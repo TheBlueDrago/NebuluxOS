@@ -185,6 +185,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.press("Space"); await wait(400);
   ok(await p.evaluate(() => document.querySelector("#off").hidden && !document.querySelector("#lock").hidden), "a key wakes it to the lock screen");
 
+  // adding a second account goes through setup too, and Cancel goes back to sign-in
+  await p.evaluate(() => NX.shell.signOut()); await wait(600);
+  await p.evaluate(() => document.querySelector("#lock [data-a=add]").click()); await wait(400);
+  ok(await p.evaluate(() => !document.querySelector("#oobe").hidden && /Add an account/.test(document.querySelector("#oobe h1").textContent)), "Add account opens setup for the new account");
+  await p.click("#oobe .ob-cancel"); await wait(300);
+  ok(await p.evaluate(() => document.querySelector("#oobe").hidden && !document.querySelector("#lock").hidden), "Cancel goes back to the sign-in screen");
+
   // everything is still there after signing out and back in
   await p.evaluate(() => NX.shell.signOut()); await wait(600);
   await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter"); await wait(1300);

@@ -30,7 +30,7 @@
         wire();
       };
       function pageHTML(pg, p, me) {
-        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 2.0</small></div></div>
+        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 2.1</small></div></div>
           <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}
           ${screensHTML()}
           <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}`;
@@ -60,7 +60,7 @@
         }
         if (pg === "time") { const d = new Date(); return `<div class="s-big-time">${NX.fmtTime(d)}<small>${d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</small></div>
           ${row("time", "24-hour clock", "Show 13:00 instead of 1:00 PM", toggle("clock24", p.clock24))}${row("globe", "Time zone", Intl.DateTimeFormat().resolvedOptions().timeZone || "Set by your browser", "")}${row("globe", "Language", navigator.language || "English", "")}`; }
-        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 2.0 · made by Nebulux</small></div></div>
+        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 2.1 · made by Nebulux</small></div></div>
           <h3>Device specifications</h3><div class="s-card s-spec"><div><span>Device name</span><b>Nebulux PC</b></div><div><span>Processor threads</span><b>${navigator.hardwareConcurrency || "Unknown"}</b></div><div><span>Memory</span><b>${navigator.deviceMemory ? navigator.deviceMemory + " GB or more" : "Unknown"}</b></div><div><span>Screen</span><b>${screen.width} x ${screen.height}</b></div><div><span>Runs in</span><b>${NX.native ? "This computer, from the Nebulux OS USB" : "Your web browser"}</b></div><div id="s-kernel" hidden></div></div>
           <h3>Safe by design</h3><div class="s-card"><p class="s-note">${NX.native ? "Nebulux OS runs from its USB. It never changes this computer's own drive or the system already on it: take the USB out and restart, and the computer starts the way it always did." : "Nebulux OS runs inside a browser tab. It can't change or harm your computer, and closing the tab closes it. Your accounts and settings are saved in this browser only."}</p></div>`;
         return "";

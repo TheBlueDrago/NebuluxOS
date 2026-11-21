@@ -87,7 +87,10 @@
     document.querySelectorAll("#lock [data-u]").forEach((b) => (b.onclick = () => { chosen = NX.users().find((x) => x.id === b.dataset.u); mode = "signin"; signinDraw(); reveal(); setTimeout(() => { const i = $("#lock input"); i && i.focus(); }, 30); }));
     document.querySelectorAll("#lock [data-a]").forEach((b) => (b.onclick = () => {
       const a = b.dataset.a;
-      if (a === "add") { mode = "setup"; signinDraw(); reveal(); setTimeout(() => { const i = $("#lock input"); i && i.focus(); }, 30); }
+      if (a === "add") {
+        if (NX.oobe) { const L = $("#lock"); L.hidden = true; clearInterval(lockT); NX.oobe((u) => { L.hidden = false; enter(u); }, { cancel: () => { L.hidden = false; lock(); } }); return; }
+        mode = "setup"; signinDraw(); reveal(); setTimeout(() => { const i = $("#lock input"); i && i.focus(); }, 30);
+      }
       if (a === "back") { mode = "signin"; chosen = chosen || NX.users()[0]; signinDraw(); }
       if (a === "forgot") { $(".lk-err").textContent = "Passwords on Nebulux OS stay on this PC and can't be recovered. You can add a new account below."; }
     }));

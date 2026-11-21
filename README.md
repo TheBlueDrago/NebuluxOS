@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 2.0**.
-3. Under **Assets**, click **`Nebulux-OS-2.0.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 2.1**.
+3. Under **Assets**, click **`Nebulux-OS-2.1.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-2.0.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-2.1.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-2.0.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-2.1.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -57,13 +57,15 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 3. Pick your USB from the list. It may say "UEFI: SanDisk".
 4. Nebulux OS starts by itself: no menu to pick from and no text login. You see the Nebulux logo with a spinner, then the sign-in screen with the password box ready.
 5. The first time, **first-time setup** walks you through it, like a new Windows 11 PC:
-   1. Your country or region.
-   2. Your keyboard layout.
-   3. A Wi-Fi network (if the computer isn't online yet).
-   4. **Sign in with Google** (optional), so Gmail, YouTube and Drive are ready in the web browser.
-   5. Your name and a password.
+   1. Make your account: your name and a password.
+   2. Your country or region.
+   3. Your keyboard layout.
+   4. A Wi-Fi network (if the computer isn't online yet).
+   5. **Sign in with Google** (optional), so Gmail, YouTube and Drive are ready in the web browser.
    6. Privacy choices.
    7. Your look: dark or light, a color and a background.
+
+   Accounts you add later (Add account on the sign-in screen) get the same questions.
 
    Then it says hi while it gets ready, and you're on the desktop. Next time, sign in with your name and password.
 
@@ -80,7 +82,7 @@ QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
 Then start Nebulux OS like this (all on one line):
 
 ```powershell
-& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-2.0.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-2.1.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
 ```
 
 ### If it doesn't start

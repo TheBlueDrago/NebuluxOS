@@ -127,6 +127,7 @@
     }));
     try { if (app.open) app.open(el.querySelector(".win-body"), w, opts || {}); else NX.webView(el.querySelector(".win-body"), w, Object.assign({ url: app.url }, opts || {})); } catch (e) { console.error(e); el.querySelector(".win-body").innerHTML = `<div class="app-error">${NX.esc(app.name)} couldn't start: ${NX.esc(e.message)}</div>`; }
     NX.shell && NX.shell.recent(id); NX.shell && NX.shell.taskbar();
+    document.dispatchEvent(new CustomEvent("nx:winopen", { detail: id }));
     return w;
   };
   // keep windows on screen when the screen changes size

@@ -5,12 +5,7 @@ module.exports = async function setup(p, name, pw, ok) {
   const step = () => p.evaluate(() => (document.querySelector("#oobe h1") || {}).textContent || "");
   const next = async () => { await p.click("#oobe .ob-next"); await wait(250); };
   await p.waitForSelector("#oobe:not([hidden]) .ob-next", { timeout: 10000 });
-  if (ok) ok(/right country or region/.test(await step()), "first-time setup starts by asking your country or region");
-  await next();
-  if (ok) ok(/right keyboard layout/.test(await step()), "then your keyboard layout");
-  await next();
-  if (/connect you to a network/.test(await step())) { if (ok) ok(true, "then the network"); await next(); }
-  if (ok) ok(/Who's going to use/.test(await step()), "then your name");
+  if (ok) ok(/Who's going to use|Add an account/.test(await step()), "setup starts by making your account: your name");
   await p.type("#oobe input[name=n]", name); await next();
   if (ok) {
     await p.type("#oobe input[name=p]", pw); await p.type("#oobe input[name=p2]", pw + "x"); await next();
@@ -18,6 +13,12 @@ module.exports = async function setup(p, name, pw, ok) {
     await p.evaluate(() => { document.querySelector("#oobe input[name=p]").value = ""; document.querySelector("#oobe input[name=p2]").value = ""; });
   }
   await p.type("#oobe input[name=p]", pw); await p.type("#oobe input[name=p2]", pw); await next();
+  if (ok) ok(/right country or region/.test(await step()), "then your country or region");
+  await next();
+  if (ok) ok(/right keyboard layout/.test(await step()), "then your keyboard layout");
+  await next();
+  if (/connect you to a network/.test(await step())) { if (ok) ok(true, "then the network"); await next(); }
+  if (/Sign in with Google/.test(await step())) await next();
   if (ok) ok(/privacy settings/.test(await step()), "then privacy settings");
   await next();
   if (ok) ok(/make it yours/.test(await step()), "then your look");

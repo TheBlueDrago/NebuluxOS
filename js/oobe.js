@@ -9,20 +9,22 @@
   const guessRegion = () => { const m = /-([A-Z]{2})\b/.exec(navigator.language || ""); const r = m && m[1]; return REGIONS.some((x) => x[0] === r) ? r : "US"; };
   const guessKeyboard = (r) => ({ GB: "gb", IE: "gb", DE: "de", AT: "de", CH: "de", FR: "fr", BE: "fr", ES: "es", MX: "latam", AR: "latam", CO: "latam", CL: "latam", PE: "latam", IT: "it", PT: "pt", BR: "br", SE: "se", NO: "no", DK: "dk", FI: "fi", NL: "nl", PL: "pl", TR: "tr", UA: "ua", JP: "jp", KR: "kr" }[r] || "us");
 
-  NX.oobe = (done) => {
+  NX.oobe = (done, setupOpts) => {
+    setupOpts = setupOpts || {}; const first = !NX.users().length;
     const box = document.getElementById("oobe"); box.hidden = false;
     const st = { region: guessRegion(), kb: null, name: "", pass: "", location: true, tips: true, theme: "dark", accent: ACCENTS[0], wall: 0 };
     st.kb = guessKeyboard(st.region);
-    const steps = ["region", "keyboard", ...(NX.native ? ["network", "google"] : []), "name", "password", "privacy", "look"];
+    const steps = ["name", "password", "region", "keyboard", ...(NX.native ? (first ? ["network", "google"] : ["google"]) : []), "privacy", "look"];
     let i = 0, back = false;
     const art = (k) => ({ region: "globe", keyboard: "kbd", network: "wifi", google: "google", name: "user", password: "lock", privacy: "shield", look: "brush" }[k]);
     function frame(title, sub, inner, opts) {
       opts = opts || {};
       box.innerHTML = `<div class="ob-card"><aside class="ob-art"><div class="ob-art-ic">${NX.icon(art(steps[i]) === "kbd" ? "keyboard" : art(steps[i]) === "shield" ? "shield" : art(steps[i]), 96)}</div><div class="ob-dots">${steps.map((_, k) => `<i class="${k === i ? "on" : k < i ? "done" : ""}"></i>`).join("")}</div></aside>
         <form class="ob-main" autocomplete="off"><h1>${title}</h1>${sub ? `<p class="ob-sub">${sub}</p>` : ""}<div class="ob-body">${inner}</div><p class="ob-err" role="alert"></p>
-        <div class="ob-foot">${i > 0 ? `<button type="button" class="btn ob-back">Back</button>` : "<span></span>"}<span class="ob-sp"></span>${opts.skip ? `<button type="button" class="btn ob-skip">${opts.skip}</button>` : ""}<button type="submit" class="btn primary ob-next">${opts.next || "Next"}</button></div></form></div>`;
+        <div class="ob-foot">${i > 0 ? `<button type="button" class="btn ob-back">Back</button>` : setupOpts.cancel ? `<button type="button" class="btn ob-cancel">Cancel</button>` : "<span></span>"}<span class="ob-sp"></span>${opts.skip ? `<button type="button" class="btn ob-skip">${opts.skip}</button>` : ""}<button type="submit" class="btn primary ob-next">${opts.next || "Next"}</button></div></form></div>`;
       const f = box.querySelector("form");
       const b = box.querySelector(".ob-back"); if (b) b.onclick = () => { i--; back = true; draw(); };
+      const c = box.querySelector(".ob-cancel"); if (c) c.onclick = () => { box.hidden = true; box.innerHTML = ""; setupOpts.cancel(); };
       return f;
     }
     const err = (m) => { box.querySelector(".ob-err").textContent = m; };
@@ -64,7 +66,7 @@
         box.querySelector(".ob-skip").onclick = next;
       }
       if (k === "name") {
-        const f = frame("Who's going to use this computer?", "What name do you want to use?", `<input class="ob-in" name="n" maxlength="24" placeholder="Name" aria-label="Name" value="${NX.esc(st.name)}" autocomplete="off">`);
+        const f = frame(first ? "Who's going to use this computer?" : "Add an account", first ? "Let's make your account. What name do you want to use?" : "What name should the new account use?", `<input class="ob-in" name="n" maxlength="24" placeholder="Name" aria-label="Name" value="${NX.esc(st.name)}" autocomplete="off">`);
         const n = f.querySelector("[name=n]"); setTimeout(() => n.focus(), 30);
         f.onsubmit = (e) => { e.preventDefault(); const bad = NX.nameProblem(n.value.trim()); if (bad) { err(bad); n.focus(); return; } if (NX.users().some((u) => u.name.toLowerCase() === n.value.trim().toLowerCase())) { err("There's already an account with that name."); return; } st.name = n.value.trim(); next(); };
       }
@@ -89,7 +91,7 @@
         sel("data-theme", "theme", (b) => b.dataset.theme); sel("data-acc", "accent", (b) => b.dataset.acc); sel("data-wall", "wall", (b) => +b.dataset.wall);
         f.onsubmit = (e) => { e.preventDefault(); finish(); };
       }
-      const first = box.querySelector(".ob-in") || box.querySelector(".ob-next"); if (first && !box.querySelector(".ob-in")) setTimeout(() => first.focus(), 30);
+      const focusEl = box.querySelector(".ob-in") || box.querySelector(".ob-next"); if (focusEl && !box.querySelector(".ob-in")) setTimeout(() => focusEl.focus(), 30);
     }
     async function obNets() {
       const host = box.querySelector(".ob-nets"); if (!host) return; let w;

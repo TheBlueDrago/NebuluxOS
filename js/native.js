@@ -36,6 +36,7 @@
   NX.browserOK = false; NX.browserRunning = false;
   if (!N) return;
   document.documentElement.classList.add("native");
+  document.addEventListener("nx:winopen", (e) => NX.api("POST", "/diag", { open: e.detail }).catch(() => {}));
   // shortcuts caught by the window manager (so they work over the web browser too) come in here
   try { const es = new EventSource("/api/events?k=" + encodeURIComponent(N.token)); es.onmessage = (e) => { let d = {}; try { d = JSON.parse(e.data); } catch (er) { return; } if (d.key) document.dispatchEvent(new CustomEvent("nx:key", { detail: d.key })); }; } catch (e) { /* no event stream */ }
   // the real web browser (on the USB system): Google, YouTube and websites open in it, with tabs and Google sign-in

@@ -12,16 +12,25 @@ shot() { # name
   echo "screendump /tmp/nx.ppm" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1; sleep 1
   python3 "$(dirname "$0")/ppm2png.py" /tmp/nx.ppm "$SHOTS/$MODE-$1.png" || echo "no screenshot for $1"
 }
+# a real mouse click at a spot on the 1280x800 screen (QEMU's tablet takes 0..32767 across the screen)
+click() {
+  local x=$(( $1 * 32767 / 1280 )) y=$(( $2 * 32767 / 800 ))
+  printf '%s\n' '{"execute":"qmp_capabilities"}' \
+    "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$x}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$y}}]}}" \
+    '{"execute":"input-send-event","arguments":{"events":[{"type":"btn","data":{"down":true,"button":"left"}}]}}' \
+    '{"execute":"input-send-event","arguments":{"events":[{"type":"btn","data":{"down":false,"button":"left"}}]}}' | socat - UNIX-CONNECT:/tmp/qmp >/dev/null 2>&1
+  sleep 0.3
+}
 keys() { for k in "$@"; do echo "sendkey $k" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1; sleep 0.15; done; }
 typeword() { local s="$1" i c; for ((i = 0; i < ${#s}; i++)); do c="${s:i:1}"; case "$c" in [A-Z]) keys "shift-${c,,}";; " ") keys spc;; *) keys "$c";; esac; done; }
 
 FAILS=0
 boot() { # BIOS or UEFI
-  MODE="$1"; rm -f /tmp/qmon
+  MODE="$1"; rm -f /tmp/qmon /tmp/qmp
   local fw=""; [ "$MODE" = uefi ] && fw="-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd"
   qemu-system-x86_64 $ACCEL -m 4096 -smp 2 $fw -cdrom "$ISO" -boot d -vga std -display none \
     -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci \
-    -monitor unix:/tmp/qmon,server,nowait -serial file:"$SHOTS/$MODE-serial.log" &
+    -monitor unix:/tmp/qmon,server,nowait -qmp unix:/tmp/qmp,server,nowait -serial file:"$SHOTS/$MODE-serial.log" &
   QPID=$!; T0=$(date +%s)
   sleep 8; shot 1-bootmenu
   sleep 30; shot 2-starting
@@ -32,14 +41,19 @@ boot() { # BIOS or UEFI
   if [ "$up" != 1 ]; then echo "FAIL ($MODE): Nebulux OS didn't show up"; shot 9-stuck; FAILS=$((FAILS + 1)); kill $QPID; wait $QPID 2>/dev/null; return; fi
   echo "ok   ($MODE): Nebulux OS is on screen, $(( $(date +%s) - T0 )) seconds after turning on"
   sleep 4; shot 3-lock
-  # first-time setup: region, keyboard, network, Google sign-in, name, password, privacy, look (Enter takes each step)
-  keys ret; sleep 2; keys ret; sleep 2; keys ret; sleep 3; shot 3a-google; keys ret; sleep 2; shot 3b-name
+  # first-time setup: name, password, region, keyboard, network, Google sign-in, privacy, look (Enter takes each step)
   typeword "Ada"; keys ret; sleep 2
-  typeword "nebula1"; keys tab; typeword "nebula1"; keys ret; sleep 2; shot 3c-privacy
+  typeword "nebula1"; keys tab; typeword "nebula1"; keys ret; sleep 2; shot 3b-region
+  keys ret; sleep 2; keys ret; sleep 2; keys ret; sleep 3; shot 3a-google; keys ret; sleep 2; shot 3c-privacy
   keys ret; sleep 2; keys ret; sleep 12; shot 4-desktop
   if python3 "$(dirname "$0")/ppm2png.py" --full /tmp/nx.ppm; then echo "ok   ($MODE): Nebulux OS fills the whole screen"; else echo "FAIL ($MODE): Nebulux OS doesn't fill the screen"; FAILS=$((FAILS + 1)); fi
   if grep -q "NEBULUX-DIAG ext=1" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): the web-windows extension is running"; else echo "FAIL ($MODE): the web-windows extension isn't running ($(grep -a NEBULUX-DIAG "$SHOTS/$MODE-serial.log" | tail -1))"; FAILS=$((FAILS + 1)); fi
+  # the mouse: one click on the Settings icon on the desktop opens Settings
+  click 52 145; sleep 6; shot 4b-click
+  if grep -aq "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): a mouse click opens Settings from the desktop"; else echo "FAIL ($MODE): a mouse click on the desktop didn't open Settings"; FAILS=$((FAILS + 1)); fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
+  # the mouse on the real browser: click into Google's search box and type
+  click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click
   keys meta_l; sleep 2; typeword "settings"; sleep 1; keys ret; sleep 6; shot 6-settings
   keys meta_l; sleep 2; typeword "file explorer"; sleep 1; keys ret; sleep 5; shot 7-files
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1

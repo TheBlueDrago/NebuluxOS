@@ -27,7 +27,6 @@
   </keyboard>
   <mouse>
     <dragThreshold>4</dragThreshold><doubleClickTime>500</doubleClickTime>
-    <context name="Frame"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind></context>
     <context name="Client"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Right" action="Press"><action name="Focus"/></mousebind></context>
     <context name="Titlebar"><mousebind button="Left" action="Drag"><action name="Move"/></mousebind></context>
   </mouse>

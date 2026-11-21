@@ -164,7 +164,7 @@ const api = {
     return { present: false };
   },
   async "POST /diag"(b) {
-    const line = "NEBULUX-DIAG " + ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ") + "\n";
+    const line = "NEBULUX-DIAG " + (b.open ? "open=" + String(b.open).replace(/[^a-z0-9-]/gi, "").slice(0, 20) : ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ")) + "\n";
     if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
     return { ok: true };
   },
