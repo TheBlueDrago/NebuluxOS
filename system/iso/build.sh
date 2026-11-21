@@ -60,7 +60,7 @@ for f in config/bootloaders/isolinux/isolinux.cfg config/bootloaders/syslinux_co
   [ -f "$f" ] && { sed -i 's/^timeout .*/timeout 30/' "$f"; grep -q '^timeout' "$f" || echo "timeout 30" >> "$f"; }
 done
 # the boot picture: a splash.png has to be there already, or live-build draws its own from splash.svg
-for d in isolinux syslinux_common; do [ -d "config/bootloaders/$d" ] && cp "$REPO/system/iso/splash.png" "config/bootloaders/$d/splash.png"; done
+for d in isolinux syslinux_common; do [ -d "config/bootloaders/$d" ] && cp "$REPO/system/iso/splash.png" "config/bootloaders/$d/splash.png"; cp "$REPO/system/iso/splash800x600.png" "config/bootloaders/$d/splash800x600.png"; done
 # GRUB (UEFI): starts the first entry after 3 seconds, and no start-up beep
 cat > config/bootloaders/grub-pc/config.cfg <<'GRUBCFG'
 set default=0
@@ -87,7 +87,7 @@ for s in /usr/lib/live/build/binary_grub_cfg /usr/share/live/build/scripts/build
 done
 grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/syslinux_common config/bootloaders/grub-pc/config.cfg 2>/dev/null | grep -v stdmenu | head -12
 # scripts made on Windows lose their "can run" mark
-chmod 755 config/includes.chroot/usr/local/bin/nebulux-session config/hooks/normal/9000-nebulux.hook.chroot
+chmod 755 config/includes.chroot/usr/local/bin/nebulux-session config/includes.chroot/etc/X11/xinit/xinitrc config/includes.chroot/etc/skel/.xinitrc config/hooks/normal/9000-nebulux.hook.chroot
 
 say "Build (this takes a while)"
 lb build 2>&1 | tee "$OUT/build.log" | grep -E '^(P:|E:|W:)|error' | grep -v 'Hit:\|Get:' || true
