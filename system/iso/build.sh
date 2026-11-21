@@ -52,17 +52,42 @@ mkdir -p config/bootloaders
 for d in isolinux syslinux_common grub-pc; do
   [ -d "/usr/share/live/build/bootloaders/$d" ] && cp -a "/usr/share/live/build/bootloaders/$d" config/bootloaders/
 done
+# ISOLINUX (older BIOS PCs): menu names, and a 3 second wait
 find config/bootloaders -type f \( -name '*.cfg' -o -name '*.in' \) -print0 | xargs -0 sed -i \
-  -e 's/Live system (@FLAVOUR@)/Nebulux OS/g' -e 's/Live system (fail-safe mode)/Nebulux OS (safe mode)/g' \
-  -e 's/Live system/Nebulux OS/g' -e 's/Debian GNU\/Linux/Nebulux OS/g' -e 's/@FLAVOUR@)/)/g'
+  -e 's/Live system (@FLAVOUR@ fail-safe mode)/Nebulux OS (safe mode)/g' -e 's/Live system (@FLAVOUR@)/Nebulux OS/g' \
+  -e 's/Live system/Nebulux OS/g' -e 's/Debian GNU\/Linux/Nebulux OS/g'
 for f in config/bootloaders/isolinux/isolinux.cfg config/bootloaders/syslinux_common/isolinux.cfg; do
   [ -f "$f" ] && { sed -i 's/^timeout .*/timeout 30/' "$f"; grep -q '^timeout' "$f" || echo "timeout 30" >> "$f"; }
 done
-find config/bootloaders -name 'grub.cfg' -print0 | xargs -0 -r sed -i 's/set timeout=.*/set timeout=3/'
-find config/bootloaders -name 'config.cfg' -path '*grub*' -print0 | xargs -0 -r sed -i 's/set timeout=.*/set timeout=3/'
-for f in $(find config/bootloaders -name 'splash.png'); do cp "$REPO/system/iso/splash.png" "$f"; done
-find config/bootloaders -name 'splash.svg' -delete
-grep -rl "timeout" config/bootloaders | head -5 | while read -r f; do echo "--- $f"; grep -n "timeout\|menu label\|menuentry" "$f" | head -8; done
+# the boot picture: a splash.png has to be there already, or live-build draws its own from splash.svg
+for d in isolinux syslinux_common; do [ -d "config/bootloaders/$d" ] && cp "$REPO/system/iso/splash.png" "config/bootloaders/$d/splash.png"; done
+# GRUB (UEFI): starts the first entry after 3 seconds, and no start-up beep
+cat > config/bootloaders/grub-pc/config.cfg <<'GRUBCFG'
+set default=0
+set timeout=3
+set timeout_style=menu
+
+loadfont $prefix/dejavu-bold-16.pf2
+loadfont $prefix/dejavu-bold-14.pf2
+loadfont $prefix/unicode.pf2
+set gfxmode=auto
+insmod all_video
+insmod gfxterm
+insmod png
+
+source /boot/grub/theme.cfg
+
+terminal_output gfxterm
+GRUBCFG
+# GRUB menu names are written by live-build itself
+for s in /usr/lib/live/build/binary_grub_cfg /usr/share/live/build/scripts/build/binary_grub_cfg; do
+  [ -f "$s" ] && sed -i -e 's/Live system (autodetect) (fail-safe mode)/Nebulux OS (safe mode)/g' -e 's/Live system (autodetect)/Nebulux OS/g' \
+    -e 's/"Live system (${_FLAVOUR} fail-safe mode)"/"Nebulux OS (safe mode)"/g' -e 's/"Live system (${_FLAVOUR})"/"Nebulux OS"/g' \
+    -e 's/Live system, kernel/Nebulux OS, kernel/g' "$s" && echo "menu names set in $s"
+done
+grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/syslinux_common config/bootloaders/grub-pc/config.cfg 2>/dev/null | grep -v stdmenu | head -12
+# scripts made on Windows lose their "can run" mark
+chmod 755 config/includes.chroot/usr/local/bin/nebulux-session config/hooks/normal/9000-nebulux.hook.chroot
 
 say "Build (this takes a while)"
 lb build 2>&1 | tee "$OUT/build.log" | grep -E '^(P:|E:|W:)|error' | grep -v 'Hit:\|Get:' || true
