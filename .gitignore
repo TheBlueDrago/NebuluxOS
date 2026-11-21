@@ -1,4 +1,5 @@
 tests/shots/
 node_modules/
 out/
+.lbcache/
 system/browser-ext/_metadata/

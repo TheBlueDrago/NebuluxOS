@@ -60,7 +60,7 @@ boot() { # BIOS or UEFI
   for _ in $(seq 1 30); do kill -0 $QPID 2>/dev/null || break; sleep 2; done
   kill $QPID 2>/dev/null; wait $QPID 2>/dev/null
 }
-boot bios
-boot uefi
+# UEFI by default (nearly every computer from the last 10 years); NX_BOOTS="bios uefi" tests the old BIOS start-up too
+for m in ${NX_BOOTS:-uefi}; do boot "$m"; done
 ls -la "$SHOTS"
 [ "$FAILS" = 0 ] && echo "boot test passed" || { echo "boot test: $FAILS failed"; exit 1; }

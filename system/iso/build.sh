@@ -95,11 +95,16 @@ grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/sy
 chmod 644 config/includes.chroot/etc/systemd/system/nebulux-screen.service config/includes.chroot/etc/nebulux/openbox.xml
 chmod 755 config/includes.chroot/usr/local/bin/nebulux-key config/includes.chroot/usr/local/bin/nebulux-session config/includes.chroot/etc/X11/xinit/xinitrc config/includes.chroot/etc/skel/.xinitrc config/hooks/normal/9000-nebulux.hook.chroot
 
+# packages downloaded by an earlier build (GitHub keeps them in .lbcache)
+if [ -d "$REPO/.lbcache" ]; then mkdir -p cache; cp -a "$REPO/.lbcache/." cache/ 2>/dev/null || true; echo "reusing $(du -sh cache 2>/dev/null | cut -f1) of downloaded packages"; fi
+
 say "Build (this takes a while)"
 lb build 2>&1 | tee "$OUT/build.log" | grep -E '^(P:|E:|W:)|error' | grep -v 'Hit:\|Get:' || true
 ISO="$(ls -1 "$WORK"/*.iso 2>/dev/null | head -1)"
 [ -n "$ISO" ] && [ -s "$ISO" ] || { echo "The .iso wasn't made. Last lines of the log:"; tail -60 "$OUT/build.log"; exit 1; }
 mv "$ISO" "$OUT/nebulux-os.iso"
+# keep the downloaded packages for the next build
+if [ -d "$WORK/cache" ]; then rm -rf "$REPO/.lbcache"; mkdir -p "$REPO/.lbcache"; cp -a "$WORK/cache/." "$REPO/.lbcache/" 2>/dev/null || true; fi
 ( cd "$OUT" && sha256sum nebulux-os.iso > nebulux-os.iso.sha256 )
 ls -la "$OUT"
 say "Done: $OUT/nebulux-os.iso"
