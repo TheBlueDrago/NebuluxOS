@@ -1,0 +1,62 @@
+// Nebulux OS icons: original SVGs in the Nebulux look (nebula gradients, soft glow). NX.icon(name, size).
+"use strict";
+(function () {
+  let gid = 0;
+  const grad = (a, b, c) => { const id = "g" + ++gid; return [id, `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/>${c ? `<stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/>` : `<stop offset="1" stop-color="${b}"/>`}</linearGradient></defs>`]; };
+  const tile = (a, b, c, inner) => { const [id, d] = grad(a, b, c); return `${d}<rect x="2" y="2" width="44" height="44" rx="11" fill="url(#${id})"/>${inner}`; };
+  const W = "#fff";
+  const I = {
+    // the Nebulux mark: a planet with an orbit ring and a small moon
+    logo: () => { const [id, d] = grad("#ff6fd8", "#7c5cff", "#22d3ee"); return `${d}<circle cx="24" cy="24" r="11" fill="url(#${id})"/><ellipse cx="24" cy="24" rx="20" ry="7.5" fill="none" stroke="url(#${id})" stroke-width="3" transform="rotate(-24 24 24)"/><circle cx="41" cy="15" r="3" fill="#fde68a"/>`; },
+    settings: () => tile("#64748b", "#334155", null, `<g fill="none" stroke="${W}" stroke-width="3"><circle cx="24" cy="24" r="6"/><path d="M24 9v5M24 34v5M9 24h5M34 24h5M13.4 13.4l3.5 3.5M31.1 31.1l3.5 3.5M13.4 34.6l3.5-3.5M31.1 16.9l3.5-3.5" stroke-linecap="round"/></g>`),
+    google: () => tile("#2563eb", "#7c5cff", "#ec4899", `<circle cx="22" cy="22" r="9" fill="none" stroke="${W}" stroke-width="3.5"/><path d="M29 29l7 7" stroke="${W}" stroke-width="4" stroke-linecap="round"/><path d="M17 22h10" stroke="${W}" stroke-width="2" opacity=".6"/><path d="M22 13c3 3 3 15 0 18M22 13c-3 3-3 15 0 18" stroke="${W}" stroke-width="2" fill="none" opacity=".6"/>`),
+    store: () => tile("#f472b6", "#a855f7", "#6366f1", `<path d="M14 18h20l-2 18H16z" fill="${W}"/><path d="M19 18v-3a5 5 0 0110 0v3" fill="none" stroke="${W}" stroke-width="3"/><circle cx="24" cy="27" r="3" fill="#a855f7"/>`),
+    notepad: () => tile("#38bdf8", "#2563eb", null, `<rect x="13" y="11" width="22" height="27" rx="3" fill="${W}"/><path d="M17 19h14M17 24h14M17 29h9" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>`),
+    calculator: () => tile("#34d399", "#0f766e", null, `<rect x="14" y="10" width="20" height="28" rx="4" fill="${W}"/><rect x="17" y="13" width="14" height="6" rx="1.5" fill="#0f766e"/><g fill="#0f766e"><circle cx="19" cy="24" r="1.8"/><circle cx="24" cy="24" r="1.8"/><circle cx="29" cy="24" r="1.8"/><circle cx="19" cy="29" r="1.8"/><circle cx="24" cy="29" r="1.8"/><circle cx="29" cy="29" r="1.8"/><circle cx="19" cy="34" r="1.8"/><circle cx="24" cy="34" r="1.8"/><circle cx="29" cy="34" r="1.8"/></g>`),
+    paint: () => tile("#fb923c", "#e11d48", null, `<path d="M24 11c-8 0-14 6-14 13 0 5 4 7 7 6 2-1 2 3 5 4 8 2 15-4 15-11 0-7-5-12-13-12z" fill="${W}"/><circle cx="18" cy="21" r="2.2" fill="#e11d48"/><circle cx="24" cy="17" r="2.2" fill="#f59e0b"/><circle cx="30" cy="20" r="2.2" fill="#22c55e"/><circle cx="30" cy="27" r="2.2" fill="#3b82f6"/>`),
+    clock: () => tile("#a78bfa", "#4c1d95", null, `<circle cx="24" cy="24" r="12" fill="${W}"/><path d="M24 16v8l5 3" stroke="#4c1d95" stroke-width="3" fill="none" stroke-linecap="round"/>`),
+    snake: () => tile("#22d3ee", "#0e7490", "#064e3b", `<path d="M13 32c0-6 6-6 9-6s9 0 9-6-5-7-9-7" fill="none" stroke="${W}" stroke-width="5" stroke-linecap="round"/><circle cx="22" cy="13" r="3.4" fill="${W}"/><circle cx="34" cy="33" r="3" fill="#fde68a"/>`),
+    ai: () => tile("#ff6fd8", "#7c5cff", "#22d3ee", `<path d="M24 11l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="${W}"/><circle cx="34" cy="34" r="2.5" fill="${W}"/>`),
+    arcade: () => tile("#f43f5e", "#7c3aed", null, `<rect x="11" y="18" width="26" height="14" rx="7" fill="${W}"/><path d="M17 22v6M14 25h6" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="23" r="1.9" fill="#f43f5e"/><circle cx="33" cy="27" r="1.9" fill="#7c3aed"/>`),
+    weather: () => tile("#60a5fa", "#1d4ed8", null, `<circle cx="20" cy="20" r="6" fill="#fde68a"/><path d="M17 33h14a5 5 0 000-10 7 7 0 00-13 1 4.5 4.5 0 00-1 9z" fill="${W}"/>`),
+    search: () => `<circle cx="21" cy="21" r="10" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M29 29l9 9" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+    wifi: () => `<g fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M8 19a23 23 0 0132 0"/><path d="M14 26a14 14 0 0120 0"/></g><circle cx="24" cy="34" r="3.5" fill="currentColor"/>`,
+    wifioff: () => `<g fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" opacity=".45"><path d="M8 19a23 23 0 0132 0"/><path d="M14 26a14 14 0 0120 0"/></g><circle cx="24" cy="34" r="3.5" fill="currentColor" opacity=".45"/><path d="M10 10l28 28" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+    volume: () => `<path d="M9 19h7l9-7v24l-9-7H9z" fill="currentColor"/><path d="M31 18a8 8 0 010 12M35 14a14 14 0 010 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
+    battery: () => `<rect x="7" y="16" width="30" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="3"/><rect x="11" y="20" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="38" y="21" width="3.5" height="6" rx="1" fill="currentColor"/>`,
+    bt: () => `<path d="M17 15l14 14-7 6V13l7 6-14 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`,
+    plane: () => `<path d="M24 8c2 0 3 2 3 4v9l13 7v4l-13-3v7l4 3v3l-7-2-7 2v-3l4-3v-7L8 32v-4l13-7v-9c0-2 1-4 3-4z" fill="currentColor"/>`,
+    moon: () => `<path d="M31 34a13 13 0 01-11-22 13 13 0 1011 22z" fill="currentColor"/>`,
+    sun: () => `<circle cx="24" cy="24" r="7" fill="currentColor"/><g stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M24 8v4M24 36v4M8 24h4M36 24h4M12.7 12.7l2.8 2.8M32.5 32.5l2.8 2.8M12.7 35.3l2.8-2.8M32.5 15.5l2.8-2.8"/></g>`,
+    contrast: () => `<circle cx="24" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 11a13 13 0 010 26z" fill="currentColor"/>`,
+    power: () => `<path d="M24 9v14" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M15 15a13 13 0 1018 0" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
+    user: () => `<circle cx="24" cy="18" r="7" fill="currentColor"/><path d="M10 39c1-8 7-12 14-12s13 4 14 12z" fill="currentColor"/>`,
+    lock: () => `<rect x="12" y="21" width="24" height="18" rx="4" fill="currentColor"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="currentColor" stroke-width="3.5"/>`,
+    signout: () => `<path d="M20 12h-7a3 3 0 00-3 3v18a3 3 0 003 3h7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M22 24h16M32 17l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    restart: () => `<path d="M36 24a12 12 0 11-4-9" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M33 9v7h-7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    arrow: () => `<path d="M12 24h24M27 15l9 9-9 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
+    back: () => `<path d="M36 24H12M21 15l-9 9 9 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
+    fwd: () => `<path d="M12 24h24M27 15l9 9-9 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
+    reload: () => `<path d="M36 24a12 12 0 11-4-9" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M33 9v7h-7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    home: () => `<path d="M9 23L24 10l15 13M14 19v18h20V19" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`,
+    min: () => `<path d="M14 24h20" stroke="currentColor" stroke-width="2.5"/>`,
+    max: () => `<rect x="14" y="14" width="20" height="20" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.5"/>`,
+    restore: () => `<rect x="13" y="18" width="17" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M18 18v-3a2 2 0 012-2h13a2 2 0 012 2v13a2 2 0 01-2 2h-3" fill="none" stroke="currentColor" stroke-width="2.5"/>`,
+    close: () => `<path d="M15 15l18 18M33 15L15 33" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
+    chevron: () => `<path d="M19 13l11 11-11 11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    up: () => `<path d="M13 29l11-11 11 11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    display: () => `<rect x="7" y="10" width="34" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 38h12M24 32v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
+    brush: () => `<path d="M30 9l9 9-15 15-9-9z" fill="currentColor"/><path d="M14 27c-5 0-6 5-6 10 5 0 10-1 10-6" fill="currentColor"/>`,
+    apps: () => `<g fill="currentColor"><rect x="9" y="9" width="12" height="12" rx="3"/><rect x="27" y="9" width="12" height="12" rx="3"/><rect x="9" y="27" width="12" height="12" rx="3"/><rect x="27" y="27" width="12" height="12" rx="3"/></g>`,
+    globe: () => `<circle cx="24" cy="24" r="14" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 24h28M24 10c6 6 6 22 0 28M24 10c-6 6-6 22 0 28" fill="none" stroke="currentColor" stroke-width="2.5"/>`,
+    info: () => `<circle cx="24" cy="24" r="14" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 22v10" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="24" cy="16" r="2.2" fill="currentColor"/>`,
+    time: () => `<circle cx="24" cy="24" r="14" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 16v8l6 4" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>`,
+    sound: () => `<path d="M9 19h7l9-7v24l-9-7H9z" fill="currentColor"/><path d="M31 18a8 8 0 010 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
+    taskbar: () => `<rect x="7" y="12" width="34" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M7 30h34" stroke="currentColor" stroke-width="3"/>`,
+    star: () => `<path d="M24 8l4.7 9.6 10.6 1.5-7.7 7.5 1.8 10.5L24 32l-9.4 5.1 1.8-10.5-7.7-7.5 10.6-1.5z" fill="currentColor"/>`,
+    download: () => `<path d="M24 9v20M15 21l9 9 9-9M11 38h26" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    library: () => `<path d="M10 10h6v28h-6zM20 10h6v28h-6zM29 12l6-2 6 26-6 2z" fill="currentColor"/>`,
+    trash: () => `<path d="M12 15h24M19 15v-3h10v3M15 15l2 22h14l2-22" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`,
+  };
+  NX.icon = (name, size) => `<svg class="ico" viewBox="0 0 48 48" width="${size || 20}" height="${size || 20}" aria-hidden="true">${(I[name] || I.apps)()}</svg>`;
+})();
