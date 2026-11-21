@@ -1,4 +1,4 @@
-NebuluxOS @VERSION@: a real operating system that starts from a USB stick.
+Nebulux OS @VERSION@: a real operating system that starts from a USB stick.
 
 **Download `@FILE@`** (@SIZE@), write it to a USB stick with Rufus or balenaEtcher, and start a computer from the USB. The steps are in the README.
 
