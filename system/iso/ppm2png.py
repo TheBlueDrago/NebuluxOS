@@ -31,8 +31,8 @@ def looks_like_os(w, h, rgb):
         total += 1
         if b > 25 and b > g + 8 and r > g: purple += 1
         if b > 70: bright += 1
-    # the lock screen is about 0.73 purple and 0.8 bright; the boot menu picture is only 0.36 bright, plain dark 0
-    return total and purple / total > 0.35 and bright / total > 0.5
+    # first-time setup is about 0.8 purple and 0.32 bright, the lock screen 0.73 and 0.56; the start-up screen is about 0.03 bright
+    return total and purple / total > 0.35 and bright / total > 0.2
 
 def fills_screen(w, h, rgb):
     # the right-most columns show the desktop, not the plain screen color behind it (#0b0620, set by the session)
