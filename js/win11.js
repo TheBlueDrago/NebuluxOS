@@ -51,7 +51,7 @@
   }
   async function widgetsDraw() {
     const W = $("#widgets"), d = new Date(), place = NX.data("wx-place", null), w = place ? await weather() : null;
-    const files = NX.data("recent-files", []).slice(0, 4);
+    const files = NX.prefs().showrecent === false ? [] : NX.data("recent-files", []).slice(0, 4);
     W.innerHTML = `<div class="wg-head"><b>${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</b><span>${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</span></div>
       <div class="wg-grid"><section class="wg-card wg-wx">${place ? (w ? `<div class="wg-wxnow">${wIcon(wx(w.code)[2], 56)}<div><b>${w.now}°${w.unit}</b><span>${wx(w.code)[1]}</span><small>${NX.esc(place.name)}</small></div></div><div class="wg-days">${w.days.slice(1).map((x) => `<div>${new Date(x.t + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}${wIcon(wx(x.code)[2], 26)}<span>${x.hi}° <small>${x.lo}°</small></span></div>`).join("")}</div>` : `<p class="wg-note">${NX.netOK() ? "Getting the weather..." : "Connect to the internet to see the weather."}</p>`) + `<button class="wg-link" data-wx="change">Change city</button>`
         : `<h4>Weather</h4><p class="wg-note">Type your city to see its weather.</p>`}<form class="wg-city" ${place ? "hidden" : ""}><input placeholder="Your city" aria-label="Your city" maxlength="60"><button class="btn primary" type="submit">Show</button></form><p class="wg-err"></p></section>

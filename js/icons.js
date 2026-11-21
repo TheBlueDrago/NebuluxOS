@@ -65,6 +65,8 @@
     keyboard: () => `<rect x="5" y="13" width="38" height="22" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><g fill="currentColor"><rect x="10" y="18" width="4" height="4" rx="1"/><rect x="17" y="18" width="4" height="4" rx="1"/><rect x="24" y="18" width="4" height="4" rx="1"/><rect x="31" y="18" width="4" height="4" rx="1"/><rect x="14" y="27" width="20" height="4" rx="1"/></g>`,
     shield: () => `<path d="M24 6l15 6v10c0 10-6.5 17-15 20C15.5 39 9 32 9 22V12z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M17 24l5 5 9-10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`,
     youtube: () => `<rect x="2" y="2" width="44" height="44" rx="11" fill="#fff"/><rect x="7" y="13" width="34" height="23" rx="7" fill="#ff0033"/><path d="M21 19l9 5.5-9 5.5z" fill="#fff"/>`,
+    access: () => `<circle cx="24" cy="9" r="4" fill="currentColor"/><path d="M9 16l15 3 15-3M24 19v9l-6 13M24 28l6 13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    eye: () => `<path d="M4 24s7-12 20-12 20 12 20 12-7 12-20 12S4 24 4 24z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="24" r="6" fill="currentColor"/>`,
     // apps added in 1.2
     files: () => tile("#fbbf24", "#f97316", null, `<path d="M10 16a3 3 0 013-3h7l3 3h12a3 3 0 013 3v13a3 3 0 01-3 3H13a3 3 0 01-3-3z" fill="${W}"/><path d="M10 21h28" stroke="#f97316" stroke-width="2.5"/>`),
     photos: () => tile("#38bdf8", "#6366f1", "#a855f7", `<rect x="11" y="13" width="26" height="22" rx="3.5" fill="${W}"/><path d="M14 31l7-8 5 5 3-3 5 6z" fill="#6366f1"/><circle cx="30" cy="19" r="2.6" fill="#f59e0b"/>`),

@@ -179,6 +179,40 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => [...document.querySelectorAll("#icons .dicon.dfile")].some((d) => /On my desktop\.txt/.test(d.innerText))), "files in the Desktop folder show on the desktop");
   await shot("desktop-files");
 
+  // ---------- 3.0: Settings like Windows 11, and web apps in the Store ----------
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+  await p.evaluate(() => NX.open("settings")); await wait(400);
+  ok(await p.evaluate(() => /Home/.test(document.querySelector(".win[data-app=settings] .s-main h1").textContent) && document.querySelectorAll(".win[data-app=settings] .s-hcard").length === 4), "Settings opens on Home, with your account, the PC, Wi-Fi and Bluetooth");
+  await shot("settings-home");
+  ok(await p.evaluate(() => ["Home", "System", "Bluetooth & devices", "Network & internet", "Personalization", "Apps", "Accounts", "Time & language", "Accessibility", "Privacy & security", "Nebulux Update"].every((n) => [...document.querySelectorAll(".win[data-app=settings] .s-nav span")].some((x) => x.textContent === n))), "the pages are the Windows 11 ones (with Nebulux Update)");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-p=system]").click()); await wait(250);
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] .s-link")].find((b) => /About/.test(b.textContent)).click()); await wait(250);
+  ok(await p.evaluate(() => /System.*About/.test(document.querySelector(".win[data-app=settings] .s-main h1").textContent) && /Device specifications/.test(document.querySelector(".win[data-app=settings]").innerText)), "About is inside System, with the path in the title");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-p=access]").click()); await wait(250);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pref=anim]").click()); await wait(150);
+  ok(await p.evaluate(() => document.documentElement.classList.contains("noanim")), "Accessibility can turn animations off");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pref=anim]").click()); await wait(150);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-p=privacy]").click()); await wait(250);
+  await p.evaluate(() => document.querySelector("#s-clearrecent").click()); await wait(250);
+  ok(await p.evaluate(() => NX.data("recent-files", []).length === 0), "Privacy & security clears recently opened files");
+  await p.evaluate(() => NX.close("settings")); await wait(250);
+  await p.evaluate(() => NX.open("store")); await wait(500);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=store] .st-row").length >= 8 && /Watch/.test(document.querySelector(".win[data-app=store]").innerText)), "the Store's Home has rows of apps (Watch, Listen, Chat and share...)");
+  ok(await p.evaluate(() => ["netflix", "spotify", "whatsapp", "word", "excel", "discord", "xboxcloud", "chatgpt"].every((id) => NX.apps[id] && NX.apps[id].webapp)), "it has the big apps: Netflix, Spotify, WhatsApp, Word, Excel, Discord, Xbox Cloud Gaming, ChatGPT");
+  await shot("store-home");
+  await p.evaluate(() => document.querySelector('.win[data-app=store] .st-card[data-app=netflix]').click()); await wait(300);
+  await p.evaluate(() => document.querySelector('.win[data-app=store] [data-get=netflix]').click());
+  ok(await until(() => p.evaluate(() => NX.prefs().installed.includes("netflix")), 6000), "Get installs Netflix");
+  ok(await p.evaluate(() => !!document.querySelector("#icons [data-app=netflix]")), "and it shows on the desktop");
+  await p.evaluate(() => NX.close("store")); await wait(200);
+
+  // Start search finds settings and files too
+  await p.click("#tb-start"); await wait(300); await p.type("#start .sm-search input", "wallpaper"); await wait(500);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#start [data-spage]")].some((b) => b.dataset.spage === "personal")), "Start search finds settings (wallpaper: Personalization)");
+  await p.evaluate(() => { const i = document.querySelector("#start .sm-search input"); i.value = ""; i.dispatchEvent(new Event("input")); }); await p.type("#start .sm-search input", "party"); await wait(800);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#start [data-sfile]")].some((b) => /Party plans.txt/.test(b.textContent))), "and files (party: Party plans.txt)");
+  await p.keyboard.press("Escape"); await wait(200);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

@@ -12,14 +12,17 @@ shot() { # name
   echo "screendump /tmp/nx.ppm" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1; sleep 1
   python3 "$(dirname "$0")/ppm2png.py" /tmp/nx.ppm "$SHOTS/$MODE-$1.png" || echo "no screenshot for $1"
 }
-# a real mouse click at a spot on the 1280x800 screen (QEMU's tablet takes 0..32767 across the screen)
+# a real mouse click at a spot on the 1280x800 screen (QEMU's tablet takes 0..32767 across the screen):
+# move there and press in one go, a short pause, then let go (like a finger on a real mouse)
+qmp() { printf '%s\n' '{"execute":"qmp_capabilities"}' "$1" | socat -t 1 - UNIX-CONNECT:/tmp/qmp >/dev/null 2>&1; }
 click() {
   local x=$(( $1 * 32767 / 1280 )) y=$(( $2 * 32767 / 800 ))
-  printf '%s\n' '{"execute":"qmp_capabilities"}' \
-    "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$x}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$y}}]}}" \
-    '{"execute":"input-send-event","arguments":{"events":[{"type":"btn","data":{"down":true,"button":"left"}}]}}' \
-    '{"execute":"input-send-event","arguments":{"events":[{"type":"btn","data":{"down":false,"button":"left"}}]}}' | socat - UNIX-CONNECT:/tmp/qmp >/dev/null 2>&1
+  qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$x}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$y}}]}}"
   sleep 0.3
+  qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$x}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$y}},{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"left\"}}]}}"
+  sleep 0.15
+  qmp '{"execute":"input-send-event","arguments":{"events":[{"type":"btn","data":{"down":false,"button":"left"}}]}}'
+  sleep 0.4
 }
 keys() { for k in "$@"; do echo "sendkey $k" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1; sleep 0.15; done; }
 typeword() { local s="$1" i c; for ((i = 0; i < ${#s}; i++)); do c="${s:i:1}"; case "$c" in [A-Z]) keys "shift-${c,,}";; " ") keys spc;; *) keys "$c";; esac; done; }
@@ -40,6 +43,7 @@ boot() { # BIOS or UEFI
   rm -f "$SHOTS/$MODE-now.png"
   if [ "$up" != 1 ]; then echo "FAIL ($MODE): Nebulux OS didn't show up"; shot 9-stuck; FAILS=$((FAILS + 1)); kill $QPID; wait $QPID 2>/dev/null; return; fi
   echo "ok   ($MODE): Nebulux OS is on screen, $(( $(date +%s) - T0 )) seconds after turning on"
+  sleep 3; grep -a "NEBULUX-BOOT" "$SHOTS/$MODE-serial.log" | head -18
   sleep 4; shot 3-lock
   # first-time setup: name, password, region, keyboard, network, Google sign-in, privacy, look (Enter takes each step)
   typeword "Ada"; keys ret; sleep 2
@@ -50,6 +54,7 @@ boot() { # BIOS or UEFI
   if grep -q "NEBULUX-DIAG ext=1" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): the web-windows extension is running"; else echo "FAIL ($MODE): the web-windows extension isn't running ($(grep -a NEBULUX-DIAG "$SHOTS/$MODE-serial.log" | tail -1))"; FAILS=$((FAILS + 1)); fi
   # the mouse: one click on the Settings icon on the desktop opens Settings
   click 52 145; sleep 6; shot 4b-click
+  click 430 776; sleep 2; shot 4c-start-click; keys esc; sleep 1
   if grep -aq "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): a mouse click opens Settings from the desktop"; else echo "FAIL ($MODE): a mouse click on the desktop didn't open Settings"; FAILS=$((FAILS + 1)); grep -a "NEBULUX-X" "$SHOTS/$MODE-serial.log" | head -45; fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   # the mouse on the real browser: click into Google's search box and type

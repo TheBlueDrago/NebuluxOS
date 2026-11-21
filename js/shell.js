@@ -29,6 +29,7 @@
     const p = NX.prefs(), root = document.documentElement;
     root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent);
     root.classList.toggle("nofx", !NX.fx());
+    root.classList.toggle("noanim", !!(NX.me && p.anim === false)); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
     const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
@@ -190,6 +191,7 @@
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
     si.onkeydown = (e) => { if (e.key === "Enter") { const f = $(".sm-res", S); if (f) f.click(); } };
+    if (q) startExtras(q, S);
     S.querySelectorAll("[data-app]").forEach((b) => { b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }; b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; const r = S.getBoundingClientRect(); const mx = e.clientX, my = e.clientY; const items = [[p.pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], [p.desktop.includes(id) ? "Remove from desktop" : "Add to desktop", () => NX.setPref("desktop", p.desktop.includes(id) ? p.desktop.filter((x) => x !== id) : [...p.desktop, id])], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]; menu(mx, my, items); void r; }; });
     const web = $("[data-web]", S); if (web) web.onclick = () => { closeFlyouts(); NX.searchWeb(q); };
     const st = $("[data-store]", S); if (st) st.onclick = () => { closeFlyouts(); NX.open("store"); };
@@ -203,7 +205,7 @@
   const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "Just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : new Date(t).toLocaleDateString(); };
   const FICON = { image: "fimage", video: "fvideo", audio: "faudio", text: "ftext", pdf: "fpdf" };
   function recHTML(rec) {
-    const files = NX.data("recent-files", []).slice(0, 4), out = [];
+    const files = NX.prefs().showrecent === false ? [] : NX.data("recent-files", []).slice(0, 4), out = [];
     files.forEach((f, i) => out.push(`<button class="sm-res" data-rfile="${i}">${NX.icon(FICON[f.kind] || "file", 30)}<span><b>${NX.esc(f.name)}</b><small>${ago(f.at)}</small></span></button>`));
     rec.slice(0, 6 - out.length).forEach((id) => out.push(`<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 30)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>Recently opened</small></span></button>`));
     return out.length ? out.join("") : `<p class="sm-empty">The apps and files you open will show up here.</p>`;
@@ -221,6 +223,22 @@
     $("[data-store]", S).onclick = () => { closeFlyouts(); NX.open("store"); };
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     const si = $(".sm-search input", S); si.oninput = () => { startDraw(si.value); const n = $(".sm-search input"); n.focus(); };
+  }
+  // Settings pages and files that match a Start search (files are looked up in your main folders)
+  let searchGen = 0;
+  async function startExtras(q, S) {
+    const gen = ++searchGen, ql = q.toLowerCase(), box = $(".sm-results", S); if (!box) return;
+    const web = box.querySelector("[data-web]");
+    const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql))).slice(0, 3);
+    if (pages.length) { web.insertAdjacentHTML("beforebegin", `<h4 class="sm-sub">Settings</h4>` + pages.map((pg) => `<button class="sm-res" data-spage="${pg.id}">${NX.icon(pg.icon, 28)}<span><b>${NX.esc(pg.name)}</b><small>Settings</small></span></button>`).join(""));
+      box.querySelectorAll("[data-spage]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open("settings", { page: b.dataset.spage }); })); }
+    if (!NX.fs || ql.length < 2) return;
+    let found = [];
+    try { const pl = await NX.fs.places(); for (const f of pl.folders) { const r = await NX.fs.list(f.path).catch(() => null); if (r) found.push(...r.entries.filter((e) => e.name.toLowerCase().includes(ql)).map((e) => Object.assign({ where: f.name }, e))); if (found.length > 12) break; } } catch (e) { return; }
+    if (gen !== searchGen || !found.length || !document.body.contains(web)) return;
+    found = found.slice(0, 5); const FI = { folder: "folder", image: "fimage", video: "fvideo", audio: "faudio", text: "ftext", pdf: "fpdf" };
+    web.insertAdjacentHTML("beforebegin", `<h4 class="sm-sub">Files</h4>` + found.map((e, i) => `<button class="sm-res" data-sfile="${i}">${NX.icon(FI[e.kind] || "file", 28)}<span><b>${NX.esc(e.name)}</b><small>${NX.esc(e.where)}</small></span></button>`).join(""));
+    box.querySelectorAll("[data-sfile]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.openFile(found[+b.dataset.sfile]); }));
   }
   function toggleStart(focus) { if (NX.browserHide) NX.browserHide(); const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
   function qsDraw() {

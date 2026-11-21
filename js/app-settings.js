@@ -4,6 +4,7 @@
 (function () {
   const ACCENTS = ["#7c5cff", "#ff4fa3", "#22c3ee", "#34d399", "#f5a524", "#ef4444", "#3b82f6", "#a855f7"];
   const PAGES = [
+    { id: "home", name: "Home", icon: "home" },
     { id: "system", name: "System", icon: "display" },
     { id: "devices", name: "Bluetooth & devices", icon: "bt" },
     { id: "network", name: "Network & internet", icon: "wifi" },
@@ -11,29 +12,57 @@
     { id: "apps", name: "Apps", icon: "apps" },
     { id: "accounts", name: "Accounts", icon: "user" },
     { id: "time", name: "Time & language", icon: "time" },
-    { id: "about", name: "About", icon: "info" },
+    { id: "access", name: "Accessibility", icon: "access" },
+    { id: "privacy", name: "Privacy & security", icon: "shield" },
+    { id: "update", name: "Nebulux Update", icon: "restart" },
+    { id: "about", name: "About", icon: "info", under: "system" },
   ];
+  NX.settingsPages = PAGES;
+  NX.settingsWords = { system: "display brightness night light screen tv hdmi sound volume speakers", devices: "bluetooth mouse pointer speed headphones keyboard", network: "wifi wi-fi internet airplane network", personal: "background wallpaper dark light mode color accent taskbar transparency", apps: "uninstall installed apps", accounts: "password name account user", time: "clock 24-hour time zone language", access: "accessibility animations scrollbars", privacy: "privacy weather location recent files", update: "update version", about: "about pc kernel memory processor specifications" };
+  // a row that goes to another page, with an arrow (like Windows 11)
+  const link = (icon, title, sub, to) => `<button class="s-row s-link" data-p="${to}">${icon ? `<span class="s-ri">${NX.icon(icon, 20)}</span>` : ""}<span class="s-rt"><b>${title}</b>${sub ? `<small>${sub}</small>` : ""}</span><span class="s-rc">${NX.icon("chevron", 14)}</span></button>`;
   const row = (icon, title, sub, ctrl) => `<div class="s-row">${icon ? `<span class="s-ri">${NX.icon(icon, 20)}</span>` : ""}<div class="s-rt"><b>${title}</b>${sub ? `<small>${sub}</small>` : ""}</div><div class="s-rc">${ctrl || ""}</div></div>`;
   const toggle = (key, on) => `<label class="tg"><input type="checkbox" data-pref="${key}" ${on ? "checked" : ""}><i></i><span>${on ? "On" : "Off"}</span></label>`;
   const slider = (key, v, min, max) => `<input type="range" class="sl" data-pref="${key}" min="${min}" max="${max}" value="${v}">`;
 
   NX.apps.settings = { name: "Settings", icon: "settings", builtIn: true, w: 980, h: 640, minW: 420, minH: 360, desc: "Change how Nebulux OS looks and works.",
     open(body, win, opts) {
-      let page = opts.page || "system", q = "";
+      let page = opts.page || "home", q = "";
       body.classList.add("settings");
       const draw = () => {
         const p = NX.prefs(), me = NX.me;
-        const nav = PAGES.filter((x) => !q || x.name.toLowerCase().includes(q)).map((x) => `<button class="s-nav ${x.id === page ? "on" : ""}" data-p="${x.id}">${NX.icon(x.icon, 18)}<span>${x.name}</span></button>`).join("");
+        const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}">${NX.icon(x.icon, 18)}<span>${x.name}</span></button>`).join("");
         body.innerHTML = `<aside class="s-side"><div class="s-me" data-p="accounts"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span><b>${NX.esc(me.name)}</b><small>Local account</small></span></div>
           <label class="s-search">${NX.icon("search", 16)}<input placeholder="Find a setting" value="${NX.esc(q)}" aria-label="Find a setting"></label><nav>${nav || `<p class="s-none">No settings match.</p>`}</nav></aside>
-          <section class="s-main"><h1>${PAGES.find((x) => x.id === page).name}</h1>${pageHTML(page, p, me)}</section>`;
+          <section class="s-main"><h1>${(() => { const pg = PAGES.find((x) => x.id === page); return pg.under ? `<button class="s-crumb" data-p="${pg.under}">${PAGES.find((x) => x.id === pg.under).name}</button><span class="s-crumbsep">${NX.icon("chevron", 14)}</span>${pg.name}` : pg.name; })()}</h1>${pageHTML(page, p, me)}</section>`;
         wire();
       };
       function pageHTML(pg, p, me) {
+        if (pg === "home") {
+          const net = NX.online(), bt = p.bt && !p.airplane;
+          return `<div class="s-homegrid">
+            <button class="s-hcard s-hme" data-p="accounts"><span class="av big" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span><b>${NX.esc(me.name)}</b><small>Local account</small><em>Manage your account ${NX.icon("chevron", 11)}</em></span></button>
+            <button class="s-hcard s-hpc" data-p="about"><img src="${NX.wallpaperURL(p.wallpaper)}" alt=""><span><b>Nebulux PC</b><small>Nebulux OS 3.0</small><em>About this PC ${NX.icon("chevron", 11)}</em></span></button>
+            <button class="s-hcard" data-p="network"><span class="s-hic">${NX.icon(net ? "wifi" : "wifioff", 24)}</span><span><b>${net ? "Connected" : "Not connected"}</b><small>Network & internet</small></span></button>
+            <button class="s-hcard" data-p="devices"><span class="s-hic">${NX.icon("bt", 24)}</span><span><b>Bluetooth ${bt ? "on" : "off"}</b><small>Bluetooth & devices</small></span></button>
+          </div>
+          <h3>Recommended settings</h3>${link("sun", "Display", "Brightness, night light, screens and TV", "system")}${link("volume", "Sound", "Volume, and where sound plays", "system")}${link("brush", "Background", "Wallpapers, colors and dark or light", "personal")}${link("mouse", "Mouse", "Pointer speed", "devices")}${link("access", "Accessibility", "Animations and how things look", "access")}
+          <h3>Personalize your device</h3><div class="s-walls s-hwalls">${NX.wallpapers.map((w, i) => `<button class="s-wall ${i === p.wallpaper ? "on" : ""}" data-wall="${i}" title="${w.name}" aria-label="${w.name}"><img src="${NX.wallpaperURL(i)}" alt=""></button>`).join("")}</div>
+          ${row("contrast", "Choose your mode", "Dark or light windows and menus", `<div class="seg"><button data-theme="dark" class="${p.theme === "dark" ? "on" : ""}">Dark</button><button data-theme="light" class="${p.theme === "light" ? "on" : ""}">Light</button></div>`)}`;
+        }
+        if (pg === "access") return `<h3>Vision</h3>${row("contrast", "Transparency effects", "See-through, frosted windows and taskbar", toggle("transparency", NX.fx()))}${row("time", "Animation effects", "Windows, menus and pop-ups glide in and out", toggle("anim", p.anim !== false))}${row("eye", "Always show scrollbars", "Thicker scroll bars that are easier to grab", toggle("bigscroll", !!p.bigscroll))}
+          <h3>Interaction</h3>${link("mouse", "Mouse", "Pointer speed", "devices")}${row("bell", "Do not disturb", "Notifications wait quietly in the notification center", toggle("dnd", !!p.dnd))}`;
+        if (pg === "privacy") { const rf = NX.data("recent-files", []).length;
+          return `<div class="s-card"><p class="s-note">Nebulux OS keeps your accounts, passwords, files and settings on this computer (and its USB). It doesn't send anything about you to Nebulux.</p></div>
+          <h3>App permissions</h3>${row("globe", "Weather where you are", "Widgets sends only the city you type to the weather service (Open-Meteo)", toggle("location", p.location !== false))}
+          <h3>Activity</h3>${row("files", "Show recently opened files", "In Start, Widgets and File Explorer", toggle("showrecent", p.showrecent !== false))}${row("trash", "Clear recently opened files", rf ? rf + " files are listed" : "Nothing is listed", `<button class="btn" id="s-clearrecent" ${rf ? "" : "disabled"}>Clear</button>`)}${row("bell", "Tips", "Tips and shortcuts in Widgets", toggle("tips", p.tips !== false))}`; }
+        if (pg === "update") return `<div class="s-upd">${NX.icon("logo", 64)}<div><b>You're on Nebulux OS 3.0</b><small>New versions come as a new .iso file in the Nebulux OS repo's Releases on GitHub.</small></div></div>
+          <h3>How to update</h3><div class="s-card"><p class="s-note">1. Download the newest Nebulux-OS-X.Y.iso from Releases.<br>2. Write it to your USB with Rufus, like the first time.<br>3. Start the computer from the USB.</p><p class="s-note">Your files and settings are kept on the USB's persistent space when Rufus keeps it, but back up important files first.</p></div>`;
         if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 3.0</small></div></div>
           <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}
           ${screensHTML()}
-          <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}`;
+          <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}
+          <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
           <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}`;
         if (pg === "devices") return devicesMouse(p) + `<h3>Bluetooth</h3>${NX.native ? nativeBt(p) : `${row("bt", "Bluetooth", p.airplane ? "Airplane mode is on" : p.bt ? (navigator.bluetooth ? "On. Add a device to connect it." : "This browser can't reach Bluetooth devices. Try Edge or Chrome on a computer.") : "Off", toggle("bt", p.bt && !p.airplane))}
@@ -175,6 +204,7 @@
       }
       function wire() {
         if (NX.native) wireHW();
+        const cr = body.querySelector("#s-clearrecent"); if (cr) cr.onclick = () => { NX.setData("recent-files", []); NX.toast("Recently opened files cleared."); draw(); };
         body.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { page = b.dataset.p; draw(); body.querySelector(".s-main").scrollTop = 0; }));
         const si = body.querySelector(".s-search input"); si.oninput = () => { q = si.value.trim().toLowerCase(); const pos = si.selectionStart; draw(); const n = body.querySelector(".s-search input"); n.focus(); n.setSelectionRange(pos, pos); };
         body.querySelectorAll("[data-pref]").forEach((inp) => {

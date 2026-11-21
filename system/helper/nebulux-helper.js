@@ -170,6 +170,9 @@ const api = {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);
       const lines = tree.out.split("\n").filter((l) => /0x[0-9a-f]+/.test(l)).slice(0, 40).map((l) => "NEBULUX-X " + l.trim()).join("\n");
       fs.appendFile("/dev/ttyS0", lines + "\nNEBULUX-X mouse " + mouse.out.replace(/\n/g, " ") + " active=" + act.out.trim() + "\n", () => {});
+      // how long start-up took, and its slowest parts (to make it faster)
+      const t = await run("systemd-analyze", ["time"], 8000), bl = await run("systemd-analyze", ["blame", "--no-pager"], 8000);
+      fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT " + t.out.replace(/\n/g, " ") + "\n" + bl.out.split("\n").slice(0, 15).map((l) => "NEBULUX-BOOT " + l.trim()).join("\n") + "\nNEBULUX-BOOT page-ready-after " + Math.round(os.uptime()) + "s\n", () => {});
     }
     return { ok: true };
   },

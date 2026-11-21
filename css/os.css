@@ -576,3 +576,23 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus
 .st-hero-tiles{display:grid;grid-template-columns:repeat(3,64px);gap:12px;transform:rotate(-8deg);filter:drop-shadow(0 10px 24px #0006)}
 @container (max-width:640px){.st-hero-tiles{display:none}}
 .win[data-app=store] .win-body{container-type:inline-size}
+
+/* Settings like Windows 11: Home cards, rows with arrows, the path in the title */
+.s-homegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:8px}
+.s-hcard{display:flex;align-items:center;gap:14px;padding:16px;border-radius:10px;background:var(--card);border:1px solid var(--line);text-align:left;min-height:84px}
+.s-hcard:hover{background:var(--card2)}.s-hcard>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.s-hcard b{font-size:15px;font-weight:600}.s-hcard small{color:var(--sub);font-size:12.5px}.s-hcard em{font-style:normal;color:var(--accent);font-size:12.5px;display:inline-flex;align-items:center;gap:4px;margin-top:4px}
+.s-hcard .av.big{width:56px;height:56px;font-size:24px;flex:none}
+.s-hpc img{width:84px;height:52px;border-radius:6px;object-fit:cover;flex:none}
+.s-hic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--card2);flex:none;color:var(--accent)}
+button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-link:hover{background:var(--card2)}
+.s-hwalls{grid-template-columns:repeat(6,1fr)}.s-hwalls .s-wall img{aspect-ratio:16/10}
+.s-crumb{font:inherit;color:var(--sub);padding:0 2px;border-radius:4px}.s-crumb:hover{color:var(--txt)}.s-crumbsep{display:inline-flex;margin:0 8px;color:var(--sub);vertical-align:middle}
+.s-upd{display:flex;align-items:center;gap:18px;padding:18px;border-radius:10px;background:var(--card);border:1px solid var(--line);margin-bottom:6px}.s-upd div{display:flex;flex-direction:column;gap:4px}.s-upd b{font-size:18px;font-weight:600}.s-upd small{color:var(--sub)}
+@container (max-width:640px){.s-hwalls{grid-template-columns:repeat(3,1fr)}}
+/* Accessibility: no animations; easier scroll bars */
+.noanim *,.noanim *::before,.noanim *::after{animation:none!important;transition:none!important}
+.bigscroll *{scrollbar-width:auto!important}
+#tb-widgets:focus:not(:focus-visible),#tb-widgets:focus{outline:none}
+
+.sm-sub{margin:12px 0 4px;font-size:12px;color:var(--sub);font-weight:600}
