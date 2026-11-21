@@ -10,5 +10,12 @@
   "PromptForDownloadLocation": false,
   "DownloadDirectory": "/home/nebulux/Downloads",
   "AutofillCreditCardEnabled": false,
-  "URLBlocklist": ["file://*", "chrome://settings", "chrome://extensions", "chrome://flags"]
+  "URLBlocklist": [
+    "file://*",
+    "chrome://settings",
+    "chrome://extensions",
+    "chrome://flags"
+  ],
+  "PasswordManagerEnabled": false,
+  "PasswordLeakDetectionEnabled": false
 }

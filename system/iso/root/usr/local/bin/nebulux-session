@@ -8,9 +8,9 @@ pkill -u "$(id -u)" -f nebulux-helper.js 2>/dev/null
 node /opt/nebulux/helper/nebulux-helper.js /opt/nebulux/www >"$HOME/.nebulux-helper.log" 2>&1 &
 for _ in $(seq 1 150); do (echo >/dev/tcp/127.0.0.1/7777) 2>/dev/null && break; sleep 0.1; done
 
-# big screens get bigger text, like display scaling
-W=$(xrandr 2>/dev/null | awk '/\*/{split($1,a,"x"); print a[1]; exit}')
-SCALE=1; [ "${W:-0}" -ge 2500 ] && SCALE=1.5; [ "${W:-0}" -ge 3400 ] && SCALE=2
+# the whole screen: there is no window manager, so the browser is told the screen size itself
+read -r W H < <(xrandr 2>/dev/null | awk '/\*/{split($1,a,"x"); print a[1], a[2]; exit}')
+[ -n "$W" ] || { W=1280; H=800; }
 
 # never show "restore pages?" after the power was cut
 P="$HOME/.config/nebulux-browser"
@@ -18,8 +18,8 @@ sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"
 mkdir -p "$HOME/Downloads"
 
 exec chromium --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
-  --disable-session-crashed-bubble --disable-features=Translate,DisableLoadExtensionCommandLineSwitch,MediaRouter \
+  --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter \
   --password-store=basic --user-data-dir="$P" --load-extension=/opt/nebulux/ext \
-  --force-device-scale-factor="$SCALE" --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
+  --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
   --autoplay-policy=no-user-gesture-required \
   "http://127.0.0.1:7777/"

@@ -34,8 +34,19 @@ def looks_like_os(w, h, rgb):
     # the lock screen is about 0.73 purple and 0.8 bright; the boot menu picture is only 0.36 bright, plain dark 0
     return total and purple / total > 0.35 and bright / total > 0.5
 
+def fills_screen(w, h, rgb):
+    # the right-most columns show the desktop, not the plain screen color behind it (#0b0620, set by the session)
+    bare = 0
+    for y in range(0, h, 4):
+        for x in range(w - 6, w):
+            r, g, b = rgb[(y * w + x) * 3:(y * w + x) * 3 + 3]
+            if abs(r - 11) <= 3 and abs(g - 6) <= 3 and abs(b - 32) <= 3: bare += 1
+    return bare < 0.3 * (h // 4) * 6
+
 if __name__ == "__main__":
     try:
+        if sys.argv[1] == "--full":
+            w, h, rgb = read_ppm(sys.argv[2]); sys.exit(0 if fills_screen(w, h, rgb) else 1)
         if sys.argv[1] == "--check":
             w, h, rgb = read_ppm(sys.argv[2]); sys.exit(0 if looks_like_os(w, h, rgb) else 1)
         w, h, rgb = read_ppm(sys.argv[1]); write_png(sys.argv[2], w, h, rgb)

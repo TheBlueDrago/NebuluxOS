@@ -34,6 +34,7 @@ boot() { # BIOS or UEFI
   sleep 4; shot 3-lock
   keys spc; sleep 2
   typeword "Ada"; keys tab; typeword "nebula1"; keys tab; typeword "nebula1"; keys ret; sleep 6; shot 4-desktop
+  if python3 "$(dirname "$0")/ppm2png.py" --full /tmp/nx.ppm; then echo "ok   ($MODE): Nebulux OS fills the whole screen"; else echo "FAIL ($MODE): Nebulux OS doesn't fill the screen"; FAILS=$((FAILS + 1)); fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 15; shot 5-google
   keys meta_l; sleep 2; typeword "settings"; sleep 1; keys ret; sleep 6; shot 6-settings
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1
