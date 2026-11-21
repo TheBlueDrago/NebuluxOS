@@ -139,10 +139,10 @@ module.exports = function more({ api, run, FAKE }) {
       let a = m[1] ? +m[1] : st.size - +m[2], z = m[1] && m[2] ? Math.min(+m[2], st.size - 1) : st.size - 1; if (!m[1]) z = st.size - 1;
       if (a < 0 || a >= st.size || z < a) { res.writeHead(416, { "Content-Range": "bytes */" + st.size }); return res.end(); }
       res.writeHead(206, Object.assign(h, { "Content-Range": `bytes ${a}-${z}/${st.size}`, "Content-Length": z - a + 1 }));
-      return fs.createReadStream(p, { start: a, end: z }).pipe(res);
+      return fs.createReadStream(p, { start: a, end: z }).on("error", () => res.destroy()).pipe(res);
     }
     res.writeHead(200, Object.assign(h, { "Content-Length": st.size })); if (req.method === "HEAD") return res.end();
-    fs.createReadStream(p).pipe(res);
+    fs.createReadStream(p).on("error", () => res.destroy()).pipe(res);
   }
   // saving a picture (Paint, screenshots) or any file the OS makes: POST /api/files/upload?dir=..&name=.. with the bytes
   function upload(req, res, url, send) {

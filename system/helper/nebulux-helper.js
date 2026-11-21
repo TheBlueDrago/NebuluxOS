@@ -248,4 +248,7 @@ const server = http.createServer((req, res) => {
   });
 });
 server.on("error", (e) => { console.error("Nebulux helper:", e.message); process.exit(1); });
+// never go down over one bad request: log it and keep serving (Wi-Fi, files and the rest keep working)
+process.on("uncaughtException", (e) => console.error("Nebulux helper kept going after:", e && e.stack || e));
+process.on("unhandledRejection", (e) => console.error("Nebulux helper kept going after:", e && e.stack || e));
 server.listen(PORT, HOST, () => console.log("Nebulux helper on http://" + HOST + ":" + PORT + " serving " + WWW + (FAKE ? " (made-up devices)" : "")));
