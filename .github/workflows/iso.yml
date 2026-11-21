@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
-      NX_VERSION: "1.0"
+      NX_VERSION: "1.1"
     steps:
       - uses: actions/checkout@v4
 
@@ -58,11 +58,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF_NAME}"; case "$GITHUB_REF" in refs/tags/*) ;; *) TAG="v${NX_VERSION}";; esac
-          SIZE=$(du -h out/nebulux-os.iso | cut -f1); SUM=$(cut -d' ' -f1 out/nebulux-os.iso.sha256)
-          sed -e "s/@SIZE@/$SIZE/" -e "s/@SHA@/$SUM/" -e "s/@VERSION@/$NX_VERSION/" system/iso/release-notes.md > /tmp/notes.md
+          FILE="NebuluxOS-$NX_VERSION.iso"
+          mv out/nebulux-os.iso "out/$FILE"; ( cd out && sha256sum "$FILE" > "$FILE.sha256" )
+          SIZE=$(du -h "out/$FILE" | cut -f1); SUM=$(cut -d' ' -f1 "out/$FILE.sha256")
+          sed -e "s/@FILE@/$FILE/g" -e "s/@SIZE@/$SIZE/" -e "s/@SHA@/$SUM/" -e "s/@VERSION@/$NX_VERSION/" system/iso/release-notes.md > /tmp/notes.md
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" out/nebulux-os.iso out/nebulux-os.iso.sha256 --clobber
+            gh release upload "$TAG" "out/$FILE" "out/$FILE.sha256" --clobber
             gh release edit "$TAG" --notes-file /tmp/notes.md
           else
-            gh release create "$TAG" out/nebulux-os.iso out/nebulux-os.iso.sha256 --title "Nebulux OS $NX_VERSION" --notes-file /tmp/notes.md --target "$GITHUB_SHA"
+            gh release create "$TAG" "out/$FILE" "out/$FILE.sha256" --title "NebuluxOS $NX_VERSION" --latest --notes-file /tmp/notes.md --target "$GITHUB_SHA"
           fi
