@@ -158,6 +158,11 @@ const api = {
     }
     return { present: false };
   },
+  async "POST /diag"(b) {
+    const line = "NEBULUX-DIAG " + ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ") + "\n";
+    if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
+    return { ok: true };
+  },
   async "GET /fake"() { if (!FAKE) throw new Error("Not found"); return fake; },
   async "POST /fake/reset"() { if (!FAKE) throw new Error("Not found"); fake = fakeStart(); return { ok: true }; },
 };

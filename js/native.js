@@ -68,7 +68,10 @@
     } catch (e) { /* the system will answer next time */ } finally { watching = false; }
   }
   setInterval(watch, 3000);
-  document.addEventListener("nx:signin", () => { lastExt = null; knownDrives = null; watch(); });
+  document.addEventListener("nx:signin", () => { lastExt = null; knownDrives = null; watch();
+    setTimeout(() => NX.api("POST", "/diag", { ext: document.documentElement.hasAttribute("data-nxext"), w: innerWidth, h: innerHeight }).catch(() => {}), 2500);
+    if (!document.documentElement.hasAttribute("data-nxext") && !N.fake) setTimeout(() => { if (!document.documentElement.hasAttribute("data-nxext")) { console.error("Nebulux OS: the web windows extension isn't running"); NX.toast("Web windows aren't fully ready: links that open new tabs may not work. Restart to fix it."); } }, 4000);
+  });
   // settings changes reach the hardware (a short wait so dragging a slider doesn't flood the system)
   const later = {}; const soon = (k, fn) => { clearTimeout(later[k]); later[k] = setTimeout(fn, 120); };
   let syncing = false;

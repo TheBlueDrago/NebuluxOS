@@ -5,6 +5,10 @@ xset s off -dpms s noblank 2>/dev/null
 xsetroot -solid "#0b0620" 2>/dev/null
 mkdir -p "$HOME/Downloads"
 P="$HOME/.config/nebulux-browser"
+# The web-windows extension goes in a folder the browser engine can write to: it keeps an index of its rules next to
+# them, and /opt/nebulux is part of the read-only system (it silently didn't load from there in 1.1 and 1.2).
+EXT="$HOME/.local/share/nebulux-ext"
+rm -rf "$EXT"; mkdir -p "$(dirname "$EXT")"; cp -r /opt/nebulux/ext "$EXT"
 
 # the system helper (Wi-Fi, Bluetooth, files, screens, sound, power) on 127.0.0.1:7777
 helper_up() { (echo >/dev/tcp/127.0.0.1/7777) 2>/dev/null; }
@@ -31,7 +35,7 @@ while true; do
   START=$(date +%s)
   chromium --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
     --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter \
-    --password-store=basic --user-data-dir="$P" --load-extension=/opt/nebulux/ext $GPU \
+    --password-store=basic --user-data-dir="$P" --load-extension="$EXT" $GPU \
     --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
     --autoplay-policy=no-user-gesture-required \
     "http://127.0.0.1:7777/" >"$HOME/.nebulux-browser.log" 2>&1 &
