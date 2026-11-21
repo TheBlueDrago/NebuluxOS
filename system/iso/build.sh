@@ -90,7 +90,7 @@ for s in /usr/lib/live/build/binary_grub_cfg /usr/share/live/build/scripts/build
     -e 's/"Live system (${_FLAVOUR} fail-safe mode)"/"Nebulux OS (safe mode)"/g' -e 's/"Live system (${_FLAVOUR})"/"Nebulux OS"/g' \
     -e 's/Live system, kernel/Nebulux OS, kernel/g' "$s" && echo "menu names set in $s"
 done
-grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/syslinux_common config/bootloaders/grub-pc/config.cfg 2>/dev/null | grep -v stdmenu | head -12
+grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/syslinux_common config/bootloaders/grub-pc/config.cfg 2>/dev/null | grep -v stdmenu | head -12 || true
 # scripts made on Windows lose their "can run" mark
 chmod 644 config/includes.chroot/etc/systemd/system/nebulux-screen.service config/includes.chroot/etc/nebulux/openbox.xml
 chmod 755 config/includes.chroot/usr/local/bin/nebulux-key config/includes.chroot/usr/local/bin/nebulux-session config/includes.chroot/etc/X11/xinit/xinitrc config/includes.chroot/etc/skel/.xinitrc config/hooks/normal/9000-nebulux.hook.chroot
