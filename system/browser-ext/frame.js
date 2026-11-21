@@ -29,7 +29,7 @@
     if (e.key === "Meta" || e.key === "OS") { winAlone = true; return; }
     if (e.metaKey) winAlone = false;
     const arrows = { ArrowLeft: "snap-left", ArrowRight: "snap-right", ArrowUp: "snap-max", ArrowDown: "snap-down" };
-    const key = e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key)) ? "shot" : e.metaKey && /^[edl]$/i.test(e.key) ? { e: "files", d: "desk", l: "lock" }[e.key.toLowerCase()] : e.metaKey && arrows[e.key] ? arrows[e.key] : e.ctrlKey && e.shiftKey && e.key === "Escape" ? "tm" : null;
+    const key = e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key)) ? "shot" : e.metaKey && e.key === "Tab" ? "tview" : e.metaKey && /^[edlw]$/i.test(e.key) ? { e: "files", d: "desk", l: "lock", w: "widgets" }[e.key.toLowerCase()] : e.metaKey && arrows[e.key] ? arrows[e.key] : e.ctrlKey && e.shiftKey && e.key === "Escape" ? "tm" : null;
     if (key) { e.preventDefault(); toOS({ nx: "key", key }); }
   }, true);
   addEventListener("keyup", (e) => { if ((e.key === "Meta" || e.key === "OS") && winAlone) toOS({ nx: "key", key: "start" }); if (e.key === "Meta" || e.key === "OS") winAlone = false; }, true);

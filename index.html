@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+<style>html,body{background:#0b0620;margin:0}</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0620">
 <title>Nebulux OS</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='11' fill='%237c5cff'/%3E%3Cellipse cx='24' cy='24' rx='20' ry='7.5' fill='none' stroke='%23ff6fd8' stroke-width='3' transform='rotate(-24 24 24)'/%3E%3C/svg%3E">
+<link rel="icon" href="img/nebulux-64.png">
 <link rel="stylesheet" href="css/os.css">
 </head>
 <body>
-<div id="boot" hidden><div class="boot-logo"><svg viewBox="0 0 48 48" width="96" height="96" aria-hidden="true"><defs><linearGradient id="bl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6fd8"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><circle cx="24" cy="24" r="11" fill="url(#bl)"/><ellipse cx="24" cy="24" rx="20" ry="7.5" fill="none" stroke="url(#bl)" stroke-width="3" transform="rotate(-24 24 24)"/><circle cx="41" cy="15" r="3" fill="#fde68a"/></svg><b>Nebulux OS</b></div><span class="spin"></span></div>
+<div id="boot" hidden><div class="boot-logo"><img src="img/nebulux-256.png" alt="" width="112" height="112"><b>Nebulux OS</b></div><span class="spin"></span></div>
 
 <div id="lock" hidden class="locked">
   <div class="lk-bg"></div>
@@ -27,10 +28,15 @@
   <div id="start" class="flyout" hidden></div>
   <div id="qs" class="flyout" hidden></div>
   <div id="cal" class="flyout" hidden></div>
+  <div id="widgets" class="flyout" hidden></div>
+  <div id="snapfly" hidden></div>
+  <div id="taskview" hidden></div>
   <nav id="taskbar" aria-label="Taskbar">
+    <button id="tb-widgets" class="tb-pill tb-widgets" aria-label="Widgets" title="Widgets"></button>
     <div class="tb-center">
-      <button id="tb-start" class="tb-btn" aria-label="Start" title="Start"><svg viewBox="0 0 48 48" width="26" height="26" aria-hidden="true"><defs><linearGradient id="sl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6fd8"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><circle cx="24" cy="24" r="11" fill="url(#sl)"/><ellipse cx="24" cy="24" rx="20" ry="7.5" fill="none" stroke="url(#sl)" stroke-width="3.5" transform="rotate(-24 24 24)"/><circle cx="41" cy="15" r="3" fill="#fde68a"/></svg></button>
-      <button id="tb-search" class="tb-btn" aria-label="Search" title="Search"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><circle cx="21" cy="21" r="10" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M29 29l9 9" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></button>
+      <button id="tb-start" class="tb-btn" aria-label="Start" title="Start"><img class="tb-neb" src="img/nebulux-64.png" alt="" width="26" height="26"></button>
+      <button id="tb-search" class="tb-btn tb-searchbox" aria-label="Search" title="Search"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><circle cx="21" cy="21" r="10" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M29 29l9 9" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg><span>Search</span></button>
+      <button id="tb-tview" class="tb-btn" aria-label="Task view" title="Task view"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><rect x="7" y="11" width="22" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M34 15h4a3 3 0 013 3v15a3 3 0 01-3 3H19a3 3 0 01-3-3v-2" fill="none" stroke="currentColor" stroke-width="3"/></svg></button>
       <div id="tb-apps"></div>
     </div>
     <div class="tb-right">
@@ -60,5 +66,6 @@
 <script src="js/app-files.js"></script>
 <script src="js/app-taskmgr.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/win11.js"></script>
 </body>
 </html>

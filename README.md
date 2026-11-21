@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 1.3**.
-3. Under **Assets**, click **`Nebulux-OS-1.3.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 1.4**.
+3. Under **Assets**, click **`Nebulux-OS-1.4.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-1.3.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-1.4.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-1.3.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-1.4.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -55,7 +55,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 
    **From Windows:** click Start → Power, **hold Shift** and click **Restart**. Then choose **Use a device** → your USB.
 3. Pick your USB from the list. It may say "UEFI: SanDisk".
-4. The **Nebulux OS** menu shows for a moment, then Nebulux OS starts and opens its lock screen by itself. There's no text login to get through: the lock screen is where you sign in.
+4. Nebulux OS starts by itself: no menu to pick from and no text login. You see the Nebulux logo with a spinner, then the sign-in screen with the password box ready.
 5. The first time, make your account (name and password). Next time, sign in with it.
 
 **To go back to Windows:** use Start → Power → **Shut down**, take the USB out, and turn the computer on. Windows starts like always.
@@ -69,14 +69,14 @@ QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
 Then start Nebulux OS like this (all on one line):
 
 ```powershell
-& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-1.3.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-1.4.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
 ```
 
 ### If it doesn't start
 
 - **It goes straight to Windows.** You didn't hit the boot menu key in time: restart and tap it as soon as the screen turns on. Or use the Shift + Restart way above.
 - **"Secure Boot violation" or a red warning.** Nebulux OS supports Secure Boot, but some computers still refuse. Turn **Secure Boot** off in the computer's setup screen: usually **F2**, **Del** or **F10** at power-on, under Boot or Security. You can turn it back on afterwards.
-- **Only a blinking line or a black screen for more than 2 minutes.** Restart, and in the Nebulux OS menu choose **Nebulux OS (safe mode)**.
+- **Only a blinking line or a black screen for more than 2 minutes.** Restart once more. If it still happens, note the computer's brand and model, which helps find the cause.
 - **Mac computers.** Hold **Option (⌥)** at power-on and choose "EFI Boot". Macs with Apple chips (M1 and newer) can't start other systems from USB.
 
 ---
@@ -111,6 +111,14 @@ Then start Nebulux OS like this (all on one line):
 - **Media Player:** plays music and videos (MP4, WebM, MP3, WAV, OGG, M4A, FLAC).
 - **Snipping Tool:** take a screenshot, with an optional timer. You can also press **Windows + Shift + S** or **Print Screen** any time. Screenshots go in Pictures > Screenshots.
 - **Notepad** opens and saves real text files (Open, Save to Documents). **Paint** saves into Pictures.
+- **Windows 11 look and feel:**
+  - The taskbar has Widgets on the left (the weather where you are), Start, a Search box and Task View.
+  - **Task View** (the button, or Windows + Tab) shows all your open windows.
+  - **Snap layouts:** hover over a window's maximize button and pick where it goes: halves, two-thirds, or quarters.
+  - **Start** has Pinned, **All apps** (A to Z) and **Recommended**, with the files you opened recently.
+  - **Widgets** (Windows + W): the weather for your city with the next three days, the date, and recent files. The weather comes from Open-Meteo, a free service.
+  - **The desktop** shows the files in your Desktop folder. Right-click it for New folder and New text document.
+- **The Nebulux logo** is the Nebulux nebula, on the Start button, the start-up screen and the sign-in screen.
 - **Keyboard shortcuts** (they work even while a website has the keyboard):
 
   | Keys | What it does |
@@ -121,6 +129,8 @@ Then start Nebulux OS like this (all on one line):
   | Windows + Left / Right | Snap the window to half the screen |
   | Windows + Up / Down | Maximize, or restore and minimize |
   | Windows + L | Lock (your apps stay open) |
+  | Windows + Tab | Task View |
+  | Windows + W | Widgets |
   | Windows + E | File Explorer |
   | Windows + Shift + S, or Print Screen | Screenshot |
   | Ctrl + Shift + Esc | Task Manager |

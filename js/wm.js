@@ -47,6 +47,13 @@
     if (!w.snap) { w.rw = w.w; w.rh = w.h; }
     w.snap = where; w.x = where === "left" ? 0 : Math.round(A.w / 2); w.y = 0; w.w = Math.round(A.w / 2); w.h = A.h; place(w); w.onresize && w.onresize();
   };
+  // snap layouts: a window takes a part of the screen, given as fractions (x, y, width, height)
+  NX.snapRect = (id, fx, fy, fw, fh) => {
+    const w = wins.get(id); if (!w) return; const A = area();
+    if (w.max) { w.max = false; w.el.classList.remove("maxed"); w.el.querySelector(".wb-max").innerHTML = NX.icon("max", 16); }
+    if (!w.snap) { w.rw = w.w; w.rh = w.h; }
+    w.snap = "zone"; w.x = Math.round(A.w * fx); w.y = Math.round(A.h * fy); w.w = Math.round(A.w * fw); w.h = Math.round(A.h * fh); place(w); NX.focus(id); w.onresize && w.onresize();
+  };
   // Windows + D: everything out of the way, and back again
   let hidden = null;
   NX.showDesktop = () => {
@@ -121,5 +128,5 @@
     return w;
   };
   // keep windows on screen when the screen changes size
-  addEventListener("resize", () => { if (!desk) return; for (const w of wins.values()) { if (!w.max && !w.snap) fit(w); else if (w.snap) { const A = area(); w.x = w.snap === "left" ? 0 : Math.round(A.w / 2); w.w = Math.round(A.w / 2); w.h = A.h; } place(w); w.onresize && w.onresize(); } });
+  addEventListener("resize", () => { if (!desk) return; for (const w of wins.values()) { if (!w.max && !w.snap) fit(w); else if (w.snap === "left" || w.snap === "right") { const A = area(); w.x = w.snap === "left" ? 0 : Math.round(A.w / 2); w.w = Math.round(A.w / 2); w.h = A.h; } else fit(w); place(w); w.onresize && w.onresize(); } });
 })();

@@ -149,6 +149,35 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !document.querySelector("#desktop").hidden && !!NX.wins.get("taskmgr")), "unlocking brings you back to them");
   await p.evaluate(() => NX.close("taskmgr")); await wait(200);
 
+  // ---------- 1.4: Windows 11 touches ----------
+  ok(await p.evaluate(() => !!document.querySelector("#tb-start img.tb-neb") && /nebulux-64\.png/.test(document.querySelector("#tb-start img").src)), "the Start button is the Nebulux nebula");
+  const narrow = W < 560;
+  ok(await p.evaluate((narrow) => narrow ? !!document.querySelector("#tb-search") : /Search/.test(document.querySelector("#tb-search").innerText) && !!document.querySelector("#tb-tview").offsetWidth && !!document.querySelector("#tb-widgets").offsetWidth, narrow), narrow ? "the taskbar has Search (Task View and Widgets are on the keyboard on a phone)" : "the taskbar has a Search box, Task View and Widgets");
+  await p.click("#tb-start"); await wait(300); await p.click("#start [data-allapps]"); await wait(250);
+  ok(await p.evaluate(() => /All apps/.test(document.querySelector("#start").innerText) && document.querySelectorAll("#start .sm-letter").length >= 5), "Start has All apps, A to Z");
+  await p.click("#start [data-back]"); await wait(200);
+  ok(await p.evaluate(() => /Groceries\.txt/.test(document.querySelector("#start .sm-rec").innerText)), "Recommended shows files you opened recently");
+  await p.keyboard.press("Escape"); await wait(200);
+  await p.evaluate(() => { NX.open("notepad"); NX.open("calculator"); }); await wait(400);
+  if (narrow) { await winKey("Tab"); await wait(200); } else { await p.click("#tb-tview"); await wait(300); }
+  ok(await p.evaluate(() => !document.querySelector("#taskview").hidden && document.querySelectorAll("#taskview .tv-card").length === NX.wins.size), "Task View shows every open window");
+  await shot("taskview");
+  await p.evaluate(() => [...document.querySelectorAll("#taskview .tv-card")].find((c) => /Notepad/.test(c.innerText)).click()); await wait(250);
+  ok(await p.evaluate(() => document.querySelector("#taskview").hidden && NX.topWin().id === "notepad"), "clicking a window in Task View switches to it");
+  const mx = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wb-max").getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  if (!narrow) { await p.mouse.move(mx.x, mx.y); await wait(900);
+  ok(await p.evaluate(() => !document.querySelector("#snapfly").hidden && document.querySelectorAll("#snapfly .sf-lay").length === 4), "hovering over maximize shows snap layouts");
+  await shot("snaplayouts");
+  await p.evaluate(() => document.querySelectorAll("#snapfly .sf-lay")[3].querySelectorAll(".sf-zone")[3].click()); await wait(250);
+  ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return Math.abs(r.x - A.width / 2) < 3 && Math.abs(r.width - A.width / 2) < 3 && Math.abs(r.height - A.height / 2) < 3; }), "picking a zone snaps the window there (bottom-right quarter)"); }
+  await p.evaluate(() => { NX.close("notepad"); NX.close("calculator"); }); await wait(300);
+  if (narrow) { await winKey("KeyW"); await wait(400); } else { await p.click("#tb-widgets"); await wait(400); }
+  ok(await p.evaluate(() => !document.querySelector("#widgets").hidden && /Weather/.test(document.querySelector("#widgets").innerText) && /Recent files/.test(document.querySelector("#widgets").innerText)), "Widgets opens with the weather and recent files");
+  await p.keyboard.press("Escape"); await wait(200);
+  await p.evaluate(async () => { await NX.fs.create(await NX.folder("Desktop"), "On my desktop.txt", false); NX.filesChanged(); }); await wait(500);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#icons .dicon.dfile")].some((d) => /On my desktop\.txt/.test(d.innerText))), "files in the Desktop folder show on the desktop");
+  await shot("desktop-files");
+
   // everything is still there after signing out and back in
   await p.evaluate(() => NX.shell.signOut()); await wait(600);
   await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter"); await wait(1300);

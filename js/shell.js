@@ -24,12 +24,13 @@
   NX.beep = (f) => { try { const v = NX.prefs().volume / 100; if (!v) return; actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f || 880; o.type = "sine"; g.gain.setValueAtTime(0.0001, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.18 * v, actx.currentTime + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.35); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + 0.4); } catch (e) { /* no sound */ } };
 
   // ---------- look: theme, accent, wallpaper, brightness, night light ----------
+  let lastWall = null;
   function applyLook() {
     const p = NX.prefs(), root = document.documentElement;
     root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent);
     root.classList.toggle("nofx", !NX.fx());
     const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
-    root.style.setProperty("--wall", `url(${wall})`);
+    if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
@@ -41,17 +42,19 @@
   // ---------- boot ----------
   function boot() {
     const b = $("#boot"); b.hidden = false; $("#lock").hidden = true; $("#desktop").hidden = true; $("#off").hidden = true;
+    if (NX.native && !boot.again) { boot.again = true; b.hidden = true; lock(); return; }
     applyLook(); setTimeout(() => { b.classList.add("out"); setTimeout(() => { b.hidden = true; b.classList.remove("out"); lock(); }, 400); }, NX.fast ? 50 : NX.native ? 500 : 1300);
   }
 
   // ---------- lock screen and sign-in ----------
   let lockT = 0, chosen = null, mode = "";
-  function lock() {
-    NX.me = null; applyLook(); const L = $("#lock"); L.hidden = false; L.className = "locked"; $("#desktop").hidden = true;
+  function lock(clockFirst) {
+    NX.me = null; applyLook(); const L = $("#lock"); L.hidden = false; L.className = clockFirst ? "locked" : "signin"; $("#desktop").hidden = true;
     const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); };
     tick(); clearInterval(lockT); lockT = setInterval(tick, 1000);
     const users = NX.users(); chosen = (users.find((u) => u.id === NX.get("lastUser")) || users[0] || null); mode = users.length ? "signin" : "setup";
     signinDraw();
+    if (!clockFirst) setTimeout(() => { const i = $("#lock input"); if (i) i.focus(); }, 60);
   }
   function reveal() { const L = $("#lock"); if (L.className !== "locked") return; L.className = "signin"; setTimeout(() => { const i = $("#lock input"); if (i) i.focus(); }, 260); }
   function signinDraw() {
@@ -100,7 +103,7 @@
   function signOut() { lockedBy = null; closeFlyouts(); NX.closeAll(); setTimeout(lock, 160); }
   // Lock: the lock screen comes up, and your apps stay open behind it
   let lockedBy = null;
-  function lockKeep() { if (!NX.me) return; lockedBy = NX.me.id; closeFlyouts(); lock(); }
+  function lockKeep() { if (!NX.me) return; lockedBy = NX.me.id; closeFlyouts(); lock(true); }
   function power(kind) {
     closeFlyouts(); NX.closeAll(); NX.me = null;
     const o = $("#off"); o.hidden = false; o.innerHTML = `<div class="off-msg">${NX.icon("logo", 56)}<span class="spin"></span><b>${kind === "restart" ? "Restarting" : "Shutting down"}</b></div>`;
@@ -120,7 +123,9 @@
   function icons() {
     if (!NX.me) return; const box = $("#icons"), p = NX.prefs(), list = p.desktop.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id)));
     const rows = Math.max(1, Math.floor((box.clientHeight || innerHeight - 60) / 96));
+    box.dataset.apps = list.length; box.dataset.rows = rows;
     box.innerHTML = list.map((id, i) => `<button class="dicon" data-app="${id}" style="grid-row:${(i % rows) + 1};grid-column:${Math.floor(i / rows) + 1}">${NX.icon(NX.apps[id].icon || id, 40)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("");
+    setTimeout(iconsDone, 0);
     box.querySelectorAll(".dicon").forEach((b) => {
       b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); sel = b.dataset.app; if (e.pointerType === "touch") NX.open(b.dataset.app); };
       b.ondblclick = () => NX.open(b.dataset.app);
@@ -128,8 +133,10 @@
       b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; menu(e.clientX, e.clientY, [["Open", () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ["Remove from desktop", () => NX.setPref("desktop", NX.prefs().desktop.filter((x) => x !== id))], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]); };
     });
   }
+  const iconsDone = () => document.dispatchEvent(new CustomEvent("nx:icons"));
   const pin = (id) => { const p = NX.prefs(); NX.setPref("pinned", p.pinned.includes(id) ? p.pinned.filter((x) => x !== id) : [...p.pinned, id]); };
 
+  // (the Desktop folder's files are added by win11.js when the icons are drawn)
   // ---------- context menu ----------
   function menu(x, y, items) {
     closeFlyouts(); const m = $("#ctx"); m.innerHTML = items.map(([t], i) => `<button data-i="${i}">${NX.esc(t)}</button>`).join(""); m.hidden = false;
@@ -157,15 +164,16 @@
   setInterval(() => { if (NX.me) clock(); }, 5000);
 
   // ---------- flyouts: Start, quick settings, calendar ----------
-  function closeFlyouts(except) { for (const id of ["start", "qs", "cal", "ctx"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
-  function startDraw(q) {
+  function closeFlyouts(except) { for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
+  function startDraw(q, view) {
     const p = NX.prefs(), all = visibleApps(), me = NX.me;
+    if (view === "all" && !q) return allAppsDraw(all, me);
     const list = q ? all.filter((id) => NX.apps[id].name.toLowerCase().includes(q.toLowerCase())) : all;
     const rec = p.recent.filter((id) => all.includes(id)).slice(0, 4);
     $("#start").innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search" value="${NX.esc(q || "")}"></label>
       <div class="sm-body">${q ? `<h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div>` :
-      `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-store="1">Get more apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
-      <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${rec.length ? rec.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 30)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>Recently opened</small></span></button>`).join("") : `<p class="sm-empty">The apps you open will show up here.</p>`}</div>`}</div>
+      `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-allapps="1">All apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
+      <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
       <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div>`;
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
@@ -173,9 +181,34 @@
     S.querySelectorAll("[data-app]").forEach((b) => { b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }; b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; const r = S.getBoundingClientRect(); const mx = e.clientX, my = e.clientY; const items = [[p.pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], [p.desktop.includes(id) ? "Remove from desktop" : "Add to desktop", () => NX.setPref("desktop", p.desktop.includes(id) ? p.desktop.filter((x) => x !== id) : [...p.desktop, id])], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]; menu(mx, my, items); void r; }; });
     const web = $("[data-web]", S); if (web) web.onclick = () => { closeFlyouts(); NX.searchWeb(q); };
     const st = $("[data-store]", S); if (st) st.onclick = () => { closeFlyouts(); NX.open("store"); };
+    const aa = $("[data-allapps]", S); if (aa) aa.onclick = (e) => { e.stopPropagation(); startDraw("", "all"); };
+    S.querySelectorAll("[data-rfile]").forEach((b) => (b.onclick = () => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; closeFlyouts(); if (f) NX.openFile(f); }));
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     $(".sm-pwb", S).onclick = (e) => { e.stopPropagation(); const m = $(".sm-pwm", S); m.hidden = !m.hidden; };
     S.querySelectorAll("[data-pw]").forEach((b) => (b.onclick = () => { const k = b.dataset.pw; if (k === "lock") lockKeep(); else if (k === "out") signOut(); else power(k === "restart" ? "restart" : "off"); }));
+  }
+  // Recommended: recently opened files first (like Windows 11), then recently used apps
+  const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "Just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : new Date(t).toLocaleDateString(); };
+  const FICON = { image: "fimage", video: "fvideo", audio: "faudio", text: "ftext", pdf: "fpdf" };
+  function recHTML(rec) {
+    const files = NX.data("recent-files", []).slice(0, 4), out = [];
+    files.forEach((f, i) => out.push(`<button class="sm-res" data-rfile="${i}">${NX.icon(FICON[f.kind] || "file", 30)}<span><b>${NX.esc(f.name)}</b><small>${ago(f.at)}</small></span></button>`));
+    rec.slice(0, 6 - out.length).forEach((id) => out.push(`<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 30)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>Recently opened</small></span></button>`));
+    return out.length ? out.join("") : `<p class="sm-empty">The apps and files you open will show up here.</p>`;
+  }
+  // All apps: every app, A to Z, with letter headings
+  function allAppsDraw(all, me) {
+    const S = $("#start"), list = [...all].sort((a, b) => NX.apps[a].name.localeCompare(NX.apps[b].name));
+    let letter = "", rows = "";
+    for (const id of list) { const L = NX.apps[id].name[0].toUpperCase(); if (L !== letter) { letter = L; rows += `<h5 class="sm-letter">${NX.esc(L)}</h5>`; } rows += `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 28)}<span><b>${NX.esc(NX.apps[id].name)}</b></span></button>`; }
+    S.innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search"></label>
+      <div class="sm-body"><div class="sm-h"><h4>All apps</h4><button class="sm-all" data-back="1">${NX.icon("back", 12)} Back</button></div><div class="sm-allist">${rows}<button class="sm-res" data-store="1">${NX.icon("store", 28)}<span><b>Get more apps</b><small>Nebulux Store</small></span></button></div></div>
+      <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button></div>`;
+    S.querySelectorAll("[data-app]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }));
+    $("[data-back]", S).onclick = (e) => { e.stopPropagation(); startDraw(""); };
+    $("[data-store]", S).onclick = () => { closeFlyouts(); NX.open("store"); };
+    $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
+    const si = $(".sm-search input", S); si.oninput = () => { startDraw(si.value); const n = $(".sm-search input"); n.focus(); };
   }
   function toggleStart(focus) { const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
   function qsDraw() {
@@ -221,6 +254,7 @@
       if (key === "desk") NX.showDesktop(); if (key === "lock") lockKeep(); if (key === "files") NX.open("files");
       if (key === "shot" && NX.screenshot) NX.screenshot().catch((er) => NX.toast(er.message));
       if (key === "tm") NX.open("taskmgr");
+      if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets();
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
     };
     addEventListener("keydown", (e) => {
@@ -231,7 +265,8 @@
       if (!NX.me) return;
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
       if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key))) { e.preventDefault(); winKeys("shot"); }
-      else if (e.metaKey && /^[edl]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock" }[e.key.toLowerCase()]); }
+      else if (e.metaKey && /^[edlw]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets" }[e.key.toLowerCase()]); }
+      else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
       else if (e.metaKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") { e.preventDefault(); winKeys("tm"); }
       if (e.altKey && e.key === "Tab") {
@@ -253,15 +288,15 @@
     $("#tb-search").onclick = (e) => { e.stopPropagation(); toggleStart(true); };
     $("#tb-qs").onclick = (e) => { e.stopPropagation(); const q = $("#qs"); if (!q.hidden) { closeFlyouts(); return; } closeFlyouts("qs"); qsDraw(); q.hidden = false; };
     $("#tb-clock").onclick = (e) => { e.stopPropagation(); const c = $("#cal"); if (!c.hidden) { closeFlyouts(); return; } closeFlyouts("cal"); calM = null; calDraw(); c.hidden = false; };
-    for (const id of ["start", "qs", "cal", "ctx"]) $("#" + id).addEventListener("pointerdown", (e) => e.stopPropagation());
+    for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) $("#" + id).addEventListener("pointerdown", (e) => e.stopPropagation());
     document.addEventListener("pointerdown", (e) => { if (!e.target.closest("#taskbar")) closeFlyouts(); if (!e.target.closest(".dicon")) { document.querySelectorAll(".dicon.sel").forEach((x) => x.classList.remove("sel")); sel = null; } });
     $("#desktop").addEventListener("contextmenu", (e) => {
       if (e.target.closest(".win") || e.target.closest("#taskbar") || e.target.closest(".dicon") || e.target.closest("#start,#qs,#cal")) return;
-      e.preventDefault(); menu(e.clientX, e.clientY, [["Personalize", () => NX.open("settings", { page: "personal" })], ["Display settings", () => NX.open("settings", { page: "system" })], ["Open Nebulux Store", () => NX.open("store")], ["Refresh", () => { icons(); NX.toast("Desktop refreshed."); }]]);
+      e.preventDefault(); menu(e.clientX, e.clientY, [["New folder", () => NX.desktopNew && NX.desktopNew(true)], ["New text document", () => NX.desktopNew && NX.desktopNew(false)], ["Refresh", () => { icons(); }], ["Display settings", () => NX.open("settings", { page: "system" })], ["Personalize", () => NX.open("settings", { page: "personal" })], ["Open in File Explorer", () => NX.open("files", { place: "Desktop" })]]);
     });
     boot();
   }
   NX.menu = menu;
-  NX.shell = { lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
+  NX.shell = { closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

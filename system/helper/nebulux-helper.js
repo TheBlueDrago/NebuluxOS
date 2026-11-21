@@ -18,7 +18,7 @@ const { execFile } = require("child_process");
 const PORT = +(process.env.NX_PORT || 7777), HOST = "127.0.0.1";
 const WWW = path.resolve(process.argv[2] || path.join(__dirname, "..", "..")), FAKE = process.env.NX_FAKE === "1";
 const TOKEN = crypto.randomBytes(24).toString("hex");
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".json": "application/json", ".woff2": "font/woff2" };
+const TYPES = { ".webp": "image/webp", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".json": "application/json", ".woff2": "font/woff2" };
 
 // ---------- running commands ----------
 function run(cmd, args, timeout) {

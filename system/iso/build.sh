@@ -29,7 +29,7 @@ lb config \
   --chroot-squashfs-compression-type zstd \
   --memtest none --security true --updates true --checksums sha256 --zsync false \
   --iso-application "Nebulux OS" --iso-publisher "Nebulux LLC" --iso-volume "NEBULUX_OS" \
-  --image-name nebulux-os \
+  --image-name nebulux-os --bootappend-live-failsafe none \
   --bootappend-live "boot=live components quiet splash loglevel=3 rd.udev.log_level=3 systemd.show_status=false vt.global_cursor_default=0 username=nebulux user-fullname=Nebulux hostname=nebulux-os locales=en_US.UTF-8 keyboard-layouts=us live-config.user-default-groups=audio,cdrom,dip,floppy,video,plugdev,netdev,powerdev,scanner,bluetooth,input,render,dialout persistence persistence-media=removable-usb" \
   >/dev/null
 
@@ -39,7 +39,7 @@ cp "$REPO/system/iso/packages.list" config/package-lists/nebulux.list.chroot
 mkdir -p config/includes.chroot
 cp -a "$REPO/system/iso/root/." config/includes.chroot/
 mkdir -p config/includes.chroot/opt/nebulux/www config/includes.chroot/opt/nebulux/helper config/includes.chroot/opt/nebulux/ext
-cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" config/includes.chroot/opt/nebulux/www/
+cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" "$REPO/img" config/includes.chroot/opt/nebulux/www/
 cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" config/includes.chroot/opt/nebulux/helper/
 cp -a "$REPO/system/browser-ext/." config/includes.chroot/opt/nebulux/ext/
 echo "$VERSION" > config/includes.chroot/opt/nebulux/VERSION
@@ -53,20 +53,23 @@ mkdir -p config/bootloaders
 for d in isolinux syslinux_common grub-pc; do
   [ -d "/usr/share/live/build/bootloaders/$d" ] && cp -a "/usr/share/live/build/bootloaders/$d" config/bootloaders/
 done
-# ISOLINUX (older BIOS PCs): menu names, and a 1 second wait
+# ISOLINUX (older BIOS PCs): menu names
 find config/bootloaders -type f \( -name '*.cfg' -o -name '*.in' \) -print0 | xargs -0 sed -i \
   -e 's/Live system (@FLAVOUR@ fail-safe mode)/Nebulux OS (safe mode)/g' -e 's/Live system (@FLAVOUR@)/Nebulux OS/g' \
   -e 's/Live system/Nebulux OS/g' -e 's/Debian GNU\/Linux/Nebulux OS/g'
-for f in config/bootloaders/isolinux/isolinux.cfg config/bootloaders/syslinux_common/isolinux.cfg; do
-  [ -f "$f" ] && { sed -i 's/^timeout .*/timeout 10/' "$f"; grep -q '^timeout' "$f" || echo "timeout 10" >> "$f"; }
+# no menu: one entry, started right away
+for d in isolinux syslinux_common; do
+  [ -d "config/bootloaders/$d" ] || continue
+  printf 'label live-@FLAVOUR@\n\tmenu label ^Nebulux OS\n\tmenu default\n\tlinux @LINUX@\n\tinitrd @INITRD@\n\tappend @APPEND_LIVE@\n' > "config/bootloaders/$d/live.cfg.in"
+  printf 'include live.cfg\ndefault live-amd64\nprompt 0\ntimeout 0\n' > "config/bootloaders/$d/isolinux.cfg"
 done
 # the boot picture: a splash.png has to be there already, or live-build draws its own from splash.svg
 for d in isolinux syslinux_common; do [ -d "config/bootloaders/$d" ] && cp "$REPO/system/iso/splash.png" "config/bootloaders/$d/splash.png"; cp "$REPO/system/iso/splash800x600.png" "config/bootloaders/$d/splash800x600.png"; done
-# GRUB (UEFI): starts the first entry after 1 second, and no start-up beep
+# GRUB (UEFI): starts Nebulux OS at once, with no menu and no start-up beep
 cat > config/bootloaders/grub-pc/config.cfg <<'GRUBCFG'
 set default=0
-set timeout=1
-set timeout_style=menu
+set timeout=0
+set timeout_style=hidden
 
 loadfont $prefix/dejavu-bold-16.pf2
 loadfont $prefix/dejavu-bold-14.pf2
@@ -80,6 +83,7 @@ source /boot/grub/theme.cfg
 
 terminal_output gfxterm
 GRUBCFG
+printf 'source /boot/grub/config.cfg\n\n# Nebulux OS\n@LINUX_LIVE@\n' > config/bootloaders/grub-pc/grub.cfg
 # GRUB menu names are written by live-build itself
 for s in /usr/lib/live/build/binary_grub_cfg /usr/share/live/build/scripts/build/binary_grub_cfg; do
   [ -f "$s" ] && sed -i -e 's/Live system (autodetect) (fail-safe mode)/Nebulux OS (safe mode)/g' -e 's/Live system (autodetect)/Nebulux OS/g' \

@@ -95,6 +95,7 @@
   // open a file in the app that fits it
   NX.openFile = (e, list) => {
     if (e.dir) return NX.open("files", { path: e.path });
+    const rf = NX.data("recent-files", []).filter((x) => x.path !== e.path); rf.unshift({ name: e.name, path: e.path, kind: e.kind || kindOf(e.name, false), at: Date.now() }); NX.setData("recent-files", rf.slice(0, 8));
     const k = e.kind || kindOf(e.name, false);
     if (k === "image") return NX.open("photos", { path: e.path, list: (list || []).filter((x) => x.kind === "image") });
     if (k === "video" || k === "audio") return NX.open("media", { path: e.path, list: (list || []).filter((x) => x.kind === "video" || x.kind === "audio") });

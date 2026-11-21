@@ -7,7 +7,8 @@
   const W = "#fff";
   const I = {
     // the Nebulux mark: a planet with an orbit ring and a small moon
-    logo: () => { const [id, d] = grad("#ff6fd8", "#7c5cff", "#22d3ee"); return `${d}<circle cx="24" cy="24" r="11" fill="url(#${id})"/><ellipse cx="24" cy="24" rx="20" ry="7.5" fill="none" stroke="url(#${id})" stroke-width="3" transform="rotate(-24 24 24)"/><circle cx="41" cy="15" r="3" fill="#fde68a"/>`; },
+    // the Nebulux logo: the Nebulux nebula (the same picture as nebuluxai.com)
+    logo: () => { const id = "nl" + ++gid; return `<defs><clipPath id="${id}"><rect x="2" y="2" width="44" height="44" rx="12"/></clipPath></defs><image href="img/nebulux-128.png" x="2" y="2" width="44" height="44" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/>`; },
     settings: () => tile("#64748b", "#334155", null, `<g fill="none" stroke="${W}" stroke-width="3"><circle cx="24" cy="24" r="6"/><path d="M24 9v5M24 34v5M9 24h5M34 24h5M13.4 13.4l3.5 3.5M31.1 31.1l3.5 3.5M13.4 34.6l3.5-3.5M31.1 16.9l3.5-3.5" stroke-linecap="round"/></g>`),
     // Google keeps its own look: the four-color G on white
     google: () => `<rect x="2" y="2" width="44" height="44" rx="11" fill="#fff"/><g fill="none" stroke-width="6"><path d="M33.5 17.5A12 12 0 0 0 13 18" stroke="#ea4335"/><path d="M13 18a12 12 0 0 0 0 12" stroke="#fbbc05"/><path d="M13 30a12 12 0 0 0 20.5 1.5" stroke="#34a853"/><path d="M33.5 31.5A12 12 0 0 0 36 24H24" stroke="#4285f4"/></g>`,

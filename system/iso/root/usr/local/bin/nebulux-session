@@ -2,7 +2,6 @@
 # The Nebulux OS session: the system helper, then Nebulux OS full screen in the built-in browser engine.
 # If the browser engine ever closes, or the OS page doesn't load within 45 seconds, it starts again by itself.
 xset s off -dpms s noblank 2>/dev/null
-xsetroot -solid "#0b0620" 2>/dev/null
 mkdir -p "$HOME/Downloads"
 P="$HOME/.config/nebulux-browser"
 # The web-windows extension goes in a folder the browser engine can write to: it keeps an index of its rules next to

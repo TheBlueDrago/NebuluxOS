@@ -1,6 +1,6 @@
 /* Nebulux OS. Windows-style layout: centered taskbar, Start menu, rounded glass windows. Nebulux look: nebula colors,
    glow, the orbit logo. Light and dark themes; the accent color comes from Settings. */
-:root{--accent:#7c5cff;--font:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;--tb:48px;
+:root{--accent:#7c5cff;--font:"Segoe UI Variable Text","Segoe UI","Inter","Noto Sans",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;--tb:48px;
   --bg:#1b1430e6;--bg2:#241b3df0;--card:#ffffff0d;--card2:#ffffff14;--line:#ffffff1c;--txt:#f4f1ff;--sub:#bdb3dd;--hover:#ffffff14;--glass:#1a1330cc;--shadow:0 18px 50px #0009,0 0 0 1px #ffffff14}
 [data-theme=light]{--bg:#f6f4fbf0;--bg2:#ffffffee;--card:#ffffffb3;--card2:#fffffff0;--line:#1b123a1a;--txt:#1b1530;--sub:#5d567a;--hover:#1b123a0f;--glass:#f3effcd9;--shadow:0 18px 50px #2b1d5a33,0 0 0 1px #1b123a14}
 *{box-sizing:border-box}
@@ -443,3 +443,61 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus
 .tb-clock{position:relative}
 #tb-badge{position:absolute;top:-2px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#fff;font-size:10px;font-style:normal;font-weight:700;line-height:16px;text-align:center}
 #tb-badge[hidden]{display:none}
+
+/* ---------- Windows 11 touches ---------- */
+/* the taskbar: Widgets on the left, a Search box and Task View next to Start */
+.tb-widgets{position:absolute;left:8px;top:4px;height:40px;gap:8px;max-width:180px}
+.tb-widgets span{display:flex;flex-direction:column;line-height:1.2;text-align:left;font-size:12px}.tb-widgets small{color:var(--sub);font-size:11px;white-space:nowrap}
+.tb-searchbox{width:auto;min-width:40px;padding:0 14px 0 12px;gap:8px;display:flex;align-items:center;border-radius:20px;background:var(--card2);border:1px solid var(--line);color:var(--sub);font-size:13px;height:34px}
+.tb-searchbox span{min-width:96px;text-align:left}.tb-searchbox:hover{background:var(--hover)}
+#desktop.tb-left .tb-widgets{display:none}
+@media (max-width:860px){.tb-searchbox span,.tb-widgets span{display:none}.tb-searchbox{padding:0;width:40px;justify-content:center;border:0;background:none}}
+@media (max-width:560px){.tb-widgets,#tb-tview{display:none}}
+
+/* Start: All apps */
+.sm-allist{display:flex;flex-direction:column;gap:1px;padding:0 6px}
+.sm-letter{margin:10px 10px 2px;font-size:12px;color:var(--accent);font-weight:600}
+.sm-allist .sm-res{padding:6px 10px}
+
+/* Task View */
+#taskview{position:absolute;inset:0;bottom:var(--tb);z-index:1900;background:#0b0620b3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:30px;animation:tvIn .16s ease-out}
+.nofx #taskview{background:#0b0620e6}
+#taskview[hidden]{display:none}
+@keyframes tvIn{from{opacity:0;transform:scale(1.02)}to{opacity:1}}
+.tv-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;max-width:1100px;max-height:calc(100% - 60px);overflow:auto;padding:6px}
+.tv-card{width:240px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;outline:0;transition:transform .12s}
+.tv-card:hover,.tv-card:focus{transform:translateY(-3px);box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.tv-top{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;font-size:12.5px}.tv-top span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-x{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;opacity:.7}.tv-x:hover{background:#c42b1c;color:#fff;opacity:1}
+.tv-face{height:140px;display:grid;place-items:center;background:var(--card)}
+.tv-none{color:#fff;opacity:.8}
+.tv-desk{display:flex;gap:10px}.tv-desk span{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);font-size:13px;cursor:pointer}
+
+/* Widgets */
+#widgets{left:12px;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - var(--tb) - 24px);overflow-y:auto;padding:18px}
+.wg-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}.wg-head b{font-size:22px;font-weight:600}.wg-head span{color:var(--sub);font-size:13px}
+.wg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.wg-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.wg-card h4{margin:0;font-size:13px}.wg-wx{grid-column:1/-1}
+.wg-wxnow{display:flex;align-items:center;gap:14px}.wg-wxnow div{display:flex;flex-direction:column}.wg-wxnow b{font-size:34px;font-weight:600;line-height:1}.wg-wxnow span{font-size:14px}.wg-wxnow small{color:var(--sub);font-size:12px}
+.wg-days{display:flex;gap:8px}.wg-days div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:8px;background:var(--card2);font-size:12px}.wg-days small{color:var(--sub)}
+.wg-city{display:flex;gap:8px}.wg-city input{flex:1;min-width:0;background:var(--card2);border:1px solid var(--line);border-bottom:2px solid var(--accent);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:14px;outline:0}
+.wg-note{margin:0;color:var(--sub);font-size:13px;line-height:1.45}.wg-note b{color:var(--txt);font-weight:600}.wg-err{margin:0;color:#ff8a9b;font-size:12.5px;min-height:0}
+.wg-link{align-self:flex-start;font-size:12.5px;color:var(--accent);padding:2px 0}
+.wg-file{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;font-size:13px;text-align:left}.wg-file:hover{background:var(--hover)}.wg-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* snap layouts */
+#snapfly{position:fixed;z-index:3200;display:grid;grid-template-columns:repeat(2,auto);gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);animation:pop .12s ease-out}
+#snapfly[hidden]{display:none}
+.sf-lay{position:relative;width:96px;height:62px}
+.sf-zone{position:absolute;padding:0;border:2px solid var(--bg2);border-radius:5px;background:var(--card2);box-sizing:border-box}
+.sf-zone:hover{background:var(--accent)}
+
+/* the Desktop folder's files */
+.d-thumb{width:48px;height:40px;display:grid;place-items:center;overflow:hidden;border-radius:4px}.d-thumb img{max-width:100%;max-height:100%;object-fit:cover;box-shadow:0 2px 8px #0007}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* the Nebulux nebula logo */
+.boot-logo img{border-radius:28px;box-shadow:0 0 40px #b06cff66}
+.tb-neb{width:26px;height:26px;border-radius:8px;object-fit:cover;display:block;transition:transform .12s}
+#tb-start:active .tb-neb{transform:scale(.86)}
