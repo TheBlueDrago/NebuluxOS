@@ -173,6 +173,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => { const i = document.querySelector(".win[data-app=photos] .ph-tile img"); return !!i && i.naturalWidth > 0; })), "Photos shows the screenshot from the real files");
   await p.evaluate(() => NX.close("photos")); await wait(200);
 
+  // ---------- 1.3: solid look by default here, Task Manager with the real processor ----------
+  ok(await p.evaluate(() => document.documentElement.classList.contains("nofx")), "on the real OS, transparency is off by default (faster without graphics acceleration)");
+  await p.evaluate(() => NX.open("taskmgr")); await wait(300);
+  await p.evaluate(() => document.querySelector(".win[data-app=taskmgr] [data-tab=perf]").click());
+  ok(await until(() => p.evaluate(() => /Processor\s*\d+%/.test(document.querySelector(".win[data-app=taskmgr]").innerText)), 6000), "Task Manager shows how busy the processor is");
+  await p.evaluate(() => NX.close("taskmgr")); await wait(200);
+
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

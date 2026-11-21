@@ -147,7 +147,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.documentElement.dataset.theme === "light"), "the quick settings dark mode switch works");
   await p.evaluate(() => document.querySelector("#qs [data-k=theme]").click()); await wait(150);
   await p.click("#tb-clock"); await wait(250); ok(await vis("#cal") && !(await vis("#qs")), "the calendar opens (and quick settings close)");
-  await p.mouse.click(W / 2, H / 3); await wait(150); ok(!(await vis("#cal")), "clicking elsewhere closes it");
+  await p.mouse.click(W / 2, 24); await wait(150); ok(!(await vis("#cal")), "clicking elsewhere closes it");
 
   // sign out, wrong password, sign in again: settings and data are still there
   await p.click("#tb-start"); await wait(250); await p.click(".sm-pwb"); await p.evaluate(() => document.querySelector("[data-pw=out]").click()); await wait(900);

@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 1.2**.
-3. Under **Assets**, click **`Nebulux-OS-1.2.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 1.3**.
+3. Under **Assets**, click **`Nebulux-OS-1.3.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-1.2.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-1.3.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-1.2.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-1.3.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -59,6 +59,18 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 5. The first time, make your account (name and password). Next time, sign in with it.
 
 **To go back to Windows:** use Start → Power → **Shut down**, take the USB out, and turn the computer on. Windows starts like always.
+
+### Trying it in QEMU instead of a real computer
+
+QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
+1. Press Start, type **Turn Windows features on or off**, and tick **Windows Hypervisor Platform**.
+2. Restart the PC.
+
+Then start Nebulux OS like this (all on one line):
+
+```powershell
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-1.3.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+```
 
 ### If it doesn't start
 
@@ -99,7 +111,23 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 - **Media Player:** plays music and videos (MP4, WebM, MP3, WAV, OGG, M4A, FLAC).
 - **Snipping Tool:** take a screenshot, with an optional timer. You can also press **Windows + Shift + S** or **Print Screen** any time. Screenshots go in Pictures > Screenshots.
 - **Notepad** opens and saves real text files (Open, Save to Documents). **Paint** saves into Pictures.
-- **Keyboard:** the Windows key opens Start (even while a website has the keyboard), and Windows + E opens File Explorer.
+- **Keyboard shortcuts** (they work even while a website has the keyboard):
+
+  | Keys | What it does |
+  |---|---|
+  | Windows | Open Start |
+  | Alt + Tab | Switch between open windows |
+  | Windows + D | Show the desktop (press again to bring the windows back) |
+  | Windows + Left / Right | Snap the window to half the screen |
+  | Windows + Up / Down | Maximize, or restore and minimize |
+  | Windows + L | Lock (your apps stay open) |
+  | Windows + E | File Explorer |
+  | Windows + Shift + S, or Print Screen | Screenshot |
+  | Ctrl + Shift + Esc | Task Manager |
+- **Task Manager:** your open apps, with End task, and live graphs of how busy the processor is and how much memory is in use.
+- **Notifications:** click the clock to see recent notifications, with Clear all. **Do not disturb** in quick settings keeps them quiet.
+- **Transparency effects** (Settings > Personalization): the frosted-glass look. It's off by default on the USB system, which draws without the graphics chip's help, because the solid look is faster there. Turn it on if your computer is quick.
+- **Start-up:** the Nebulux OS logo with a spinner, then straight to the lock screen.
 - **Google:** real Google in its own window, with its own look and an address bar, Back, Forward, Reload and Home. Links that would open a new tab open in the window instead.
 - **Nebulux Store:**
   - Notepad, Calculator, Paint, Clock and Comet Snake;

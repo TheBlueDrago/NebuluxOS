@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Nebulux OS
+Description=The Nebulux OS start-up screen: the logo with a spinner
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nebulux
+ScriptFile=/usr/share/plymouth/themes/nebulux/nebulux.script

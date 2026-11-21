@@ -286,6 +286,17 @@ module.exports = function more({ api, run, FAKE }) {
   api["POST /cast/hide"] = async () => { if (!FAKE) for (const id of await castWin()) await run("xdotool", ["windowmove", id, "-4000", "-4000"]); return { ok: true }; };
   api["POST /cast/stop"] = async () => { if (FAKE) { fakeCast = false; return { running: false }; } try { if (cast) process.kill(-cast.pid); } catch (e) { /* gone */ } await run("pkill", ["-f", "gnome-network-displays"]); cast = null; return { running: false }; };
 
+  // ---------- Task Manager: how busy the processor is, and memory ----------
+  let lastCpu = null;
+  api["GET /stats"] = async () => {
+    const now = os.cpus().map((c) => c.times), sum = (t) => t.user + t.nice + t.sys + t.irq + t.idle;
+    let cpu = null;
+    if (lastCpu && lastCpu.length === now.length) { let busy = 0, all = 0; now.forEach((t, i) => { const d = sum(t) - sum(lastCpu[i]); all += d; busy += d - (t.idle - lastCpu[i].idle); }); cpu = all > 0 ? Math.round((busy / all) * 100) : 0; }
+    lastCpu = now;
+    let avail = os.freemem(); try { const mi = fs.readFileSync("/proc/meminfo", "utf8"); const m2 = /MemAvailable:\s+(\d+) kB/.exec(mi); if (m2) avail = +m2[1] * 1024; } catch (e) { /* not Linux */ }
+    return { cpu, cores: now.length, model: ((os.cpus()[0] || {}).model || "").replace(/\s+/g, " ").trim(), memTotal: os.totalmem(), memUsed: os.totalmem() - avail, uptime: Math.round(os.uptime()) };
+  };
+
   // ---------- screenshots ----------
   api["POST /screenshot"] = async () => {
     const d = new Date(), pad = (n) => String(n).padStart(2, "0");

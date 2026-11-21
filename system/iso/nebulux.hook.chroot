@@ -18,8 +18,8 @@ echo "Nebulux OS $V" > /etc/issue; echo "Nebulux OS $V" > /etc/issue.net; : > /e
 chmod 755 /usr/local/bin/nebulux-session
 chmod -R a+rX /opt/nebulux
 
-# start-up picture: the computer maker's logo with a spinner, like Windows
-plymouth-set-default-theme bgrt 2>/dev/null || plymouth-set-default-theme spinner 2>/dev/null || true
+# start-up picture: the Nebulux OS logo with a spinner
+plymouth-set-default-theme nebulux 2>/dev/null || plymouth-set-default-theme bgrt 2>/dev/null || plymouth-set-default-theme spinner 2>/dev/null || true
 
 # Nebulux OS opens on the screen by itself (no text login)
 systemctl enable nebulux-screen.service

@@ -36,6 +36,23 @@
     setTimeout(() => w.el.remove(), 140); NX.shell && NX.shell.taskbar();
   };
   NX.closeAll = () => { for (const id of [...wins.keys()]) NX.close(id); };
+  // the window in front (not minimized)
+  NX.topWin = () => [...wins.values()].filter((w) => !w.min).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex))[0] || null;
+  // Windows + arrow keys: left or right half, maximize, restore, minimize
+  NX.snap = (id, where) => {
+    const w = wins.get(id); if (!w) return; const A = area();
+    if (where === "max") { if (!w.max) NX.toggleMax(id); return; }
+    if (where === "down") { if (w.max) NX.toggleMax(id); else if (w.snap) { w.snap = null; w.w = w.rw || w.w; w.h = w.rh || w.h; fit(w); place(w); w.onresize && w.onresize(); } else NX.minimize(id); return; }
+    if (w.max) { w.max = false; w.el.classList.remove("maxed"); w.el.querySelector(".wb-max").innerHTML = NX.icon("max", 16); }
+    if (!w.snap) { w.rw = w.w; w.rh = w.h; }
+    w.snap = where; w.x = where === "left" ? 0 : Math.round(A.w / 2); w.y = 0; w.w = Math.round(A.w / 2); w.h = A.h; place(w); w.onresize && w.onresize();
+  };
+  // Windows + D: everything out of the way, and back again
+  let hidden = null;
+  NX.showDesktop = () => {
+    if (hidden && hidden.length && ![...wins.values()].some((w) => !w.min)) { for (const id of hidden) if (wins.has(id)) NX.focus(id); hidden = null; return; }
+    hidden = [...wins.values()].filter((w) => !w.min).map((w) => w.id); for (const id of hidden) NX.minimize(id);
+  };
   NX.open = (id, opts) => {
     const app = NX.apps[id]; if (!app) return null;
     if (app.url && !NX.webFrames) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }

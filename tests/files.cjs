@@ -99,6 +99,56 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(/Windows \+ Shift \+ S/.test(await txt(".win[data-app=snip]")), "Snipping Tool opens");
   await p.evaluate(() => NX.close("snip")); await wait(200);
 
+  // ---------- 1.3: transparency, window keys, Alt + Tab, Lock, notifications, Task Manager ----------
+  ok(await p.evaluate(() => !document.documentElement.classList.contains("nofx")), "Transparency effects are on in a browser tab");
+  await p.evaluate(() => NX.open("settings", { page: "personal" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pref=transparency]").click()); await wait(200);
+  ok(await p.evaluate(() => document.documentElement.classList.contains("nofx") && getComputedStyle(document.querySelector("#taskbar")).backdropFilter === "none"), "turning them off makes the taskbar and windows solid");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pref=transparency]").click()); await wait(200);
+  await p.evaluate(() => NX.open("notepad")); await wait(300);
+  const winKey = async (k) => { await p.keyboard.down("Meta"); await p.keyboard.press(k); await p.keyboard.up("Meta"); await wait(250); };
+  await winKey("ArrowLeft");
+  ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(); return r.x <= 1 && Math.abs(r.width - innerWidth / 2) < 3; }), "Windows + Left snaps the window to the left half");
+  ok(await p.evaluate(() => document.querySelector("#start").hidden), "and doesn't open Start");
+  await winKey("ArrowUp");
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad]").classList.contains("maxed")), "Windows + Up maximizes it");
+  await winKey("KeyD");
+  ok(await p.evaluate(() => [...NX.wins.values()].every((w) => w.min)), "Windows + D shows the desktop");
+  await winKey("KeyD");
+  ok(await p.evaluate(() => NX.wins.get("notepad") && !NX.wins.get("notepad").min), "and pressing it again brings the windows back");
+  await p.keyboard.down("Alt"); await p.keyboard.press("Tab"); await wait(150);
+  ok(await p.evaluate(() => !document.querySelector("#switcher").hidden && document.querySelectorAll("#switcher .sw-item").length === NX.wins.size), "Alt + Tab shows your open windows");
+  const target = await p.evaluate(() => document.querySelector("#switcher .sw-item.on span").textContent);
+  await p.keyboard.up("Alt"); await wait(250);
+  ok(await p.evaluate((t) => document.querySelector("#switcher").hidden && NX.topWin().app.name === t, target), "letting go of Alt switches to it (" + target + ")");
+  NX_toasts: {
+    await p.evaluate(() => NX.toast("A test notification"));
+    await p.click("#tb-clock"); await wait(300);
+    ok(/A test notification/.test(await txt("#cal")), "the notification center keeps your notifications");
+    await p.click("#cal .nc-clear"); await wait(200);
+    ok(/No new notifications/.test(await txt("#cal")), "Clear all clears them");
+    await p.keyboard.press("Escape"); await wait(150);
+    await p.click("#tb-qs"); await wait(250); await p.click("#qs [data-k=dnd]"); await wait(200); await p.keyboard.press("Escape");
+    const before = await p.evaluate(() => document.querySelectorAll("#toasts .toast").length);
+    await p.evaluate(() => NX.toast("Quiet please")); await wait(150);
+    ok(await p.evaluate((b) => document.querySelectorAll("#toasts .toast").length === b && NX.notes[0].text === "Quiet please", before), "Do not disturb keeps notifications quiet, but saved");
+    await p.evaluate(() => NX.setPref("dnd", false));
+  }
+  await p.keyboard.down("Control"); await p.keyboard.down("Shift"); await p.keyboard.press("Escape"); await p.keyboard.up("Shift"); await p.keyboard.up("Control"); await wait(500);
+  ok(await p.evaluate(() => !!NX.wins.get("taskmgr")), "Ctrl + Shift + Esc opens Task Manager");
+  ok(await p.evaluate(() => [...document.querySelectorAll(".win[data-app=taskmgr] .tm-row b")].some((b) => b.textContent === "Notepad")), "it lists the open apps");
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=taskmgr] .tm-row")].find((r) => /Notepad/.test(r.innerText)).querySelector("[data-end]").click()); await wait(300);
+  ok(await p.evaluate(() => !NX.wins.get("notepad")), "End task closes an app");
+  await p.evaluate(() => document.querySelector(".win[data-app=taskmgr] [data-tab=perf]").click()); await wait(1300);
+  ok(/Memory/.test(await txt(".win[data-app=taskmgr]")) && await p.evaluate(() => !!document.querySelector(".win[data-app=taskmgr] .tm-graph")), "Performance shows the graphs");
+  await shot("taskmgr");
+  // Lock keeps your apps open
+  await winKey("KeyL"); await wait(400);
+  ok(await p.evaluate(() => !document.querySelector("#lock").hidden && !!NX.wins.get("taskmgr")), "Windows + L locks, and your apps stay open behind the lock screen");
+  await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter"); await wait(1200);
+  ok(await p.evaluate(() => !document.querySelector("#desktop").hidden && !!NX.wins.get("taskmgr")), "unlocking brings you back to them");
+  await p.evaluate(() => NX.close("taskmgr")); await wait(200);
+
   // everything is still there after signing out and back in
   await p.evaluate(() => NX.shell.signOut()); await wait(600);
   await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter"); await wait(1300);

@@ -58,6 +58,8 @@
     download: () => `<path d="M24 9v20M15 21l9 9 9-9M11 38h26" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
     library: () => `<path d="M10 10h6v28h-6zM20 10h6v28h-6zM29 12l6-2 6 26-6 2z" fill="currentColor"/>`,
     trash: () => `<path d="M12 15h24M19 15v-3h10v3M15 15l2 22h14l2-22" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`,
+    bell: () => `<path d="M24 8a10 10 0 00-10 10v8l-4 6h28l-4-6v-8A10 10 0 0024 8z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M20 36a4 4 0 008 0" fill="none" stroke="currentColor" stroke-width="3"/>`,
+    taskmgr: () => tile("#4ade80", "#15803d", null, `<rect x="11" y="12" width="26" height="24" rx="3" fill="${W}"/><path d="M14 28l5-6 4 4 5-8 6 7" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`),
     // apps added in 1.2
     files: () => tile("#fbbf24", "#f97316", null, `<path d="M10 16a3 3 0 013-3h7l3 3h12a3 3 0 013 3v13a3 3 0 01-3 3H13a3 3 0 01-3-3z" fill="${W}"/><path d="M10 21h28" stroke="#f97316" stroke-width="2.5"/>`),
     photos: () => tile("#38bdf8", "#6366f1", "#a855f7", `<rect x="11" y="13" width="26" height="22" rx="3.5" fill="${W}"/><path d="M14 31l7-8 5 5 3-3 5 6z" fill="#6366f1"/><circle cx="30" cy="19" r="2.6" fill="#f59e0b"/>`),
