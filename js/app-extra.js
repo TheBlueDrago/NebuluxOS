@@ -158,7 +158,7 @@
       win.onresize = () => setTimeout(size, 0); reset(); setTimeout(size, 30);
     } };
 
-  // ---------- web apps (open in a new tab) ----------
-  A.nebuluxai = { name: "Nebulux AI", icon: "ai", category: "Web", rating: "4.8", size: "Web app", url: "https://nebuluxai.com", desc: "Chat with AI, make games and websites. Opens nebuluxai.com in a new tab." };
-  A.arcade = { name: "Nebulux Arcade", icon: "arcade", category: "Web", rating: "4.7", size: "Web app", url: "https://nebuluxai.com/arcade", desc: "Play Nebula Royale, Nebula Brawl and dozens of free games. Opens in a new tab." };
+  // ---------- web apps (a new tab in a browser; their own window on the real OS) ----------
+  A.nebuluxai = { name: "Nebulux AI", icon: "ai", category: "Web", rating: "4.8", size: "Web app", url: "https://nebuluxai.com", desc: "Chat with AI, make games and websites on nebuluxai.com." };
+  A.arcade = { name: "Nebulux Arcade", icon: "arcade", category: "Web", rating: "4.7", size: "Web app", url: "https://nebuluxai.com/arcade", desc: "Play Nebula Royale, Nebula Brawl and dozens of free games." };
 })();

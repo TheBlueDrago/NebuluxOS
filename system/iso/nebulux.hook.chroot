@@ -1,0 +1,49 @@
+#!/bin/sh
+# Runs inside the Nebulux OS system while the .iso is built.
+set -e
+V="$(cat /opt/nebulux/VERSION 2>/dev/null || echo 1.0)"
+
+# the system's name
+cat > /etc/os-release <<OSR
+PRETTY_NAME="Nebulux OS $V"
+NAME="Nebulux OS"
+VERSION_ID="$V"
+VERSION="$V"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://nebuluxai.com/"
+OSR
+echo "Nebulux OS $V" > /etc/issue; echo "Nebulux OS $V" > /etc/issue.net; : > /etc/motd
+
+chmod 755 /usr/local/bin/nebulux-session
+chmod -R a+rX /opt/nebulux
+
+# start-up picture: the computer maker's logo with a spinner, like Windows
+plymouth-set-default-theme bgrt 2>/dev/null || plymouth-set-default-theme spinner 2>/dev/null || true
+
+# quiet start-up: nothing waits for a network that isn't there
+systemctl mask NetworkManager-wait-online.service 2>/dev/null || true
+systemctl enable NetworkManager.service bluetooth.service systemd-timesyncd.service 2>/dev/null || true
+
+# Bluetooth turns on when there's a Bluetooth chip
+if [ -f /etc/bluetooth/main.conf ]; then sed -i 's/^#\?AutoEnable=.*/AutoEnable=true/' /etc/bluetooth/main.conf; fi
+
+# brightness without a password for the signed-in person
+cat > /etc/udev/rules.d/90-nebulux-backlight.rules <<UDEV
+ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
+UDEV
+
+# Wi-Fi, Bluetooth and power controls are allowed for the person at the computer
+mkdir -p /etc/polkit-1/rules.d
+cat > /etc/polkit-1/rules.d/50-nebulux.rules <<PK
+polkit.addRule(function(action, subject) {
+  if (subject.user == "nebulux" && subject.local && (
+      action.id.indexOf("org.freedesktop.NetworkManager.") == 0 ||
+      action.id.indexOf("org.freedesktop.login1.power-off") == 0 ||
+      action.id.indexOf("org.freedesktop.login1.reboot") == 0 ||
+      action.id.indexOf("org.freedesktop.login1.suspend") == 0)) return polkit.Result.YES;
+});
+PK
+
+# the rebuilt start-up files pick up the start-up picture
+update-initramfs -u -k all

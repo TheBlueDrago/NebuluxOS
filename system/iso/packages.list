@@ -1,0 +1,59 @@
+# Nebulux OS system packages (Debian 12). The Linux kernel (linux-image-amd64) and all the free and non-free
+# firmware for Wi-Fi, Bluetooth, graphics and sound are added by the build itself.
+
+# starting up from the USB
+live-boot
+live-config
+live-config-systemd
+systemd-sysv
+libpam-systemd
+dbus-user-session
+user-setup
+sudo
+procps
+locales
+keyboard-configuration
+console-setup
+plymouth
+plymouth-themes
+intel-microcode
+amd64-microcode
+
+# the screen
+xserver-xorg-core
+xserver-xorg-video-all
+xserver-xorg-input-all
+xinit
+x11-xserver-utils
+mesa-utils
+libgl1-mesa-dri
+
+# the browser engine Nebulux OS runs in, and fonts
+chromium
+chromium-sandbox
+fonts-dejavu-core
+fonts-liberation2
+fonts-noto-core
+fonts-noto-color-emoji
+
+# the system helper
+nodejs
+
+# internet, Wi-Fi and Bluetooth
+network-manager
+wpasupplicant
+iw
+wireless-regdb
+rfkill
+bluez
+polkitd
+ca-certificates
+systemd-timesyncd
+
+# sound, brightness and battery
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+alsa-utils
+brightnessctl

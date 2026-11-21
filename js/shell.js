@@ -12,8 +12,8 @@
   };
   // the internet: this computer's real connection, plus the OS's own Wi-Fi switch and airplane mode
   NX.online = () => navigator.onLine !== false;
-  NX.netOK = () => { const p = NX.prefs(); return NX.online() && p.wifi && !p.airplane; };
-  NX.netWhy = () => { const p = NX.prefs(); return p.airplane ? "Airplane mode is on. Turn it off in quick settings to go online." : !p.wifi ? "Wi-Fi is off. Turn it on in quick settings to go online." : "This computer isn't connected to the internet."; };
+  NX.netOK = () => { const p = NX.prefs(); return NX.native ? NX.online() : NX.online() && p.wifi && !p.airplane; }; // on the real OS, a cable counts too
+  NX.netWhy = () => { const p = NX.prefs(); if (NX.native) return p.airplane ? "Airplane mode is on. Turn it off and connect to Wi-Fi to go online." : "This computer isn't connected to the internet. Connect to Wi-Fi in quick settings or Settings."; return p.airplane ? "Airplane mode is on. Turn it off in quick settings to go online." : !p.wifi ? "Wi-Fi is off. Turn it on in quick settings to go online." : "This computer isn't connected to the internet."; };
   const netChange = (on) => { if (NX.me) { tray(); NX.toast(on ? "You're back online." : "The internet connection was lost."); } document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "net" })); };
   addEventListener("online", () => netChange(true)); addEventListener("offline", () => netChange(false));
   let actx = null;
@@ -25,11 +25,11 @@
     root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent);
     const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     root.style.setProperty("--wall", `url(${wall})`);
-    $("#dim").style.opacity = NX.me ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
+    $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
   let resizeT = 0; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { applyLook(); if (NX.me) icons(); }, 150); });
-  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
+  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
 
   NX.fast = /[?&]fast(&|=|$)/.test(location.search); // tests skip the boot animation
   // ---------- boot ----------
@@ -51,7 +51,7 @@
   function signinDraw() {
     const users = NX.users(), box = $("#lk-panel");
     if (mode === "setup") {
-      box.innerHTML = `<div class="lk-av new">${NX.icon("logo", 64)}</div><h2>${users.length ? "Add an account" : "Welcome to Nebulux OS"}</h2><p class="lk-sub">${users.length ? "Make a new account on this PC." : "Make your account to get started. It stays on this PC, in this browser."}</p>
+      box.innerHTML = `<div class="lk-av new">${NX.icon("logo", 64)}</div><h2>${users.length ? "Add an account" : "Welcome to Nebulux OS"}</h2><p class="lk-sub">${users.length ? "Make a new account on this PC." : (NX.native ? "Make your account to get started. It stays on this computer." : "Make your account to get started. It stays on this PC, in this browser.")}</p>
         <form class="lk-form" autocomplete="off"><input name="n" maxlength="24" placeholder="Your name" aria-label="Your name" autocomplete="username"><input name="p" type="password" maxlength="64" placeholder="Password" aria-label="Password" autocomplete="new-password"><input name="p2" type="password" maxlength="64" placeholder="Password again" aria-label="Password again" autocomplete="new-password"><button class="btn primary wide" type="submit">Make my account</button></form><p class="lk-err" role="alert"></p>
         ${users.length ? `<button class="lk-link" data-a="back">Back to sign in</button>` : ""}`;
       const f = $(".lk-form", box), er = $(".lk-err", box);
@@ -86,6 +86,7 @@
     NX.me = u; NX.set("lastUser", u.id); clearInterval(lockT);
     const L = $("#lock"); L.className = "out"; setTimeout(() => { L.hidden = true; }, 350);
     $("#desktop").hidden = false; applyLook(); icons(); taskbar(); tray(); clock(); closeFlyouts();
+    document.dispatchEvent(new CustomEvent("nx:signin"));
     setTimeout(() => NX.toast("Welcome, " + u.name + "."), 500);
   }
   function signOut() { closeFlyouts(); NX.closeAll(); setTimeout(lock, 160); }
@@ -93,6 +94,10 @@
     closeFlyouts(); NX.closeAll(); NX.me = null;
     const o = $("#off"); o.hidden = false; o.innerHTML = `<div class="off-msg">${NX.icon("logo", 56)}<span class="spin"></span><b>${kind === "restart" ? "Restarting" : "Shutting down"}</b></div>`;
     $("#desktop").hidden = true; $("#lock").hidden = true;
+    if (NX.native) { // the real computer restarts or turns off
+      setTimeout(() => NX.api("POST", "/power", { kind }).catch((e) => { o.innerHTML = `<div class="off-msg">${NX.icon("logo", 56)}<b>Couldn't ${kind === "restart" ? "restart" : "shut down"}: ${NX.esc(e.message)}</b></div>`; setTimeout(() => { o.hidden = true; boot(); }, 2500); }), 900);
+      return;
+    }
     setTimeout(() => {
       if (kind === "restart") { o.hidden = true; boot(); return; }
       o.innerHTML = `<button class="off-on" aria-label="Turn on">${NX.icon("power", 34)}<span>Turn on</span></button>`; $(".off-on", o).onclick = () => { o.hidden = true; boot(); };
@@ -133,8 +138,10 @@
   }
   function tray() {
     if (!NX.me) return; const p = NX.prefs();
-    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${NX.icon("battery", 18)}`;
+    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="Battery ${batt().percent}%${batt().charging ? ", charging" : ""}">${NX.icon("battery", 18)}</span>` : ""}`;
   }
+  // the battery: on the real OS the computer's own (none on a desktop PC); in a browser tab a full one
+  const batt = () => NX.native ? (NX.battery && NX.battery.present ? NX.battery : null) : { percent: 100, charging: false };
   function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d); $("#tb-date").textContent = d.toLocaleDateString(); }
   setInterval(() => { if (NX.me) clock(); }, 5000);
 
@@ -164,7 +171,7 @@
     const p = NX.prefs(), t = (k, icon, label, on) => `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
     $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("store", "store", "Store", false)}</div>
       <label class="qs-sl">${NX.icon("sun", 18)}<input type="range" min="30" max="100" value="${p.brightness}" data-s="brightness" aria-label="Brightness"></label><label class="qs-sl">${NX.icon("volume", 18)}<input type="range" min="0" max="100" value="${p.volume}" data-s="volume" aria-label="Volume"></label>
-      <div class="qs-foot"><span>${NX.icon("battery", 18)} 100%</span><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
+      <div class="qs-foot"><span>${batt() ? `${NX.icon("battery", 18)} ${batt().percent}%${batt().charging ? " (charging)" : ""}` : ""}</span><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
     const Q = $("#qs");
     Q.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => {
       const k = b.dataset.k, P = NX.prefs();

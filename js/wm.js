@@ -38,7 +38,7 @@
   NX.closeAll = () => { for (const id of [...wins.keys()]) NX.close(id); };
   NX.open = (id, opts) => {
     const app = NX.apps[id]; if (!app) return null;
-    if (app.url) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }
+    if (app.url && !NX.webFrames) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }
     if (wins.has(id)) { NX.focus(id); const w = wins.get(id); if (opts && w.onopts) w.onopts(opts); return w; }
     desk = desk || document.getElementById("windows");
     const A = area(), small = A.w < 700;
@@ -66,7 +66,7 @@
       const mv = (ev) => {
         const dx = ev.clientX - sx, dy = ev.clientY - sy;
         if (!moved && Math.hypot(dx, dy) < 4) return;
-        if (!moved) { moved = true; el.classList.add("dragging");
+        if (!moved) { moved = true; el.classList.add("dragging"); document.documentElement.classList.add("nx-drag");
           if (w.max || w.snap) { const fx = (sx - el.getBoundingClientRect().left) / el.getBoundingClientRect().width; w.max = false; w.snap = null; el.classList.remove("maxed"); el.querySelector(".wb-max").innerHTML = NX.icon("max", 16); w.w = w.rw || w.w; w.h = w.rh || w.h; ox = sx - fx * w.w; oy = 0; } }
         w.x = Math.round(ox + dx); w.y = Math.round(clamp(oy + dy, 0, A2.h - 40)); w.x = clamp(w.x, -w.w + 120, A2.w - 120); place(w);
         const r = desk.getBoundingClientRect(), px = ev.clientX - r.left, py = ev.clientY - r.top;
@@ -75,7 +75,7 @@
       };
       const up = () => {
         removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
-        el.classList.remove("dragging"); if (hint) hint.className = "";
+        el.classList.remove("dragging"); document.documentElement.classList.remove("nx-drag"); if (hint) hint.className = "";
         if (moved && zone) {
           w.rw = w.w; w.rh = w.h;
           if (zone === "max") { w.max = false; NX.toggleMax(id); }
@@ -87,7 +87,7 @@
     // resize
     el.querySelectorAll(".rz").forEach((h) => h.addEventListener("pointerdown", (e) => {
       if (w.max) return; e.preventDefault(); e.stopPropagation();
-      const d = h.dataset.d, sx = e.clientX, sy = e.clientY, o = { x: w.x, y: w.y, w: w.w, h: w.h }, A2 = area();
+      document.documentElement.classList.add("nx-drag"); const d = h.dataset.d, sx = e.clientX, sy = e.clientY, o = { x: w.x, y: w.y, w: w.w, h: w.h }, A2 = area();
       const mv = (ev) => {
         const dx = ev.clientX - sx, dy = ev.clientY - sy;
         if (d.includes("e")) w.w = clamp(o.w + dx, w.minW, A2.w - o.x);
@@ -96,10 +96,10 @@
         if (d.includes("n")) { const nh = clamp(o.h - dy, w.minH, o.y + o.h); w.y = o.y + o.h - nh; w.h = nh; }
         w.snap = null; place(w); w.onresize && w.onresize();
       };
-      const up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); };
+      const up = () => { document.documentElement.classList.remove("nx-drag"); removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); };
       addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);
     }));
-    try { app.open(el.querySelector(".win-body"), w, opts || {}); } catch (e) { console.error(e); el.querySelector(".win-body").innerHTML = `<div class="app-error">${NX.esc(app.name)} couldn't start: ${NX.esc(e.message)}</div>`; }
+    try { if (app.open) app.open(el.querySelector(".win-body"), w, opts || {}); else NX.webView(el.querySelector(".win-body"), w, Object.assign({ url: app.url }, opts || {})); } catch (e) { console.error(e); el.querySelector(".win-body").innerHTML = `<div class="app-error">${NX.esc(app.name)} couldn't start: ${NX.esc(e.message)}</div>`; }
     NX.shell && NX.shell.recent(id); NX.shell && NX.shell.taskbar();
     return w;
   };

@@ -1,24 +1,71 @@
-// Google: a search page in a browser-style window. Google doesn't let other pages show it inside them, so searches and
-// the shortcuts open Google in a new browser tab.
+// Google. On the real Nebulux OS (from the USB) this window is a real web browser that shows Google itself, with
+// Back, Forward, Reload, Home and an address bar; links that open new tabs open here too. In a normal browser tab,
+// Google doesn't let other pages show it inside them, so there it's a search page that opens Google in a new tab.
 "use strict";
 (function () {
+  const HOME = "https://www.google.com/webhp?igu=1";
   const LINKS = [["Gmail", "https://mail.google.com"], ["YouTube", "https://www.youtube.com"], ["Maps", "https://maps.google.com"], ["Drive", "https://drive.google.com"], ["News", "https://news.google.com"], ["Translate", "https://translate.google.com"]];
+  // a typed web address, or else a Google search
+  const resolve = (q, frame) => {
+    q = String(q || "").trim(); if (!q) return "";
+    if (/^https?:\/\/\S+$/i.test(q)) return q;
+    if (/^([\w-]+\.)+[a-z]{2,}(:\d+)?(\/\S*)?$/i.test(q)) return "https://" + q;
+    return "https://www.google.com/search?q=" + encodeURIComponent(q) + (frame ? "&igu=1" : "");
+  };
   const go = (q) => {
-    q = String(q || "").trim(); if (!q) return false;
+    const url = resolve(q, NX.webFrames); if (!url) return false;
     if (!NX.netOK()) { NX.toast(NX.netWhy()); return false; }
-    const isUrl = /^(https?:\/\/)?([\w-]+\.)+[a-z]{2,}(\/\S*)?$/i.test(q) && !/\s/.test(q);
-    const url = isUrl ? (/^https?:\/\//i.test(q) ? q : "https://" + q) : "https://www.google.com/search?q=" + encodeURIComponent(q);
+    if (NX.webFrames) { NX.open("google", { url }); return true; }
     window.open(url, "_blank", "noopener"); return true;
   };
-  NX.apps.google = { name: "Google", icon: "google", builtIn: true, w: 1000, h: 640, minW: 380, minH: 320, desc: "Search the web with Google.",
+  NX.searchWeb = go;
+  NX.openWeb = (url) => { if (/^https?:/i.test(url)) NX.open("google", { url }); };
+
+  // ---------- a website inside an OS window (real OS only) ----------
+  NX.webView = (body, win, opts) => {
+    const home = opts.home || opts.url || HOME;
+    body.classList.add("webapp");
+    body.innerHTML = `<div class="wv-bar"><button class="wv-b" data-w="back" aria-label="Back" title="Back">${NX.icon("back", 16)}</button><button class="wv-b" data-w="forward" aria-label="Forward" title="Forward">${NX.icon("fwd", 16)}</button><button class="wv-b" data-w="reload" aria-label="Reload" title="Reload">${NX.icon("restart", 16)}</button><button class="wv-b" data-w="home" aria-label="Home" title="Home">${NX.icon("home", 16)}</button>
+      <form class="wv-addr">${NX.icon("lock", 14)}<input name="u" placeholder="Search Google or type a web address" aria-label="Search Google or type a web address" autocomplete="off" spellcheck="false"></form></div><div class="wv-load"><i></i></div>
+      <div class="wv-view"><iframe class="webview" title="${NX.esc(win.app.name)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-presentation allow-storage-access-by-user-activation" allow="fullscreen; autoplay; clipboard-read; clipboard-write; camera; microphone; geolocation; encrypted-media; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="wv-off" hidden></div></div>`;
+    const f = body.querySelector("iframe"), addr = body.querySelector(".wv-addr"), ai = addr.querySelector("input"), off = body.querySelector(".wv-off"), load = body.querySelector(".wv-load");
+    let current = "", pending = "";
+    const busy = (on) => load.classList.toggle("on", on);
+    const nav = (url) => {
+      if (!url) return;
+      if (!NX.netOK()) { pending = url; off.hidden = false; f.hidden = true; busy(false);
+        off.innerHTML = `${NX.icon("wifioff", 44)}<b>You're not connected</b><p>${NX.esc(NX.netWhy())}</p><div><button class="btn primary" data-o="wifi">Wi-Fi settings</button><button class="btn" data-o="retry">Try again</button></div>`;
+        off.querySelector("[data-o=wifi]").onclick = () => NX.open("settings", { page: "system" }); off.querySelector("[data-o=retry]").onclick = () => nav(pending); return; }
+      off.hidden = true; f.hidden = false; pending = ""; current = url; busy(true); f.src = url; if (document.activeElement !== ai) ai.value = url;
+    };
+    f.addEventListener("load", () => busy(false));
+    f._onloc = (url, title) => { current = url; if (document.activeElement !== ai) ai.value = url.replace(/[?&]igu=1(?=&|$)/, "").replace(/\?$/, ""); busy(false); win.el.querySelector(".wt-name").textContent = title ? title + " - " + win.app.name : win.app.name; };
+    const send = (m) => { try { f.contentWindow.postMessage({ nx: m }, "*"); } catch (e) { /* not loaded yet */ } };
+    body.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const k = b.dataset.w; if (k === "home") nav(home); else if (k === "reload") { if (pending || !current) nav(pending || current || home); else { busy(true); send("reload"); } } else send(k); }));
+    addr.onsubmit = (e) => { e.preventDefault(); const url = resolve(ai.value, true); if (url) { ai.blur(); nav(url); } };
+    // clicking the address bar selects it all at once (so typing replaces it), without losing the first letter typed
+    let fresh = false;
+    ai.onfocus = () => { ai.select(); fresh = true; };
+    ai.onmouseup = (e) => { if (fresh) { e.preventDefault(); fresh = false; } };
+    ai.onkeydown = () => { fresh = false; };
+    const onNet = () => { if (pending && NX.netOK()) nav(pending); };
+    addEventListener("online", onNet); document.addEventListener("nx:prefs", onNet);
+    win.onclose = () => { removeEventListener("online", onNet); document.removeEventListener("nx:prefs", onNet); };
+    win.onopts = (o) => { if (o.url) nav(o.url); else if (o.q) nav(resolve(o.q, true)); };
+    nav(opts.q ? resolve(opts.q, true) : opts.url || home);
+    return { nav };
+  };
+
+  NX.apps.google = { name: "Google", icon: "google", builtIn: true, w: 1100, h: 700, minW: 380, minH: 320, desc: "Search the web with Google.",
     open(body, win, opts) {
+      if (NX.webFrames) { NX.webView(body, win, Object.assign({ home: HOME }, opts)); return; }
       body.classList.add("gapp");
       body.innerHTML = `<div class="g-bar"><button class="g-nav" disabled aria-label="Back">${NX.icon("back", 16)}</button><button class="g-nav" disabled aria-label="Forward">${NX.icon("fwd", 16)}</button><button class="g-nav g-home" aria-label="Home">${NX.icon("home", 16)}</button>
         <form class="g-addr">${NX.icon("lock", 14)}<input name="u" placeholder="Search Google or type a web address" aria-label="Search Google or type a web address" autocomplete="off"></form></div>
         <div class="g-page"><div class="g-logo"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></div>
         <form class="g-search"><span class="g-si">${NX.icon("search", 18)}</span><input name="q" placeholder="Search Google" aria-label="Search Google" autocomplete="off"><button type="submit" class="btn primary">Search</button></form><div class="g-btns"><button type="button" data-g="s">Google Search</button><button type="button" data-g="l">I'm Feeling Lucky</button></div>
         <div class="g-links">${LINKS.map(([n, u]) => `<a class="g-tile" href="${u}" target="_blank" rel="noopener"><span>${n[0]}</span><b>${n}</b></a>`).join("")}</div>
-        <p class="g-note">Results open in a new tab, because Google doesn't let other pages show it inside them.</p></div>`;
+        <p class="g-note">Results open in a new tab, because Google doesn't let other pages show it inside them. On the real Nebulux OS (from the USB), Google opens right here.</p></div>`;
       const s = body.querySelector(".g-search"), a = body.querySelector(".g-addr"), qi = s.querySelector("input");
       s.onsubmit = (e) => { e.preventDefault(); if (go(qi.value)) { qi.value = ""; NX.toast("Opened Google in a new tab."); } else qi.focus(); };
       a.onsubmit = (e) => { e.preventDefault(); const i = a.querySelector("input"); if (go(i.value)) { i.value = ""; NX.toast("Opened in a new tab."); } };
@@ -30,5 +77,4 @@
       if (opts.q) { qi.value = opts.q; }
       win.onopts = (o) => { if (o.q) { qi.value = o.q; qi.focus(); } };
     } };
-  NX.searchWeb = go;
 })();

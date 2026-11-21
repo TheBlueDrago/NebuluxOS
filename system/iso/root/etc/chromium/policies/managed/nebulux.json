@@ -1,0 +1,14 @@
+{
+  "BrowserSignin": 0,
+  "SyncDisabled": true,
+  "MetricsReportingEnabled": false,
+  "DefaultBrowserSettingEnabled": false,
+  "TranslateEnabled": false,
+  "IncognitoModeAvailability": 1,
+  "BrowserGuestModeEnabled": false,
+  "BrowserAddPersonEnabled": false,
+  "PromptForDownloadLocation": false,
+  "DownloadDirectory": "/home/nebulux/Downloads",
+  "AutofillCreditCardEnabled": false,
+  "URLBlocklist": ["file://*", "chrome://settings", "chrome://extensions", "chrome://flags"]
+}

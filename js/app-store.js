@@ -31,7 +31,7 @@
           const id = view.slice(4), a = NX.apps[id];
           main = !a ? `<p>That app isn't here.</p>` : `<button class="st-back" data-view="all">${NX.icon("back", 16)} Back</button>
             <div class="st-detail"><div class="st-dh">${NX.icon(a.icon || id, 96)}<div><h2>${NX.esc(a.name)}</h2><p class="st-pub">Nebulux · ${a.category}</p><p class="st-rate big">${NX.icon("star", 14)} ${a.rating || "4.5"} average</p>${btn(id)}${isIn(id) ? `<button class="btn ghost" data-remove="${id}">Uninstall</button>` : ""}</div></div>
-            <h3>Description</h3><p>${NX.esc(a.desc)}</p><h3>Details</h3><div class="st-facts"><div><span>Size</span><b>${a.size || "1 MB"}</b></div><div><span>Works</span><b>${a.url ? "On the web, opens in a new tab" : "On this PC, no internet needed"}</b></div><div><span>Price</span><b>Free</b></div></div></div>`;
+            <h3>Description</h3><p>${NX.esc(a.desc)}</p><h3>Details</h3><div class="st-facts"><div><span>Size</span><b>${a.size || "1 MB"}</b></div><div><span>Works</span><b>${a.url ? (NX.webFrames ? "On the web, in its own window" : "On the web, opens in a new tab") : "On this PC, no internet needed"}</b></div><div><span>Price</span><b>Free</b></div></div></div>`;
         } else if (view === "library") {
           const mine = storeApps().filter(([id]) => isIn(id));
           main = `<h2>Library</h2>${mine.length ? `<div class="st-lib">${mine.map(([id, a]) => `<div class="st-lrow">${NX.icon(a.icon || id, 36)}<b>${NX.esc(a.name)}</b><small>${a.category}</small><button class="btn" data-launch="${id}">Open</button><button class="btn ghost" data-remove="${id}">Uninstall</button></div>`).join("")}</div>` : `<p class="st-empty">You haven't installed anything yet. Find something on Home.</p>`}`;
