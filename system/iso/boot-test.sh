@@ -32,11 +32,14 @@ boot() { # BIOS or UEFI
   if [ "$up" != 1 ]; then echo "FAIL ($MODE): Nebulux OS didn't show up"; shot 9-stuck; FAILS=$((FAILS + 1)); kill $QPID; wait $QPID 2>/dev/null; return; fi
   echo "ok   ($MODE): Nebulux OS is on screen, $(( $(date +%s) - T0 )) seconds after turning on"
   sleep 4; shot 3-lock
-  keys spc; sleep 2
-  typeword "Ada"; keys tab; typeword "nebula1"; keys tab; typeword "nebula1"; keys ret; sleep 6; shot 4-desktop
+  # first-time setup: region, keyboard, network, Google sign-in, name, password, privacy, look (Enter takes each step)
+  keys ret; sleep 2; keys ret; sleep 2; keys ret; sleep 3; shot 3a-google; keys ret; sleep 2; shot 3b-name
+  typeword "Ada"; keys ret; sleep 2
+  typeword "nebula1"; keys tab; typeword "nebula1"; keys ret; sleep 2; shot 3c-privacy
+  keys ret; sleep 2; keys ret; sleep 12; shot 4-desktop
   if python3 "$(dirname "$0")/ppm2png.py" --full /tmp/nx.ppm; then echo "ok   ($MODE): Nebulux OS fills the whole screen"; else echo "FAIL ($MODE): Nebulux OS doesn't fill the screen"; FAILS=$((FAILS + 1)); fi
   if grep -q "NEBULUX-DIAG ext=1" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): the web-windows extension is running"; else echo "FAIL ($MODE): the web-windows extension isn't running ($(grep -a NEBULUX-DIAG "$SHOTS/$MODE-serial.log" | tail -1))"; FAILS=$((FAILS + 1)); fi
-  keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 15; shot 5-google
+  keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   keys meta_l; sleep 2; typeword "settings"; sleep 1; keys ret; sleep 6; shot 6-settings
   keys meta_l; sleep 2; typeword "file explorer"; sleep 1; keys ret; sleep 5; shot 7-files
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1

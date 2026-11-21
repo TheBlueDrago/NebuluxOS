@@ -85,7 +85,7 @@ window.NX = window.NX || {};
 
   // ---- per-user preferences and app data ----
   const DEF = { theme: "dark", accent: "#7c5cff", wallpaper: 0, align: "center", clock24: false, brightness: 100, volume: 60, night: false,
-    installed: [], pinned: ["files", "settings", "google", "store"], desktop: ["files", "settings", "google", "store"], recent: [], wifi: true, bt: true, airplane: false };
+    installed: [], pinned: ["files", "settings", "google", "youtube", "store"], desktop: ["files", "settings", "google", "youtube", "store"], recent: [], wifi: true, bt: true, airplane: false, mouse: 3 };
   NX.prefs = () => Object.assign({}, DEF, NX.me ? NX.get("prefs:" + NX.me.id, {}) : {});
   NX.setPref = (k, v) => { if (!NX.me) return; const p = NX.get("prefs:" + NX.me.id, {}); p[k] = v; NX.set("prefs:" + NX.me.id, p); document.dispatchEvent(new CustomEvent("nx:prefs", { detail: k })); };
   NX.data = (k, d) => { const all = NX.me ? NX.get("data:" + NX.me.id, {}) : {}; return k in all ? all[k] : d; };

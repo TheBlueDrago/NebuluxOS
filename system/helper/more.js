@@ -192,6 +192,16 @@ module.exports = function more({ api, run, FAKE }) {
     return { ok: true };
   };
 
+  // ---------- what changed: screens plugged in or out, drives plugged in or out ----------
+  api["GET /changes"] = async () => {
+    if (FAKE) return { sig: (fakeDisp.tv ? "tv" : "") + (fakeDrive.plugged ? "usb" : "") };
+    let sig = "";
+    try { for (const d of fs.readdirSync("/sys/class/drm")) { if (!/-/.test(d)) continue; try { sig += d + "=" + fs.readFileSync("/sys/class/drm/" + d + "/status", "utf8").trim() + ";"; } catch (e) { /* no status */ } } } catch (e) { /* no screens info */ }
+    try { sig += fs.readFileSync("/proc/partitions", "utf8").replace(/\s+/g, " "); } catch (e) { /* not Linux */ }
+    try { sig += "|" + fs.readFileSync("/proc/self/mounts", "utf8").split("\n").filter((l) => l.includes("/media/")).length; } catch (e) { /* not Linux */ }
+    return { sig };
+  };
+
   // ---------- displays: a TV or monitor on HDMI ----------
   let fakeDisp = { tv: false, mode: "internal" };
   function parseXrandr(s) {
@@ -222,7 +232,7 @@ module.exports = function more({ api, run, FAKE }) {
   async function fitBrowser() {
     // there is no window manager, so the browser is moved and sized to the new screen by hand
     const r = await run("xrandr", ["--current"], 6000); const sc = parseXrandr(r.out).screen; if (!sc) return;
-    const ids = (await run("xdotool", ["search", "--class", "chromium"], 5000)).out.split("\n").filter((x) => /^\d+$/.test(x.trim()));
+    const ids = (await run("xdotool", ["search", "--class", "NebuluxShell"], 5000)).out.split("\n").filter((x) => /^\d+$/.test(x.trim()));
     for (const id of ids) { await run("xdotool", ["windowmove", id, "0", "0"], 4000); await run("xdotool", ["windowsize", id, String(sc.w), String(sc.h)], 4000); }
   }
   api["POST /display/get"] = async (b) => displays(!!b.probe);
@@ -295,6 +305,31 @@ module.exports = function more({ api, run, FAKE }) {
     lastCpu = now;
     let avail = os.freemem(); try { const mi = fs.readFileSync("/proc/meminfo", "utf8"); const m2 = /MemAvailable:\s+(\d+) kB/.exec(mi); if (m2) avail = +m2[1] * 1024; } catch (e) { /* not Linux */ }
     return { cpu, cores: now.length, model: ((os.cpus()[0] || {}).model || "").replace(/\s+/g, " ").trim(), memTotal: os.totalmem(), memUsed: os.totalmem() - avail, uptime: Math.round(os.uptime()) };
+  };
+
+  // ---------- the real web browser (Google, YouTube, websites) ----------
+  // A full browser window with tabs, above Nebulux OS and just above its taskbar (the window manager keeps that strip
+  // free). It has its own profile, so signing in to Google there stays signed in.
+  let web = null; const WEBDIR = path.join(HOME, ".config", "nebulux-web");
+  const browserOK = () => !FAKE && fs.existsSync("/usr/bin/chromium") && !!process.env.DISPLAY && fs.existsSync("/usr/bin/openbox");
+  const webWins = async () => (await run("xdotool", ["search", "--class", "NebuluxWeb"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
+  api["GET /browser"] = async () => ({ available: browserOK(), running: !!(web && web.exitCode == null) });
+  api["POST /browser/open"] = async (b) => {
+    const url = String(b.url || ""); if (!/^https?:\/\/[^\s]{1,2000}$/i.test(url)) throw new Error("That web address doesn't look right.");
+    if (!browserOK()) throw new Error("The web browser isn't available here.");
+    const flags = (process.env.NX_BROWSER_FLAGS || "").split(" ").filter(Boolean);
+    const p = spawn("chromium", ["--user-data-dir=" + WEBDIR, "--class=NebuluxWeb", "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--password-store=basic", ...flags, url], { detached: true, stdio: "ignore" });
+    p.unref(); if (!(web && web.exitCode == null)) { web = p; p.on("exit", () => { if (web === p) web = null; }); }
+    for (let k = 0; k < 15; k++) { await new Promise((ok) => setTimeout(ok, 300)); const w = await webWins(); if (w.length) { await run("xdotool", ["windowactivate", w[w.length - 1]], 4000); break; } }
+    return { ok: true };
+  };
+  api["POST /browser/show"] = async () => { const w = await webWins(); for (const id of w) await run("xdotool", ["windowactivate", id], 4000); return { shown: w.length }; };
+  api["POST /browser/hide"] = async () => { if (!(web && web.exitCode == null)) return { hidden: 0 }; const w = await webWins(); for (const id of w) await run("xdotool", ["windowminimize", id], 4000); return { hidden: w.length }; };
+  api["POST /browser/toggle"] = async () => {
+    const w = await webWins(); if (!w.length) return { running: false };
+    const act = (await run("xdotool", ["getactivewindow"], 3000)).out.trim();
+    if (w.includes(act)) { for (const id of w) await run("xdotool", ["windowminimize", id], 4000); return { running: true, shown: false }; }
+    for (const id of w) await run("xdotool", ["windowactivate", id], 4000); return { running: true, shown: true };
   };
 
   // ---------- screenshots ----------

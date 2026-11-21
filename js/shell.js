@@ -53,6 +53,7 @@
     const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); };
     tick(); clearInterval(lockT); lockT = setInterval(tick, 1000);
     const users = NX.users(); chosen = (users.find((u) => u.id === NX.get("lastUser")) || users[0] || null); mode = users.length ? "signin" : "setup";
+    if (!users.length && NX.oobe) { L.hidden = true; clearInterval(lockT); NX.oobe((u) => { L.hidden = false; enter(u); }); return; }
     signinDraw();
     if (!clockFirst) setTimeout(() => { const i = $("#lock input"); if (i) i.focus(); }, 60);
   }
@@ -104,6 +105,14 @@
   // Lock: the lock screen comes up, and your apps stay open behind it
   let lockedBy = null;
   function lockKeep() { if (!NX.me) return; lockedBy = NX.me.id; closeFlyouts(); lock(true); }
+  // Sleep: the computer sleeps (on the real OS); press a key or click to wake it, then sign in again
+  function sleep() {
+    closeFlyouts(); lockKeep();
+    if (NX.native) { setTimeout(() => NX.api("POST", "/power", { kind: "sleep" }).catch((e) => NX.toast(e.message)), 400); return; }
+    const o = $("#off"); o.hidden = false; o.innerHTML = ""; o.classList.add("sleeping");
+    const wake = () => { o.hidden = true; o.classList.remove("sleeping"); removeEventListener("keydown", wake, true); o.removeEventListener("pointerdown", wake); };
+    setTimeout(() => { addEventListener("keydown", wake, true); o.addEventListener("pointerdown", wake); }, 300);
+  }
   function power(kind) {
     closeFlyouts(); NX.closeAll(); NX.me = null;
     const o = $("#off"); o.hidden = false; o.innerHTML = `<div class="off-msg">${NX.icon("logo", 56)}<span class="spin"></span><b>${kind === "restart" ? "Restarting" : "Shutting down"}</b></div>`;
@@ -127,8 +136,8 @@
     box.innerHTML = list.map((id, i) => `<button class="dicon" data-app="${id}" style="grid-row:${(i % rows) + 1};grid-column:${Math.floor(i / rows) + 1}">${NX.icon(NX.apps[id].icon || id, 40)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("");
     setTimeout(iconsDone, 0);
     box.querySelectorAll(".dicon").forEach((b) => {
-      b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); sel = b.dataset.app; if (e.pointerType === "touch") NX.open(b.dataset.app); };
-      b.ondblclick = () => NX.open(b.dataset.app);
+      // one click opens it (a slow double-click on a slow computer used to do nothing)
+      b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); sel = b.dataset.app; NX.open(b.dataset.app); };
       b.onkeydown = (e) => { if (e.key === "Enter") NX.open(b.dataset.app); };
       b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; menu(e.clientX, e.clientY, [["Open", () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ["Remove from desktop", () => NX.setPref("desktop", NX.prefs().desktop.filter((x) => x !== id))], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]); };
     });
@@ -148,9 +157,9 @@
   function taskbar() {
     if (!NX.me) return; const p = NX.prefs(), running = [...NX.wins.keys()], ids = [...p.pinned.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id))), ...running.filter((id) => !p.pinned.includes(id))];
     const top = [...NX.wins.values()].filter((w) => !w.min).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex))[0];
-    $("#tb-apps").innerHTML = ids.map((id) => { const w = NX.wins.get(id); return `<button class="tb-app ${w ? "run" : ""} ${w && top === w ? "act" : ""}" data-app="${id}" title="${NX.esc(NX.apps[id].name)}" aria-label="${NX.esc(NX.apps[id].name)}">${NX.icon(NX.apps[id].icon || id, 26)}<i></i></button>`; }).join("");
+    $("#tb-apps").innerHTML = ids.map((id) => { const w = NX.wins.get(id) || (id === "google" && NX.browserRunning ? { browser: true } : null); return `<button class="tb-app ${w ? "run" : ""} ${w && (top === w || (w.browser && NX.browserShown)) ? "act" : ""}" data-app="${id}" title="${NX.esc(NX.apps[id].name)}" aria-label="${NX.esc(NX.apps[id].name)}">${NX.icon(NX.apps[id].icon || id, 26)}<i></i></button>`; }).join("");
     $("#tb-apps").querySelectorAll(".tb-app").forEach((b) => {
-      b.onclick = () => { const id = b.dataset.app, w = NX.wins.get(id); closeFlyouts(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
+      b.onclick = () => { const id = b.dataset.app, w = NX.wins.get(id); closeFlyouts(); if (id === "google" && NX.browserOK && NX.browserRunning) { NX.browserToggle(); return; } if (NX.browserHide) NX.browserHide(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
       b.oncontextmenu = (e) => { e.preventDefault(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : [])]); };
     });
   }
@@ -164,7 +173,7 @@
   setInterval(() => { if (NX.me) clock(); }, 5000);
 
   // ---------- flyouts: Start, quick settings, calendar ----------
-  function closeFlyouts(except) { for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
+  function closeFlyouts(except) { if (except && NX.browserHide) NX.browserHide(); for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
   function startDraw(q, view) {
     const p = NX.prefs(), all = visibleApps(), me = NX.me;
     if (view === "all" && !q) return allAppsDraw(all, me);
@@ -174,7 +183,7 @@
       <div class="sm-body">${q ? `<h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div>` :
       `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-allapps="1">All apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
       <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
-      <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div>`;
+      <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="sleep">${NX.icon("moon", 16)}Sleep</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div>`;
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
     si.onkeydown = (e) => { if (e.key === "Enter") { const f = $(".sm-res", S); if (f) f.click(); } };
@@ -185,7 +194,7 @@
     S.querySelectorAll("[data-rfile]").forEach((b) => (b.onclick = () => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; closeFlyouts(); if (f) NX.openFile(f); }));
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     $(".sm-pwb", S).onclick = (e) => { e.stopPropagation(); const m = $(".sm-pwm", S); m.hidden = !m.hidden; };
-    S.querySelectorAll("[data-pw]").forEach((b) => (b.onclick = () => { const k = b.dataset.pw; if (k === "lock") lockKeep(); else if (k === "out") signOut(); else power(k === "restart" ? "restart" : "off"); }));
+    S.querySelectorAll("[data-pw]").forEach((b) => (b.onclick = () => { const k = b.dataset.pw; if (k === "lock") lockKeep(); else if (k === "out") signOut(); else if (k === "sleep") sleep(); else power(k === "restart" ? "restart" : "off"); }));
   }
   // Recommended: recently opened files first (like Windows 11), then recently used apps
   const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "Just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : new Date(t).toLocaleDateString(); };
@@ -210,16 +219,17 @@
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     const si = $(".sm-search input", S); si.oninput = () => { startDraw(si.value); const n = $(".sm-search input"); n.focus(); };
   }
-  function toggleStart(focus) { const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
+  function toggleStart(focus) { if (NX.browserHide) NX.browserHide(); const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
   function qsDraw() {
-    const p = NX.prefs(), t = (k, icon, label, on) => `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
-    $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("dnd", "bell", "Do not disturb", !!p.dnd)}${t("store", "store", "Store", false)}</div>
+    const p = NX.prefs(), t = (k, icon, label, on, more) => more ? `<div class="qs-t qs-split ${on ? "on" : ""}"><button class="qs-main" data-k="${k}" aria-label="${label}">${NX.icon(icon, 18)}</button><button class="qs-more" data-more="${k}" aria-label="${label} list">${NX.icon("chevron", 12)}</button><span>${label}</span></div>` : `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
+    $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("dnd", "bell", "Do not disturb", !!p.dnd)}${t("cast", "cast", "Cast", false)}</div>
       <label class="qs-sl">${NX.icon("sun", 18)}<input type="range" min="30" max="100" value="${p.brightness}" data-s="brightness" aria-label="Brightness"></label><label class="qs-sl">${NX.icon("volume", 18)}<input type="range" min="0" max="100" value="${p.volume}" data-s="volume" aria-label="Volume"></label>
       <div class="qs-foot"><span>${batt() ? `${NX.icon("battery", 18)} ${batt().percent}%${batt().charging ? " (charging)" : ""}` : ""}</span><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
     const Q = $("#qs");
     Q.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => {
       const k = b.dataset.k, P = NX.prefs();
       if (k === "store") { closeFlyouts(); NX.open("store"); return; }
+      if (k === "cast") { qsMore("cast"); return; }
       if (k === "theme") NX.setPref("theme", P.theme === "dark" ? "light" : "dark");
       else if (k === "airplane") { NX.setPref("airplane", !P.airplane); if (!P.airplane) { NX.setPref("wifi", false); NX.setPref("bt", false); } }
       else if (k === "dnd") NX.setPref("dnd", !P.dnd);
@@ -228,6 +238,53 @@
     }));
     Q.querySelectorAll("[data-s]").forEach((s) => (s.oninput = () => NX.setPref(s.dataset.s, +s.value)));
     $(".qs-set", Q).onclick = () => { closeFlyouts(); NX.open("settings"); };
+    Q.querySelectorAll("[data-more]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); qsMore(b.dataset.more); }));
+  }
+  // ---------- the lists inside quick settings: Wi-Fi networks, Bluetooth devices, Cast ----------
+  function qsMore(kind) {
+    const Q = $("#qs"), p = NX.prefs(), title = { wifi: "Wi-Fi", bt: "Bluetooth", cast: "Cast" }[kind], go = { wifi: "network", bt: "devices", cast: "system" }[kind];
+    const on = kind === "cast" ? null : !!(p[kind] && !p.airplane);
+    Q.innerHTML = `<div class="qs-sub"><div class="qs-subh"><button class="qs-back" aria-label="Back">${NX.icon("back", 16)}</button><b>${title}</b>${on == null ? "" : `<label class="tg"><input type="checkbox" ${on ? "checked" : ""} data-qt="${kind}"><i></i></label>`}</div><div class="qs-list"><p class="qs-note">Looking...</p></div>
+      <button class="qs-link" data-go="${go}">${kind === "wifi" ? "More Wi-Fi settings" : kind === "bt" ? "More Bluetooth settings" : "Display settings"}</button></div>`;
+    $(".qs-back", Q).onclick = (e) => { e.stopPropagation(); qsDraw(); };
+    $(".qs-link", Q).onclick = () => { closeFlyouts(); NX.open("settings", { page: go }); };
+    const tq = Q.querySelector("[data-qt]"); if (tq) tq.onchange = () => { NX.setPref(kind, tq.checked); if (tq.checked) NX.setPref("airplane", false); setTimeout(() => qsMore(kind), 1500); };
+    const list = Q.querySelector(".qs-list"), note = (t) => (list.innerHTML = `<p class="qs-note">${t}</p>`);
+    if (!NX.native) {
+      note(kind === "wifi" ? (NX.netOK() ? "Connected to the internet through this computer's connection." : NX.netWhy()) : kind === "bt" ? "Bluetooth devices connect on the real Nebulux OS (from the USB), or through Settings in Edge and Chrome." : "On the real Nebulux OS (from the USB), cast to a TV that supports screen mirroring, or plug one into the HDMI port.");
+      return;
+    }
+    if (kind === "wifi") {
+      if (!on) return note("Wi-Fi is off.");
+      NX.api("GET", "/wifi").then((w) => {
+        if (!w.device) return note("This computer has no Wi-Fi that Nebulux OS can use. A network cable works too.");
+        if (!w.networks.length) return note("No networks found yet.");
+        list.innerHTML = w.networks.slice(0, 12).map((n, i) => `<div class="qs-item ${n.active ? "on" : ""}" data-i="${i}"><button class="qs-row" data-row="${i}">${NX.icon("wifi", 18)}<span><b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"}</small></span></button></div>`).join("");
+        list.querySelectorAll("[data-row]").forEach((r) => (r.onclick = (e) => {
+          e.stopPropagation(); const n = w.networks[+r.dataset.row], item = r.parentNode;
+          if (item.querySelector(".qs-act")) return;
+          item.insertAdjacentHTML("beforeend", n.active ? `<div class="qs-act"><button class="btn sm" data-dis="1">Disconnect</button></div>` : `<form class="qs-act">${n.secure ? `<input type="password" placeholder="Network password" aria-label="Password for ${NX.esc(n.ssid)}" maxlength="63">` : ""}<button class="btn sm primary" type="submit">Connect</button><p class="qs-err"></p></form>`);
+          const d = item.querySelector("[data-dis]"); if (d) d.onclick = () => NX.api("POST", "/wifi/disconnect").then(() => qsMore("wifi"));
+          const f = item.querySelector("form"); if (!f) return; const pi = f.querySelector("input"); if (pi) pi.focus();
+          f.onsubmit = (ev) => { ev.preventDefault(); const b = f.querySelector("button"); b.disabled = true; b.textContent = "Connecting...";
+            NX.api("POST", "/wifi/connect", { ssid: n.ssid, password: pi ? pi.value : "" }).then(() => { NX.toast("Connected to " + n.ssid + "."); qsMore("wifi"); }).catch((er) => { b.disabled = false; b.textContent = "Connect"; f.querySelector(".qs-err").textContent = er.message; }); };
+        }));
+      }).catch((e) => note(e.message));
+    }
+    if (kind === "bt") {
+      if (!on) return note("Bluetooth is off.");
+      NX.api("GET", "/bt").then((b) => {
+        if (!b.available) return note("This computer has no Bluetooth that Nebulux OS can use.");
+        list.innerHTML = (b.devices.length ? b.devices.map((d) => `<div class="qs-item"><div class="qs-row">${NX.icon("bt", 18)}<span><b>${NX.esc(d.name)}</b><small>${d.connected ? "Connected" : "Paired"}</small></span></div></div>`).join("") : `<p class="qs-note">No devices yet.</p>`) + `<button class="btn sm" data-add="1">Add a device</button>`;
+        list.querySelector("[data-add]").onclick = () => { closeFlyouts(); NX.open("settings", { page: "devices" }); setTimeout(() => { const s = document.querySelector("#s-bscan"); if (s && !s.disabled) s.click(); }, 700); };
+      }).catch((e) => note(e.message));
+    }
+    if (kind === "cast") {
+      NX.api("GET", "/cast").then((c) => {
+        list.innerHTML = `<p class="qs-note">Show Nebulux OS on a TV. With a wire: plug the TV into the HDMI port and it shows the same picture by itself.</p>` + (c.available ? (c.running ? `<div class="qs-castbtns"><button class="btn sm" data-c="show">Show the TV list</button><button class="btn sm" data-c="stop">Stop casting</button></div>` : `<button class="btn sm primary" data-c="start">Find wireless displays</button><p class="qs-note">For TVs with screen mirroring (Miracast). The computer's Wi-Fi needs to support it too.</p>`) : "");
+        list.querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => { b.disabled = true; NX.api("POST", "/cast/" + b.dataset.c).then(() => qsMore("cast")).catch((e) => NX.toast(e.message)); }));
+      }).catch((e) => note(e.message));
+    }
   }
   let calM = null;
   function calDraw() {
@@ -277,6 +334,8 @@
     addEventListener("keyup", (e) => { if (e.key === "Alt" && sw) swEnd(); });
     addEventListener("blur", () => { if (sw && document.activeElement && document.activeElement.tagName !== "IFRAME") swEnd(); });
     addEventListener("keyup", (e) => { if ((e.key === "Meta" || e.key === "OS") && winAlone && NX.me) { e.preventDefault(); toggleStart(true); } if (e.key === "Meta" || e.key === "OS") winAlone = false; });
+    // shortcuts from the window manager on the real computer
+    document.addEventListener("nx:key", (e) => { if (!NX.me) return; const k = e.detail; if (k === "start") toggleStart(true); else { if (k !== "shot") closeFlyouts(); if (k === "desk" && NX.browserHide) NX.browserHide(); winKeys(k); } });
     // the same keys pressed while a website in a window has the keyboard
     addEventListener("message", (e) => { const d = e.data; if (!d || d.nx !== "key" || !NX.me || ![...document.querySelectorAll("iframe")].some((f) => f.contentWindow === e.source)) return;
       if (d.key === "start") toggleStart(true); else if (typeof d.key === "string") winKeys(d.key); });
@@ -289,7 +348,9 @@
     $("#tb-qs").onclick = (e) => { e.stopPropagation(); const q = $("#qs"); if (!q.hidden) { closeFlyouts(); return; } closeFlyouts("qs"); qsDraw(); q.hidden = false; };
     $("#tb-clock").onclick = (e) => { e.stopPropagation(); const c = $("#cal"); if (!c.hidden) { closeFlyouts(); return; } closeFlyouts("cal"); calM = null; calDraw(); c.hidden = false; };
     for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) $("#" + id).addEventListener("pointerdown", (e) => e.stopPropagation());
-    document.addEventListener("pointerdown", (e) => { if (!e.target.closest("#taskbar")) closeFlyouts(); if (!e.target.closest(".dicon")) { document.querySelectorAll(".dicon.sel").forEach((x) => x.classList.remove("sel")); sel = null; } });
+    // (the capture phase, so a click on a window edge that stops the event still closes flyouts)
+    document.addEventListener("pointerdown", (e) => { if (!e.target.closest("#taskbar,#start,#qs,#cal,#ctx,#widgets,#snapfly,.nx-ask")) closeFlyouts(); }, true);
+    document.addEventListener("pointerdown", (e) => { if (!e.target.closest(".dicon")) { document.querySelectorAll(".dicon.sel").forEach((x) => x.classList.remove("sel")); sel = null; } });
     $("#desktop").addEventListener("contextmenu", (e) => {
       if (e.target.closest(".win") || e.target.closest("#taskbar") || e.target.closest(".dicon") || e.target.closest("#start,#qs,#cal")) return;
       e.preventDefault(); menu(e.clientX, e.clientY, [["New folder", () => NX.desktopNew && NX.desktopNew(true)], ["New text document", () => NX.desktopNew && NX.desktopNew(false)], ["Refresh", () => { icons(); }], ["Display settings", () => NX.open("settings", { page: "system" })], ["Personalize", () => NX.open("settings", { page: "personal" })], ["Open in File Explorer", () => NX.open("files", { place: "Desktop" })]]);

@@ -18,6 +18,11 @@ const { execFile } = require("child_process");
 const PORT = +(process.env.NX_PORT || 7777), HOST = "127.0.0.1";
 const WWW = path.resolve(process.argv[2] || path.join(__dirname, "..", "..")), FAKE = process.env.NX_FAKE === "1";
 const TOKEN = crypto.randomBytes(24).toString("hex");
+// a second key, in a file only this person can read, for the window manager's shortcut script (nebulux-key)
+const LOCALKEY = crypto.randomBytes(24).toString("hex");
+if (!FAKE) { try { fs.writeFileSync(path.join(os.homedir(), ".nebulux-key"), LOCALKEY, { mode: 0o600 }); fs.chmodSync(path.join(os.homedir(), ".nebulux-key"), 0o600); } catch (e) { /* no home folder */ } }
+const listeners = new Set();
+const pushEvent = (obj) => { const line = "data: " + JSON.stringify(obj) + "\n\n"; for (const r of listeners) { try { r.write(line); } catch (e) { listeners.delete(r); } } };
 const TYPES = { ".webp": "image/webp", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".json": "application/json", ".woff2": "font/woff2" };
 
 // ---------- running commands ----------
@@ -143,7 +148,7 @@ const api = {
     await run("brightnessctl", ["-q", "set", v + "%"]); return { ok: true };
   },
   async "POST /power"(b) {
-    const kind = b.kind === "restart" ? "reboot" : b.kind === "off" ? "poweroff" : null; if (!kind) throw new Error("Unknown power choice.");
+    const kind = b.kind === "restart" ? "reboot" : b.kind === "off" ? "poweroff" : b.kind === "sleep" ? "suspend" : null; if (!kind) throw new Error("Unknown power choice.");
     if (FAKE) { fake.power = kind; return { ok: true }; }
     setTimeout(() => run("systemctl", [kind]), 300); return { ok: true };
   },
@@ -163,6 +168,20 @@ const api = {
     if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
     return { ok: true };
   },
+  async "POST /mouse"(b) {
+    const v = Math.max(0, Math.min(10, Math.round(+b.speed))); if (!(v >= 0)) throw new Error("Pick a speed."); const accel = (v / 5 - 1).toFixed(2);
+    if (FAKE) { fake.mouse = v; return { ok: true }; }
+    const ids = (await run("xinput", ["list", "--id-only"])).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
+    for (const id of ids) await run("xinput", ["set-prop", id, "libinput Accel Speed", accel], 3000); // devices without it just say no
+    return { ok: true };
+  },
+  async "POST /keyboard"(b) {
+    const k = String(b.layout || ""); if (!/^[a-z]{2,5}(-intl)?$/.test(k)) throw new Error("Unknown keyboard layout.");
+    if (FAKE) { fake.kb = k; return { ok: true }; }
+    const [layout, variant] = k.split("-"); const r = await run("setxkbmap", variant ? ["-layout", layout, "-variant", variant] : ["-layout", layout]);
+    if (!r.ok) throw new Error("That keyboard layout couldn't be set."); return { ok: true };
+  },
+  async "POST /fake/key"(b) { if (!FAKE) throw new Error("Not found"); pushEvent({ key: String(b.key || "") }); return { ok: true }; },
   async "GET /fake"() { if (!FAKE) throw new Error("Not found"); return fake; },
   async "POST /fake/reset"() { if (!FAKE) throw new Error("Not found"); fake = fakeStart(); return { ok: true }; },
 };
@@ -188,6 +207,20 @@ const server = http.createServer((req, res) => {
   if (req.headers.host !== HOST + ":" + PORT && req.headers.host !== "localhost:" + PORT) return send(res, 403, '{"error":"Forbidden"}');
   const url = new URL(req.url, "http://" + HOST + ":" + PORT);
   if (url.pathname === "/health") return send(res, 200, '{"ok":true}');
+  // shortcuts from the window manager (nebulux-key), sent on to the OS page
+  if (url.pathname === "/local/key" && req.method === "POST") {
+    if (req.headers["x-nx-local"] !== LOCALKEY) return send(res, 403, "");
+    const k = url.searchParams.get("k") || ""; if (/^[a-z-]{2,12}$/.test(k)) pushEvent({ key: k });
+    return send(res, 200, '{"ok":true}');
+  }
+  // the OS page listens here for shortcuts and other news from the system
+  if (url.pathname === "/api/events" && req.method === "GET") {
+    if (url.searchParams.get("k") !== TOKEN) return send(res, 403, "");
+    res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-store", Connection: "keep-alive" }); res.write(": hi\n\n");
+    listeners.add(res); const ping = setInterval(() => { try { res.write(": ping\n\n"); } catch (e) { /* closed */ } }, 25000);
+    req.on("close", () => { listeners.delete(res); clearInterval(ping); });
+    return;
+  }
   if (url.pathname.startsWith("/api/")) {
     alive();
     // pictures, music and videos load straight into the page, so for them the key can come in the address

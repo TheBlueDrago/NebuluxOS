@@ -92,8 +92,8 @@ for s in /usr/lib/live/build/binary_grub_cfg /usr/share/live/build/scripts/build
 done
 grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/syslinux_common config/bootloaders/grub-pc/config.cfg 2>/dev/null | grep -v stdmenu | head -12
 # scripts made on Windows lose their "can run" mark
-chmod 644 config/includes.chroot/etc/systemd/system/nebulux-screen.service
-chmod 755 config/includes.chroot/usr/local/bin/nebulux-session config/includes.chroot/etc/X11/xinit/xinitrc config/includes.chroot/etc/skel/.xinitrc config/hooks/normal/9000-nebulux.hook.chroot
+chmod 644 config/includes.chroot/etc/systemd/system/nebulux-screen.service config/includes.chroot/etc/nebulux/openbox.xml
+chmod 755 config/includes.chroot/usr/local/bin/nebulux-key config/includes.chroot/usr/local/bin/nebulux-session config/includes.chroot/etc/X11/xinit/xinitrc config/includes.chroot/etc/skel/.xinitrc config/hooks/normal/9000-nebulux.hook.chroot
 
 say "Build (this takes a while)"
 lb build 2>&1 | tee "$OUT/build.log" | grep -E '^(P:|E:|W:)|error' | grep -v 'Hit:\|Get:' || true

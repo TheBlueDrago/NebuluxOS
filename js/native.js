@@ -33,8 +33,17 @@
     document.dispatchEvent(new CustomEvent("nx:framefocus"));
   }, 0));
 
+  NX.browserOK = false; NX.browserRunning = false;
   if (!N) return;
   document.documentElement.classList.add("native");
+  // shortcuts caught by the window manager (so they work over the web browser too) come in here
+  try { const es = new EventSource("/api/events?k=" + encodeURIComponent(N.token)); es.onmessage = (e) => { let d = {}; try { d = JSON.parse(e.data); } catch (er) { return; } if (d.key) document.dispatchEvent(new CustomEvent("nx:key", { detail: d.key })); }; } catch (e) { /* no event stream */ }
+  // the real web browser (on the USB system): Google, YouTube and websites open in it, with tabs and Google sign-in
+  NX.browserOpen = (url) => { NX.browserShown = true; NX.browserRunning = true; NX.shell && NX.shell.taskbar(); return NX.api("POST", "/browser/open", { url }).catch((e) => NX.toast(e.message)); };
+  NX.browserHide = () => { if (!NX.browserRunning || NX.browserShown === false) return; NX.browserShown = false; NX.api("POST", "/browser/hide").catch(() => {}); };
+  NX.browserToggle = () => NX.api("POST", "/browser/toggle").then((r) => { NX.browserShown = !!r.shown; NX.browserRunning = !!r.running; NX.shell && NX.shell.taskbar(); }).catch(() => {});
+  const browserState = () => NX.api("GET", "/browser").then((b) => { const was = NX.browserRunning; NX.browserOK = !!b.available; NX.browserRunning = !!b.running; if (!b.running) NX.browserShown = false; if (was !== NX.browserRunning && NX.shell) NX.shell.taskbar(); }).catch(() => {});
+  browserState(); setInterval(() => { if (NX.me && NX.browserOK) browserState(); }, 3000);
   // a file's own address, for pictures, music and videos (the key rides along, as they can't send headers)
   NX.rawURL = (p, dl) => "/api/files/raw?k=" + encodeURIComponent(N.token) + "&path=" + encodeURIComponent(p) + (dl ? "&dl=1" : "");
   NX.apiUpload = async (dir, name, blob) => {
@@ -45,9 +54,12 @@
 
   // a TV or monitor plugged in shows the same picture (like Windows), and USB drives open by themselves
   let lastExt = null, knownDrives = null, watching = false;
-  async function watch() {
+  let lastSig = null;
+  async function watch(force) {
     if (!NX.me || watching) return; watching = true;
     try {
+      const { sig } = await NX.api("GET", "/changes");
+      if (!force && sig === lastSig) return; lastSig = sig;
       const d = await NX.api("POST", "/display/get", { probe: false });
       const ext = d.ext || null;
       if (lastExt !== null || ext) {
@@ -68,7 +80,7 @@
     } catch (e) { /* the system will answer next time */ } finally { watching = false; }
   }
   setInterval(watch, 3000);
-  document.addEventListener("nx:signin", () => { lastExt = null; knownDrives = null; watch();
+  document.addEventListener("nx:signin", () => { lastExt = null; knownDrives = null; lastSig = null; watch(true);
     setTimeout(() => NX.api("POST", "/diag", { ext: document.documentElement.hasAttribute("data-nxext"), w: innerWidth, h: innerHeight }).catch(() => {}), 2500);
     if (!document.documentElement.hasAttribute("data-nxext") && !N.fake) setTimeout(() => { if (!document.documentElement.hasAttribute("data-nxext")) { console.error("Nebulux OS: the web windows extension isn't running"); NX.toast("Web windows aren't fully ready: links that open new tabs may not work. Restart to fix it."); } }, 4000);
   });
@@ -77,6 +89,7 @@
   let syncing = false;
   document.addEventListener("nx:prefs", (e) => {
     if (!NX.me || syncing) return; const k = e.detail, p = NX.prefs();
+    if (k === "mouse") soon(k, () => NX.api("POST", "/mouse", { speed: p.mouse }).catch(() => {}));
     if (k === "volume") soon(k, () => NX.api("POST", "/volume", { volume: p.volume }).catch(() => {}));
     if (k === "brightness" && NX.hw.brightness) soon(k, () => NX.api("POST", "/brightness", { brightness: p.brightness }).catch(() => {}));
     if (k === "wifi") soon(k, () => NX.api("POST", "/wifi/radio", { on: p.wifi }).catch((er) => NX.toast(er.message)));
@@ -90,6 +103,8 @@
   document.addEventListener("nx:signin", async () => {
     try { const b = await NX.api("GET", "/brightness"); NX.hw.brightness = b.brightness != null; if (NX.hw.brightness) NX.api("POST", "/brightness", { brightness: NX.prefs().brightness }).catch(() => {}); } catch (e) { NX.hw.brightness = false; }
     NX.api("POST", "/volume", { volume: NX.prefs().volume }).catch(() => {});
+    if (NX.prefs().keyboard) NX.api("POST", "/keyboard", { layout: NX.prefs().keyboard }).catch(() => {});
+    NX.api("POST", "/mouse", { speed: NX.prefs().mouse }).catch(() => {});
     try {
       const [w, b] = await Promise.all([NX.api("GET", "/wifi").catch(() => null), NX.api("GET", "/bt").catch(() => null)]);
       syncing = true;

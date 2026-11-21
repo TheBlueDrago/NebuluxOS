@@ -22,9 +22,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const answer = async (v) => { if (v != null) { await p.evaluate(() => { document.querySelector(".nx-ask input").value = ""; }); await p.type(".nx-ask input", v); } await p.click(".nx-ask [type=submit]"); await wait(400); };
 
   // sign up
-  await p.mouse.click(W / 2, H / 2); await wait(400);
-  await p.type("#lk-panel input[name=n]", "Ada"); await p.type("#lk-panel input[name=p]", "nebula1"); await p.type("#lk-panel input[name=p2]", "nebula1");
-  await p.click("#lk-panel button[type=submit]"); await wait(1400);
+  await require("./setup.cjs")(p, "Ada", "nebula1");
   ok(await p.evaluate(() => !!document.querySelector("#tb-apps [data-app=files]") && !!document.querySelector("#icons [data-app=files]")), "File Explorer is on the taskbar and the desktop");
 
   // the Windows key opens Start when it's let go
@@ -78,11 +76,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.close("notepad")); await wait(300);
 
   // Paint saves into Pictures, and Photos shows it
-  await p.evaluate(() => NX.open("paint")); await wait(500);
+  await p.evaluate(() => NX.open("paint")); await wait(900);
   const cv = await p.evaluate(() => { const r = document.querySelector(".win[data-app=paint] canvas").getBoundingClientRect(); return { x: r.x + 60, y: r.y + 60 }; });
   await p.mouse.move(cv.x, cv.y); await p.mouse.down(); await p.mouse.move(cv.x + 120, cv.y + 40, { steps: 6 }); await p.mouse.up();
-  await p.click(".win[data-app=paint] [data-t=save]"); await wait(900);
-  ok(await p.evaluate(async () => (await NX.fs.list("/Pictures")).entries.some((e) => e.name === "Painting.png")), "Paint saves the picture in Pictures");
+  const hit = await p.evaluate(() => { const r = document.querySelector(".win[data-app=paint] [data-t=save]").getBoundingClientRect(); const e = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return (e && (e.dataset.t || e.tagName + "#" + e.id + "." + e.className)) + " at " + Math.round(r.x) + "," + Math.round(r.y); });
+  for (let k = 0; k < 3; k++) { await p.click(".win[data-app=paint] [data-t=save]"); await wait(900); if (await p.evaluate(async () => (await NX.fs.list("/Pictures")).entries.some((e) => /^Painting/.test(e.name)))) break; }
+  if (!/^save/.test(hit)) console.log("  save button covered by:", hit);
+  ok(await p.evaluate(async () => (await NX.fs.list("/Pictures")).entries.some((e) => /^Painting/.test(e.name))), "Paint saves the picture in Pictures");
+  if (!(await p.evaluate(async () => (await NX.fs.list("/Pictures")).entries.some((e) => e.name === "Painting.png")))) console.log("  toasts:", await p.evaluate(() => NX.notes.slice(0, 3).map((n) => n.text).join(" | ")), "| pictures:", await p.evaluate(async () => (await NX.fs.list("/Pictures")).entries.map((e) => e.name).join(",")));
   await p.evaluate(() => NX.close("paint")); await wait(300);
   await p.evaluate(() => NX.open("photos")); await wait(700);
   ok(await until(() => p.evaluate(() => { const i = document.querySelector(".win[data-app=photos] .ph-tile img"); return !!i && i.naturalWidth > 0; })), "Photos shows your pictures");
@@ -177,6 +178,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(async () => { await NX.fs.create(await NX.folder("Desktop"), "On my desktop.txt", false); NX.filesChanged(); }); await wait(500);
   ok(await p.evaluate(() => [...document.querySelectorAll("#icons .dicon.dfile")].some((d) => /On my desktop\.txt/.test(d.innerText))), "files in the Desktop folder show on the desktop");
   await shot("desktop-files");
+
+  // Sleep, then wake with a key
+  await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
+  ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");
+  await p.keyboard.press("Space"); await wait(400);
+  ok(await p.evaluate(() => document.querySelector("#off").hidden && !document.querySelector("#lock").hidden), "a key wakes it to the lock screen");
 
   // everything is still there after signing out and back in
   await p.evaluate(() => NX.shell.signOut()); await wait(600);

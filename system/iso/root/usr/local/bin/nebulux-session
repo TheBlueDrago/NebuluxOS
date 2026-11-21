@@ -9,6 +9,17 @@ P="$HOME/.config/nebulux-browser"
 EXT="$HOME/.local/share/nebulux-ext"
 rm -rf "$EXT"; mkdir -p "$(dirname "$EXT")"; cp -r /opt/nebulux/ext "$EXT"
 
+# Graphics: drawn without the graphics chip's acceleration, which works on every computer (some chips showed only a
+# white screen with it). To try acceleration, make the file /etc/nebulux/use-gpu.
+GPU="--disable-gpu --disable-gpu-compositing"
+[ -f /etc/nebulux/use-gpu ] && GPU="--ignore-gpu-blocklist"
+export NX_BROWSER_FLAGS="$GPU"
+
+# the window manager: Nebulux OS underneath, real web browser windows above it (above the taskbar)
+pkill -u "$(id -u)" -x openbox 2>/dev/null
+openbox --config-file /etc/nebulux/openbox.xml >/dev/null 2>&1 &
+sleep 0.3
+
 # the system helper (Wi-Fi, Bluetooth, files, screens, sound, power) on 127.0.0.1:7777
 helper_up() { (echo >/dev/tcp/127.0.0.1/7777) 2>/dev/null; }
 start_helper() {
@@ -19,10 +30,6 @@ start_helper() {
 }
 start_helper
 
-# Graphics: drawn without the graphics chip's acceleration, which works on every computer (some chips showed only a
-# white screen with it). To try acceleration, make the file /etc/nebulux/use-gpu.
-GPU="--disable-gpu --disable-gpu-compositing"
-[ -f /etc/nebulux/use-gpu ] && GPU="--ignore-gpu-blocklist"
 
 while true; do
   helper_up || start_helper
@@ -32,8 +39,9 @@ while true; do
   # never show "restore pages?" after the power was cut
   sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$P/Default/Preferences" 2>/dev/null
   START=$(date +%s)
-  chromium --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
-    --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter \
+  chromium --class=NebuluxShell --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
+    --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter,OptimizationHints,InterestFeedContentSuggestions,CalculateNativeWinOcclusion,HeavyAdIntervention \
+    --disable-background-networking --disable-component-update --disable-sync --no-pings --disable-breakpad --disable-domain-reliability --metrics-recording-only --disable-client-side-phishing-detection \
     --password-store=basic --user-data-dir="$P" --load-extension="$EXT" $GPU \
     --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
     --autoplay-policy=no-user-gesture-required \

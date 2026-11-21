@@ -28,15 +28,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(async () => (await fetch("/system/helper/nebulux-helper.js")).status === 404), "the helper doesn't serve its own files");
 
   // sign up
-  await p.mouse.click(W / 2, H / 2); await wait(450);
-  ok(/It stays on this computer/.test(await txt()), "setup says the account stays on this computer");
-  await p.type("#lk-panel input[name=n]", "Ada"); await p.type("#lk-panel input[name=p]", "nebula1"); await p.type("#lk-panel input[name=p2]", "nebula1");
-  await p.click("#lk-panel button[type=submit]"); await wait(1500);
+  ok(await until(() => p.evaluate(() => !document.querySelector("#oobe").hidden)), "the first start goes to first-time setup");
+  await require("./setup.cjs")(p, "Ada", "nebula1", ok);
   ok(await p.evaluate(() => !document.querySelector("#desktop").hidden), "signed in");
   ok(await until(() => p.evaluate(() => { const b = document.querySelector("#tb-tray .tb-batt"); return !!b && /76%/.test(b.title); })), "the taskbar shows the real battery level");
 
   // Wi-Fi
-  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
+  await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(400);
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-wlist .s-net").length === 3)), "Settings lists the Wi-Fi networks nearby");
   ok(/Connected to Home Wi-Fi/.test(await txt()), "and says which one this computer is on");
   const connectTo = (name) => p.evaluate((name) => { const r = [...document.querySelectorAll("#s-wlist .s-net")].find((x) => x.querySelector("b").textContent === name); r.querySelector("[data-wc]").click(); }, name);
@@ -52,6 +50,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await shot("wifi");
 
   // Bluetooth
+  await p.evaluate(() => NX.open("settings", { page: "devices" })); await wait(500);
   await p.evaluate(() => document.querySelector("#s-bscan").click());
   ok(await until(() => p.evaluate(() => /Nearby/.test(document.querySelector("#s-blist").innerText) && /Nebulux Earbuds/.test(document.querySelector("#s-blist").innerText))), "Add device finds Bluetooth devices nearby");
   await p.evaluate(() => document.querySelector("[data-bpair]").click());
@@ -60,9 +59,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await shot("bt");
 
   // volume reaches the speakers
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
   await p.evaluate(() => { const s = document.querySelector("[data-pref=volume]"); s.value = 25; s.dispatchEvent(new Event("input")); });
   ok(await until(async () => (await fake()).vol === 25), "the volume slider changes the computer's volume");
   // Wi-Fi switch reaches the hardware
+  await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(400);
   await p.evaluate(() => { const t = document.querySelector("[data-pref=wifi]"); t.click(); });
   ok(await until(async () => (await fake()).wifiOn === false), "the Wi-Fi switch turns the computer's Wi-Fi off");
   await p.evaluate(() => { const t = document.querySelector("[data-pref=wifi]"); t.click(); });
@@ -179,6 +180,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => document.querySelector(".win[data-app=taskmgr] [data-tab=perf]").click());
   ok(await until(() => p.evaluate(() => /Processor\s*\d+%/.test(document.querySelector(".win[data-app=taskmgr]").innerText)), 6000), "Task Manager shows how busy the processor is");
   await p.evaluate(() => NX.close("taskmgr")); await wait(200);
+
+  // ---------- 2.0: shortcuts caught by the window manager reach the OS ----------
+  await p.evaluate(() => NX.open("notepad")); await wait(400);
+  await api("POST", "/fake/key", { key: "start" });
+  ok(await until(() => p.evaluate(() => !document.querySelector("#start").hidden), 4000), "the Windows key from the window manager opens Start");
+  await api("POST", "/fake/key", { key: "desk" });
+  ok(await until(() => p.evaluate(() => document.querySelector("#start").hidden && [...NX.wins.values()].every((w) => w.min)), 4000), "and Windows + D shows the desktop");
+  await p.evaluate(() => NX.close("notepad")); await wait(200);
+  ok(await p.evaluate(() => NX.browserOK === false && NX.webFrames === true), "with no real browser (the test helper), websites open in OS windows instead");
 
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");

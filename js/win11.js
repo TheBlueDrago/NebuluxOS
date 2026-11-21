@@ -31,7 +31,7 @@
     storm: `<path d="M13 26h21a8 8 0 000-16 10 10 0 00-19 3 6.5 6.5 0 00-2 13z" fill="#94a3b8"/><path d="M25 27l-6 9h5l-3 8 8-11h-5l3-6z" fill="#fbbf24"/>`,
   };
   const wIcon = (k, s) => `<svg viewBox="0 0 48 48" width="${s}" height="${s}" aria-hidden="true">${WICON[k] || WICON.cloud}</svg>`;
-  const fahrenheit = () => /^en-(US|LR|MM)$/i.test(navigator.language || "") || /-US$/i.test(navigator.language || "");
+  const fahrenheit = () => { const r = NX.me && NX.prefs().region; return r ? ["US", "LR", "MM"].includes(r) : /-(US|LR|MM)$/i.test(navigator.language || ""); };
   let wxBusy = false;
   async function weather(force) {
     const place = NX.data("wx-place", null); if (!place) return null;
@@ -119,8 +119,7 @@
       const i = used + j, b = document.createElement("button");
       b.className = "dicon dfile"; b.style.gridRow = (i % rows) + 1; b.style.gridColumn = Math.floor(i / rows) + 1; b.title = f.name;
       b.innerHTML = `${f.kind === "image" ? `<span class="d-thumb">${NX.icon("fimage", 40)}</span>` : NX.icon(FICON[f.kind] || "file", 40)}<span>${NX.esc(f.name)}</span>`;
-      b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); if (e.pointerType === "touch") NX.openFile(f, list); };
-      b.ondblclick = () => NX.openFile(f, list);
+      b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); NX.openFile(f, list); };
       b.onkeydown = (e) => { if (e.key === "Enter") NX.openFile(f, list); };
       b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); NX.menu(e.clientX, e.clientY, [["Open", () => NX.openFile(f, list)], ["Show in File Explorer", () => NX.open("files", { place: "Desktop" })], ["Delete", async () => { try { await NX.fs.remove([f.path]); NX.toast("Moved to the Recycle Bin."); NX.filesChanged(); } catch (er) { NX.toast(er.message); } }]]); };
       box.appendChild(b);

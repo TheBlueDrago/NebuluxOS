@@ -35,7 +35,7 @@
       if (!url) return;
       if (!NX.netOK()) { pending = url; off.hidden = false; f.hidden = true; busy(false);
         off.innerHTML = `${NX.icon("wifioff", 44)}<b>You're not connected</b><p>${NX.esc(NX.netWhy())}</p><div><button class="btn primary" data-o="wifi">Wi-Fi settings</button><button class="btn" data-o="retry">Try again</button></div>`;
-        off.querySelector("[data-o=wifi]").onclick = () => NX.open("settings", { page: "system" }); off.querySelector("[data-o=retry]").onclick = () => nav(pending); return; }
+        off.querySelector("[data-o=wifi]").onclick = () => NX.open("settings", { page: "network" }); off.querySelector("[data-o=retry]").onclick = () => nav(pending); return; }
       off.hidden = true; f.hidden = false; pending = ""; current = url; busy(true); f.src = url; if (document.activeElement !== ai) ai.value = url;
     };
     f.addEventListener("load", () => busy(false));
@@ -56,7 +56,7 @@
     return { nav };
   };
 
-  NX.apps.google = { name: "Google", icon: "google", builtIn: true, w: 1100, h: 700, minW: 380, minH: 320, desc: "Search the web with Google.",
+  NX.apps.google = { name: "Google", icon: "google", builtIn: true, browser: "https://www.google.com/", w: 1100, h: 700, minW: 380, minH: 320, desc: "Search the web with Google.",
     open(body, win, opts) {
       if (NX.webFrames) { NX.webView(body, win, Object.assign({ home: HOME }, opts)); return; }
       body.classList.add("gapp");

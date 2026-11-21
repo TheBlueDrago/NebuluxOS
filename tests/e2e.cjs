@@ -18,18 +18,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const vis = (s) => p.evaluate((s) => { const e = document.querySelector(s); return !!(e && !e.hidden && e.getBoundingClientRect().width > 0); }, s);
   const txt = () => p.evaluate(() => document.body.innerText);
 
-  // first run: lock screen, then setup
-  ok(await vis("#lock"), "boots to the lock screen");
-  await shot("01-lock");
-  await p.mouse.click(W / 2, H / 2); await wait(450);
-  ok(/Welcome to Nebulux OS/.test(await txt()), "first run asks you to make an account");
-  await p.type("#lk-panel input[name=n]", "Ada"); await p.type("#lk-panel input[name=p]", "nebula1"); await p.type("#lk-panel input[name=p2]", "nebula2");
-  await p.click("#lk-panel button[type=submit]"); await wait(300);
-  ok(/don't match/.test(await txt()), "mismatched passwords are refused");
-  await p.evaluate(() => { document.querySelector("#lk-panel input[name=p2]").value = ""; }); await p.type("#lk-panel input[name=p2]", "nebula1");
-  await shot("02-setup");
-  await p.click("#lk-panel button[type=submit]"); await wait(1500);
-  ok(await vis("#desktop") && !(await vis("#lock")), "making the account signs you in to the desktop");
+  // first run: first-time setup (like Windows 11's)
+  await p.waitForSelector("#oobe:not([hidden])", { timeout: 8000 }).catch(() => {});
+  ok(await vis("#oobe"), "the first start goes to first-time setup");
+  await shot("01-setup");
+  await require("./setup.cjs")(p, "Ada", "nebula1", ok);
+  ok(await vis("#desktop") && !(await vis("#lock")) && !(await vis("#oobe")), "finishing setup signs you in to the desktop");
   const stored = await p.evaluate(() => JSON.stringify(localStorage));
   ok(!stored.includes("nebula1"), "the password itself is never stored");
   await shot("03-desktop");
@@ -91,8 +85,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !NX.netOK()) && /connection was lost/.test(await txt()), "a real lost connection is noticed");
   await p.setOfflineMode(false); await wait(400);
   ok(await p.evaluate(() => NX.netOK()), "and coming back online too");
-  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
-  ok(await p.evaluate(() => !!document.querySelector("#s-btadd")) && /Connected to the internet/.test(await txt()), "Settings shows the real connection and a Bluetooth Add device button");
+  await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(400);
+  ok(/Connected to the internet/.test(await txt()), "Settings > Network & internet shows the real connection");
+  await p.evaluate(() => NX.open("settings", { page: "devices" })); await wait(300);
+  ok(await p.evaluate(() => !!document.querySelector("#s-btadd")), "Settings > Bluetooth & devices has an Add device button");
   await p.click(".win[data-app=settings] .wb-close"); await wait(250);
 
   // Google

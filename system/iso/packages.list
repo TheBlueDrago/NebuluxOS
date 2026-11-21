@@ -57,6 +57,9 @@ ntfs-3g
 exfatprogs
 dosfstools
 xdotool
+curl
+openbox
+xinput
 x11-utils
 scrot
 pulseaudio-utils

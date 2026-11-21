@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Nebulux OS window manager settings (Openbox). Nebulux OS itself (NebuluxShell) fills the screen underneath.
+     Web browser windows (NebuluxWeb) open maximized above it, stopping above the 48 px Nebulux taskbar so it always
+     shows. No title bars: the browser draws its own tabs and buttons. The Windows-key shortcuts are caught here and passed to Nebulux OS, so they work over every window. -->
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <resistance><strength>10</strength><screen_edge_strength>20</screen_edge_strength></resistance>
+  <focus><focusNew>yes</focusNew><followMouse>no</followMouse><raiseOnFocus>no</raiseOnFocus></focus>
+  <placement><policy>Smart</policy><center>yes</center></placement>
+  <theme><name>Clearlooks</name><titleLayout>NLIMC</titleLayout><keepBorder>no</keepBorder><animateIconify>no</animateIconify></theme>
+  <desktops><number>1</number><firstdesk>1</firstdesk><popupTime>0</popupTime></desktops>
+  <margins><top>0</top><bottom>48</bottom><left>0</left><right>0</right></margins>
+  <keyboard>
+    <keybind key="Super_L"><action name="Execute"><command>/usr/local/bin/nebulux-key start</command></action></keybind>
+    <keybind key="Super_R"><action name="Execute"><command>/usr/local/bin/nebulux-key start</command></action></keybind>
+    <keybind key="W-d"><action name="Execute"><command>/usr/local/bin/nebulux-key desk</command></action></keybind>
+    <keybind key="W-e"><action name="Execute"><command>/usr/local/bin/nebulux-key files</command></action></keybind>
+    <keybind key="W-l"><action name="Execute"><command>/usr/local/bin/nebulux-key lock</command></action></keybind>
+    <keybind key="W-Tab"><action name="Execute"><command>/usr/local/bin/nebulux-key tview</command></action></keybind>
+    <keybind key="W-w"><action name="Execute"><command>/usr/local/bin/nebulux-key widgets</command></action></keybind>
+    <keybind key="W-Left"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-left</command></action></keybind>
+    <keybind key="W-Right"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-right</command></action></keybind>
+    <keybind key="W-Up"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-max</command></action></keybind>
+    <keybind key="W-Down"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-down</command></action></keybind>
+    <keybind key="Print"><action name="Execute"><command>/usr/local/bin/nebulux-key shot</command></action></keybind>
+    <keybind key="W-S-s"><action name="Execute"><command>/usr/local/bin/nebulux-key shot</command></action></keybind>
+    <keybind key="C-S-Escape"><action name="Execute"><command>/usr/local/bin/nebulux-key tm</command></action></keybind>
+  </keyboard>
+  <mouse>
+    <dragThreshold>4</dragThreshold><doubleClickTime>500</doubleClickTime>
+    <context name="Frame"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind></context>
+    <context name="Client"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Right" action="Press"><action name="Focus"/></mousebind></context>
+    <context name="Titlebar"><mousebind button="Left" action="Drag"><action name="Move"/></mousebind></context>
+  </mouse>
+  <applications>
+    <application class="NebuluxShell">
+      <decor>no</decor><fullscreen>yes</fullscreen><layer>below</layer><focus>yes</focus><skip_taskbar>yes</skip_taskbar><skip_pager>yes</skip_pager>
+    </application>
+    <application class="NebuluxWeb">
+      <decor>no</decor><maximized>yes</maximized><layer>normal</layer><focus>yes</focus>
+    </application>
+  </applications>
+</openbox_config>
