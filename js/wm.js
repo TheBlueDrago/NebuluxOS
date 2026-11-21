@@ -62,7 +62,7 @@
   };
   NX.open = (id, opts) => {
     const app = NX.apps[id]; if (!app) return null;
-    if (NX.browserOK && (app.url || app.browser)) { NX.browserOpen((opts && opts.url) || (opts && opts.q && "https://www.google.com/search?q=" + encodeURIComponent(opts.q)) || app.url || app.browser); NX.shell && NX.shell.recent(id); return null; }
+    if (NX.browserOK && (app.url || app.browser)) { NX.browserOpen((opts && opts.url) || (opts && opts.q && "https://www.google.com/search?q=" + encodeURIComponent(opts.q)) || app.url || app.browser, !!app.webapp && !(opts && (opts.url || opts.q))); NX.shell && NX.shell.recent(id); return null; }
     if (NX.browserHide) NX.browserHide();
     if (app.url && !NX.webFrames) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }
     if (wins.has(id)) { NX.focus(id); const w = wins.get(id); if (opts && w.onopts) w.onopts(opts); return w; }

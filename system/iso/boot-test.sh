@@ -50,7 +50,7 @@ boot() { # BIOS or UEFI
   if grep -q "NEBULUX-DIAG ext=1" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): the web-windows extension is running"; else echo "FAIL ($MODE): the web-windows extension isn't running ($(grep -a NEBULUX-DIAG "$SHOTS/$MODE-serial.log" | tail -1))"; FAILS=$((FAILS + 1)); fi
   # the mouse: one click on the Settings icon on the desktop opens Settings
   click 52 145; sleep 6; shot 4b-click
-  if grep -aq "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): a mouse click opens Settings from the desktop"; else echo "FAIL ($MODE): a mouse click on the desktop didn't open Settings"; FAILS=$((FAILS + 1)); fi
+  if grep -aq "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): a mouse click opens Settings from the desktop"; else echo "FAIL ($MODE): a mouse click on the desktop didn't open Settings"; FAILS=$((FAILS + 1)); grep -a "NEBULUX-X" "$SHOTS/$MODE-serial.log" | head -45; fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   # the mouse on the real browser: click into Google's search box and type
   click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click

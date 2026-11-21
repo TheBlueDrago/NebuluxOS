@@ -2,7 +2,11 @@
 // your Library. Installed apps appear in Start, on the desktop and in Settings > Apps.
 "use strict";
 (function () {
-  const CATS = [["all", "Home"], ["Productivity", "Productivity"], ["Creativity", "Creativity"], ["Games", "Games"], ["Utilities", "Utilities"], ["Web", "Web apps"]];
+  const CATS = [["all", "Home"], ["Entertainment", "Entertainment"], ["Music", "Music"], ["Social", "Social"], ["Productivity", "Productivity"], ["Creativity", "Creativity"], ["AI", "AI"], ["Games", "Games"], ["Shopping", "Shopping"], ["Education", "Education"], ["Utilities", "Utilities"], ["Web", "Nebulux"]];
+  const NAVICON = { all: "home", Entertainment: "tv", Music: "volume", Social: "user", Productivity: "apps", Creativity: "brush", AI: "star", Games: "arcade", Shopping: "store", Education: "info", Utilities: "settings", Web: "globe" };
+  // the Home page: a featured banner, then a row for each kind of app (like the Microsoft Store)
+  const FEATURED = [["netflix", "Movies and shows", "Netflix, Disney+, Prime Video and more, in their own windows."], ["spotify", "Your music", "Spotify, YouTube Music, SoundCloud and Apple Music."], ["m365", "Work and school", "Word, Excel, PowerPoint, Outlook and Teams, plus Google Docs and Drive."], ["xboxcloud", "Play in the cloud", "Xbox Cloud Gaming and GeForce NOW stream big games to this computer."]];
+  const ROWS = [["Entertainment", "Watch"], ["Music", "Listen"], ["Social", "Chat and share"], ["Productivity", "Work and school"], ["AI", "AI assistants"], ["Games", "Play"], ["Creativity", "Create"], ["Shopping", "Shop"], ["Education", "Learn"], ["Utilities", "Handy tools"], ["Web", "Made by Nebulux"]];
   const storeApps = () => Object.entries(NX.apps).filter(([, a]) => !a.builtIn);
   const isIn = (id) => NX.prefs().installed.includes(id);
   NX.install = (id) => {
@@ -30,16 +34,20 @@
         if (view.startsWith("app:")) {
           const id = view.slice(4), a = NX.apps[id];
           main = !a ? `<p>That app isn't here.</p>` : `<button class="st-back" data-view="all">${NX.icon("back", 16)} Back</button>
-            <div class="st-detail"><div class="st-dh">${NX.icon(a.icon || id, 96)}<div><h2>${NX.esc(a.name)}</h2><p class="st-pub">Nebulux · ${a.category}</p><p class="st-rate big">${NX.icon("star", 14)} ${a.rating || "4.5"} average</p>${btn(id)}${isIn(id) ? `<button class="btn ghost" data-remove="${id}">Uninstall</button>` : ""}</div></div>
+            <div class="st-detail"><div class="st-dh">${NX.icon(a.icon || id, 96)}<div><h2>${NX.esc(a.name)}</h2><p class="st-pub">${NX.esc(a.publisher || "Nebulux")} · ${a.category}</p><p class="st-rate big">${NX.icon("star", 14)} ${a.rating || "4.5"} average</p>${btn(id)}${isIn(id) ? `<button class="btn ghost" data-remove="${id}">Uninstall</button>` : ""}</div></div>
             <h3>Description</h3><p>${NX.esc(a.desc)}</p><h3>Details</h3><div class="st-facts"><div><span>Size</span><b>${a.size || "1 MB"}</b></div><div><span>Works</span><b>${a.url ? (NX.webFrames ? "On the web, in its own window" : "On the web, opens in a new tab") : "On this PC, no internet needed"}</b></div><div><span>Price</span><b>Free</b></div></div></div>`;
         } else if (view === "library") {
           const mine = storeApps().filter(([id]) => isIn(id));
           main = `<h2>Library</h2>${mine.length ? `<div class="st-lib">${mine.map(([id, a]) => `<div class="st-lrow">${NX.icon(a.icon || id, 36)}<b>${NX.esc(a.name)}</b><small>${a.category}</small><button class="btn" data-launch="${id}">Open</button><button class="btn ghost" data-remove="${id}">Uninstall</button></div>`).join("")}</div>` : `<p class="st-empty">You haven't installed anything yet. Find something on Home.</p>`}`;
         } else {
-          main = (view === "all" && !q ? `<div class="st-hero"><div><small>Featured</small><h2>Make it yours</h2><p>Free apps and games made for Nebulux OS.</p><button class="btn primary" data-app-open="snake">Play Comet Snake</button></div>${NX.icon("snake", 120)}</div>` : "") +
+          if (view === "all" && !q) {
+            const f = FEATURED[Math.floor(Date.now() / 86400000) % FEATURED.length], fa = NX.apps[f[0]];
+            const rows = ROWS.map(([cat, title]) => { const apps = storeApps().filter(([, a]) => a.category === cat); return apps.length ? `<div class="st-rowh"><h3>${title}</h3><button class="st-see" data-view="${cat}">See all ${NX.icon("chevron", 11)}</button></div><div class="st-row">${apps.slice(0, 8).map(([id, a]) => card(id, a)).join("")}</div>` : ""; }).join("");
+            main = `<div class="st-hero"><div><small>Featured</small><h2>${f[1]}</h2><p>${f[2]}</p><button class="btn primary" data-app-open="${f[0]}">See ${NX.esc(fa.name)}</button></div><div class="st-hero-tiles">${["netflix", "spotify", "whatsapp", "word", "discord", "xboxcloud"].filter((x) => NX.apps[x]).map((x) => NX.icon(NX.apps[x].icon, 64)).join("")}</div></div>${rows}`;
+          } else main =
             `<h2>${q ? "Results" : CATS.find((c) => c[0] === view)[1]}</h2>${list.length ? `<div class="st-grid">${list.map(([id, a]) => card(id, a)).join("")}</div>` : `<p class="st-empty">No apps match.</p>`}`;
         }
-        body.innerHTML = `<aside class="st-side">${CATS.map(([k, n]) => `<button class="st-nav ${view === k ? "on" : ""}" data-view="${k}">${NX.icon(k === "all" ? "home" : k === "Games" ? "arcade" : k === "Creativity" ? "brush" : k === "Web" ? "globe" : k === "Utilities" ? "settings" : "apps", 18)}<span>${n}</span></button>`).join("")}<button class="st-nav lib ${view === "library" ? "on" : ""}" data-view="library">${NX.icon("library", 18)}<span>Library</span></button></aside>
+        body.innerHTML = `<aside class="st-side">${CATS.map(([k, n]) => `<button class="st-nav ${view === k ? "on" : ""}" data-view="${k}">${NX.icon(NAVICON[k] || "apps", 18)}<span>${n}</span></button>`).join("")}<button class="st-nav lib ${view === "library" ? "on" : ""}" data-view="library">${NX.icon("library", 18)}<span>Library</span></button></aside>
           <section class="st-main"><label class="st-search">${NX.icon("search", 16)}<input placeholder="Search apps and games" value="${NX.esc(q)}" aria-label="Search apps and games"></label>${main}</section>`;
         wire();
       };

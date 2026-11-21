@@ -318,14 +318,14 @@ module.exports = function more({ api, run, FAKE }) {
     const url = String(b.url || ""); if (!/^https?:\/\/[^\s]{1,2000}$/i.test(url)) throw new Error("That web address doesn't look right.");
     if (!browserOK()) throw new Error("The web browser isn't available here.");
     const flags = (process.env.NX_BROWSER_FLAGS || "").split(" ").filter(Boolean);
-    const p = spawn("chromium", ["--user-data-dir=" + WEBDIR, "--class=NebuluxWeb", "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--password-store=basic", ...flags, url], { detached: true, stdio: "ignore" });
+    const p = spawn("chromium", ["--user-data-dir=" + WEBDIR, "--class=NebuluxWeb", "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--password-store=basic", ...flags, b.app ? "--app=" + url : url], { detached: true, stdio: "ignore" });
     p.unref(); if (!(web && web.exitCode == null)) { web = p; p.on("exit", () => { if (web === p) web = null; }); }
     for (let k = 0; k < 15; k++) { await new Promise((ok) => setTimeout(ok, 300)); const w = await webWins(); if (w.length) { await run("xdotool", ["windowactivate", w[w.length - 1]], 4000); break; } }
     return { ok: true };
   };
   // the keyboard goes back to Nebulux OS when the browser steps aside (otherwise typing in Start went nowhere)
   const shellFocus = async () => { const s2 = (await run("xdotool", ["search", "--class", "NebuluxShell"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x)); for (const id of s2) { await run("xdotool", ["windowactivate", "--sync", id], 4000); await run("xdotool", ["windowfocus", id], 3000); } };
-  api["POST /browser/show"] = async () => { const w = await webWins(); for (const id of w) await run("xdotool", ["windowactivate", id], 4000); return { shown: w.length }; };
+  api["POST /browser/show"] = async () => { const w = await webWins(); for (const id of w) { await run("xdotool", ["windowactivate", id], 4000); await run("xdotool", ["windowraise", id], 3000); } return { shown: w.length }; };
   api["POST /browser/hide"] = async () => { if (!(web && web.exitCode == null)) return { hidden: 0 }; const w = await webWins(); for (const id of w) await run("xdotool", ["windowminimize", id], 4000); await shellFocus(); return { hidden: w.length }; };
   api["POST /browser/toggle"] = async () => {
     const w = await webWins(); if (!w.length) return { running: false };

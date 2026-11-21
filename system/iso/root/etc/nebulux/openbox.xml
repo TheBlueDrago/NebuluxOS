@@ -32,7 +32,7 @@
   </mouse>
   <applications>
     <application class="NebuluxShell">
-      <decor>no</decor><fullscreen>yes</fullscreen><layer>below</layer><focus>yes</focus><skip_taskbar>yes</skip_taskbar><skip_pager>yes</skip_pager>
+      <decor>no</decor><fullscreen>yes</fullscreen><focus>yes</focus><skip_taskbar>yes</skip_taskbar><skip_pager>yes</skip_pager>
     </application>
     <application class="NebuluxWeb">
       <decor>no</decor><maximized>yes</maximized><layer>normal</layer><focus>yes</focus>

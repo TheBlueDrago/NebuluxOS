@@ -166,6 +166,11 @@ const api = {
   async "POST /diag"(b) {
     const line = "NEBULUX-DIAG " + (b.open ? "open=" + String(b.open).replace(/[^a-z0-9-]/gi, "").slice(0, 20) : ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ")) + "\n";
     if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
+    if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
+      const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);
+      const lines = tree.out.split("\n").filter((l) => /0x[0-9a-f]+/.test(l)).slice(0, 40).map((l) => "NEBULUX-X " + l.trim()).join("\n");
+      fs.appendFile("/dev/ttyS0", lines + "\nNEBULUX-X mouse " + mouse.out.replace(/\n/g, " ") + " active=" + act.out.trim() + "\n", () => {});
+    }
     return { ok: true };
   },
   async "POST /mouse"(b) {

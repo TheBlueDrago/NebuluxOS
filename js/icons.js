@@ -94,5 +94,12 @@
     zoomout: () => `<circle cx="21" cy="21" r="11" fill="none" stroke="currentColor" stroke-width="3"/><path d="M29 29l9 9M16 21h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
     rotate: () => `<path d="M36 20a13 13 0 10-1 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M37 10v10H27" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`,
   };
-  NX.icon = (name, size) => `<svg class="ico" viewBox="0 0 48 48" width="${size || 20}" height="${size || 20}" aria-hidden="true">${(I[name] || I.apps)()}</svg>`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const brand = (spec) => {
+    const [, cols, text, fg] = spec.split(":"); const c = cols.split(",").filter((x) => /^#[0-9a-f]{3,8}$/i.test(x)); const id = "b" + ++gid;
+    const stops = c.map((col, k) => `<stop offset="${c.length > 1 ? k / (c.length - 1) : 0}" stop-color="${col}"/>`).join("");
+    const t = String(text || "").slice(0, 4), fs2 = t.length <= 1 ? 26 : t.length === 2 ? 20 : t.length === 3 ? 15 : 12;
+    return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">${stops}</linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="11" fill="url(#${id})"/><rect x="2" y="2" width="44" height="22" rx="11" fill="#ffffff" opacity=".08"/><text x="24" y="${24 + fs2 * 0.36}" text-anchor="middle" font-family="Segoe UI Variable Display,Segoe UI,Inter,Arial,sans-serif" font-weight="700" font-size="${fs2}" fill="${/^#[0-9a-f]{3,8}$/i.test(fg) ? fg : "#fff"}" letter-spacing="-.3">${esc(t)}</text>`;
+  };
+  NX.icon = (name, size) => `<svg class="ico" viewBox="0 0 48 48" width="${size || 20}" height="${size || 20}" aria-hidden="true">${String(name).startsWith("brand:") ? brand(name) : (I[name] || I.apps)()}</svg>`;
 })();

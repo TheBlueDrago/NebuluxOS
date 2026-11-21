@@ -40,7 +40,7 @@
   // shortcuts caught by the window manager (so they work over the web browser too) come in here
   try { const es = new EventSource("/api/events?k=" + encodeURIComponent(N.token)); es.onmessage = (e) => { let d = {}; try { d = JSON.parse(e.data); } catch (er) { return; } if (d.key) document.dispatchEvent(new CustomEvent("nx:key", { detail: d.key })); }; } catch (e) { /* no event stream */ }
   // the real web browser (on the USB system): Google, YouTube and websites open in it, with tabs and Google sign-in
-  NX.browserOpen = (url) => { NX.browserShown = true; NX.browserRunning = true; NX.shell && NX.shell.taskbar(); return NX.api("POST", "/browser/open", { url }).catch((e) => NX.toast(e.message)); };
+  NX.browserOpen = (url, app) => { NX.browserShown = true; NX.browserRunning = true; NX.shell && NX.shell.taskbar(); return NX.api("POST", "/browser/open", { url, app: !!app }).catch((e) => NX.toast(e.message)); };
   NX.browserHide = () => { if (!NX.browserRunning || NX.browserShown === false) return; NX.browserShown = false; NX.api("POST", "/browser/hide").catch(() => {}); };
   NX.browserToggle = () => NX.api("POST", "/browser/toggle").then((r) => { NX.browserShown = !!r.shown; NX.browserRunning = !!r.running; NX.shell && NX.shell.taskbar(); }).catch(() => {});
   const browserState = () => NX.api("GET", "/browser").then((b) => { const was = NX.browserRunning; NX.browserOK = !!b.available; NX.browserRunning = !!b.running; if (!b.running) NX.browserShown = false; if (was !== NX.browserRunning && NX.shell) NX.shell.taskbar(); }).catch(() => {});
