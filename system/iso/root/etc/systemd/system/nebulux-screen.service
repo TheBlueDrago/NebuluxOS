@@ -1,0 +1,30 @@
+# Starts Nebulux OS on the screen as soon as the computer is ready. There is no text login: the screen opens straight
+# into Nebulux OS, whose own lock screen asks for your account and password.
+[Unit]
+Description=Nebulux OS screen
+After=systemd-user-sessions.service live-config.service plymouth-quit-wait.service systemd-logind.service
+Wants=systemd-logind.service
+Conflicts=getty@tty1.service
+StartLimitIntervalSec=60
+StartLimitBurst=8
+
+[Service]
+User=nebulux
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+Environment=XDG_SESSION_TYPE=x11 XDG_SESSION_CLASS=user
+WorkingDirectory=~
+ExecStart=/usr/bin/startx /usr/local/bin/nebulux-session -- vt1 -keeptty -nolisten tcp -background none
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

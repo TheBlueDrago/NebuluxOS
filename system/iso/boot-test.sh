@@ -22,7 +22,7 @@ boot() { # BIOS or UEFI
   qemu-system-x86_64 $ACCEL -m 4096 -smp 2 $fw -cdrom "$ISO" -boot d -vga std -display none \
     -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci \
     -monitor unix:/tmp/qmon,server,nowait -serial file:"$SHOTS/$MODE-serial.log" &
-  QPID=$!
+  QPID=$!; T0=$(date +%s)
   sleep 8; shot 1-bootmenu
   sleep 30; shot 2-starting
   # wait for the Nebulux OS screens (the lock screen is mostly purple)
@@ -30,13 +30,14 @@ boot() { # BIOS or UEFI
   for _ in $(seq 1 40); do sleep 5; shot now; python3 "$(dirname "$0")/ppm2png.py" --check /tmp/nx.ppm && { up=1; break; }; done
   rm -f "$SHOTS/$MODE-now.png"
   if [ "$up" != 1 ]; then echo "FAIL ($MODE): Nebulux OS didn't show up"; shot 9-stuck; FAILS=$((FAILS + 1)); kill $QPID; wait $QPID 2>/dev/null; return; fi
-  echo "ok   ($MODE): Nebulux OS is on screen"
+  echo "ok   ($MODE): Nebulux OS is on screen, $(( $(date +%s) - T0 )) seconds after turning on"
   sleep 4; shot 3-lock
   keys spc; sleep 2
   typeword "Ada"; keys tab; typeword "nebula1"; keys tab; typeword "nebula1"; keys ret; sleep 6; shot 4-desktop
   if python3 "$(dirname "$0")/ppm2png.py" --full /tmp/nx.ppm; then echo "ok   ($MODE): Nebulux OS fills the whole screen"; else echo "FAIL ($MODE): Nebulux OS doesn't fill the screen"; FAILS=$((FAILS + 1)); fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 15; shot 5-google
   keys meta_l; sleep 2; typeword "settings"; sleep 1; keys ret; sleep 6; shot 6-settings
+  keys meta_l; sleep 2; typeword "file explorer"; sleep 1; keys ret; sleep 5; shot 7-files
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1
   for _ in $(seq 1 30); do kill -0 $QPID 2>/dev/null || break; sleep 2; done
   kill $QPID 2>/dev/null; wait $QPID 2>/dev/null

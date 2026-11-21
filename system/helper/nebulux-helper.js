@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Nebulux OS system helper. On the real (USB) Nebulux OS it serves the OS screens to the built-in browser on
 // http://127.0.0.1:7777 and lets them control the real computer: Wi-Fi (NetworkManager), Bluetooth (BlueZ), volume,
-// brightness, and restart / shut down.
+// brightness, battery, restart / shut down, and (in more.js) files, USB drives, a TV on HDMI, sound output, wireless
+// display and screenshots.
 //
 // Safety:
 //  - It listens on 127.0.0.1 only, so other computers can't reach it.
@@ -124,10 +125,13 @@ const api = {
   },
   async "GET /volume"() {
     if (FAKE) return { volume: fake.vol };
+    const p = await run("pactl", ["get-sink-volume", "@DEFAULT_SINK@"], 4000); const pm = /(\d+)%/.exec(p.out); if (p.ok && pm) return { volume: +pm[1] };
     const r = await run("amixer", ["-M", "sget", "Master"]); const m = /\[(\d+)%\]/.exec(r.out); return { volume: m ? +m[1] : null };
   },
   async "POST /volume"(b) {
     const v = pct(b.volume); if (FAKE) { fake.vol = v; return { ok: true }; }
+    const p = await run("pactl", ["set-sink-volume", "@DEFAULT_SINK@", v + "%"], 4000);
+    if (p.ok) { await run("pactl", ["set-sink-mute", "@DEFAULT_SINK@", v ? "0" : "1"], 4000); return { ok: true }; }
     await run("amixer", ["-q", "-M", "sset", "Master", v + "%", v ? "unmute" : "mute"]); return { ok: true };
   },
   async "GET /brightness"() {
@@ -167,16 +171,27 @@ async function btList(pairedOnly) {
   return list.sort((a, b) => (b.paired - a.paired) || ((a.name.replace(/-/g, ":") === a.mac) - (b.name.replace(/-/g, ":") === b.mac)));
 }
 
+// ---------- files, USB drives, displays and TV, sound output, casting, screenshots ----------
+const extra = require("./more.js")({ api, run, FAKE });
+
 // ---------- the server ----------
 function send(res, code, body, type, extra) { res.writeHead(code, Object.assign({ "Content-Type": type || "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" }, extra || {})); res.end(body); }
+// the session's watchdog checks this file: the OS page loaded and is talking to the helper
+let lastAlive = 0; const ALIVE = path.join(os.homedir(), ".nebulux-alive");
+const alive = () => { if (FAKE || Date.now() - lastAlive < 5000) return; lastAlive = Date.now(); fs.writeFile(ALIVE, String(lastAlive), () => {}); };
 const server = http.createServer((req, res) => {
   if (req.headers.host !== HOST + ":" + PORT && req.headers.host !== "localhost:" + PORT) return send(res, 403, '{"error":"Forbidden"}');
   const url = new URL(req.url, "http://" + HOST + ":" + PORT);
   if (url.pathname === "/health") return send(res, 200, '{"ok":true}');
   if (url.pathname.startsWith("/api/")) {
+    alive();
+    // pictures, music and videos load straight into the page, so for them the key can come in the address
+    if (url.pathname === "/api/files/raw" && (req.method === "GET" || req.method === "HEAD")) { if (url.searchParams.get("k") !== TOKEN && req.headers["x-nx"] !== TOKEN) return send(res, 403, ""); return extra.rawFile(req, res, url); }
     if (req.headers["x-nx"] !== TOKEN) return send(res, 403, '{"error":"Forbidden"}');
+    if (url.pathname === "/api/files/upload" && req.method === "POST") return extra.upload(req, res, url, send);
     const fn = api[req.method + " " + url.pathname.slice(4)]; if (!fn) return send(res, 404, '{"error":"Not found"}');
-    let raw = ""; req.on("data", (c) => { raw += c; if (raw.length > 8192) req.destroy(); });
+    const limit = url.pathname === "/api/files/write" ? 6 * 1048576 : 65536;
+    let raw = ""; req.on("data", (c) => { raw += c; if (raw.length > limit) req.destroy(); });
     req.on("end", async () => {
       let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { return send(res, 400, '{"error":"Bad request"}'); }
       try { send(res, 200, JSON.stringify(await fn(body || {}))); } catch (e) { send(res, 400, JSON.stringify({ error: String(e && e.message || e) })); }

@@ -35,6 +35,40 @@
 
   if (!N) return;
   document.documentElement.classList.add("native");
+  // a file's own address, for pictures, music and videos (the key rides along, as they can't send headers)
+  NX.rawURL = (p, dl) => "/api/files/raw?k=" + encodeURIComponent(N.token) + "&path=" + encodeURIComponent(p) + (dl ? "&dl=1" : "");
+  NX.apiUpload = async (dir, name, blob) => {
+    const r = await fetch("/api/files/upload?dir=" + encodeURIComponent(dir) + "&name=" + encodeURIComponent(name), { method: "POST", headers: { "x-nx": N.token }, body: blob });
+    let j = {}; try { j = await r.json(); } catch (e) { j = {}; }
+    if (!r.ok) throw new Error(j.error || "The file couldn't be saved."); return j;
+  };
+
+  // a TV or monitor plugged in shows the same picture (like Windows), and USB drives open by themselves
+  let lastExt = null, knownDrives = null, watching = false;
+  async function watch() {
+    if (!NX.me || watching) return; watching = true;
+    try {
+      const d = await NX.api("POST", "/display/get", { probe: false });
+      const ext = d.ext || null;
+      if (lastExt !== null || ext) {
+        if (ext && ext !== lastExt && d.mode === "internal") { // your last choice, or the same picture on both (like Windows)
+          const m = NX.data("tv-mode", "mirror");
+          try { await NX.api("POST", "/display/set", { mode: m }); NX.toast(m === "external" ? "A TV or monitor is connected, and Nebulux OS shows on it only." : "A TV or monitor is connected and shows the same picture. Change it in Settings > System."); } catch (e) { NX.toast(e.message); }
+        } else if (ext && ext !== lastExt) NX.toast("A TV or monitor is connected. Choose how to use it in Settings > System.");
+        if (!ext && lastExt) { NX.toast("The TV or monitor was unplugged."); NX.api("POST", "/display/set", { mode: "internal" }).catch(() => {}); }
+        if (ext !== lastExt) document.dispatchEvent(new CustomEvent("nx:display"));
+      }
+      lastExt = ext || "";
+      const { drives } = await NX.api("GET", "/drives"), ids = drives.map((x) => x.dev);
+      if (knownDrives) for (const dr of drives) if (!knownDrives.includes(dr.dev)) {
+        try { if (!dr.mount) await NX.api("POST", "/drives/mount", { dev: dr.dev }); NX.toast(dr.label + " is ready. Open it in File Explorer."); } catch (e) { NX.toast(e.message); }
+      }
+      if (knownDrives && (ids.length !== knownDrives.length || ids.some((x) => !knownDrives.includes(x)))) document.dispatchEvent(new CustomEvent("nx:drives"));
+      knownDrives = ids;
+    } catch (e) { /* the system will answer next time */ } finally { watching = false; }
+  }
+  setInterval(watch, 3000);
+  document.addEventListener("nx:signin", () => { lastExt = null; knownDrives = null; watch(); });
   // settings changes reach the hardware (a short wait so dragging a slider doesn't flood the system)
   const later = {}; const soon = (k, fn) => { clearTimeout(later[k]); later[k] = setTimeout(fn, 120); };
   let syncing = false;

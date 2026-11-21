@@ -113,6 +113,66 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await shot("webapp");
   await p.evaluate(() => NX.close("nebuluxai")); await wait(300);
 
+  // ---------- 1.2: a TV on HDMI, sound on the TV, wireless display ----------
+  const api = (m, u, body) => p.evaluate(async (m, u, body) => (await fetch("/api" + u, { method: m, headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined })).json(), m, u, body);
+  await api("POST", "/fake/reset-files");
+  await api("POST", "/fake/tv", { on: true });
+  ok(await until(async () => (await api("POST", "/display/get", {})).mode === "mirror", 9000), "plugging in a TV shows the same picture on it by itself");
+  ok(await until(() => p.evaluate(() => /TV or monitor is connected/.test(document.querySelector("#toasts").innerText)), 4000), "and says so");
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(500);
+  ok(await until(() => p.evaluate(() => /TV or monitor \(HDMI-1\)/.test(document.querySelector("#s-dlist").innerText) && document.querySelector("[data-dm=mirror]").classList.contains("on"))), "Settings shows the TV, set to Duplicate");
+  await p.evaluate(() => document.querySelector("[data-dm=external]").click());
+  ok(await until(async () => (await api("POST", "/display/get", {})).mode === "external"), "Second screen only shows Nebulux OS on the TV only");
+  ok(await until(() => p.evaluate(() => document.querySelector("[data-dm=external]") && document.querySelector("[data-dm=external]").classList.contains("on"))), "and Settings shows it");
+  await p.evaluate(() => document.querySelector("[data-dm=mirror]").click()); await until(async () => (await api("POST", "/display/get", {})).mode === "mirror");
+  ok(await until(() => p.evaluate(() => /TV \(HDMI\)/.test(document.querySelector("#s-alist").innerText))), "the TV's speakers are offered for sound");
+  await p.evaluate(() => [...document.querySelectorAll("#s-alist .s-net")].find((r) => /TV/.test(r.innerText)).querySelector("[data-ao]").click());
+  ok(await until(async () => (await api("GET", "/audio")).outputs.find((o) => /TV/.test(o.label)).active), "Use this plays the sound on the TV");
+  await shot("tv");
+  await p.evaluate(() => document.querySelector("[data-cast=start]").click());
+  ok(await until(async () => (await api("GET", "/cast")).running), "Wireless display: Connect starts casting");
+  ok(await until(() => p.evaluate(() => !!document.querySelector("[data-cast=stop]"))), "and offers Stop");
+  await p.evaluate(() => document.querySelector("[data-cast=stop]").click());
+  ok(await until(async () => !(await api("GET", "/cast")).running), "Stop ends it");
+  await api("POST", "/fake/tv", { on: false });
+  ok(await until(() => p.evaluate(() => /TV or monitor was unplugged/.test(document.querySelector("#toasts").innerText)), 9000), "unplugging the TV is noticed");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
+  // ---------- 1.2: the real files, a USB drive, screenshots ----------
+  await p.evaluate(() => NX.open("files")); await wait(800);
+  const fxNames = () => p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item .fx-n")].map((x) => x.textContent));
+  ok(await until(() => p.evaluate(() => /MY USB/.test(document.querySelector(".win[data-app=files] .fx-side").innerText))), "File Explorer lists the plugged-in USB drive");
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-place")].find((b) => /MY USB/.test(b.innerText)).click()); await wait(600);
+  ok((await fxNames()).includes("From my USB.txt"), "opening it shows the files on it");
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((b) => /From my USB/.test(b.innerText)).click()); await wait(150);
+  await p.click(".win[data-app=files] [data-t=copy]"); await wait(150);
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-place")].find((b) => b.innerText.trim() === "Documents").click()); await wait(500);
+  await p.click(".win[data-app=files] [data-t=paste]"); await wait(600);
+  ok((await fxNames()).includes("From my USB.txt") && (await fxNames()).includes("Welcome.txt"), "a file copies from the USB drive into Documents");
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-place")].find((b) => /MY USB/.test(b.innerText)).click()); await wait(500);
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((b) => /From my USB/.test(b.innerText)).click()); await wait(150);
+  await p.click(".win[data-app=files] [data-t=delete]"); await wait(300);
+  ok(await p.evaluate(() => /USB drives have no Recycle Bin/.test((document.querySelector(".nx-ask") || {}).innerText || "")), "deleting on a USB drive warns it can't be brought back");
+  await p.click(".nx-ask [type=submit]"); await wait(600);
+  ok(!(await fxNames()).includes("From my USB.txt"), "and then deletes it");
+  await p.evaluate(() => document.querySelector(".win[data-app=files] [data-eject]").click());
+  ok(await until(() => p.evaluate(() => /safe to take out MY USB/.test(document.querySelector("#toasts").innerText))), "Eject says it's safe to take the drive out");
+  ok(await until(() => p.evaluate(() => !/MY USB/.test(document.querySelector(".win[data-app=files] .fx-side").innerText))), "and the drive leaves the list");
+  await shot("files");
+  // the file rules: a key is needed, and nothing outside your folders or drives
+  ok(await p.evaluate(async () => (await fetch("/api/files/raw?path=" + encodeURIComponent("C:/Windows/win.ini"))).status === 403), "file addresses without the key are refused");
+  ok(await p.evaluate(async () => (await fetch(NX.rawURL("C:/Windows/win.ini"))).status === 404), "files outside your folders and USB drives can't be opened");
+  ok(await p.evaluate(async () => { try { await NX.fs.list("C:/Windows"); return false; } catch (e) { return /only opens your own folders/.test(e.message); } }), "and folders outside them can't be listed");
+  ok(await p.evaluate(async () => { const pl = await NX.fs.places(); try { await NX.fs.rename(pl.folders[1].path, "Stuff"); return false; } catch (e) { return /can't be changed/.test(e.message); } }), "your main folders can't be renamed or deleted");
+  // screenshots: Windows + Shift + S
+  await p.evaluate(() => NX.close("files")); await wait(300);
+  await p.keyboard.down("Meta"); await p.keyboard.down("Shift"); await p.keyboard.press("KeyS"); await p.keyboard.up("Shift"); await p.keyboard.up("Meta");
+  ok(await until(async () => p.evaluate(async () => { const pl = await NX.fs.places(); return (await NX.fs.list(pl.folders[3].path + (pl.sep) + "Screenshots")).entries.some((e) => /^Screenshot .*\.png$/.test(e.name)); })), "Windows + Shift + S saves a screenshot in Pictures > Screenshots");
+  ok(await p.evaluate(() => document.querySelector("#start").hidden), "and doesn't open Start");
+  await p.evaluate(() => NX.open("photos")); await wait(800);
+  ok(await until(() => p.evaluate(() => { const i = document.querySelector(".win[data-app=photos] .ph-tile img"); return !!i && i.naturalWidth > 0; })), "Photos shows the screenshot from the real files");
+  await p.evaluate(() => NX.close("photos")); await wait(200);
+
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

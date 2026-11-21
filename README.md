@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 1.1**.
-3. Under **Assets**, click **`Nebulux-OS-1.1.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 1.2**.
+3. Under **Assets**, click **`Nebulux-OS-1.2.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-1.1.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-1.2.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-1.1.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-1.2.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -55,7 +55,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 
    **From Windows:** click Start → Power, **hold Shift** and click **Restart**. Then choose **Use a device** → your USB.
 3. Pick your USB from the list. It may say "UEFI: SanDisk".
-4. The **Nebulux OS** menu shows for 3 seconds, then Nebulux OS starts. In about 30 to 60 seconds you'll see the Nebulux OS lock screen.
+4. The **Nebulux OS** menu shows for a moment, then Nebulux OS starts and opens its lock screen by itself. There's no text login to get through: the lock screen is where you sign in.
 5. The first time, make your account (name and password). Next time, sign in with it.
 
 **To go back to Windows:** use Start → Power → **Shut down**, take the USB out, and turn the computer on. Windows starts like always.
@@ -85,6 +85,21 @@ It runs on the computer itself, not inside Windows. It never touches the compute
   - **Real controls:** brightness, volume, and night light.
   - **Personalization:** wallpapers, dark or light, accent color and taskbar position.
   - **Accounts, Apps, Time & language,** and **About**, which shows the computer's real processor, memory and kernel.
+- **File Explorer:**
+  - Your folders: Desktop, Documents, Downloads, Pictures, Music and Videos.
+  - The Recycle Bin, and plugged-in **USB drives**, which open by themselves; Eject one before you take it out.
+  - New folder, New text file, Cut, Copy, Paste, Rename, Delete, Search, and Icons or Details view.
+  - Double-click opens a file in the app that fits it. Downloads from Google land in Downloads.
+  - The computer's own drive (where Windows is) is never shown or touched.
+- **Screens and TV** (Settings > System):
+  - **With an HDMI cable:** plug a TV or monitor in, and it shows the same picture by itself. Choose **Duplicate**, **Second screen only** or **This screen only**.
+  - **Sound on the TV:** under "Play sound on", pick the TV's speakers.
+  - **Wireless display:** cast to a TV that supports Miracast ("screen mirroring" on many Samsung, LG and Roku TVs and Fire TV sticks). Press **Connect** and pick the TV. It needs a computer whose Wi-Fi supports Miracast, and not every Wi-Fi card does.
+- **Photos:** see your pictures and screenshots, with zoom and rotate.
+- **Media Player:** plays music and videos (MP4, WebM, MP3, WAV, OGG, M4A, FLAC).
+- **Snipping Tool:** take a screenshot, with an optional timer. You can also press **Windows + Shift + S** or **Print Screen** any time. Screenshots go in Pictures > Screenshots.
+- **Notepad** opens and saves real text files (Open, Save to Documents). **Paint** saves into Pictures.
+- **Keyboard:** the Windows key opens Start (even while a website has the keyboard), and Windows + E opens File Explorer.
 - **Google:** real Google in its own window, with its own look and an address bar, Back, Forward, Reload and Home. Links that would open a new tab open in the window instead.
 - **Nebulux Store:**
   - Notepad, Calculator, Paint, Clock and Comet Snake;

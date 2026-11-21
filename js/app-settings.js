@@ -28,9 +28,10 @@
         wire();
       };
       function pageHTML(pg, p, me) {
-        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 1.1</small></div></div>
+        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 1.2</small></div></div>
           <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}
-          <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}
+          ${screensHTML()}
+          <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}
           <h3>Network</h3>${NX.native ? nativeNet(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}
           ${row("bt", "Bluetooth", p.airplane ? "Airplane mode is on" : p.bt ? (navigator.bluetooth ? "On. Add a device to connect it." : "This browser can't reach Bluetooth devices. Try Edge or Chrome on a computer.") : "Off", toggle("bt", p.bt && !p.airplane))}
           ${p.bt && !p.airplane ? `<div class="s-card"><div class="s-bth"><b>Bluetooth devices</b><button class="btn primary" id="s-btadd" ${navigator.bluetooth ? "" : "disabled"}>Add device</button></div>${(NX.data("bt-devices", []).length ? NX.data("bt-devices", []).map((d, i) => `<div class="s-user">${NX.icon("bt", 20)}<b>${NX.esc(d.name)}</b><span class="s-tag">${d.at}</span><button class="btn" data-btrm="${i}">Remove</button></div>`).join("") : `<p class="s-note">No devices yet. Add device opens your browser's Bluetooth list, where you pick a device near you.</p>`)}<p class="s-msg" id="s-btmsg"></p></div>` : ""}
@@ -56,11 +57,48 @@
         }
         if (pg === "time") { const d = new Date(); return `<div class="s-big-time">${NX.fmtTime(d)}<small>${d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</small></div>
           ${row("time", "24-hour clock", "Show 13:00 instead of 1:00 PM", toggle("clock24", p.clock24))}${row("globe", "Time zone", Intl.DateTimeFormat().resolvedOptions().timeZone || "Set by your browser", "")}${row("globe", "Language", navigator.language || "English", "")}`; }
-        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 1.1 · made by Nebulux</small></div></div>
+        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 1.2 · made by Nebulux</small></div></div>
           <h3>Device specifications</h3><div class="s-card s-spec"><div><span>Device name</span><b>Nebulux PC</b></div><div><span>Processor threads</span><b>${navigator.hardwareConcurrency || "Unknown"}</b></div><div><span>Memory</span><b>${navigator.deviceMemory ? navigator.deviceMemory + " GB or more" : "Unknown"}</b></div><div><span>Screen</span><b>${screen.width} x ${screen.height}</b></div><div><span>Runs in</span><b>${NX.native ? "This computer, from the Nebulux OS USB" : "Your web browser"}</b></div><div id="s-kernel" hidden></div></div>
           <h3>Safe by design</h3><div class="s-card"><p class="s-note">${NX.native ? "Nebulux OS runs from its USB. It never changes this computer's own drive or the system already on it: take the USB out and restart, and the computer starts the way it always did." : "Nebulux OS runs inside a browser tab. It can't change or harm your computer, and closing the tab closes it. Your accounts and settings are saved in this browser only."}</p></div>`;
         return "";
       }
+      // ---------- screens: a TV or monitor on HDMI, and wireless displays ----------
+      function screensHTML() {
+        if (!NX.native) return `<h3>Screens and TV</h3><div class="s-card"><p class="s-note">On the real Nebulux OS (started from the USB), plug a TV or monitor into the computer's HDMI port to show Nebulux OS on it, or cast to a wireless TV.</p></div>`;
+        return `<h3>Screens and TV</h3><div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("tv", 20)}<b>Screens</b></span><span class="s-hwc"><button class="btn" id="s-detect">Detect</button></span></div><div id="s-dlist"><p class="s-note">Checking screens...</p></div></div>
+          <div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("cast", 20)}<b>Wireless display</b></span><span class="s-hwc" id="s-castc"></span></div><p class="s-note" id="s-castn">Checking...</p></div>`;
+      }
+      async function fillScreens(probe) {
+        if (!q$("#s-dlist")) return; let d;
+        try { d = await NX.api("POST", "/display/get", { probe: !!probe }); } catch (e) { const b0 = q$("#s-dlist"); if (b0) b0.innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; return; }
+        const b = q$("#s-dlist"); if (!b) return;
+        const outs = d.outputs || [];
+        b.innerHTML = outs.map((o) => `<div class="s-net"><span class="s-sig">${NX.icon(o.builtIn ? "display" : "tv", 20)}</span><span class="s-nn"><b>${NX.esc(o.label)}</b><small>${o.active ? (o.w ? o.w + " x " + o.h : "On") : "Off"}</small></span></div>`).join("") +
+          (d.ext ? `<h4 class="s-sub">How to use the TV or monitor</h4><div class="seg s-dmode">${[["mirror", "Duplicate"], ["external", "Second screen only"], ["internal", "This screen only"]].map(([k, l]) => `<button data-dm="${k}" class="${d.mode === k ? "on" : ""}">${l}</button>`).join("")}</div><p class="s-msg" id="s-dmsg"></p>`
+            : `<p class="s-note">To show Nebulux OS on a TV, plug it into this computer's HDMI port (with an HDMI cable), turn the TV to that HDMI input, then press Detect.</p>`);
+        b.querySelectorAll("[data-dm]").forEach((x) => (x.onclick = async () => {
+          b.querySelectorAll("[data-dm]").forEach((y) => (y.disabled = true)); const m = q$("#s-dmsg"); if (m) m.textContent = "Changing the screens...";
+          try { await NX.api("POST", "/display/set", { mode: x.dataset.dm }); NX.setData("tv-mode", x.dataset.dm); NX.toast(x.dataset.dm === "mirror" ? "The TV shows the same picture." : x.dataset.dm === "external" ? "Nebulux OS shows on the TV only." : "Nebulux OS shows on this screen only."); }
+          catch (e) { NX.toast(e.message); }
+          fillScreens(); fillAudio();
+        }));
+      }
+      async function fillAudio() {
+        if (!q$("#s-alist")) return; let a;
+        try { a = await NX.api("GET", "/audio"); } catch (e) { const b0 = q$("#s-alist"); if (b0) b0.innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; return; }
+        const b = q$("#s-alist"); if (!b) return;
+        b.innerHTML = a.outputs.length ? a.outputs.map((o, i) => `<div class="s-net ${o.active ? "on" : ""}"><span class="s-sig">${NX.icon(/hdmi|tv/i.test(o.id + o.label) ? "tv" : "volume", 20)}</span><span class="s-nn"><b>${NX.esc(o.label)}</b><small>${o.active ? "Playing here" : ""}</small></span>${o.active ? "" : `<button class="btn" data-ao="${i}">Use this</button>`}</div>`).join("") : `<p class="s-note">No speakers were found.</p>`;
+        b.querySelectorAll("[data-ao]").forEach((x) => (x.onclick = async () => { x.disabled = true; x.textContent = "Switching..."; try { await NX.api("POST", "/audio", { id: a.outputs[+x.dataset.ao].id }); NX.toast("Sound now plays on " + a.outputs[+x.dataset.ao].label + "."); } catch (e) { NX.toast(e.message); } fillAudio(); }));
+      }
+      async function fillCast() {
+        const c = q$("#s-castc"), n = q$("#s-castn"); if (!c || !n) return; let s;
+        try { s = await NX.api("GET", "/cast"); } catch (e) { n.textContent = e.message; return; }
+        if (!s.available) { n.textContent = "Wireless display isn't available on this copy of Nebulux OS."; c.innerHTML = ""; return; }
+        if (!s.running) { n.textContent = "Show Nebulux OS on a TV that supports Miracast (\"screen mirroring\" on many Samsung, LG and Roku TVs and Fire TV sticks). The computer's Wi-Fi needs to support it too."; c.innerHTML = `<button class="btn primary" data-cast="start">Connect</button>`; }
+        else { n.textContent = "Pick your TV in the Network Displays window. Hide it when you're casting, and Stop to end."; c.innerHTML = `<button class="btn" data-cast="show">Show</button><button class="btn" data-cast="hide">Hide</button><button class="btn" data-cast="stop">Stop</button>`; }
+        c.querySelectorAll("[data-cast]").forEach((x) => (x.onclick = async () => { x.disabled = true; try { await NX.api("POST", "/cast/" + x.dataset.cast); } catch (e) { NX.toast(e.message); } fillCast(); }));
+      }
+
       // ---------- the real computer's Wi-Fi and Bluetooth (Nebulux OS from the USB) ----------
       function nativeNet(p) {
         return `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("wifi", 20)}<b>Wi-Fi</b></span><span class="s-hwc"><button class="btn" id="s-wrefresh" ${p.wifi && !p.airplane ? "" : "hidden"}>Refresh</button>${toggle("wifi", p.wifi && !p.airplane)}</span></div><p class="s-note" id="s-netnow"></p><div id="s-wlist"><p class="s-note">Looking for networks...</p></div></div>
@@ -153,7 +191,7 @@
           } catch (e) { m.textContent = e && e.name === "NotFoundError" ? "No device was picked." : e && e.name === "SecurityError" ? "The browser blocked Bluetooth here. Open Nebulux OS from a web address (https) to use it." : "Couldn't reach Bluetooth: " + (e && e.message || "unknown error"); }
         };
         body.querySelectorAll("[data-btrm]").forEach((b) => (b.onclick = () => { const L = NX.data("bt-devices", []); L.splice(+b.dataset.btrm, 1); NX.setData("bt-devices", L); draw(); }));
-        if (NX.native && page === "system") { fillWifi(); fillBt(); }
+        if (NX.native && page === "system") { fillWifi(); fillBt(); fillScreens(); fillAudio(); fillCast(); const dt = q$("#s-detect"); if (dt) dt.onclick = () => { const b = q$("#s-dlist"); if (b) b.innerHTML = `<p class="s-note">Looking for screens...</p>`; fillScreens(true); }; }
         if (NX.native && page === "about") fillInfo();
         const os = body.querySelector("[data-openstore]"); if (os) os.onclick = () => NX.open("store");
         const rn = body.querySelector("#s-rename"); if (rn) rn.onclick = () => { const m = body.querySelector("#s-namemsg"); try { NX.renameUser(NX.me.id, body.querySelector("#s-name").value); NX.me = NX.users().find((u) => u.id === NX.me.id); NX.shell.refresh(); draw(); NX.toast("Your name is saved."); } catch (e) { m.textContent = e.message; } };
@@ -166,8 +204,9 @@
         body.querySelectorAll("[data-rmuser]").forEach((b) => (b.onclick = () => { if (b.dataset.sure) { NX.removeUser(b.dataset.rmuser); draw(); NX.toast("Account removed."); } else { b.dataset.sure = 1; b.textContent = "Remove for good?"; b.classList.add("danger"); } }));
       }
       win.onopts = (o) => { if (o.page) { page = o.page; draw(); } };
+      const onDisp = () => { if (page === "system") { fillScreens(); fillAudio(); } }; document.addEventListener("nx:display", onDisp);
       const onPref = () => { if (document.activeElement && document.activeElement.type === "range" && body.contains(document.activeElement)) return; };
-      document.addEventListener("nx:prefs", onPref); win.onclose = () => document.removeEventListener("nx:prefs", onPref);
+      document.addEventListener("nx:prefs", onPref); win.onclose = () => { document.removeEventListener("nx:prefs", onPref); document.removeEventListener("nx:display", onDisp); };
       draw();
     } };
 })();

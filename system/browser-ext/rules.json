@@ -5,10 +5,24 @@
     "action": {
       "type": "modifyHeaders",
       "responseHeaders": [
-        { "header": "x-frame-options", "operation": "remove" },
-        { "header": "content-security-policy", "operation": "remove" }
+        {
+          "header": "x-frame-options",
+          "operation": "remove"
+        },
+        {
+          "header": "content-security-policy",
+          "operation": "remove"
+        }
       ]
     },
-    "condition": { "resourceTypes": ["sub_frame"] }
+    "condition": {
+      "resourceTypes": [
+        "sub_frame"
+      ],
+      "excludedRequestDomains": [
+        "127.0.0.1",
+        "localhost"
+      ]
+    }
   }
 ]

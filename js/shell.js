@@ -35,7 +35,7 @@
   // ---------- boot ----------
   function boot() {
     const b = $("#boot"); b.hidden = false; $("#lock").hidden = true; $("#desktop").hidden = true; $("#off").hidden = true;
-    applyLook(); setTimeout(() => { b.classList.add("out"); setTimeout(() => { b.hidden = true; b.classList.remove("out"); lock(); }, 400); }, NX.fast ? 50 : 1300);
+    applyLook(); setTimeout(() => { b.classList.add("out"); setTimeout(() => { b.hidden = true; b.classList.remove("out"); lock(); }, 400); }, NX.fast ? 50 : NX.native ? 500 : 1300);
   }
 
   // ---------- lock screen and sign-in ----------
@@ -197,11 +197,21 @@
   // ---------- wiring ----------
   function init() {
     $("#lock").addEventListener("click", (e) => { if ($("#lock").className === "locked" && !e.target.closest("button")) reveal(); });
+    let winAlone = false;
     addEventListener("keydown", (e) => {
       if (!$("#lock").hidden && $("#lock").className === "locked") { reveal(); return; }
       if (e.key === "Escape") closeFlyouts();
-      if (NX.me && ((e.ctrlKey && e.key === "Escape") || e.key === "Meta" || e.key === "OS")) { e.preventDefault(); toggleStart(true); }
+      if (e.key === "Meta" || e.key === "OS") { winAlone = true; e.preventDefault(); return; }
+      if (e.metaKey || e.getModifierState && e.getModifierState("OS")) winAlone = false;
+      if (!NX.me) return;
+      if (e.ctrlKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
+      if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key))) { e.preventDefault(); NX.screenshot && NX.screenshot().catch((er) => NX.toast(er.message)); }
+      if (e.metaKey && /^e$/i.test(e.key)) { e.preventDefault(); NX.open("files"); }
     });
+    addEventListener("keyup", (e) => { if ((e.key === "Meta" || e.key === "OS") && winAlone && NX.me) { e.preventDefault(); toggleStart(true); } if (e.key === "Meta" || e.key === "OS") winAlone = false; });
+    // the same keys pressed while a website in a window has the keyboard
+    addEventListener("message", (e) => { const d = e.data; if (!d || d.nx !== "key" || !NX.me || ![...document.querySelectorAll("iframe")].some((f) => f.contentWindow === e.source)) return;
+      if (d.key === "start") toggleStart(true); if (d.key === "shot" && NX.screenshot) NX.screenshot().catch((er) => NX.toast(er.message)); if (d.key === "files") NX.open("files"); });
     let ty = null; $("#lock").addEventListener("touchstart", (e) => (ty = e.touches[0].clientY), { passive: true });
     $("#lock").addEventListener("touchend", (e) => { if (ty != null && ty - e.changedTouches[0].clientY > 40) reveal(); ty = null; }, { passive: true });
     $("#lk-power").onclick = (e) => { e.stopPropagation(); const m = $("#lk-pmenu"); m.hidden = !m.hidden; };
@@ -218,6 +228,7 @@
     });
     boot();
   }
+  NX.menu = menu;
   NX.shell = { taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
-      NX_VERSION: "1.1"
+      NX_VERSION: "1.2"
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +28,7 @@ jobs:
         run: |
           for f in js/*.js system/helper/*.js system/browser-ext/*.js; do node --check "$f"; done
           for f in system/browser-ext/*.json system/iso/root/etc/chromium/policies/managed/*.json; do node -e "JSON.parse(require('fs').readFileSync('$f'))"; done
-          bash -n system/iso/build.sh system/iso/boot-test.sh system/iso/root/usr/local/bin/nebulux-session system/iso/root/etc/skel/.bash_profile
+          bash -n system/iso/build.sh system/iso/boot-test.sh system/iso/root/usr/local/bin/nebulux-session
           sh -n system/iso/nebulux.hook.chroot
 
       - name: Build the .iso

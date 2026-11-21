@@ -3,22 +3,45 @@
 (function () {
   const A = NX.apps;
 
-  // ---------- Notepad: saves as you type ----------
-  A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type, and stays with your account.",
-    open(body, win) {
+  // ---------- Notepad: saves as you type, as a note with your account or as a real text file ----------
+  A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
+    open(body, win, opts) {
       body.classList.add("np");
-      body.innerHTML = `<div class="np-bar"><button class="btn sm" data-a="new">New</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
-      const ta = body.querySelector("textarea"), cnt = body.querySelector(".np-count"), sv = body.querySelector(".np-saved");
-      let size = NX.data("np-size", 15), t = 0; ta.value = NX.data("np-text", ""); ta.style.fontSize = size + "px";
-      const count = () => { const s = ta.value; cnt.textContent = (s.trim() ? s.trim().split(/\s+/).length : 0) + " words · " + s.length + " characters"; };
-      ta.oninput = () => { count(); sv.textContent = "Saving..."; clearTimeout(t); t = setTimeout(() => { NX.setData("np-text", ta.value); sv.textContent = "Saved"; }, 400); };
-      body.querySelector(".np-bar").onclick = (e) => {
+      body.innerHTML = `<div class="np-bar"><button class="btn sm" data-a="new">New</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
+      const ta = body.querySelector("textarea"), cnt = body.querySelector(".np-count"), sv = body.querySelector(".np-saved"), saveBtn = body.querySelector("[data-a=save]");
+      let size = NX.data("np-size", 15), t = 0, file = null; ta.style.fontSize = size + "px";
+      const title = () => { win.el.querySelector(".wt-name").textContent = (file ? NX.fs.base(file) : "Notepad"); saveBtn.hidden = !!file; };
+      const count = () => { const v = ta.value; cnt.textContent = (v.trim() ? v.trim().split(/\s+/).length : 0) + " words · " + v.length + " characters"; };
+      const saveNow = () => {
+        if (!file) { NX.setData("np-text", ta.value); sv.textContent = "Saved"; return Promise.resolve(); }
+        const p = file, text = ta.value;
+        return NX.fs.write(p, text).then(() => { if (p === file) sv.textContent = "Saved in " + NX.fs.base(NX.fs.parent(p)); NX.filesChanged && NX.filesChanged(); }).catch((e) => { sv.textContent = "Not saved: " + e.message; });
+      };
+      ta.oninput = () => { count(); sv.textContent = "Saving..."; clearTimeout(t); t = setTimeout(saveNow, 400); };
+      const flush = () => { if (t) { clearTimeout(t); t = 0; return saveNow(); } return Promise.resolve(); };
+      async function openFile(p) {
+        await flush();
+        try { const text = await NX.fs.read(p); file = p; ta.value = text; sv.textContent = "Opened"; } catch (e) { NX.toast(e.message); return; }
+        title(); count(); ta.focus();
+      }
+      function scratch() { file = null; ta.value = NX.data("np-text", ""); title(); count(); }
+      body.querySelector(".np-bar").onclick = async (e) => {
         const a = e.target.closest("button"); if (!a) return; const k = a.dataset.a;
-        if (k === "new") { if (!ta.value || a.dataset.sure) { ta.value = ""; NX.setData("np-text", ""); count(); a.textContent = "New"; delete a.dataset.sure; } else { a.dataset.sure = 1; a.textContent = "Clear note?"; setTimeout(() => { a.textContent = "New"; delete a.dataset.sure; }, 3000); } }
-        if (k === "dl") { const url = URL.createObjectURL(new Blob([ta.value], { type: "text/plain" })), l = document.createElement("a"); l.href = url; l.download = "note.txt"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+        if (k === "new") {
+          if (file) { await flush(); file = null; ta.value = ""; NX.setData("np-text", ""); title(); count(); return; }
+          if (!ta.value || a.dataset.sure) { ta.value = ""; NX.setData("np-text", ""); count(); a.textContent = "New"; delete a.dataset.sure; } else { a.dataset.sure = 1; a.textContent = "Clear note?"; setTimeout(() => { a.textContent = "New"; delete a.dataset.sure; }, 3000); }
+        }
+        if (k === "open") { await flush(); NX.open("files", { place: "Documents" }); NX.toast("Double-click a text file to open it in Notepad."); }
+        if (k === "save") {
+          const first = (ta.value.split("\n").find((x) => x.trim()) || "Note").trim().replace(/[\\/:*?"<>|\x00-\x1f]/g, "").replace(/^\.+/, "").slice(0, 40).trim() || "Note";
+          try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, first + ".txt", false); file = r.path; await NX.fs.write(file, ta.value); NX.setData("np-text", ""); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
+        }
+        if (k === "dl") { const url = URL.createObjectURL(new Blob([ta.value], { type: "text/plain" })), l = document.createElement("a"); l.href = url; l.download = file ? NX.fs.base(file) : "note.txt"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
         if (k === "+" || k === "-") { size = Math.max(11, Math.min(32, size + (k === "+" ? 2 : -2))); ta.style.fontSize = size + "px"; NX.setData("np-size", size); }
       };
-      win.onclose = () => { clearTimeout(t); NX.setData("np-text", ta.value); };
+      win.onopts = (o) => { if (o.file) openFile(o.file); };
+      win.onclose = () => { flush(); };
+      if (opts && opts.file) { scratch(); openFile(opts.file); } else scratch();
       count(); setTimeout(() => ta.focus(), 60);
     } };
 
@@ -83,7 +106,9 @@
         if (t === "brush" || t === "eraser") { tool = t; body.querySelectorAll("[data-t=brush],[data-t=eraser]").forEach((x) => x.classList.toggle("on", x === b)); }
         if (t === "undo" && hist.length) g.putImageData(hist.pop(), 0, 0);
         if (t === "clear") { snap(); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); }
-        if (t === "save") { const l = document.createElement("a"); l.href = cv.toDataURL("image/png"); l.download = "painting.png"; document.body.appendChild(l); l.click(); l.remove(); NX.toast("Picture saved to your downloads."); }
+        if (t === "save") { // into Pictures, where Photos and File Explorer find it
+          cv.toBlob(async (blob) => { try { const r = await NX.fs.upload(await NX.folder("Pictures"), "Painting.png", blob); NX.toast("Saved in Pictures as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (e) { NX.toast(e.message); } }, "image/png");
+        }
       });
       body.querySelector("[data-t=brush]").classList.add("on");
       win.onresize = () => setTimeout(resize, 0); setTimeout(resize, 30);

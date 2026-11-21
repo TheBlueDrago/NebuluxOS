@@ -1,25 +1,47 @@
 #!/bin/bash
 # The Nebulux OS session: the system helper, then Nebulux OS full screen in the built-in browser engine.
+# If the browser engine ever closes, or the OS page doesn't load within 45 seconds, it starts again by itself.
 xset s off -dpms s noblank 2>/dev/null
 xsetroot -solid "#0b0620" 2>/dev/null
-
-# the system helper (Wi-Fi, Bluetooth, volume, brightness, power) on 127.0.0.1:7777
-pkill -u "$(id -u)" -f nebulux-helper.js 2>/dev/null
-node /opt/nebulux/helper/nebulux-helper.js /opt/nebulux/www >"$HOME/.nebulux-helper.log" 2>&1 &
-for _ in $(seq 1 150); do (echo >/dev/tcp/127.0.0.1/7777) 2>/dev/null && break; sleep 0.1; done
-
-# the whole screen: there is no window manager, so the browser is told the screen size itself
-read -r W H < <(xrandr 2>/dev/null | awk '/\*/{split($1,a,"x"); print a[1], a[2]; exit}')
-[ -n "$W" ] || { W=1280; H=800; }
-
-# never show "restore pages?" after the power was cut
-P="$HOME/.config/nebulux-browser"
-sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$P/Default/Preferences" 2>/dev/null
 mkdir -p "$HOME/Downloads"
+P="$HOME/.config/nebulux-browser"
 
-exec chromium --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
-  --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter \
-  --password-store=basic --user-data-dir="$P" --load-extension=/opt/nebulux/ext \
-  --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
-  --autoplay-policy=no-user-gesture-required \
-  "http://127.0.0.1:7777/"
+# the system helper (Wi-Fi, Bluetooth, files, screens, sound, power) on 127.0.0.1:7777
+helper_up() { (echo >/dev/tcp/127.0.0.1/7777) 2>/dev/null; }
+start_helper() {
+  pkill -u "$(id -u)" -f nebulux-helper.js 2>/dev/null
+  node /opt/nebulux/helper/nebulux-helper.js /opt/nebulux/www >"$HOME/.nebulux-helper.log" 2>&1 &
+  for _ in $(seq 1 200); do helper_up && return 0; sleep 0.1; done
+  return 1
+}
+start_helper
+
+# Graphics: drawn without the graphics chip's acceleration, which works on every computer (some chips showed only a
+# white screen with it). To try acceleration, make the file /etc/nebulux/use-gpu.
+GPU="--disable-gpu --disable-gpu-compositing"
+[ -f /etc/nebulux/use-gpu ] && GPU="--ignore-gpu-blocklist"
+
+while true; do
+  helper_up || start_helper
+  # the whole screen: there is no window manager, so the browser is told the screen size itself
+  read -r W H < <(xrandr 2>/dev/null | awk '/\*/{split($1,a,"x"); print a[1], a[2]; exit}')
+  [ -n "$W" ] || { W=1280; H=800; }
+  # never show "restore pages?" after the power was cut
+  sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$P/Default/Preferences" 2>/dev/null
+  START=$(date +%s)
+  chromium --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
+    --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter \
+    --password-store=basic --user-data-dir="$P" --load-extension=/opt/nebulux/ext $GPU \
+    --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
+    --autoplay-policy=no-user-gesture-required \
+    "http://127.0.0.1:7777/" >"$HOME/.nebulux-browser.log" 2>&1 &
+  CPID=$!
+  # the watchdog: the OS page talks to the helper all the time; if it hasn't within 45 seconds, start over
+  ( sleep 45
+    A=$(stat -c %Y "$HOME/.nebulux-alive" 2>/dev/null || echo 0)
+    if [ "$A" -lt "$START" ]; then echo "$(date) the OS page didn't load; starting again" >>"$HOME/.nebulux-browser.log"; start_helper; kill "$CPID" 2>/dev/null; fi ) &
+  WD=$!
+  wait "$CPID"
+  kill "$WD" 2>/dev/null
+  sleep 1
+done

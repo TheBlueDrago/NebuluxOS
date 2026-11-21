@@ -26,6 +26,7 @@ lb config \
   --debian-installer none --apt-recommends false --apt-indices false \
   --bootloaders "syslinux,grub-efi" --uefi-secure-boot auto \
   --firmware-chroot true --firmware-binary false \
+  --chroot-squashfs-compression-type zstd \
   --memtest none --security true --updates true --checksums sha256 --zsync false \
   --iso-application "Nebulux OS" --iso-publisher "Nebulux LLC" --iso-volume "NEBULUX_OS" \
   --image-name nebulux-os \
@@ -39,7 +40,7 @@ mkdir -p config/includes.chroot
 cp -a "$REPO/system/iso/root/." config/includes.chroot/
 mkdir -p config/includes.chroot/opt/nebulux/www config/includes.chroot/opt/nebulux/helper config/includes.chroot/opt/nebulux/ext
 cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" config/includes.chroot/opt/nebulux/www/
-cp -a "$REPO/system/helper/nebulux-helper.js" config/includes.chroot/opt/nebulux/helper/
+cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" config/includes.chroot/opt/nebulux/helper/
 cp -a "$REPO/system/browser-ext/." config/includes.chroot/opt/nebulux/ext/
 echo "$VERSION" > config/includes.chroot/opt/nebulux/VERSION
 # setup steps run inside the system while it's built
@@ -52,19 +53,19 @@ mkdir -p config/bootloaders
 for d in isolinux syslinux_common grub-pc; do
   [ -d "/usr/share/live/build/bootloaders/$d" ] && cp -a "/usr/share/live/build/bootloaders/$d" config/bootloaders/
 done
-# ISOLINUX (older BIOS PCs): menu names, and a 3 second wait
+# ISOLINUX (older BIOS PCs): menu names, and a 1 second wait
 find config/bootloaders -type f \( -name '*.cfg' -o -name '*.in' \) -print0 | xargs -0 sed -i \
   -e 's/Live system (@FLAVOUR@ fail-safe mode)/Nebulux OS (safe mode)/g' -e 's/Live system (@FLAVOUR@)/Nebulux OS/g' \
   -e 's/Live system/Nebulux OS/g' -e 's/Debian GNU\/Linux/Nebulux OS/g'
 for f in config/bootloaders/isolinux/isolinux.cfg config/bootloaders/syslinux_common/isolinux.cfg; do
-  [ -f "$f" ] && { sed -i 's/^timeout .*/timeout 30/' "$f"; grep -q '^timeout' "$f" || echo "timeout 30" >> "$f"; }
+  [ -f "$f" ] && { sed -i 's/^timeout .*/timeout 10/' "$f"; grep -q '^timeout' "$f" || echo "timeout 10" >> "$f"; }
 done
 # the boot picture: a splash.png has to be there already, or live-build draws its own from splash.svg
 for d in isolinux syslinux_common; do [ -d "config/bootloaders/$d" ] && cp "$REPO/system/iso/splash.png" "config/bootloaders/$d/splash.png"; cp "$REPO/system/iso/splash800x600.png" "config/bootloaders/$d/splash800x600.png"; done
-# GRUB (UEFI): starts the first entry after 3 seconds, and no start-up beep
+# GRUB (UEFI): starts the first entry after 1 second, and no start-up beep
 cat > config/bootloaders/grub-pc/config.cfg <<'GRUBCFG'
 set default=0
-set timeout=3
+set timeout=1
 set timeout_style=menu
 
 loadfont $prefix/dejavu-bold-16.pf2
@@ -87,6 +88,7 @@ for s in /usr/lib/live/build/binary_grub_cfg /usr/share/live/build/scripts/build
 done
 grep -rn "timeout\|menu label" config/bootloaders/isolinux config/bootloaders/syslinux_common config/bootloaders/grub-pc/config.cfg 2>/dev/null | grep -v stdmenu | head -12
 # scripts made on Windows lose their "can run" mark
+chmod 644 config/includes.chroot/etc/systemd/system/nebulux-screen.service
 chmod 755 config/includes.chroot/usr/local/bin/nebulux-session config/includes.chroot/etc/X11/xinit/xinitrc config/includes.chroot/etc/skel/.xinitrc config/hooks/normal/9000-nebulux.hook.chroot
 
 say "Build (this takes a while)"

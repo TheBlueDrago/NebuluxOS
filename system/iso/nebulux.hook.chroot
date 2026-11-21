@@ -21,9 +21,16 @@ chmod -R a+rX /opt/nebulux
 # start-up picture: the computer maker's logo with a spinner, like Windows
 plymouth-set-default-theme bgrt 2>/dev/null || plymouth-set-default-theme spinner 2>/dev/null || true
 
-# quiet start-up: nothing waits for a network that isn't there
+# Nebulux OS opens on the screen by itself (no text login)
+systemctl enable nebulux-screen.service
+systemctl mask getty@tty1.service 2>/dev/null || true
+
+# a fast start-up: nothing waits for a network, and no background upkeep jobs run on a USB system
 systemctl mask NetworkManager-wait-online.service 2>/dev/null || true
-systemctl enable NetworkManager.service bluetooth.service systemd-timesyncd.service 2>/dev/null || true
+for t in apt-daily.timer apt-daily-upgrade.timer man-db.timer e2scrub_all.timer e2scrub_reap.service fstrim.timer logrotate.timer dpkg-db-backup.timer; do systemctl mask "$t" 2>/dev/null || true; done
+systemctl enable NetworkManager.service bluetooth.service systemd-timesyncd.service udisks2.service 2>/dev/null || true
+# a short journal kept in memory
+mkdir -p /etc/systemd/journald.conf.d; printf '[Journal]\nStorage=volatile\nRuntimeMaxUse=32M\n' > /etc/systemd/journald.conf.d/nebulux.conf
 
 # Bluetooth turns on when there's a Bluetooth chip
 if [ -f /etc/bluetooth/main.conf ]; then sed -i 's/^#\?AutoEnable=.*/AutoEnable=true/' /etc/bluetooth/main.conf; fi
@@ -41,7 +48,9 @@ polkit.addRule(function(action, subject) {
       action.id.indexOf("org.freedesktop.NetworkManager.") == 0 ||
       action.id.indexOf("org.freedesktop.login1.power-off") == 0 ||
       action.id.indexOf("org.freedesktop.login1.reboot") == 0 ||
-      action.id.indexOf("org.freedesktop.login1.suspend") == 0)) return polkit.Result.YES;
+      action.id.indexOf("org.freedesktop.login1.suspend") == 0 ||
+      action.id == "org.freedesktop.udisks2.filesystem-mount" || action.id == "org.freedesktop.udisks2.filesystem-unmount-others" ||
+      action.id == "org.freedesktop.udisks2.eject-media" || action.id == "org.freedesktop.udisks2.power-off-drive")) return polkit.Result.YES;
 });
 PK
 
