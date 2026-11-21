@@ -38,7 +38,7 @@
   NX.closeAll = () => { for (const id of [...wins.keys()]) NX.close(id); };
   NX.open = (id, opts) => {
     const app = NX.apps[id]; if (!app) return null;
-    if (app.url) { window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }
+    if (app.url) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }
     if (wins.has(id)) { NX.focus(id); const w = wins.get(id); if (opts && w.onopts) w.onopts(opts); return w; }
     desk = desk || document.getElementById("windows");
     const A = area(), small = A.w < 700;

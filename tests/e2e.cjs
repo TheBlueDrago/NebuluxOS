@@ -83,6 +83,18 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.click(".win[data-app=settings] .wb-close"); await wait(300);
   ok(!(await p.$(".win[data-app=settings]")), "Close closes it");
 
+  // Wi-Fi and Bluetooth: the switch really blocks the web, real offline is noticed, Bluetooth offers Add device
+  await p.evaluate(() => NX.setPref("wifi", false)); await wait(100);
+  { const n0 = (await opensNow()).length; await p.evaluate(() => NX.searchWeb("test")); await wait(200);
+    ok((await opensNow()).length === n0 && /Wi-Fi is off/.test(await txt()), "with Wi-Fi off, a search doesn't go out and says why"); }
+  await p.evaluate(() => NX.setPref("wifi", true)); await p.setOfflineMode(true); await wait(400);
+  ok(await p.evaluate(() => !NX.netOK()) && /connection was lost/.test(await txt()), "a real lost connection is noticed");
+  await p.setOfflineMode(false); await wait(400);
+  ok(await p.evaluate(() => NX.netOK()), "and coming back online too");
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
+  ok(await p.evaluate(() => !!document.querySelector("#s-btadd")) && /Connected to the internet/.test(await txt()), "Settings shows the real connection and a Bluetooth Add device button");
+  await p.click(".win[data-app=settings] .wb-close"); await wait(250);
+
   // Google
   await p.click("#tb-apps [data-app=google]"); await wait(400);
   await shot("07-google");

@@ -10,6 +10,12 @@
     box.appendChild(t); while (box.children.length > 3) box.firstChild.remove();
     setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3600);
   };
+  // the internet: this computer's real connection, plus the OS's own Wi-Fi switch and airplane mode
+  NX.online = () => navigator.onLine !== false;
+  NX.netOK = () => { const p = NX.prefs(); return NX.online() && p.wifi && !p.airplane; };
+  NX.netWhy = () => { const p = NX.prefs(); return p.airplane ? "Airplane mode is on. Turn it off in quick settings to go online." : !p.wifi ? "Wi-Fi is off. Turn it on in quick settings to go online." : "This computer isn't connected to the internet."; };
+  const netChange = (on) => { if (NX.me) { tray(); NX.toast(on ? "You're back online." : "The internet connection was lost."); } document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "net" })); };
+  addEventListener("online", () => netChange(true)); addEventListener("offline", () => netChange(false));
   let actx = null;
   NX.beep = (f) => { try { const v = NX.prefs().volume / 100; if (!v) return; actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f || 880; o.type = "sine"; g.gain.setValueAtTime(0.0001, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.18 * v, actx.currentTime + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.35); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + 0.4); } catch (e) { /* no sound */ } };
 
@@ -23,7 +29,7 @@
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
   let resizeT = 0; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { applyLook(); if (NX.me) icons(); }, 150); });
-  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
+  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
 
   NX.fast = /[?&]fast(&|=|$)/.test(location.search); // tests skip the boot animation
   // ---------- boot ----------
@@ -127,7 +133,7 @@
   }
   function tray() {
     if (!NX.me) return; const p = NX.prefs();
-    $("#tb-tray").innerHTML = `${NX.icon(p.wifi && !p.airplane ? "wifi" : p.airplane ? "plane" : "wifioff", 16)}${NX.icon("volume", 16)}${NX.icon("battery", 18)}`;
+    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${NX.icon("battery", 18)}`;
   }
   function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d); $("#tb-date").textContent = d.toLocaleDateString(); }
   setInterval(() => { if (NX.me) clock(); }, 5000);
