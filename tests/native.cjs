@@ -206,6 +206,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(async () => fetch("/api/fake/clip", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: JSON.stringify({ text: "copied in a real app" }) }));
   ok(await until(() => p.evaluate(() => NX.clip.list().some((x) => x.t === "copied in a real app")), 6000), "text copied in real apps and the browser joins clipboard history");
 
+  // ---------- 3.2: Settings > System > Storage ----------
+  await p.evaluate(() => NX.open("settings", { page: "system" }));
+  ok(await until(() => p.evaluate(() => /19.5 GB free/.test((document.querySelector("#s-store") || {}).innerText || "") && document.querySelectorAll("#s-store .s-str").length >= 5)), "Storage shows how full the USB is and what uses it");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // ---------- 3.2: the network troubleshooter ----------
   await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(500);
   await p.evaluate(() => document.querySelector("#s-diag").click());

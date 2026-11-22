@@ -734,3 +734,12 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .fx-tab.on:after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;border-radius:2px;background:var(--accent)}
 .fx-tabx{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;opacity:.7}.fx-tabx:hover{background:var(--hover);opacity:1}
 .fx-tabadd{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;margin:0 0 3px 4px;color:var(--sub)}.fx-tabadd:hover{background:var(--hover);color:var(--txt)}
+
+/* Settings > System > Storage */
+.s-sth{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}.s-sth b{font-size:18px;font-weight:600}.s-sth small{color:var(--sub)}
+.s-stbar{height:10px;border-radius:5px;background:var(--card2);overflow:hidden;margin-bottom:14px}.s-stbar i{display:block;height:100%;border-radius:5px;background:var(--accent)}
+.s-stbar.high i{background:#f5a524}.s-stbar.full i{background:#ef4444}
+.s-stlist{display:flex;flex-direction:column;gap:8px}
+.s-str{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 70px;align-items:center;gap:12px;font-size:13px}
+.s-str b{font-weight:500;text-align:right}.s-strb{height:6px;border-radius:3px;background:var(--card2);overflow:hidden}.s-strb i{display:block;height:100%;background:color-mix(in srgb,var(--accent) 70%,#fff)}
+#s-store .s-dacts{display:flex;gap:8px;margin-top:12px}

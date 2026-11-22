@@ -65,6 +65,7 @@
           ${screensHTML()}
           <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}
           ${NX.batt && NX.batt() ? `<h3>Power & battery</h3><div class="s-card s-battc">${NX.battIcon(44)}<div><b>${NX.batt().percent}%</b><small>${NX.batt().charging ? "Charging" : NX.saverOn() ? "Battery saver is on" : "On battery"}</small></div></div>${row("leaf", "Battery saver", "Turns off see-through effects and animations so the battery lasts longer. The battery icon turns yellow.", toggle("saver", NX.saverOn()))}${row("battery", "Turn on Battery saver by itself", "At 20% battery", toggle("saverAuto", p.saverAuto !== false))}` : ""}
+          ${NX.native ? `<h3>Storage</h3><div class="s-card s-hw" id="s-store"><p class="s-note">Checking...</p></div>` : ""}
           <h3>Clipboard</h3>${row("files", "Clipboard history", "Keep the last 25 things you copy. Nebulux + V shows them.", toggle("cliphist", p.cliphist !== false))}${row("trash", "Clear clipboard history", (NX.data("clip-history", []).length || "Nothing") + (NX.data("clip-history", []).length === 1 ? " item" : NX.data("clip-history", []).length ? " items" : ""), `<button class="btn" id="s-clipclear" ${NX.data("clip-history", []).some((x) => !x.pin) ? "" : "disabled"}>Clear</button>`)}
           <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
@@ -139,6 +140,22 @@
           go.disabled = false;
         };
         go.onclick = () => run(false);
+      }
+      // how full the USB is, and what uses the space
+      async function fillStorage() {
+        const box = q$("#s-store"); if (!box) return; let s;
+        try { s = await NX.api("GET", "/storage"); } catch (e) { box.innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; return; }
+        if (!q$("#s-store")) return;
+        const gb = (b) => b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? Math.round(b / 1e6) + " MB" : b > 0 ? Math.max(1, Math.round(b / 1e3)) + " KB" : "0 KB";
+        const pct = s.total ? Math.min(100, Math.round((s.used / s.total) * 100)) : 0;
+        const rows = [...s.folders, ["Apps from the Nebulux Store", s.apps], ["Recycle Bin", s.trash]].filter((r) => r[1] > 0).sort((a, b) => b[1] - a[1]);
+        const max = Math.max(1, ...rows.map((r) => r[1]));
+        box.innerHTML = `<div class="s-sth"><b>${gb(s.free)} free</b><small>of ${gb(s.total)} ${s.persistent ? "on this USB" : "(in memory: this USB doesn't save changes)"}</small></div>
+          <div class="s-stbar ${pct > 90 ? "full" : pct > 75 ? "high" : ""}"><i style="width:${pct}%"></i></div>
+          ${rows.length ? `<div class="s-stlist">${rows.map((r) => `<div class="s-str"><span>${NX.esc(r[0])}</span><span class="s-strb"><i style="width:${Math.max(2, Math.round((r[1] / max) * 100))}%"></i></span><b>${gb(r[1])}</b></div>`).join("")}</div>` : ""}
+          ${s.trash > 0 ? `<div class="s-dacts"><button class="btn" id="s-stempty">Empty the Recycle Bin (${gb(s.trash)})</button></div>` : ""}
+          ${pct > 90 ? `<p class="s-note">The USB is almost full. Delete files you don't need, empty the Recycle Bin, or uninstall apps.</p>` : ""}`;
+        const em = q$("#s-stempty"); if (em) em.onclick = async () => { em.disabled = true; try { await NX.fs.emptyTrash(); NX.toast("The Recycle Bin is empty."); } catch (e) { NX.toast(e.message); } fillStorage(); };
       }
       async function fillAudio() {
         if (!q$("#s-alist")) return; let a;
@@ -256,7 +273,7 @@
         if (NX.native && page === "devices") fillBt();
         if (page === "update" && NX.update) NX.update.fillSettings(q$);
         const cc = q$("#s-clipclear"); if (cc) cc.onclick = () => { NX.setData("clip-history", NX.data("clip-history", []).filter((x) => x.pin)); NX.toast("Clipboard history cleared. Pinned items stay."); draw(); };
-        if (NX.native && page === "system") { fillScreens(); fillAudio(); fillCast(); const dt = q$("#s-detect"); if (dt) dt.onclick = () => { const b = q$("#s-dlist"); if (b) b.innerHTML = `<p class="s-note">Looking for screens...</p>`; fillScreens(true); }; }
+        if (NX.native && page === "system") { fillScreens(); fillAudio(); fillCast(); fillStorage(); const dt = q$("#s-detect"); if (dt) dt.onclick = () => { const b = q$("#s-dlist"); if (b) b.innerHTML = `<p class="s-note">Looking for screens...</p>`; fillScreens(true); }; }
         if (NX.native && page === "about") fillInfo();
         const os = body.querySelector("[data-openstore]"); if (os) os.onclick = () => NX.open("store");
         const rn = body.querySelector("#s-rename"); if (rn) rn.onclick = () => { const m = body.querySelector("#s-namemsg"); try { NX.renameUser(NX.me.id, body.querySelector("#s-name").value); NX.me = NX.users().find((u) => u.id === NX.me.id); NX.shell.refresh(); draw(); NX.toast("Your name is saved."); } catch (e) { m.textContent = e.message; } };

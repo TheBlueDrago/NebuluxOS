@@ -439,6 +439,18 @@ module.exports = function more({ api, run, FAKE }) {
   };
   if (FAKE) api["GET /fake/desks"] = async () => fakeDesks;
 
+  // ---------- storage: how full the USB is, and what uses it ----------
+  api["GET /storage"] = async () => {
+    if (FAKE) return { persistent: true, total: 28.6e9, used: 9.1e9, free: 19.5e9, folders: [["Documents", 2.4e8], ["Downloads", 1.9e9], ["Pictures", 4.1e8], ["Music", 0], ["Videos", 1.2e9], ["Desktop", 2e6]], apps: 3.3e9, trash: 5.2e7 };
+    const persist = fs.existsSync("/run/live/persistence") && fs.readdirSync("/run/live/persistence").length > 0;
+    // where your changes are kept: the USB's persistent space, or memory when it doesn't save changes
+    const df = await run("df", ["-B1", "--output=size,used,avail", HOME], 4000);
+    const n = (df.out.trim().split("\n")[1] || "").trim().split(/\s+/).map(Number);
+    const du = async (p) => { const r = await run("du", ["-sb", p], 8000); return +(r.out.split(/\s/)[0]) || 0; };
+    const folders = []; for (const f of FOLDERS) folders.push([f, await du(path.join(HOME, f))]);
+    return { persistent: persist, total: n[0] || 0, used: n[1] || 0, free: n[2] || 0, folders, apps: await du(path.join(HOME, ".local", "share", "flatpak")), trash: await du(TRASH) };
+  };
+
   // ---------- the network troubleshooter ----------
   // Checks, in order: is there a Wi-Fi chip, does it have a driver, did its firmware load, is it switched off, does
   // NetworkManager see it, is it connected, does the internet answer. Each check says what's wrong in plain words.
