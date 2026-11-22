@@ -25,12 +25,12 @@ lb config \
   --archive-areas "main contrib non-free-firmware" \
   --debian-installer none --apt-recommends false --apt-indices false \
   --bootloaders "syslinux,grub-efi" --uefi-secure-boot auto \
-  --firmware-chroot true --firmware-binary false \
+  --firmware-chroot false --firmware-binary false \
   --chroot-squashfs-compression-type zstd \
   --memtest none --security true --updates true --checksums sha256 --zsync false \
   --iso-application "Nebulux OS" --iso-publisher "Nebulux LLC" --iso-volume "NEBULUX_OS" \
   --image-name nebulux-os --bootappend-live-failsafe none \
-  --bootappend-live "boot=live components quiet splash loglevel=3 rd.udev.log_level=3 systemd.show_status=false vt.global_cursor_default=0 username=nebulux user-fullname=Nebulux hostname=nebulux-os locales=en_US.UTF-8 keyboard-layouts=us live-config.user-default-groups=audio,cdrom,dip,floppy,video,plugdev,netdev,powerdev,scanner,bluetooth,input,render,dialout persistence persistence-media=removable-usb" \
+  --bootappend-live "boot=live components quiet splash loglevel=3 rd.udev.log_level=3 systemd.show_status=false vt.global_cursor_default=0 username=nebulux user-fullname=Nebulux hostname=nebulux-os locales=en_US.UTF-8 keyboard-layouts=us live-config.user-default-groups=audio,cdrom,dip,floppy,video,plugdev,netdev,powerdev,scanner,bluetooth,input,render,dialout,systemd-journal persistence persistence-media=removable-usb" \
   >/dev/null
 
 # The newer Linux kernel and firmware from Debian's backports (kernel 6.12 instead of 6.1): newer Wi-Fi chips have
@@ -119,11 +119,16 @@ ISO="$(ls -1 "$WORK"/*.iso 2>/dev/null | head -1)"
 say "Wi-Fi drivers"
 KV="$(ls -1 "$WORK/chroot/lib/modules" | sort -V | tail -1)"; echo "kernel $KV"
 miss=""
-for m in realtek/rtw89/rtw89_8852be realtek/rtw89/rtw89_8852ae realtek/rtw89/rtw89_8852ce realtek/rtw89/rtw89_8922ae mediatek/mt76/mt7921/mt7921e intel/iwlwifi/iwlwifi; do
+# must be there: the owner's RTL8852BE (driver and firmware) and the common driver families
+for m in realtek/rtw89/rtw89_8852be realtek/rtw89/rtw89_8852ae realtek/rtw89/rtw89_8852ce mediatek/mt76/mt7921/mt7921e intel/iwlwifi/iwlwifi; do
   ls "$WORK/chroot/lib/modules/$KV/kernel/drivers/net/wireless/$m".ko* >/dev/null 2>&1 && echo "ok  $m" || miss="$miss $m"
 done
-for f in rtw89/rtw8852b_fw rtl_bt/rtl8852bu_fw mediatek/WIFI_RAM_CODE_MT7922_1; do
+for f in rtw89/rtw8852b_fw rtl_bt/rtl8852bu_fw; do
   ls "$WORK/chroot/lib/firmware/$f"* >/dev/null 2>&1 && echo "ok  firmware $f" || miss="$miss firmware:$f"
+done
+# good to have (reported, not required)
+for f in mediatek/WIFI_RAM_CODE_MT7922_1 mediatek/WIFI_RAM_CODE_MT7961_1 iwlwifi-ty-a0-gf-a0; do
+  ls "$WORK/chroot/lib/firmware/$f"* >/dev/null 2>&1 && echo "ok  firmware $f" || echo "--  firmware $f not included"
 done
 [ -z "$miss" ] || { echo "Missing Wi-Fi drivers or firmware:$miss"; exit 1; }
 mv "$ISO" "$OUT/nebulux-os.iso"

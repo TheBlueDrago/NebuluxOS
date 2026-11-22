@@ -381,7 +381,7 @@ module.exports = function more({ api, run, FAKE }) {
   const activeId = async () => +(await run("xdotool", ["getactivewindow"], 3000)).out.trim() || 0;
   api["POST /native/open"] = async (b) => {
     if (!okApp(b.app) || (b.wm && !okWm(b.wm))) throw new Error("That app name doesn't look right.");
-    if (FAKE) { fakeRunning.add(b.app); return { ok: true }; }
+    if (FAKE) { fakeRunning.add(b.wm || b.app); return { ok: true }; } // the made-up computer keeps window classes, like the real one
     const w = mineOf(await windows(), b.wm);
     if (w.length) { for (const x of w) await run("wmctrl", ["-i", "-a", x.id], 4000); return { ok: true, shown: true }; }
     const p = spawn("flatpak", ["run", b.app], { detached: true, stdio: "ignore" }); p.on("error", () => {}); p.unref();
@@ -389,7 +389,7 @@ module.exports = function more({ api, run, FAKE }) {
   };
   // which real apps have windows open (for the taskbar), and showing or hiding them from the taskbar
   api["POST /native/running"] = async (b) => {
-    if (FAKE) return { running: [...fakeRunning], active: [] };
+    if (FAKE) return { running: Object.entries(b.apps || {}).filter(([, wm]) => fakeRunning.has(wm)).map(([app]) => app), active: [] };
     const all = await windows(), act = await activeId(), running = [], active = [];
     for (const [app, wm] of Object.entries(b.apps || {}).slice(0, 60)) { if (!okWm(wm)) continue; const mine = mineOf(all, wm); if (mine.length) { running.push(app); if (mine.some((x) => parseInt(x.id, 16) === act)) active.push(app); } }
     return { running, active };
@@ -407,6 +407,74 @@ module.exports = function more({ api, run, FAKE }) {
     const all = await windows(), act = await activeId();
     for (const wm of Object.values(b.apps || {}).slice(0, 60)) { if (!okWm(wm)) continue; for (const x of mineOf(all, wm)) if (parseInt(x.id, 16) === act || b.all) await run("xdotool", ["windowminimize", String(parseInt(x.id, 16))], 4000); }
     return { ok: true };
+  };
+
+  // ---------- the network troubleshooter ----------
+  // Checks, in order: is there a Wi-Fi chip, does it have a driver, did its firmware load, is it switched off, does
+  // NetworkManager see it, is it connected, does the internet answer. Each check says what's wrong in plain words.
+  // The report (everything it read) can be saved to Documents, to send to someone who can help.
+  let lastNet = null;
+  async function netRaw() {
+    const t = (c, a, ms) => run(c, a, ms || 8000).then((r) => (r.out + (r.ok ? "" : r.err)).trim());
+    const raw = {
+      kernel: os.release(),
+      pci: await t("lspci", ["-nnk"]),
+      usb: await t("lsusb", []),
+      rfkill: await t("rfkill", ["list"]),
+      general: await t("nmcli", ["-t", "-f", "STATE,CONNECTIVITY,WIFI-HW,WIFI,NETWORKING", "general"]),
+      devices: await t("nmcli", ["-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device"]),
+      kernelLog: (await t("journalctl", ["-k", "-b", "--no-pager", "-o", "cat", "-n", "3000"], 10000)).split("\n").filter((l) => /firmware|rtw8|rtw89|iwlwifi|mt79|mt76|ath1[01]k|brcm|wlan|wlp|80211|bluetooth|btusb|btrtl/i.test(l)).slice(-60).join("\n"),
+    };
+    raw.modules = await t("sh", ["-c", "lsmod | grep -Ei 'rtw|iwl|mt7|ath|brcm|wl|cfg80211|bt' | head -40"]);
+    return raw;
+  }
+  async function online() {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 7000);
+    try { const r = await fetch("https://www.google.com/generate_204", { signal: ctl.signal }); return r.status === 204 || r.ok; } catch (e) { return false; } finally { clearTimeout(tm); }
+  }
+  function netChecks(raw, isOnline) {
+    const out = [], add = (id, ok, title, detail) => out.push({ id, ok, title, detail });
+    // the Wi-Fi chip, from lspci -nnk: its block shows "Kernel driver in use" when a driver took it
+    const blocks = raw.pci.split(/\n(?=\S)/), wb = blocks.find((b) => /network controller|wireless|802\.11|wi-?fi/i.test(b.split("\n")[0]) && !/ethernet/i.test(b.split("\n")[0]));
+    const usbWifi = raw.usb.split("\n").find((l) => /wireless|802\.11|wlan|wi-?fi/i.test(l));
+    const chipName = wb ? wb.split("\n")[0].replace(/^[0-9a-f:.]+\s+/i, "").replace(/^[^:]*:\s*/, "").replace(/\s*\(rev [^)]*\)/, "").trim() : usbWifi ? usbWifi.replace(/^Bus \d+ Device \d+: ID [0-9a-f:]+\s+/i, "") : "";
+    const tidy = (n) => n.replace(/\s*\[[0-9a-f]{4}:[0-9a-f]{4}\]/gi, "").replace(/\s*(Semiconductor|Technology)?\s*(Co\.,?\s*Ltd\.?|Corporation|Corp\.|Inc\.)/gi, "").replace(/\s+/g, " ").trim();
+    const driver = wb ? ((wb.match(/Kernel driver in use:\s*(\S+)/) || [])[1] || "") : "";
+    const devs = raw.devices.split("\n").map((l) => nm(l)).filter((d) => d[0]);
+    const wifiDev = devs.find((d) => d[1] === "wifi"), eth = devs.find((d) => d[1] === "ethernet" && /^connected/.test(d[2] || ""));
+    add("chip", !!chipName, chipName ? "Wi-Fi chip: " + tidy(chipName) : "No Wi-Fi chip found", chipName ? "" : "Nebulux OS can't see a Wi-Fi chip. Virtual computers (like QEMU) have none; on a real computer, a USB Wi-Fi adapter or a network cable works.");
+    if (chipName && wb) add("driver", !!driver, driver ? "Driver: " + driver + " (Linux " + raw.kernel + ")" : "No driver for this chip", driver ? "" : "Linux " + raw.kernel + " has no driver for this chip. A newer Nebulux OS may add one; meanwhile a network cable or a USB Wi-Fi adapter works.");
+    const fwFail = raw.kernelLog.split("\n").filter((l) => /firmware.*(fail|error|not found|missing)|failed to (load|request) firmware|direct firmware load .* failed/i.test(l));
+    if (driver) add("firmware", !fwFail.length, fwFail.length ? "The chip's firmware didn't load" : "Firmware loaded", fwFail.length ? fwFail[0].slice(0, 200) : "");
+    const hard = /Hard blocked:\s*yes/i.test(raw.rfkill.split(/\n(?=\d+:)/).filter((b) => /wireless lan|wlan/i.test(b)).join("\n"));
+    const soft = /Soft blocked:\s*yes/i.test(raw.rfkill.split(/\n(?=\d+:)/).filter((b) => /wireless lan|wlan/i.test(b)).join("\n"));
+    if (chipName) add("switch", !hard && !soft, hard ? "Wi-Fi is switched off on the computer" : soft ? "Wi-Fi is turned off" : "Wi-Fi is switched on", hard ? "Press the computer's Wi-Fi or airplane key (often F7 or Fn plus a key with an antenna), or slide its Wi-Fi switch." : soft ? "Press Try to fix, or turn Wi-Fi on in quick settings." : "");
+    if (chipName) add("device", !!wifiDev, wifiDev ? "Wi-Fi is ready (" + wifiDev[0] + ")" : "Wi-Fi isn't ready", wifiDev ? "" : "The chip is there but no Wi-Fi device came up.");
+    if (wifiDev) add("connected", /^connected/.test(wifiDev[2] || "") || !!eth, /^connected/.test(wifiDev[2] || "") ? "Connected to " + (wifiDev[3] || "Wi-Fi") : eth ? "Using a network cable" : "Not connected to a network", /^connected/.test(wifiDev[2] || "") || eth ? "" : "Open the Wi-Fi list and pick your network.");
+    add("internet", isOnline, isOnline ? "The internet answers" : "The internet doesn't answer", isOnline ? "" : "Connected but no internet: the network may need a sign-in page, or the router may be offline.");
+    const bad = out.find((c) => !c.ok);
+    return { checks: out, ok: !bad, summary: bad ? bad.title : "Everything works", chip: tidy(chipName), driver };
+  }
+  const nm = (l) => { const o = []; let c = ""; for (let i = 0; i < l.length; i++) { if (l[i] === "\\" && i + 1 < l.length) c += l[++i]; else if (l[i] === ":") { o.push(c); c = ""; } else c += l[i]; } o.push(c); return o; };
+  api["POST /net/diagnose"] = async (b) => {
+    if (FAKE) {
+      const raw = { kernel: "6.12.9+bpo-amd64", pci: "02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller [10ec:b852]\n\tKernel driver in use: rtw89_8852be\n\tKernel modules: rtw89_8852be", usb: "", rfkill: "0: phy0: Wireless LAN\n\tSoft blocked: no\n\tHard blocked: no", general: "connected:full:enabled:enabled:enabled", devices: "wlp2s0:wifi:connected:Home Wi-Fi", kernelLog: "rtw89_8852be 0000:02:00.0: loaded firmware rtw89/rtw8852b_fw-1.bin", modules: "rtw89_8852be" };
+      if (b && b.fix) { /* nothing to fix in the made-up computer */ }
+      lastNet = { raw, at: new Date().toISOString() }; return Object.assign(netChecks(raw, true), { fixed: !!(b && b.fix) });
+    }
+    if (b && b.fix) { await run("rfkill", ["unblock", "wifi"]); await run("nmcli", ["networking", "on"]); await run("nmcli", ["radio", "wifi", "on"]); await new Promise((r) => setTimeout(r, 2500)); }
+    const raw = await netRaw(), isOnline = await online();
+    lastNet = { raw, at: new Date().toISOString() };
+    return Object.assign(netChecks(raw, isOnline), { fixed: !!(b && b.fix) });
+  };
+  api["POST /net/report"] = async () => {
+    if (!lastNet) throw new Error("Run the troubleshooter first.");
+    const r = lastNet.raw, file = path.join(HOME, "Documents", "Nebulux network report " + lastNet.at.slice(0, 19).replace(/[T:]/g, "-") + ".txt");
+    const text = ["Nebulux OS network report", "Made " + lastNet.at, "Linux " + r.kernel, "",
+      "== Chips (lspci -nnk) ==", r.pci, "", "== USB (lsusb) ==", r.usb, "", "== Switches (rfkill) ==", r.rfkill, "", "== NetworkManager ==", r.general, r.devices, "",
+      "== Drivers loaded ==", r.modules, "", "== Kernel messages about Wi-Fi and Bluetooth ==", r.kernelLog, ""].join("\n");
+    fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text);
+    return { ok: true, path: "/Documents/" + path.basename(file) };
   };
 
   // ---------- updates: Nebulux OS updates itself ----------
@@ -433,7 +501,7 @@ module.exports = function more({ api, run, FAKE }) {
     if (f.error) return { configured: true, current, error: f.error, job: updJob };
     return { configured: true, current, latest: f.version, available: newer(f.version, current), notes: Array.isArray(f.notes) ? f.notes.slice(0, 30).map(String) : [], size: +f.size || 0, needsIso: !!f.needsIso, job: updJob };
   };
-  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; fakeNative.clear(); fakeRunning.clear(); return { ok: true }; };
+  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; jobs = {}; fakeNative.clear(); fakeRunning.clear(); return { ok: true }; };
   api["POST /update/install"] = async () => {
     if (updJob && updJob.state === "installing") return updJob;
     updJob = { state: "installing", msg: "Downloading the update..." };

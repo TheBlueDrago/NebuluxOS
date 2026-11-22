@@ -1,5 +1,18 @@
-# Nebulux OS system packages (Debian 12). The Linux kernel (linux-image-amd64) and all the free and non-free
-# firmware for Wi-Fi, Bluetooth, graphics and sound are added by the build itself.
+# Nebulux OS system packages (Debian 12). The Linux kernel (linux-image-amd64) comes from bookworm-backports (see
+# build.sh), and so does the firmware below when backports has a newer one.
+
+# firmware: Wi-Fi and Bluetooth (Realtek, Intel, Atheros/Qualcomm, Broadcom), graphics and sound. More optional
+# firmware (MediaTek and the newer split packages) is added by nebulux.hook.chroot when it exists.
+firmware-linux-free
+firmware-misc-nonfree
+firmware-realtek
+firmware-iwlwifi
+firmware-atheros
+firmware-brcm80211
+firmware-amd-graphics
+firmware-sof-signed
+amd64-microcode
+intel-microcode
 
 # starting up from the USB
 live-boot

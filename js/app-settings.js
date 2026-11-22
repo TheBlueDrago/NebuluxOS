@@ -67,7 +67,8 @@
           ${NX.batt && NX.batt() ? `<h3>Power & battery</h3><div class="s-card s-battc">${NX.battIcon(44)}<div><b>${NX.batt().percent}%</b><small>${NX.batt().charging ? "Charging" : NX.saverOn() ? "Battery saver is on" : "On battery"}</small></div></div>${row("leaf", "Battery saver", "Turns off see-through effects and animations so the battery lasts longer. The battery icon turns yellow.", toggle("saver", NX.saverOn()))}${row("battery", "Turn on Battery saver by itself", "At 20% battery", toggle("saverAuto", p.saverAuto !== false))}` : ""}
           <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
-          <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}`;
+          <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}
+          ${NX.native ? `<h3>Troubleshoot</h3><div class="s-card s-hw" id="s-trouble"><div class="s-bth"><span class="s-hwt">${NX.icon("wifi", 20)}<b>Network troubleshooter</b></span><span class="s-hwc"><button class="btn primary" id="s-diag">Run</button></span></div><p class="s-note">Checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, and says what's wrong.</p><div id="s-diagout"></div></div>` : ""}`;
         if (pg === "devices") return devicesMouse(p) + `<h3>Bluetooth</h3>${NX.native ? nativeBt(p) : `${row("bt", "Bluetooth", p.airplane ? "Airplane mode is on" : p.bt ? (navigator.bluetooth ? "On. Add a device to connect it." : "This browser can't reach Bluetooth devices. Try Edge or Chrome on a computer.") : "Off", toggle("bt", p.bt && !p.airplane))}
           ${p.bt && !p.airplane ? `<div class="s-card"><div class="s-bth"><b>Bluetooth devices</b><button class="btn primary" id="s-btadd" ${navigator.bluetooth ? "" : "disabled"}>Add device</button></div>${(NX.data("bt-devices", []).length ? NX.data("bt-devices", []).map((d, i) => `<div class="s-user">${NX.icon("bt", 20)}<b>${NX.esc(d.name)}</b><span class="s-tag">${d.at}</span><button class="btn" data-btrm="${i}">Remove</button></div>`).join("") : `<p class="s-note">No devices yet. Add device opens your browser's Bluetooth list, where you pick a device near you.</p>`)}<p class="s-msg" id="s-btmsg"></p></div>` : ""}`}`;
         if (pg === "personal") return `<div class="s-preview" style="background-image:url(${NX.wallpaperURL(p.wallpaper, 560, 315)})"><div class="s-pv-task"></div><div class="s-pv-win ${p.theme}"></div></div>
@@ -118,6 +119,25 @@
           catch (e) { NX.toast(e.message); }
           fillScreens(); fillAudio();
         }));
+      }
+      // the network troubleshooter: run, try to fix, save a report to Documents
+      function wireTrouble() {
+        const go = q$("#s-diag"); if (!go) return;
+        const draw = (d) => {
+          const o = q$("#s-diagout"); if (!o) return;
+          o.innerHTML = `<div class="s-diag ${d.ok ? "ok" : "bad"}"><b>${d.ok ? "Everything works" : NX.esc(d.summary)}</b></div>` +
+            d.checks.map((c) => `<div class="s-dc ${c.ok ? "ok" : "bad"}"><span class="s-dci">${NX.icon(c.ok ? "check" : "close", 14)}</span><span><b>${NX.esc(c.title)}</b>${c.detail ? `<small>${NX.esc(c.detail)}</small>` : ""}</span></div>`).join("") +
+            `<div class="s-dacts">${d.ok ? "" : `<button class="btn primary" id="s-dfix">Try to fix</button>`}<button class="btn" id="s-drep">Save a report to Documents</button></div>`;
+          const fx = q$("#s-dfix"); if (fx) fx.onclick = () => run(true);
+          q$("#s-drep").onclick = async () => { try { const r = await NX.api("POST", "/net/report"); NX.toast("Saved the report to " + r.path.split("/").filter(Boolean).join(" > ") + "."); } catch (e) { NX.toast(e.message); } };
+        };
+        const run = async (fix) => {
+          const o = q$("#s-diagout"); if (o) o.innerHTML = `<p class="s-note">${fix ? "Trying to fix it..." : "Checking..."}</p>`; go.disabled = true;
+          try { const d = await NX.api("POST", "/net/diagnose", { fix: !!fix }); draw(d); if (fix) { NX.toast(d.ok ? "Fixed. Everything works now." : "That didn't fix it: " + d.summary); fillWifi(); } }
+          catch (e) { if (q$("#s-diagout")) q$("#s-diagout").innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; }
+          go.disabled = false;
+        };
+        go.onclick = () => run(false);
       }
       async function fillAudio() {
         if (!q$("#s-alist")) return; let a;
@@ -230,7 +250,7 @@
           } catch (e) { m.textContent = e && e.name === "NotFoundError" ? "No device was picked." : e && e.name === "SecurityError" ? "The browser blocked Bluetooth here. Open Nebulux OS from a web address (https) to use it." : "Couldn't reach Bluetooth: " + (e && e.message || "unknown error"); }
         };
         body.querySelectorAll("[data-btrm]").forEach((b) => (b.onclick = () => { const L = NX.data("bt-devices", []); L.splice(+b.dataset.btrm, 1); NX.setData("bt-devices", L); draw(); }));
-        if (NX.native && page === "network") fillWifi();
+        if (NX.native && page === "network") { fillWifi(); wireTrouble(); }
         if (NX.native && page === "devices") fillBt();
         if (page === "update" && NX.update) NX.update.fillSettings(q$);
         if (NX.native && page === "system") { fillScreens(); fillAudio(); fillCast(); const dt = q$("#s-detect"); if (dt) dt.onclick = () => { const b = q$("#s-dlist"); if (b) b.innerHTML = `<p class="s-note">Looking for screens...</p>`; fillScreens(true); }; }

@@ -4,6 +4,7 @@
   NX.version = "3.1.1";
   NX.whatsNew = [
     ["Wi-Fi on newer laptops", "Nebulux OS now runs on the newer Linux kernel 6.12, with drivers for Wi-Fi 6 and 6E chips that had none before: Realtek RTL8852BE, RTL8852AE, RTL8852CE and RTL8922AE (in many Lenovo, HP and ASUS laptops), MediaTek MT7921 and MT7922, and the newest Intel chips. Their Bluetooth works too."],
+    ["Network troubleshooter", "Settings > Network & internet > Troubleshoot checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, says what is wrong in plain words, tries to fix it, and can save a report to Documents."],
     ["Updates by themselves", "Nebulux OS now finds its own updates. Install them tonight (Later), get a reminder in 30 minutes, or skip one (Never) and install it any time from Settings > Nebulux Update."],
     ["Real apps in the Nebulux Store", "Steam, Minecraft, Spotify, Discord, Zoom, Slack, Telegram, VLC, OBS Studio, GIMP, Krita, Blender, LibreOffice, Firefox, Google Chrome, Visual Studio Code, Signal and Audacity install as real apps. Netflix, WhatsApp, Office and about 60 more open as web apps in their own windows."],
     ["Window buttons for every app", "Real apps and app windows have minimize, maximize and close. Minimized apps come back from the taskbar."],

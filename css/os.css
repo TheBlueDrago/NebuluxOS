@@ -640,3 +640,12 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .nx-batt.b-saver .nx-bfill{fill:#f5c518}.nx-batt.b-saver{color:#f5c518}
 .qs-batt{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;font-size:13px}.qs-batt:hover{background:var(--hover)}
 .s-battc{display:flex;align-items:center;gap:14px}.s-battc div{display:flex;flex-direction:column;gap:2px}.s-battc b{font-size:20px;font-weight:600}.s-battc small{color:var(--sub)}
+
+/* the network troubleshooter */
+.s-diag{margin:10px 0 6px;padding:10px 12px;border-radius:8px;font-size:14px}
+.s-diag.ok{background:#34d39922;color:#9ff0cf}.s-diag.bad{background:#ff9f1a22;color:#ffd59a}
+.s-dc{display:flex;gap:10px;align-items:flex-start;padding:7px 2px;font-size:13px}
+.s-dc span:last-child{display:flex;flex-direction:column;gap:2px}.s-dc small{color:var(--sub)}
+.s-dci{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;margin-top:1px}
+.s-dc.ok .s-dci{background:#34d399;color:#05261a}.s-dc.bad .s-dci{background:#ff6b5a;color:#2b0703}
+#s-trouble .s-dacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}

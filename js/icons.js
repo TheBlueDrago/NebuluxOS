@@ -46,6 +46,7 @@
     max: () => `<rect x="14" y="14" width="20" height="20" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.5"/>`,
     restore: () => `<rect x="13" y="18" width="17" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M18 18v-3a2 2 0 012-2h13a2 2 0 012 2v13a2 2 0 01-2 2h-3" fill="none" stroke="currentColor" stroke-width="2.5"/>`,
     close: () => `<path d="M15 15l18 18M33 15L15 33" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
+    check: () => `<path d="M12 25l8 8 16-17" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
     chevron: () => `<path d="M19 13l11 11-11 11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
     up: () => `<path d="M13 29l11-11 11 11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
     display: () => `<rect x="7" y="10" width="34" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 38h12M24 32v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,

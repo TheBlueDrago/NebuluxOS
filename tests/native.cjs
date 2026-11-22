@@ -202,6 +202,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=spotify]")), "it opens as its own app, not in a Nebulux OS window");
   ok(await until(() => p.evaluate(() => !!document.querySelector("#tb-apps [data-app=spotify].run")), 8000), "and shows on the taskbar while it's open");
 
+  // ---------- 3.2: the network troubleshooter ----------
+  await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(500);
+  await p.evaluate(() => document.querySelector("#s-diag").click());
+  ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-diagout .s-dc").length >= 5)), "the network troubleshooter runs its checks");
+  const dtx = await p.evaluate(() => (document.querySelector("#s-diagout") || {}).innerText || "");
+  ok(/Realtek RTL8852BE/.test(dtx) && /Driver: rtw89_8852be/.test(dtx) && /Everything works/.test(dtx), "it names the Wi-Fi chip and its driver, and says everything works" + (/Everything works/.test(dtx) ? "" : " [" + dtx.replace(/s+/g, " ").slice(0, 300) + "]"));
+  await p.evaluate(() => document.querySelector("#s-drep").click());
+  ok(await until(() => p.evaluate(async () => { const d = (await NX.fs.places()).folders.find((f) => f.name === "Documents"); return (await NX.fs.list(d.path)).entries.some((e) => /^Nebulux network report/.test(e.name)); })), "Save a report puts it in Documents");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // ---------- 3.1: a USB that doesn't save changes offers a guest start ----------
   await p.evaluate(() => localStorage.clear()); await p.goto(OS + "?fast&nopersist", { waitUntil: "load" }); await wait(1200);
   ok(await until(() => p.evaluate(() => /doesn't save changes/.test((document.querySelector("#oobe h1") || {}).textContent || ""))), "a USB that doesn't save changes offers to skip setup");
