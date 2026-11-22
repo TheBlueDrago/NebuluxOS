@@ -1,0 +1,31 @@
+# The Nebulux OS website. Build, then deploy, from C:\NebuluxOS:
+#   node site/build.cjs
+#   cd site; npx wrangler deploy
+# Address: https://nebuluxos.thebluedragonstriker.workers.dev
+#
+# Optional secret (only the owner sets it): GITHUB_TOKEN, a read-only GitHub token for TheBlueDrago/NebuluxOS, so
+# downloads and updates work while that repo is private:   npx wrangler secret put GITHUB_TOKEN
+name = "nebuluxos"
+main = "src/worker.js"
+compatibility_date = "2026-09-22"
+keep_vars = true
+
+[vars]
+# The site is down for everyone but the owner while this is "on". Set to "off" and deploy again to open it.
+MAINTENANCE = "on"
+# The owner link: /__owner/<OWNER_LINK>, then the owner password (the same admin key as Nebulux Sites).
+OWNER_LINK = "nebuluxaiistuff"
+GH_REPO = "TheBlueDrago/NebuluxOS"
+
+# asks Nebulux Sites whether the owner password is right (one Worker can't reach another on workers.dev directly)
+[[services]]
+binding = "SITES"
+service = "nebuluxsites"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# every request goes through the Worker first, so maintenance covers the files too
+run_worker_first = true
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"

@@ -61,7 +61,7 @@
       if (k === "never") { NX.set("upd-skip", u.latest); NX.toast("Skipped. Settings > Nebulux Update can still install it."); }
       close();
     }));
-    const f = d.querySelector("[data-u=later]"); f && f.focus();
+    const f = d.querySelector("[data-u=later]"); if (f) f.focus({ preventScroll: true });
   }
 
   // tonight: installs between 2 and 4 in the morning
@@ -99,7 +99,7 @@
     document.body.appendChild(d);
     d.querySelector("[data-w=ok]").onclick = () => d.remove();
     d.querySelector("[data-w=more]").onclick = () => { d.remove(); NX.open("settings", { page: "update" }); };
-    d.querySelector("[data-w=ok]").focus();
+    d.querySelector("[data-w=ok]").focus({ preventScroll: true }); d.querySelector(".nx-pcard").scrollTop = 0;
   }
   const add = NX.addUser;
   NX.addUser = async (...a) => { const u = await add(...a); if (u && u.id) NX.set(seenKey(u), NX.version); return u; };
