@@ -202,6 +202,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=spotify]")), "it opens as its own app, not in a Nebulux OS window");
   ok(await until(() => p.evaluate(() => !!document.querySelector("#tb-apps [data-app=spotify].run")), 8000), "and shows on the taskbar while it's open");
 
+  // ---------- 3.2: the clipboard from real apps and the browser joins clipboard history ----------
+  await p.evaluate(async () => fetch("/api/fake/clip", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: JSON.stringify({ text: "copied in a real app" }) }));
+  ok(await until(() => p.evaluate(() => NX.clip.list().some((x) => x.t === "copied in a real app")), 6000), "text copied in real apps and the browser joins clipboard history");
+
   // ---------- 3.2: the network troubleshooter ----------
   await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(500);
   await p.evaluate(() => document.querySelector("#s-diag").click());

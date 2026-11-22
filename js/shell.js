@@ -202,9 +202,22 @@
   });
   function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d); $("#tb-date").textContent = d.toLocaleDateString(); }
   setInterval(() => { if (NX.me) clock(); }, 5000);
+  // Night light on a schedule: on at "nightFrom", off at "nightTo" (it can run past midnight). Turning it on or off
+  // by hand still works; the schedule takes over again at the next on or off time.
+  let nightWas = null;
+  const inHours = (from, to, d) => { const m = d.getHours() * 60 + d.getMinutes(), f = (s) => { const [h, mi] = String(s).split(":").map(Number); return h * 60 + mi; }, a = f(from), b = f(to); return a === b ? false : a < b ? m >= a && m < b : m >= a || m < b; };
+  function nightTick(force) {
+    if (!NX.me) { nightWas = null; return; }
+    const p = NX.prefs(); if (!p.nightSched) { nightWas = null; return; }
+    const want = inHours(p.nightFrom || "21:00", p.nightTo || "07:00", new Date());
+    if (force || nightWas === null || want !== nightWas) { nightWas = want; if (!!p.night !== want) NX.setPref("night", want); }
+  }
+  setInterval(() => nightTick(false), 30000);
+  document.addEventListener("nx:signin", () => { nightWas = null; nightTick(true); });
+  document.addEventListener("nx:prefs", (e) => { if (e.detail === "nightSched") { nightWas = null; nightTick(true); } });
 
   // ---------- flyouts: Start, quick settings, calendar ----------
-  function closeFlyouts(except) { if (except && NX.browserHide) NX.browserHide(); for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
+  function closeFlyouts(except) { if (except && NX.browserHide) NX.browserHide(); for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly", "clip"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
   function startDraw(q, view) {
     const p = NX.prefs(), all = visibleApps(), me = NX.me;
     if (view === "all" && !q) return allAppsDraw(all, me);
@@ -389,7 +402,7 @@
       if (key === "desk") NX.showDesktop(); if (key === "lock") lockKeep(); if (key === "files") NX.open("files");
       if (key === "shot" && NX.screenshot) NX.screenshot().catch((er) => NX.toast(er.message));
       if (key === "tm") NX.open("taskmgr");
-      if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets();
+      if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets(); if (key === "clip" && NX.clip) NX.clip.toggle();
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
     };
     addEventListener("keydown", (e) => {
@@ -400,7 +413,7 @@
       if (!NX.me) return;
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
       if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key))) { e.preventDefault(); winKeys("shot"); }
-      else if (e.metaKey && /^[edlw]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets" }[e.key.toLowerCase()]); }
+      else if (e.metaKey && /^[edlwv]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets", v: "clip" }[e.key.toLowerCase()]); }
       else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
       else if (e.metaKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") { e.preventDefault(); winKeys("tm"); }
@@ -413,7 +426,7 @@
     addEventListener("blur", () => { if (sw && document.activeElement && document.activeElement.tagName !== "IFRAME") swEnd(); });
     addEventListener("keyup", (e) => { if ((e.key === "Meta" || e.key === "OS") && winAlone && NX.me) { e.preventDefault(); toggleStart(true); } if (e.key === "Meta" || e.key === "OS") winAlone = false; });
     // shortcuts from the window manager on the real computer
-    document.addEventListener("nx:key", (e) => { if (!NX.me) return; const k = e.detail; if (k === "start") toggleStart(true); else { if (k !== "shot") closeFlyouts(); if (k === "desk" && NX.browserHide) NX.browserHide(); winKeys(k); } });
+    document.addEventListener("nx:key", (e) => { if (!NX.me) return; const k = e.detail; if (k === "start") toggleStart(true); else { if (k !== "shot" && k !== "clip") closeFlyouts(); if (k === "desk" && NX.browserHide) NX.browserHide(); winKeys(k); } });
     // the same keys pressed while a website in a window has the keyboard
     addEventListener("message", (e) => { const d = e.data; if (!d || d.nx !== "key" || !NX.me || ![...document.querySelectorAll("iframe")].some((f) => f.contentWindow === e.source)) return;
       if (d.key === "start") toggleStart(true); else if (typeof d.key === "string") winKeys(d.key); });
@@ -425,7 +438,7 @@
     $("#tb-search").onclick = (e) => { e.stopPropagation(); toggleStart(true); };
     $("#tb-qs").onclick = (e) => { e.stopPropagation(); const q = $("#qs"); if (!q.hidden) { closeFlyouts(); return; } closeFlyouts("qs"); qsDraw(); q.hidden = false; };
     $("#tb-clock").onclick = (e) => { e.stopPropagation(); const c = $("#cal"); if (!c.hidden) { closeFlyouts(); return; } closeFlyouts("cal"); calM = null; calDraw(); c.hidden = false; };
-    for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly"]) $("#" + id).addEventListener("pointerdown", (e) => e.stopPropagation());
+    for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly", "clip"]) $("#" + id).addEventListener("pointerdown", (e) => e.stopPropagation());
     // (the capture phase, so a click on a window edge that stops the event still closes flyouts)
     document.addEventListener("pointerdown", (e) => { if (!e.target.closest("#taskbar,#start,#qs,#cal,#ctx,#widgets,#snapfly,.nx-ask")) closeFlyouts(); }, true);
     document.addEventListener("pointerdown", (e) => { if (!e.target.closest(".dicon")) { document.querySelectorAll(".dicon.sel").forEach((x) => x.classList.remove("sel")); sel = null; } });
@@ -437,6 +450,6 @@
   }
   NX.menu = menu;
   const openWifi = () => { closeFlyouts("qs"); qsDraw(); $("#qs").hidden = false; qsMore("wifi"); };
-  NX.shell = { openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
+  NX.shell = { nightTick, nightHours: inHours, openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

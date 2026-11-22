@@ -61,10 +61,11 @@
           <h3>What's new in ${NX.version}</h3><div class="s-card">${NX.whatsNew.map((w) => `<p class="s-note"><b>${NX.esc(w[0])}</b><br>${NX.esc(w[1])}</p>`).join("")}</div>
           <h3>Starting fresh</h3><div class="s-card"><p class="s-note">Nebulux OS updates itself. You only need a new .iso from Releases (written with Rufus) for a brand-new USB, or when an update says it needs one.</p></div>`;
         if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS ${NX.version}</small></div></div>
-          <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}
+          <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}${row("time", "Schedule night light", p.nightSched ? "On from " + NX.esc(p.nightFrom || "21:00") + " to " + NX.esc(p.nightTo || "07:00") : "Turns night light on and off by itself", toggle("nightSched", !!p.nightSched))}${p.nightSched ? `<div class="s-row s-nsched"><span class="s-ri"></span><div class="s-rt"><b>Hours</b><small>Night light comes on and goes off at these times every day</small></div><div class="s-rc"><label>Turn on <input type="time" data-time="nightFrom" value="${NX.esc(p.nightFrom || "21:00")}"></label><label>Turn off <input type="time" data-time="nightTo" value="${NX.esc(p.nightTo || "07:00")}"></label></div></div>` : ""}
           ${screensHTML()}
           <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}
           ${NX.batt && NX.batt() ? `<h3>Power & battery</h3><div class="s-card s-battc">${NX.battIcon(44)}<div><b>${NX.batt().percent}%</b><small>${NX.batt().charging ? "Charging" : NX.saverOn() ? "Battery saver is on" : "On battery"}</small></div></div>${row("leaf", "Battery saver", "Turns off see-through effects and animations so the battery lasts longer. The battery icon turns yellow.", toggle("saver", NX.saverOn()))}${row("battery", "Turn on Battery saver by itself", "At 20% battery", toggle("saverAuto", p.saverAuto !== false))}` : ""}
+          <h3>Clipboard</h3>${row("files", "Clipboard history", "Keep the last 25 things you copy. Nebulux + V shows them.", toggle("cliphist", p.cliphist !== false))}${row("trash", "Clear clipboard history", (NX.data("clip-history", []).length || "Nothing") + (NX.data("clip-history", []).length === 1 ? " item" : NX.data("clip-history", []).length ? " items" : ""), `<button class="btn" id="s-clipclear" ${NX.data("clip-history", []).some((x) => !x.pin) ? "" : "disabled"}>Clear</button>`)}
           <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
           <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}
@@ -235,6 +236,7 @@
           if (inp.type === "checkbox") inp.onchange = () => { NX.setPref(k, inp.checked); if (k === "airplane" && inp.checked) { NX.setPref("wifi", false); NX.setPref("bt", false); } if ((k === "wifi" || k === "bt") && inp.checked) NX.setPref("airplane", false); draw(); if (NX.native && ["wifi", "bt", "airplane"].includes(k)) setTimeout(() => { if (page === "network") fillWifi(); if (page === "devices") fillBt(); }, 1500); };
           else inp.oninput = () => NX.setPref(k, +inp.value);
         });
+        body.querySelectorAll("[data-time]").forEach((inp) => (inp.onchange = () => { if (/^dd:dd$/.test(inp.value)) { NX.setPref(inp.dataset.time, inp.value); if (NX.shell && NX.shell.nightTick) NX.shell.nightTick(true); } }));
         body.querySelectorAll("[data-wall]").forEach((b) => (b.onclick = () => { NX.setPref("wallpaper", +b.dataset.wall); draw(); }));
         body.querySelectorAll("[data-theme]").forEach((b) => (b.onclick = () => { NX.setPref("theme", b.dataset.theme); draw(); }));
         body.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = () => { NX.setPref("accent", b.dataset.acc); draw(); }));
@@ -253,6 +255,7 @@
         if (NX.native && page === "network") { fillWifi(); wireTrouble(); }
         if (NX.native && page === "devices") fillBt();
         if (page === "update" && NX.update) NX.update.fillSettings(q$);
+        const cc = q$("#s-clipclear"); if (cc) cc.onclick = () => { NX.setData("clip-history", NX.data("clip-history", []).filter((x) => x.pin)); NX.toast("Clipboard history cleared. Pinned items stay."); draw(); };
         if (NX.native && page === "system") { fillScreens(); fillAudio(); fillCast(); const dt = q$("#s-detect"); if (dt) dt.onclick = () => { const b = q$("#s-dlist"); if (b) b.innerHTML = `<p class="s-note">Looking for screens...</p>`; fillScreens(true); }; }
         if (NX.native && page === "about") fillInfo();
         const os = body.querySelector("[data-openstore]"); if (os) os.onclick = () => NX.open("store");

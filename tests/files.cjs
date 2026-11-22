@@ -252,6 +252,58 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(/Power & battery/.test(await txt(".win[data-app=settings]")) && /Battery saver is on/.test(await txt(".win[data-app=settings]")), "Settings > System shows the battery and Battery saver");
   await p.evaluate(() => { NX.close("settings"); NX.setPref("saver", false); NX.setPref("saverAuto", true); }); await setBatt(100, false); await wait(300);
 
+  // 3.2: clipboard history (Nebulux + V)
+  await p.evaluate(() => { NX.setData("clip-history", []); NX.open("notepad"); }); await wait(500);
+  const npSel = ".win[data-app=notepad] textarea";
+  await p.evaluate((s) => { const ta = document.querySelector(s); ta.value = ""; ta.focus(); }, npSel);
+  await p.type(npSel, "hello nebula");
+  await p.evaluate((s) => { const ta = document.querySelector(s); ta.focus(); ta.select(); document.dispatchEvent(new ClipboardEvent("copy", { bubbles: true })); }, npSel); await wait(200);
+  await p.evaluate((s) => { const ta = document.querySelector(s); ta.value = "second copy"; ta.select(); document.dispatchEvent(new ClipboardEvent("copy", { bubbles: true })); }, npSel); await wait(200);
+  ok(await p.evaluate(() => NX.clip.list().map((x) => x.t).join("|") === "second copy|hello nebula"), "copied text goes into clipboard history, newest first");
+  await p.evaluate((s) => { const ta = document.querySelector(s); ta.value = ""; ta.focus(); }, npSel);
+  await p.keyboard.down("Meta"); await p.keyboard.press("v"); await p.keyboard.up("Meta"); await wait(300);
+  ok(await p.evaluate(() => !document.querySelector("#clip").hidden && document.querySelectorAll("#clip .cl-item").length === 2), "Nebulux + V opens clipboard history");
+  await p.evaluate(() => document.querySelector("#clip [data-pin=\"1\"]").click()); await wait(150);
+  ok(await p.evaluate(() => NX.clip.list()[0].pin && NX.clip.list()[0].t === "hello nebula"), "pinning moves an item to the top and keeps it");
+  await p.evaluate(() => document.querySelector("#clip .cl-item[data-i=\"0\"]").click()); await wait(300);
+  ok(await p.evaluate((s) => document.querySelector(s).value === "hello nebula" && document.querySelector("#clip").hidden, npSel), "clicking an item pastes it where you were typing");
+  await p.keyboard.down("Meta"); await p.keyboard.press("v"); await p.keyboard.up("Meta"); await wait(300);
+  await p.evaluate(() => document.querySelector("#clip .cl-clear").click()); await wait(150);
+  ok(await p.evaluate(() => NX.clip.list().length === 1 && NX.clip.list()[0].pin), "Clear all keeps pinned items");
+  await p.keyboard.press("Escape"); await wait(150);
+  await p.evaluate(() => NX.setPref("cliphist", false));
+  await p.evaluate((s) => { const ta = document.querySelector(s); ta.value = "secret"; ta.focus(); ta.select(); document.dispatchEvent(new ClipboardEvent("copy", { bubbles: true })); }, npSel); await wait(200);
+  ok(await p.evaluate(() => !NX.clip.list().some((x) => x.t === "secret")), "with clipboard history off, nothing is kept");
+  await p.evaluate(() => { NX.setPref("cliphist", true); NX.close("notepad"); }); await wait(300);
+
+  // 3.2: Sticky Notes
+  await p.evaluate(() => { NX.setData("sticky-notes", []); NX.open("notes"); }); await wait(500);
+  ok(await p.evaluate(() => /No notes yet/.test(document.querySelector(".win[data-app=notes]").innerText)), "Sticky Notes opens empty");
+  await p.click(".win[data-app=notes] [data-a=new]"); await wait(200);
+  await p.keyboard.type("Buy milk");
+  await p.click(".win[data-app=notes] [data-a=new]"); await wait(200);
+  await p.keyboard.type("Call Sam");
+  await wait(500);
+  ok(await p.evaluate(() => NX.data("sticky-notes", []).map((n) => n.t).join("|") === "Call Sam|Buy milk"), "new notes save as you type, newest first");
+  await p.evaluate(() => document.querySelector(".win[data-app=notes] .sn-note:last-child [data-c=sky]").click()); await wait(400);
+  ok(await p.evaluate(() => NX.data("sticky-notes", []).find((n) => n.t === "Buy milk").c === "sky" && !!document.querySelector(".win[data-app=notes] .sn-note.c-sky")), "a note changes color");
+  await p.type(".win[data-app=notes] .sn-q", "milk"); await wait(200);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=notes] .sn-note").length === 1), "search finds notes");
+  await p.evaluate(() => { const q = document.querySelector(".win[data-app=notes] .sn-q"); q.value = ""; q.dispatchEvent(new Event("input")); });
+  await p.evaluate(() => document.querySelector(".win[data-app=notes] .sn-note .sn-del").click()); await wait(400);
+  ok(await p.evaluate(() => NX.data("sticky-notes", []).length === 1 && !document.querySelector(".win[data-app=notes] .sn-undo").hidden), "deleting a note offers Undo");
+  await p.click(".win[data-app=notes] [data-a=undo]"); await wait(400);
+  ok(await p.evaluate(() => NX.data("sticky-notes", []).length === 2), "Undo brings it back");
+  await p.evaluate(() => NX.close("notes")); await wait(300);
+
+  // 3.2: night light on a schedule
+  ok(await p.evaluate(() => { const H = NX.shell.nightHours, at = (h, m) => { const d = new Date(); d.setHours(h, m, 0, 0); return d; }; return H("21:00", "07:00", at(23, 0)) && H("21:00", "07:00", at(6, 59)) && !H("21:00", "07:00", at(7, 0)) && !H("21:00", "07:00", at(12, 0)) && H("13:00", "14:00", at(13, 30)); }), "night light hours work, also past midnight");
+  await p.evaluate(() => { const d = new Date(), f = (n) => String(n).padStart(2, "0"), a = new Date(d - 3600000), b = new Date(+d + 3600000); NX.setPref("night", false); NX.setPref("nightFrom", f(a.getHours()) + ":" + f(a.getMinutes())); NX.setPref("nightTo", f(b.getHours()) + ":" + f(b.getMinutes())); NX.setPref("nightSched", true); }); await wait(300);
+  ok(await p.evaluate(() => NX.prefs().night === true && document.querySelector("#night").classList.contains("on")), "inside the scheduled hours, night light turns on by itself");
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=settings] [data-time]").length === 2), "Settings shows the night light hours");
+  await p.evaluate(() => { NX.close("settings"); NX.setPref("nightSched", false); NX.setPref("night", false); }); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

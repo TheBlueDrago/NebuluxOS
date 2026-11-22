@@ -1,7 +1,7 @@
 #!/bin/bash
 # Passes a Windows-key shortcut to Nebulux OS (the window manager catches the keys, so they work over every window).
-#   nebulux-key start | desk | files | lock | tview | widgets | snap-left | snap-right | snap-max | snap-down | shot | tm
+#   nebulux-key start | desk | files | lock | tview | widgets | snap-left | snap-right | snap-max | snap-down | shot | tm | clip
 K=$(cat "$HOME/.nebulux-key" 2>/dev/null) || exit 0
-case "$1" in start|desk|files|lock|tview|widgets|snap-left|snap-right|snap-max|snap-down|shot|tm) ;; *) exit 0;; esac
+case "$1" in start|desk|files|lock|tview|widgets|snap-left|snap-right|snap-max|snap-down|shot|tm|clip) ;; *) exit 0;; esac
 curl -s -m 2 -X POST -H "x-nx-local: $K" "http://127.0.0.1:7777/local/key?k=$1" >/dev/null 2>&1
 exit 0

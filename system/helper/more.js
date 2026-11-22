@@ -409,6 +409,25 @@ module.exports = function more({ api, run, FAKE }) {
     return { ok: true };
   };
 
+  // ---------- the clipboard (for clipboard history): text copied in any app on the screen ----------
+  let fakeClip = "";
+  api["GET /clip"] = async () => {
+    if (FAKE) return { text: fakeClip };
+    const r = await run("xclip", ["-o", "-selection", "clipboard", "-t", "UTF8_STRING"], 2500);
+    return { text: r.ok ? r.out.slice(0, 20000) : "" };
+  };
+  api["POST /clip"] = async (b) => {
+    const text = String((b && b.text) || "").slice(0, 20000);
+    if (FAKE) { fakeClip = text; return { ok: true }; }
+    await new Promise((done) => {
+      const p = spawn("xclip", ["-i", "-selection", "clipboard"], { stdio: ["pipe", "ignore", "ignore"] });
+      p.on("error", () => done()); p.stdin.on("error", () => {}); p.stdin.end(text);
+      setTimeout(done, 400); // xclip keeps running to hold the text; don't wait for it
+    });
+    return { ok: true };
+  };
+  if (FAKE) api["POST /fake/clip"] = async (b) => { fakeClip = String((b && b.text) || ""); return { ok: true }; };
+
   // ---------- the network troubleshooter ----------
   // Checks, in order: is there a Wi-Fi chip, does it have a driver, did its firmware load, is it switched off, does
   // NetworkManager see it, is it connected, does the internet answer. Each check says what's wrong in plain words.

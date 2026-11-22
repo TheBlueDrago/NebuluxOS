@@ -649,3 +649,47 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .s-dci{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;margin-top:1px}
 .s-dc.ok .s-dci{background:#34d399;color:#05261a}.s-dc.bad .s-dci{background:#ff6b5a;color:#2b0703}
 #s-trouble .s-dacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+/* clipboard history (Nebulux + V) */
+#clip{right:12px;width:min(380px,calc(100vw - 24px));max-height:min(560px,calc(100vh - var(--tb) - 24px));display:flex;flex-direction:column;padding:14px}
+#clip[hidden]{display:none}
+.cl-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 10px}
+.cl-head b{font-size:15px;font-weight:600}
+.cl-clear{font-size:13px;padding:5px 10px;border-radius:6px;color:var(--sub)}.cl-clear:hover{background:var(--hover);color:var(--txt)}
+.cl-list{overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:2px}
+.cl-item{padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--line);cursor:pointer;outline:none}
+.cl-item:hover,.cl-item:focus-visible{background:var(--card2);border-color:var(--accent)}
+.cl-item.pin{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.cl-t{font-size:13px;white-space:pre-wrap;word-break:break-word;max-height:4.6em;overflow:hidden;line-height:1.5}
+.cl-meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:11px;color:var(--sub)}
+.cl-acts{display:flex;gap:2px}.cl-acts button{width:28px;height:28px;display:grid;place-items:center;border-radius:6px;color:var(--sub)}.cl-acts button:hover{background:var(--hover);color:var(--txt)}
+.cl-item.pin [data-pin]{color:var(--accent)}
+.cl-empty{color:var(--sub);font-size:13px;padding:18px 6px;text-align:center;margin:0}
+.cl-onwrap{display:flex;justify-content:center;padding-bottom:10px}
+/* Sticky Notes */
+.sn{display:flex;flex-direction:column;height:100%;position:relative}
+.sn-bar{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.sn-bar .btn svg{margin-right:2px}
+.sn-q{flex:1;min-width:0;max-width:280px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:13px;outline:none}
+.sn-q:focus{border-color:var(--accent)}
+.sn-count{margin-left:auto;color:var(--sub);font-size:12px}
+.sn-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:14px;align-content:start}
+.sn-note{display:flex;flex-direction:column;border-radius:10px;min-height:190px;box-shadow:0 6px 18px #0004;overflow:hidden;color:#1d1a10}
+.sn-note.c-sun{background:#fff3a3}.sn-note.c-rose{background:#ffc9de}.sn-note.c-mint{background:#c3f5d6}.sn-note.c-sky{background:#c4e3ff}.sn-note.c-violet{background:#dcd0ff}.sn-note.c-slate{background:#dfe3ea}
+.sn-top{display:flex;align-items:center;gap:6px;padding:8px 8px 4px 12px;font-size:11px;opacity:.85}
+.sn-when{margin-right:auto}
+.sn-cols{display:flex;gap:3px}
+.sn-dot{width:14px;height:14px;border-radius:50%;border:1px solid #0003;padding:0}
+.sn-dot.on{outline:2px solid #0008;outline-offset:1px}
+.sn-dot.c-sun{background:#facc15}.sn-dot.c-rose{background:#f472b6}.sn-dot.c-mint{background:#34d399}.sn-dot.c-sky{background:#60a5fa}.sn-dot.c-violet{background:#a78bfa}.sn-dot.c-slate{background:#94a3b8}
+.sn-del{width:26px;height:26px;display:grid;place-items:center;border-radius:6px;color:#3b3520}.sn-del:hover{background:#0001}
+.sn-note textarea{flex:1;resize:none;border:0;outline:none;background:transparent;color:inherit;font:14px/1.5 var(--font);padding:4px 12px 12px}
+.sn-note textarea::placeholder{color:#0007}
+.sn-empty{grid-column:1/-1;color:var(--sub);text-align:center;padding:60px 20px;font-size:14px}
+.sn-undo{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;border-radius:10px;background:var(--bg2);box-shadow:var(--shadow);font-size:13px}
+.sn-undo[hidden]{display:none}
+
+.s-nsched .s-rc{display:flex;gap:12px;flex-wrap:wrap}
+.s-nsched label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub)}
+.s-nsched input{padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;color-scheme:dark}
+[data-theme=light] .s-nsched input{color-scheme:light}

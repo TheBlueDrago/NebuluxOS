@@ -70,6 +70,7 @@ ntfs-3g
 exfatprogs
 dosfstools
 xdotool
+xclip
 wmctrl
 flatpak
 xdg-desktop-portal
