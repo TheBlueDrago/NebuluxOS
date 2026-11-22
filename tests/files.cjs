@@ -336,6 +336,27 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !!document.querySelector(".win[data-app=notes]") && document.querySelector("#widgets").hidden), "a note in Widgets opens Sticky Notes");
   await p.evaluate(() => { NX.close("notes"); NX.battery = { present: true, percent: 100, charging: false }; }); await wait(300);
 
+  // 3.2: the lock screen shows the network and the battery
+  await p.evaluate(() => { NX.battery = { present: true, percent: 47, charging: false }; NX.shell.lockKeep(); }); await wait(1300);
+  ok(await p.evaluate(() => /47%/.test(document.querySelector("#lk-status").textContent) && !!document.querySelector("#lk-status .nx-batt")), "the lock screen shows the network and the battery");
+  await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter"); await wait(1300);
+  await p.evaluate(() => { NX.battery = { present: true, percent: 100, charging: false }; });
+
+  // 3.2: File Explorer tabs
+  await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Documents" }); }); await wait(700);
+  const tabsOf = () => p.evaluate(() => NX.wins.get("files").tabs.list());
+  ok((await tabsOf()).length === 1 && (await tabsOf())[0].name === "Documents", "File Explorer starts with one tab");
+  await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.down("Control"); await p.keyboard.press("t"); await p.keyboard.up("Control"); await wait(600);
+  ok((await tabsOf()).length === 2 && (await tabsOf())[1].on && (await tabsOf())[1].name === "Home", "Ctrl + T opens a new tab at Home");
+  await p.evaluate(() => document.querySelector(".win[data-app=files] .fx-tab[data-tab=\"0\"]").click()); await wait(600);
+  ok((await tabsOf())[0].on && /Party plans/.test(await txt(".win[data-app=files] .fx-list")), "clicking a tab goes back to its folder");
+  await p.evaluate(() => NX.wins.get("files").tabs.add()); await wait(500);
+  await p.evaluate(() => document.querySelector(".win[data-app=files] .fx-tabx[data-tabx=\"2\"]").click()); await wait(500);
+  ok((await tabsOf()).length === 2, "a tab closes with its x");
+  await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.down("Control"); await p.keyboard.press("w"); await p.keyboard.up("Control"); await wait(500);
+  ok((await tabsOf()).length === 1 && await p.evaluate(() => !!NX.wins.get("files")), "Ctrl + W closes the tab you're on");
+  await p.evaluate(() => NX.close("files")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

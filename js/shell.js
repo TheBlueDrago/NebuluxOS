@@ -50,9 +50,15 @@
 
   // ---------- lock screen and sign-in ----------
   let lockT = 0, chosen = null, mode = "";
+  // the lock screen's corner: the network and the battery, like the taskbar
+  function lkStatus() {
+    const el = $("#lk-status"); if (!el) return; const b = batt(), net = NX.netOK ? NX.netOK() : true;
+    const html = `<span title="${net ? "Connected" : "Not connected"}">${NX.icon(net ? "wifi" : "wifioff", 18)}</span>${b ? `<span class="lk-batt" title="${battText()}">${NX.battIcon(22)}<small>${b.percent}%</small></span>` : ""}`;
+    if (el.innerHTML !== html) el.innerHTML = html;
+  }
   function lock(clockFirst) {
     NX.me = null; applyLook(); const L = $("#lock"); L.hidden = false; L.className = clockFirst ? "locked" : "signin"; $("#desktop").hidden = true;
-    const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); };
+    const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); lkStatus(); };
     tick(); clearInterval(lockT); lockT = setInterval(tick, 1000);
     const users = NX.users(); chosen = (users.find((u) => u.id === NX.get("lastUser")) || users[0] || null); mode = users.length ? "signin" : "setup";
     if (!users.length && NX.oobe) { L.hidden = true; clearInterval(lockT); NX.oobe((u) => { L.hidden = false; enter(u); }); return; }

@@ -720,3 +720,17 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .wg-note1:hover{filter:brightness(.96)}
 .wg-nbtn{align-self:flex-start;margin-top:4px}
 .wg-bnow{display:flex;align-items:center;gap:12px;margin-bottom:10px}.wg-bnow div{display:flex;flex-direction:column}.wg-bnow b{font-size:22px;font-weight:600}.wg-bnow span{color:var(--sub);font-size:12px}
+#lk-status{display:flex;align-items:center;gap:14px;margin-right:14px;color:#fff;opacity:.9;text-shadow:0 1px 3px #0008}
+#lk-status>span{display:flex;align-items:center;gap:5px}
+#lk-status small{font-size:13px}
+.lk-corner{display:flex;align-items:center}
+
+/* File Explorer tabs */
+.fx-tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.fx-tab{display:flex;align-items:center;gap:7px;min-width:110px;max-width:200px;padding:7px 6px 7px 12px;border-radius:8px 8px 0 0;font-size:12.5px;color:var(--sub);cursor:pointer;position:relative}
+.fx-tab span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-tab:hover{background:var(--hover);color:var(--txt)}
+.fx-tab.on{background:var(--card2);color:var(--txt)}
+.fx-tab.on:after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;border-radius:2px;background:var(--accent)}
+.fx-tabx{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;opacity:.7}.fx-tabx:hover{background:var(--hover);opacity:1}
+.fx-tabadd{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;margin:0 0 3px 4px;color:var(--sub)}.fx-tabadd:hover{background:var(--hover);color:var(--txt)}

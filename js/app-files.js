@@ -121,10 +121,29 @@
       body.classList.add("fx");
       const TRASH = "::trash", HOME = "::home";
       let cur = null, back = [], fwd = [], sel = new Set(), items = [], view = NX.data("fx-view", "grid"), q = "", places = null, drives = [], loading = 0, parentPath = null;
-      body.innerHTML = `<div class="fx-top"><button class="wv-b" data-n="back" aria-label="Back" title="Back">${NX.icon("back", 16)}</button><button class="wv-b" data-n="fwd" aria-label="Forward" title="Forward">${NX.icon("fwd", 16)}</button><button class="wv-b" data-n="up" aria-label="Up one folder" title="Up">${NX.icon("up", 16)}</button><button class="wv-b" data-n="reload" aria-label="Refresh" title="Refresh">${NX.icon("restart", 16)}</button>
+      body.innerHTML = `<div class="fx-tabs" role="tablist" aria-label="Tabs"></div><div class="fx-top"><button class="wv-b" data-n="back" aria-label="Back" title="Back">${NX.icon("back", 16)}</button><button class="wv-b" data-n="fwd" aria-label="Forward" title="Forward">${NX.icon("fwd", 16)}</button><button class="wv-b" data-n="up" aria-label="Up one folder" title="Up">${NX.icon("up", 16)}</button><button class="wv-b" data-n="reload" aria-label="Refresh" title="Refresh">${NX.icon("restart", 16)}</button>
         <div class="fx-crumbs" aria-label="Location"></div><label class="fx-search">${NX.icon("search", 14)}<input placeholder="Search this folder" aria-label="Search this folder" spellcheck="false"></label></div>
         <div class="fx-tools"></div><div class="fx-main"><nav class="fx-side" aria-label="Places"></nav><section class="fx-list" tabindex="0" aria-label="Files"></section></div><div class="fx-status"></div>`;
       const $ = (s) => body.querySelector(s), listEl = $(".fx-list");
+      // tabs: each one has its own folder and its own Back and Forward
+      let tabs = [{ cur: null, back: [], fwd: [] }], ti = 0;
+      const tabName = (p) => (p === HOME || !p ? "Home" : p === TRASH ? "Recycle Bin" : NX.fs.base(p) || p);
+      function tabsDraw() {
+        const T = $(".fx-tabs");
+        T.innerHTML = tabs.map((t, i) => `<div class="fx-tab ${i === ti ? "on" : ""}" role="tab" aria-selected="${i === ti}" data-tab="${i}" title="${NX.esc(tabName(t.cur))}">${NX.icon(t.cur === TRASH ? "recycle" : t.cur === HOME || !t.cur ? "home" : "folder", 14)}<span>${NX.esc(tabName(t.cur))}</span><button class="fx-tabx" data-tabx="${i}" aria-label="Close tab" title="Close tab">${NX.icon("close", 10)}</button></div>`).join("") + `<button class="fx-tabadd" aria-label="New tab" title="New tab (Ctrl + T)">${NX.icon("plus", 14)}</button>`;
+        T.querySelectorAll("[data-tab]").forEach((el) => { el.onclick = (e) => { if (e.target.closest("[data-tabx]")) return; tabTo(+el.dataset.tab); }; el.onauxclick = (e) => { if (e.button === 1) tabClose(+el.dataset.tab); }; });
+        T.querySelectorAll("[data-tabx]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); tabClose(+b.dataset.tabx); }));
+        T.querySelector(".fx-tabadd").onclick = () => tabNew();
+      }
+      const tabSave = () => { tabs[ti] = { cur, back, fwd }; };
+      function tabTo(i) { if (i === ti || !tabs[i]) return; tabSave(); ti = i; ({ cur, back, fwd } = tabs[i]); sel.clear(); q = ""; $(".fx-search input").value = ""; load(); }
+      function tabNew(p) { if (tabs.length >= 12) { NX.toast("That's a lot of tabs. Close one first."); return; } tabSave(); tabs.push({ cur: null, back: [], fwd: [] }); ti = tabs.length - 1; cur = null; back = []; fwd = []; go(p || HOME, true); }
+      function tabClose(i) {
+        if (tabs.length === 1) { NX.close(win.id); return; }
+        tabSave(); tabs.splice(i, 1);
+        if (i < ti || ti >= tabs.length) ti = Math.max(0, ti - (i <= ti ? 1 : 0));
+        ti = Math.min(ti, tabs.length - 1); ({ cur, back, fwd } = tabs[ti]); sel.clear(); q = ""; $(".fx-search input").value = ""; load();
+      }
       const isTrash = () => cur === TRASH, isHome = () => cur === HOME;
       const selected = () => items.filter((e) => sel.has(e.path || e.id));
       const err = (e) => NX.toast(e && e.message || String(e));
@@ -179,6 +198,7 @@
           sel = new Set([...sel].filter((k) => items.some((e) => (e.path || e.id) === k)));
         } catch (e) { err(e); if (!isHome()) { cur = HOME; return load(); } } finally { loading--; }
         win.el.querySelector(".wt-name").textContent = (isHome() ? "Home" : isTrash() ? "Recycle Bin" : NX.fs.base(cur) || cur) + " - File Explorer";
+        tabs[ti] = { cur, back, fwd }; tabsDraw();
         crumbs(); render(); side(); $(".fx-top [data-n=back]").disabled = !back.length; $(".fx-top [data-n=fwd]").disabled = !fwd.length; $(".fx-top [data-n=up]").disabled = !parentPath && isHome();
       }
       function go(p, noHist) { if (p === cur) return load(); if (cur && !noHist) { back.push(cur); fwd = []; } cur = p; sel.clear(); q = ""; $(".fx-search input").value = ""; load(); }
@@ -219,13 +239,14 @@
         else { if (sel.size === 1 && sel.has(k) && ev.detail === 1 && ev.pointerType === "touch") { openItem(e); return; } sel = new Set([k]); }
         lastClick = k; marks(); if (ev.pointerType === "touch" && !ev.ctrlKey) openItem(e);
       });
+      listEl.addEventListener("auxclick", (ev) => { if (ev.button !== 1) return; const b = ev.target.closest(".fx-item"); if (!b) return; const e = items.find((x) => (x.path || x.id) === b.dataset.k); if (e && e.dir && !isTrash()) { ev.preventDefault(); tabNew(e.path); } });
       listEl.addEventListener("dblclick", (ev) => { const b = ev.target.closest(".fx-item"); if (!b) return; const e = items.find((x) => (x.path || x.id) === b.dataset.k); if (e) openItem(e); });
       listEl.addEventListener("contextmenu", (ev) => {
         ev.preventDefault(); ev.stopPropagation(); const b = ev.target.closest(".fx-item");
         if (b && !sel.has(b.dataset.k)) { sel = new Set([b.dataset.k]); marks(); }
         const s = selected(), M = [];
         if (isTrash()) { if (s.length) M.push(["Restore", () => act("restore")], ["Delete for good", () => act("purge")]); M.push(["Empty Recycle Bin", () => act("empty")]); }
-        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); }
+        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) M.push(["Open in new tab", () => tabNew(s[0].path)]); if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); }
         else if (!isHome()) { M.push(["New folder", () => act("newfolder")], ["New text file", () => act("newtext")]); if (NX.fsClip) M.push(["Paste", () => act("paste")]); M.push(["Refresh", () => load()]); }
         if (M.length) NX.menu(ev.clientX, ev.clientY, M);
       });
@@ -235,6 +256,9 @@
         else if (k === "F2" && sel.size === 1) { ev.preventDefault(); act("rename"); }
         else if (k === "Enter" && sel.size === 1) { ev.preventDefault(); openItem(selected()[0]); }
         else if (k === "Backspace" && !c) { ev.preventDefault(); nav("up"); }
+        else if (c && /^t$/i.test(k)) { ev.preventDefault(); tabNew(); }
+        else if (c && /^w$/i.test(k)) { ev.preventDefault(); tabClose(ti); }
+        else if (c && k === "Tab") { ev.preventDefault(); tabTo((ti + (ev.shiftKey ? tabs.length - 1 : 1)) % tabs.length); }
         else if (c && /^[acxv]$/i.test(k)) { ev.preventDefault(); const l = k.toLowerCase(); if (l === "a") { sel = new Set(items.map((e) => e.path || e.id)); marks(); } else if (!isTrash()) act(l === "c" ? "copy" : l === "x" ? "cut" : "paste"); }
       });
       function nav(k) {
@@ -249,6 +273,7 @@
       const onFs = () => { if (!loading) load(); }; document.addEventListener("nx:files", onFs);
       win.onclose = () => { document.removeEventListener("nx:drives", onDr); document.removeEventListener("nx:files", onFs); };
       win.onopts = (o) => { if (o.path) go(o.path); else if (o.place) NX.folder(o.place).then(go); };
+      win.tabs = { list: () => tabs.map((t, i) => ({ name: tabName(i === ti ? cur : t.cur), on: i === ti })), add: tabNew, to: tabTo, close: tabClose };
       if (opts.path) go(opts.path, true); else if (opts.place) NX.folder(opts.place).then((p) => go(p, true)).catch(() => go(HOME, true)); else go(HOME, true);
       setTimeout(() => listEl.focus(), 60);
     } };
