@@ -33,10 +33,11 @@ const I = {
   spark: '<path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/>',
   download: '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
   play: '<circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z" fill="currentColor"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 };
 const icon = (n, s) => `<svg viewBox="0 0 24 24" width="${s || 22}" height="${s || 22}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
-const NAV = [["/", "Home"], ["/features", "Features"], ["/whats-new", "What's new"], ["/download", "Download"], ["/help", "Help"]];
+const NAV = [["/", "Home"], ["/features", "Features"], ["/#compare", "Compare"], ["/whats-new", "What's new"], ["/download", "Download"], ["/help", "Help"]];
 
 function layout(file, title, desc, body) {
   const here = "/" + file.replace(/\.html$/, "").replace(/^index$/, "");

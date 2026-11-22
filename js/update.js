@@ -48,7 +48,7 @@
     const notes = (u.notes || []).slice(0, 8);
     d.innerHTML = `<div class="nx-pcard"><div class="nx-ph">${NX.icon("logo", 40)}<div><b>Nebulux OS ${NX.esc(u.latest)} is ready</b><small>You're on ${NX.esc(u.current)}. Updating takes a minute and keeps your files and settings.</small></div></div>
       ${notes.length ? `<ul class="nx-plist">${notes.map((n) => `<li>${NX.esc(n)}</li>`).join("")}</ul>` : ""}
-      ${u.needsIso ? `<p class="nx-pnote">This one needs a new .iso from Releases: Never and Settings explain more.</p>` : ""}
+      ${u.needsIso ? `<p class="nx-pnote">This version also changes the core of Nebulux OS (its kernel and drivers). The update brings the new screens and apps; for everything, download the new Nebulux OS from nebuluxos.thebluedragonstriker.workers.dev and write it to your USB.</p>` : ""}
       ${NX.persistent === false ? `<p class="nx-pnote">This USB doesn't save changes, so the update lasts until the computer restarts.</p>` : ""}
       <div class="nx-pbtns"><button class="btn" data-u="never">Never</button><button class="btn" data-u="remind">Remind me</button><button class="btn primary" data-u="later">Later</button></div>
       <small class="nx-pfoot">Later installs it tonight. Remind me asks again in 30 minutes. Never skips it, until you update from Settings.</small></div>`;

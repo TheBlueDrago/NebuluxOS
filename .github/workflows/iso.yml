@@ -24,7 +24,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
-      NX_VERSION: "3.1"
+      NX_VERSION: "3.1.1"
+      # this version changes the Linux kernel, so computers on 3.1 need the new .iso, not just the self-update
+      NX_NEEDS_ISO: "1"
     steps:
       - uses: actions/checkout@v4
 

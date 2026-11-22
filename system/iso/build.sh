@@ -33,6 +33,15 @@ lb config \
   --bootappend-live "boot=live components quiet splash loglevel=3 rd.udev.log_level=3 systemd.show_status=false vt.global_cursor_default=0 username=nebulux user-fullname=Nebulux hostname=nebulux-os locales=en_US.UTF-8 keyboard-layouts=us live-config.user-default-groups=audio,cdrom,dip,floppy,video,plugdev,netdev,powerdev,scanner,bluetooth,input,render,dialout persistence persistence-media=removable-usb" \
   >/dev/null
 
+# The newer Linux kernel and firmware from Debian's backports (kernel 6.12 instead of 6.1): newer Wi-Fi chips have
+# no driver in 6.1 at all. The owner's Lenovo IdeaPad (82VG) has a Realtek RTL8852BE (driver rtw89_8852be, from 6.2),
+# and many 2022+ laptops use Realtek RTW89 and MediaTek MT7922 chips. Backports kernels are signed for Secure Boot.
+mkdir -p config/archives
+for t in chroot binary; do
+  echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free-firmware" > "config/archives/backports.list.$t"
+  printf 'Package: linux-image-* linux-headers-* linux-kbuild-* linux-base firmware-* amd64-microcode intel-microcode wireless-regdb\nPin: release n=bookworm-backports\nPin-Priority: 990\n' > "config/archives/backports.pref.$t"
+done
+
 # what's installed
 cp "$REPO/system/iso/packages.list" config/package-lists/nebulux.list.chroot
 # files placed into the system
@@ -105,6 +114,18 @@ say "Build (this takes a while)"
 lb build 2>&1 | tee "$OUT/build.log" | grep -E '^(P:|E:|W:)|error' | grep -v 'Hit:\|Get:' || true
 ISO="$(ls -1 "$WORK"/*.iso 2>/dev/null | head -1)"
 [ -n "$ISO" ] && [ -s "$ISO" ] || { echo "The .iso wasn't made. Last lines of the log:"; tail -60 "$OUT/build.log"; exit 1; }
+# Wi-Fi and Bluetooth drivers that must be in every Nebulux OS (the build stops without them): the Realtek RTL8852BE
+# (the owner's laptop), other Realtek RTW89 chips, MediaTek MT7921/MT7922, and Intel AX200/AX210 and newer.
+say "Wi-Fi drivers"
+KV="$(ls -1 "$WORK/chroot/lib/modules" | sort -V | tail -1)"; echo "kernel $KV"
+miss=""
+for m in realtek/rtw89/rtw89_8852be realtek/rtw89/rtw89_8852ae realtek/rtw89/rtw89_8852ce realtek/rtw89/rtw89_8922ae mediatek/mt76/mt7921/mt7921e intel/iwlwifi/iwlwifi; do
+  ls "$WORK/chroot/lib/modules/$KV/kernel/drivers/net/wireless/$m".ko* >/dev/null 2>&1 && echo "ok  $m" || miss="$miss $m"
+done
+for f in rtw89/rtw8852b_fw rtl_bt/rtl8852bu_fw mediatek/WIFI_RAM_CODE_MT7922_1; do
+  ls "$WORK/chroot/lib/firmware/$f"* >/dev/null 2>&1 && echo "ok  firmware $f" || miss="$miss firmware:$f"
+done
+[ -z "$miss" ] || { echo "Missing Wi-Fi drivers or firmware:$miss"; exit 1; }
 mv "$ISO" "$OUT/nebulux-os.iso"
 # keep the downloaded packages for the next build
 if [ -d "$WORK/cache" ]; then rm -rf "$REPO/.lbcache"; mkdir -p "$REPO/.lbcache"; cp -a "$WORK/cache/." "$REPO/.lbcache/" 2>/dev/null || true; rm -rf "$REPO"/.lbcache/indices.* "$REPO/.lbcache/bootstrap" 2>/dev/null || true; fi

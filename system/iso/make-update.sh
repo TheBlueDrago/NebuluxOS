@@ -18,6 +18,6 @@ node -e '
   global.NX = {}; require(process.argv[1]);
   const [v, url, sum, size] = process.argv.slice(2);
   if (NX.version !== v) { console.error("js/whatsnew.js says " + NX.version + " but this release is " + v); process.exit(1); }
-  process.stdout.write(JSON.stringify({ version: v, notes: NX.whatsNew.map((x) => x[0]), bundle: url, sha256: sum, size: +size }, null, 1));
+  process.stdout.write(JSON.stringify({ version: v, notes: NX.whatsNew.map((x) => x[0]), bundle: url, sha256: sum, size: +size, needsIso: process.env.NX_NEEDS_ISO === "1" }, null, 1));
 ' "$REPO/js/whatsnew.js" "$V" "$URL" "$SUM" "$SIZE" > "$OUT/update.json"
 cat "$OUT/update.json"; echo
