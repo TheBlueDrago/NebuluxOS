@@ -304,6 +304,31 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=settings] [data-time]").length === 2), "Settings shows the night light hours");
   await p.evaluate(() => { NX.close("settings"); NX.setPref("nightSched", false); NX.setPref("night", false); }); await wait(300);
 
+  // 3.2: virtual desktops
+  const vis = (id) => p.evaluate((id) => { const w = document.querySelector(".win[data-app=" + id + "]"); return !!w && getComputedStyle(w).display !== "none"; }, id);
+  const onBar = (id) => p.evaluate((id) => !!document.querySelector("#tb-apps [data-app=" + id + "].run, #tb-apps [data-app=" + id + "].on, #tb-apps [data-app=" + id + "][data-run]") || [...document.querySelectorAll("#tb-apps [data-app=" + id + "]")].some((b) => /run|open|active/.test(b.className)), id);
+  await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(400);
+  await p.keyboard.down("Control"); await p.keyboard.down("Meta"); await p.keyboard.press("d"); await p.keyboard.up("Meta"); await p.keyboard.up("Control"); await wait(400);
+  ok(await p.evaluate(() => NX.desks.list().length === 2 && NX.desks.list()[1].current), "Ctrl + Nebulux + D adds a desktop and goes to it");
+  ok(!(await vis("notepad")), "the new desktop starts empty: Notepad stays on Desktop 1");
+  await p.evaluate(() => NX.open("calculator")); await wait(400);
+  await p.keyboard.down("Control"); await p.keyboard.down("Meta"); await p.keyboard.press("ArrowLeft"); await p.keyboard.up("Meta"); await p.keyboard.up("Control"); await wait(400);
+  ok(await vis("notepad") && !(await vis("calculator")) && await p.evaluate(() => NX.desks.list()[0].current), "Ctrl + Nebulux + Left goes back: Notepad shows, Calculator stays on Desktop 2");
+  ok(await p.evaluate(() => ![...document.querySelectorAll("#tb-apps [data-app=calculator]")].length), "the taskbar shows only this desktop's windows");
+  await p.evaluate(() => NX.focus("calculator")); await wait(400);
+  ok(await vis("calculator") && await p.evaluate(() => NX.desks.list()[1].current), "bringing up a window on another desktop goes there");
+  await p.evaluate(() => NX.taskView()); await wait(400);
+  ok(await p.evaluate(() => document.querySelectorAll("#taskview .tv-dk").length === 2 && !!document.querySelector("#taskview .tv-dkadd")), "Task View shows the desktops and New desktop");
+  await p.evaluate(() => document.querySelector("#taskview .tv-dk:first-child").click()); await wait(400);
+  ok(await p.evaluate(() => NX.desks.list()[0].current && !document.querySelector("#taskview").hidden), "clicking a desktop in Task View switches to it");
+  await p.evaluate(() => { document.querySelector("#taskview").hidden = true; NX.desks.move("calculator", NX.desks.list()[0].id); }); await wait(300);
+  ok(await vis("calculator") && await vis("notepad"), "a window can move to another desktop");
+  await p.evaluate(() => { NX.desks.rename(NX.desks.list()[1].id, "School"); NX.desks.go(NX.desks.list()[1].id); }); await wait(300);
+  ok(await p.evaluate(() => NX.desks.list()[1].name === "School" && /School/.test(document.querySelector("#deskflash").textContent)), "desktops can be renamed, and switching shows its name");
+  await p.keyboard.down("Control"); await p.keyboard.down("Meta"); await p.keyboard.press("F4"); await p.keyboard.up("Meta"); await p.keyboard.up("Control"); await wait(400);
+  ok(await p.evaluate(() => NX.desks.list().length === 1) && await vis("notepad") && await vis("calculator"), "Ctrl + Nebulux + F4 closes a desktop; its windows move over");
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

@@ -428,6 +428,17 @@ module.exports = function more({ api, run, FAKE }) {
   };
   if (FAKE) api["POST /fake/clip"] = async (b) => { fakeClip = String((b && b.text) || ""); return { ok: true }; };
 
+  // ---------- virtual desktops: the window manager follows Nebulux OS (real apps stay on their desktop) ----------
+  let fakeDesks = { count: 1, cur: 0 };
+  api["POST /desks"] = async (b) => {
+    const count = Math.max(1, Math.min(8, Math.round(+(b && b.count) || 1))), cur = Math.max(0, Math.min(count - 1, Math.round(+(b && b.cur) || 0)));
+    if (FAKE) { fakeDesks = { count, cur }; return { ok: true }; }
+    await run("wmctrl", ["-n", String(count)], 3000);
+    await run("wmctrl", ["-s", String(cur)], 3000);
+    return { ok: true };
+  };
+  if (FAKE) api["GET /fake/desks"] = async () => fakeDesks;
+
   // ---------- the network troubleshooter ----------
   // Checks, in order: is there a Wi-Fi chip, does it have a driver, did its firmware load, is it switched off, does
   // NetworkManager see it, is it connected, does the internet answer. Each check says what's wrong in plain words.

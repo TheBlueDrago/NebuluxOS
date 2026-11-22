@@ -693,3 +693,22 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .s-nsched label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub)}
 .s-nsched input{padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;color-scheme:dark}
 [data-theme=light] .s-nsched input{color-scheme:light}
+
+/* virtual desktops */
+.win.offdesk{display:none!important}
+.tv-desks{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);display:flex;gap:12px;align-items:stretch;padding:12px;border-radius:14px;background:var(--glass);backdrop-filter:blur(24px);box-shadow:var(--shadow);max-width:calc(100vw - 32px);overflow-x:auto}
+.tv-dk{position:relative;width:150px;flex:none;display:flex;flex-direction:column;gap:6px;cursor:pointer;outline:none}
+.tv-dkp{height:84px;border-radius:8px;background:var(--wall) center/cover;display:grid;place-items:center;font-size:12px;color:#fff;text-shadow:0 1px 3px #000;border:2px solid transparent;transition:border-color .12s}
+.tv-dk:hover .tv-dkp,.tv-dk:focus-visible .tv-dkp{border-color:var(--line)}
+.tv-dk.on .tv-dkp{border-color:var(--accent)}
+.tv-dk.drop .tv-dkp{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 35%,transparent)}
+.tv-dkn{font-size:13px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-dkin{font:13px var(--font);text-align:center;padding:2px 6px;border-radius:6px;border:1px solid var(--accent);background:var(--card);color:var(--txt);outline:none;width:100%}
+.tv-dkx{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:#000a;color:#fff;opacity:0;transition:opacity .12s}
+.tv-dk:hover .tv-dkx,.tv-dkx:focus-visible{opacity:1}.tv-dkx:hover{background:#e81123}
+.tv-dkadd{width:150px;flex:none;height:84px;border-radius:8px;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--sub)}
+.tv-dkadd:hover{border-color:var(--accent);color:var(--txt);background:var(--hover)}
+.tv-card[draggable=true]{cursor:grab}
+#deskflash{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:4500;padding:16px 26px;border-radius:14px;background:var(--glass);backdrop-filter:blur(24px);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:16px;pointer-events:none;transition:opacity .25s}
+#deskflash[hidden]{display:none}#deskflash.out{opacity:0}
+.df-dots{display:flex;gap:6px}.df-dots span{width:8px;height:8px;border-radius:50%;background:var(--sub);opacity:.5}.df-dots span.on{background:var(--accent);opacity:1;width:22px;border-radius:4px}

@@ -8,12 +8,13 @@
   NX.taskView = () => {
     const tv = $("#taskview"); if (!tv.hidden) { tv.hidden = true; return; }
     NX.shell.closeFlyouts();
-    const list = [...NX.wins.values()].sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex));
+    const list = [...NX.wins.values()].filter(((w) => !w.desk || !NX.desks || w.desk === NX.desks.current())).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex));
     tv.innerHTML = `<div class="tv-grid">${list.length ? list.map((w) => `<div class="tv-card" data-id="${w.id}" tabindex="0" role="button" aria-label="${NX.esc(w.app.name)}"><div class="tv-top">${NX.icon(w.app.icon || w.id, 18)}<span>${NX.esc(w.el.querySelector(".wt-name").textContent)}</span><button class="tv-x" data-x="${w.id}" aria-label="Close ${NX.esc(w.app.name)}">${NX.icon("close", 14)}</button></div><div class="tv-face">${NX.icon(w.app.icon || w.id, 64)}</div></div>`).join("") : `<p class="tv-none">No windows are open.</p>`}</div><div class="tv-desk"><span>${NX.icon("display", 16)}Desktop</span></div>`;
     tv.hidden = false;
+    if (NX.desks) NX.desks.strip(tv, () => { tv.hidden = true; NX.taskView(); });
     tv.querySelectorAll("[data-id]").forEach((c) => { c.onclick = (e) => { if (e.target.closest("[data-x]")) return; tv.hidden = true; NX.focus(c.dataset.id); }; c.onkeydown = (e) => { if (e.key === "Enter") c.click(); }; });
     tv.querySelectorAll("[data-x]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); NX.close(b.dataset.x); tv.hidden = true; NX.taskView(); }));
-    tv.onclick = (e) => { if (e.target === tv || e.target.closest(".tv-desk")) tv.hidden = true; };
+    tv.onclick = (e) => { if (e.target === tv || (e.target.closest(".tv-desk") && !e.target.closest(".tv-desks"))) tv.hidden = true; };
     const first = tv.querySelector(".tv-card"); if (first) first.focus();
   };
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#taskview").hidden) $("#taskview").hidden = true; });

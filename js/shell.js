@@ -165,7 +165,7 @@
 
   // ---------- taskbar ----------
   function taskbar() {
-    if (!NX.me) return; const p = NX.prefs(), running = [...NX.wins.keys()], ids = [...p.pinned.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id))), ...running.filter((id) => !p.pinned.includes(id)), ...[...(NX.nativeRunning || [])].filter((id) => NX.apps[id] && !p.pinned.includes(id) && !running.includes(id))];
+    if (!NX.me) return; const p = NX.prefs(), running = [...NX.wins.values()].filter(((w) => !w.desk || !NX.desks || w.desk === NX.desks.current())).map((w) => w.id), ids = [...p.pinned.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id))), ...running.filter((id) => !p.pinned.includes(id)), ...[...(NX.nativeRunning || [])].filter((id) => NX.apps[id] && !p.pinned.includes(id) && !running.includes(id))];
     const top = [...NX.wins.values()].filter((w) => !w.min).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex))[0];
     $("#tb-apps").innerHTML = ids.map((id) => { const w = NX.wins.get(id) || (id === "google" && NX.browserRunning ? { browser: true } : null) || (NX.nativeRunning && NX.nativeRunning.has(id) ? { nat: true } : null); return `<button class="tb-app ${w ? "run" : ""} ${w && (top === w || (w.browser && NX.browserShown) || (w.nat && NX.nativeActive.has(id))) ? "act" : ""}" data-app="${id}" title="${NX.esc(NX.apps[id].name)}" aria-label="${NX.esc(NX.apps[id].name)}">${NX.icon(NX.apps[id].icon || id, 26)}<i></i></button>`; }).join("");
     $("#tb-apps").querySelectorAll(".tb-app").forEach((b) => {
@@ -413,12 +413,12 @@
       if (!NX.me) return;
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
       if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key))) { e.preventDefault(); winKeys("shot"); }
-      else if (e.metaKey && /^[edlwv]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets", v: "clip" }[e.key.toLowerCase()]); }
+      else if (e.metaKey && !e.ctrlKey && /^[edlwv]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets", v: "clip" }[e.key.toLowerCase()]); }
       else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
-      else if (e.metaKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
+      else if (e.metaKey && !e.ctrlKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") { e.preventDefault(); winKeys("tm"); }
       if (e.altKey && e.key === "Tab") {
-        e.preventDefault(); const list = [...NX.wins.values()].sort((a, b) => (a.min - b.min) || ((+b.el.style.zIndex) - (+a.el.style.zIndex)));
+        e.preventDefault(); const list = [...NX.wins.values()].filter(((w) => !w.desk || !NX.desks || w.desk === NX.desks.current())).sort((a, b) => (a.min - b.min) || ((+b.el.style.zIndex) - (+a.el.style.zIndex)));
         if (!list.length) return; if (!sw) sw = { list, i: Math.min(1, list.length - 1) }; else sw.i = (sw.i + (e.shiftKey ? -1 : 1) + sw.list.length) % sw.list.length; swDraw();
       }
     });
