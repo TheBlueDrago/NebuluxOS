@@ -1,4 +1,4 @@
-// The web versions of the apps people know from other app stores: streaming, music, chat, Office, Google, AI, games
+// Real apps (from Flathub, the Linux app store) and the web versions of the apps people know from other app stores: streaming, music, chat, Office, Google, AI, games
 // and more. "Get" puts them in Start and on the desktop. On the real Nebulux OS each one opens in its own app window
 // (the real web browser, without tabs); in a browser tab it opens in a new tab.
 // The tiles are Nebulux-made: the app's colors and initials, not the companies' own logos.
@@ -83,9 +83,30 @@
     ["wikipedia", "Wikipedia", "https://www.wikipedia.org/", "Education", "#f5f5f5,#bdbdbd", "W", "#111", "Wikimedia", "4.7", "The free encyclopedia."],
     ["classroom", "Google Classroom", "https://classroom.google.com/", "Education", "#0f9d58,#f4b400", "Cls", "#fff", "Google", "4.4", "Your classes, assignments and grades."],
   ];
+  // real apps from Flathub, the Linux app store: [id, name, category, colors, initials, color, publisher, rating, description, Flathub id, window class, web address (optional)]
+  const NATIVE = [
+    ["steam", "Steam", "Games", "#1b2838,#2a475e", "St", "#66c0f4", "Valve", "4.7", "Thousands of PC games, your library and friends. Many Windows games play on Nebulux OS through Steam's Proton.", "com.valvesoftware.Steam", "steam"],
+    ["minecraft", "Minecraft", "Games", "#62b47a,#795548", "MC", "#fff", "Mojang", "4.7", "The full Minecraft: Java Edition launcher (sign in with your Microsoft account).", "com.mojang.Minecraft", "minecraft-launcher"],
+    ["vlc", "VLC", "Entertainment", "#ff8800,#c45500", "VLC", "#fff", "VideoLAN", "4.8", "Plays almost every video and music file, DVDs and streams.", "org.videolan.VLC", "vlc"],
+    ["obs", "OBS Studio", "Creativity", "#302e31,#5c5a5e", "OBS", "#fff", "OBS Project", "4.7", "Record your screen and stream live.", "com.obsproject.Studio", "obs"],
+    ["gimp", "GIMP", "Creativity", "#5c5543,#8a7f62", "Gi", "#fff", "The GIMP team", "4.5", "A powerful photo editor and painting program.", "org.gimp.GIMP", "gimp"],
+    ["krita", "Krita", "Creativity", "#3babff,#1a5c99", "Kr", "#fff", "KDE", "4.7", "Digital painting for artists.", "org.kde.krita", "krita"],
+    ["blender", "Blender", "Creativity", "#ea7600,#265787", "Bl", "#fff", "Blender Foundation", "4.8", "3D modeling, animation and video editing.", "org.blender.Blender", "blender"],
+    ["libreoffice", "LibreOffice", "Productivity", "#18a303,#0d5c02", "LO", "#fff", "The Document Foundation", "4.6", "A free office suite: documents, spreadsheets and slides that open Word, Excel and PowerPoint files.", "org.libreoffice.LibreOffice", "libreoffice"],
+    ["firefox", "Firefox", "Utilities", "#ff9500,#e31587", "Fx", "#fff", "Mozilla", "4.6", "The fast, private web browser.", "org.mozilla.firefox", "firefox"],
+    ["chrome", "Google Chrome", "Utilities", "#4285f4,#34a853", "Ch", "#fff", "Google", "4.6", "Google's web browser, with your Google account and extensions.", "com.google.Chrome", "google-chrome"],
+    ["vscode", "Visual Studio Code", "Productivity", "#23a9f2,#0065a9", "VS", "#fff", "Microsoft", "4.8", "A code editor for every language.", "com.visualstudio.code", "code"],
+    ["signal", "Signal", "Social", "#3a76f0,#1d4fb8", "Si", "#fff", "Signal", "4.7", "Private messages and calls. Link it with Signal on your phone.", "org.signal.Signal", "signal"],
+    ["audacity", "Audacity", "Music", "#0000cc,#ff6600", "Au", "#fff", "Audacity", "4.6", "Record and edit audio.", "org.audacityteam.Audacity", "audacity"],
+  ];
+  // apps above that also have a real app on Flathub (the real app is used on the Nebulux OS USB)
+  const ALSO = { spotify: ["com.spotify.Client", "spotify"], discord: ["com.discordapp.Discord", "discord"], zoom: ["us.zoom.Zoom", "zoom"], slack: ["com.slack.Slack", "slack"], telegram: ["org.telegram.desktop", "telegramdesktop"] };
   NX.webApps = [];
   for (const [id, name, url, category, cols, text, fg, publisher, rating, desc] of L) {
     NX.webApps.push(id);
     NX.apps[id] = { name, url, category, rating, publisher, webapp: true, size: "Web app", desc, icon: "brand:" + cols + ":" + text + ":" + fg };
+    if (ALSO[id]) NX.apps[id].native = { flatpak: ALSO[id][0], wm: ALSO[id][1] };
   }
+  for (const [id, name, category, cols, text, fg, publisher, rating, desc, flatpak, wm] of NATIVE)
+    NX.apps[id] = { name, category, rating, publisher, desc, native: { flatpak, wm }, size: "App", icon: "brand:" + cols + ":" + text + ":" + fg };
 })();

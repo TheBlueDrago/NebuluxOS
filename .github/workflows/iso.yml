@@ -79,10 +79,12 @@ jobs:
           FILE="Nebulux-OS-$NX_VERSION.iso"
           mv out/nebulux-os.iso "out/$FILE"; ( cd out && sha256sum "$FILE" > "$FILE.sha256" )
           SIZE=$(du -h "out/$FILE" | cut -f1); SUM=$(cut -d' ' -f1 "out/$FILE.sha256")
+          # the self-update: computers already on Nebulux OS download just this instead of a new .iso
+          bash system/iso/make-update.sh "$NX_VERSION" "https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG/nebulux-update.tar.gz" out
           sed -e "s/@FILE@/$FILE/g" -e "s/@SIZE@/$SIZE/" -e "s/@SHA@/$SUM/" -e "s/@VERSION@/$NX_VERSION/" system/iso/release-notes.md > /tmp/notes.md
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "out/$FILE" "out/$FILE.sha256" --clobber
+            gh release upload "$TAG" "out/$FILE" "out/$FILE.sha256" out/nebulux-update.tar.gz out/update.json --clobber
             gh release edit "$TAG" --notes-file /tmp/notes.md
           else
-            gh release create "$TAG" "out/$FILE" "out/$FILE.sha256" --title "Nebulux OS $NX_VERSION" --latest --notes-file /tmp/notes.md --target "$GITHUB_SHA"
+            gh release create "$TAG" "out/$FILE" "out/$FILE.sha256" out/nebulux-update.tar.gz out/update.json --title "Nebulux OS $NX_VERSION" --latest --notes-file /tmp/notes.md --target "$GITHUB_SHA"
           fi

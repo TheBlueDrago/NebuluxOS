@@ -1,0 +1,59 @@
+# Nebulux OS window title bars for real apps and app windows: the Nebulux dark look, with minimize, maximize/restore
+# and close on the right (the browser and Nebulux OS's own windows draw their own).
+border.width: 1
+padding.width: 8
+padding.height: 6
+window.handle.width: 0
+window.client.padding.width: 0
+window.client.padding.height: 0
+window.active.border.color: #3d3266
+window.inactive.border.color: #2a2145
+window.active.title.bg: flat solid
+window.active.title.bg.color: #241b3d
+window.inactive.title.bg: flat solid
+window.inactive.title.bg.color: #1b1430
+window.active.title.separator.color: #241b3d
+window.inactive.title.separator.color: #1b1430
+window.active.label.bg: parentrelative
+window.inactive.label.bg: parentrelative
+window.active.label.text.color: #f4f1ff
+window.inactive.label.text.color: #bdb3dd
+window.label.text.justify: left
+window.active.button.unpressed.bg: parentrelative
+window.active.button.unpressed.image.color: #f4f1ff
+window.active.button.hover.bg: flat solid
+window.active.button.hover.bg.color: #3a2f5c
+window.active.button.hover.image.color: #ffffff
+window.active.button.pressed.bg: flat solid
+window.active.button.pressed.bg.color: #7c5cff
+window.active.button.pressed.image.color: #ffffff
+window.active.button.toggled.bg: parentrelative
+window.active.button.toggled.image.color: #f4f1ff
+window.active.button.disabled.bg: parentrelative
+window.active.button.disabled.image.color: #6b6290
+window.inactive.button.unpressed.bg: parentrelative
+window.inactive.button.unpressed.image.color: #bdb3dd
+window.inactive.button.hover.bg: flat solid
+window.inactive.button.hover.bg.color: #2e2550
+window.inactive.button.hover.image.color: #ffffff
+window.inactive.button.pressed.bg: flat solid
+window.inactive.button.pressed.bg.color: #7c5cff
+window.inactive.button.pressed.image.color: #ffffff
+window.inactive.button.toggled.bg: parentrelative
+window.inactive.button.toggled.image.color: #bdb3dd
+window.inactive.button.disabled.bg: parentrelative
+window.inactive.button.disabled.image.color: #5c5480
+menu.border.color: #3d3266
+menu.items.bg: flat solid
+menu.items.bg.color: #241b3d
+menu.items.text.color: #f4f1ff
+menu.items.active.bg: flat solid
+menu.items.active.bg.color: #7c5cff
+menu.items.active.text.color: #ffffff
+menu.title.bg: flat solid
+menu.title.bg.color: #1b1430
+menu.title.text.color: #f4f1ff
+osd.bg: flat solid
+osd.bg.color: #241b3d
+osd.label.text.color: #f4f1ff
+osd.border.color: #3d3266

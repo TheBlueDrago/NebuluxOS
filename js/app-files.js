@@ -317,7 +317,7 @@
       start(opts);
     } };
 
-  // ---------- screenshots: Snipping Tool, Windows + Shift + S and Print Screen ----------
+  // ---------- screenshots: Snipping Tool, Nebulux + Shift + S and Print Screen ----------
   NX.screenshot = async (quiet) => {
     let r;
     if (NX.native) { await new Promise((ok) => setTimeout(ok, 250)); r = await NX.api("POST", "/screenshot"); }
@@ -336,7 +336,7 @@
   A.snip = { name: "Snipping Tool", icon: "snip", builtIn: true, w: 560, h: 460, minW: 320, minH: 300, desc: "Take a picture of your screen.",
     open(body, win) {
       body.classList.add("sn");
-      body.innerHTML = `<div class="sn-bar"><button class="btn primary" data-s="0">${NX.icon("camera", 16)}New screenshot</button><label class="sn-delay">Wait <select aria-label="Wait before taking it"><option value="0">no time</option><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label></div><div class="sn-view"><p class="sn-tip">Tip: press <b>Windows + Shift + S</b> or <b>Print Screen</b> any time. Screenshots go in Pictures${NX.native ? " > Screenshots" : ""}.</p></div>`;
+      body.innerHTML = `<div class="sn-bar"><button class="btn primary" data-s="0">${NX.icon("camera", 16)}New screenshot</button><label class="sn-delay">Wait <select aria-label="Wait before taking it"><option value="0">no time</option><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label></div><div class="sn-view"><p class="sn-tip">Tip: press <b>Nebulux + Shift + S</b> or <b>Print Screen</b> any time. Screenshots go in Pictures${NX.native ? " > Screenshots" : ""}.</p></div>`;
       const v = body.querySelector(".sn-view"), btn = body.querySelector("[data-s]");
       btn.onclick = async () => {
         const wait = +body.querySelector("select").value; btn.disabled = true;

@@ -10,7 +10,18 @@ P="$HOME/.config/nebulux-browser"
 # The web-windows extension goes in a folder the browser engine can write to: it keeps an index of its rules next to
 # them, and /opt/nebulux is part of the read-only system (it silently didn't load from there in 1.1 and 1.2).
 EXT="$HOME/.local/share/nebulux-ext"
-rm -rf "$EXT"; mkdir -p "$(dirname "$EXT")"; cp -r /opt/nebulux/ext "$EXT"
+# Updates: Nebulux OS updates itself into ~/.local/share/nebulux-update/current (screens, apps, helper, add-on).
+# It starts from there when that copy is complete and hasn't failed before; otherwise from the built-in copy.
+UPD="$HOME/.local/share/nebulux-update"
+pick_root() {
+  NXROOT=/opt/nebulux
+  local c="$UPD/current" v
+  if [ -f "$c/VERSION" ] && [ -f "$c/www/index.html" ] && [ -f "$c/helper/nebulux-helper.js" ] && [ -d "$c/ext" ]; then
+    v=$(cat "$c/VERSION"); [ -f "$UPD/failed-$v" ] || NXROOT="$c"
+  fi
+  rm -rf "$EXT"; mkdir -p "$(dirname "$EXT")"; cp -r "$NXROOT/ext" "$EXT"
+}
+pick_root
 
 # Graphics: drawn without the graphics chip's acceleration, which works on every computer (some chips showed only a
 # white screen with it). To try acceleration, make the file /etc/nebulux/use-gpu.
@@ -27,7 +38,7 @@ sleep 0.3
 helper_up() { (echo >/dev/tcp/127.0.0.1/7777) 2>/dev/null; }
 start_helper() {
   pkill -u "$(id -u)" -f nebulux-helper.js 2>/dev/null
-  node /opt/nebulux/helper/nebulux-helper.js /opt/nebulux/www >"$HOME/.nebulux-helper.log" 2>&1 &
+  node "$NXROOT/helper/nebulux-helper.js" "$NXROOT/www" >"$HOME/.nebulux-helper.log" 2>&1 &
   for _ in $(seq 1 200); do helper_up && return 0; sleep 0.1; done
   return 1
 }
@@ -39,6 +50,8 @@ pkill -u "$(id -u)" -x bt-agent 2>/dev/null
 
 
 while true; do
+  # an update was installed (the helper stops itself after switching) or one failed: start on the right copy
+  OLDROOT="$NXROOT"; pick_root; [ "$NXROOT" != "$OLDROOT" ] && start_helper
   helper_up || start_helper
   # the whole screen: there is no window manager, so the browser is told the screen size itself
   read -r W H < <(xrandr 2>/dev/null | awk '/\*/{split($1,a,"x"); print a[1], a[2]; exit}')
@@ -58,7 +71,10 @@ while true; do
   # the watchdog: the OS page talks to the helper all the time; if it hasn't within 45 seconds, start over
   ( sleep 45
     A=$(stat -c %Y "$HOME/.nebulux-alive" 2>/dev/null || echo 0)
-    if [ "$A" -lt "$START" ]; then echo "$(date) the OS page didn't load; starting again" >>"$HOME/.nebulux-browser.log"; start_helper; kill "$CPID" 2>/dev/null; fi ) &
+    if [ "$A" -lt "$START" ]; then echo "$(date) the OS page didn't load; starting again" >>"$HOME/.nebulux-browser.log"
+      # an update that doesn't start is never used again: the next round goes back to the built-in copy
+      if [ "$NXROOT" != /opt/nebulux ]; then touch "$UPD/failed-$(cat "$NXROOT/VERSION")"; echo "$(date) update $(cat "$NXROOT/VERSION") didn't start; going back" >>"$HOME/.nebulux-browser.log"; fi
+      start_helper; kill "$CPID" 2>/dev/null; fi ) &
   WD=$!
   wait "$CPID"
   kill "$WD" 2>/dev/null

@@ -28,15 +28,16 @@
   function applyLook() {
     const p = NX.prefs(), root = document.documentElement;
     root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent);
-    root.classList.toggle("nofx", !NX.fx());
-    root.classList.toggle("noanim", !!(NX.me && p.anim === false)); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
+    const sv = !!(NX.me && NX.saverOn()); root.classList.toggle("saver", sv);
+    root.classList.toggle("nofx", !NX.fx() || sv);
+    root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv))); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
     const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
   let resizeT = 0; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { applyLook(); if (NX.me) icons(); }, 150); });
-  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery", "dnd"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
+  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery", "dnd", "saver", "saverAuto"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
 
   NX.fx = () => { const v = NX.me ? NX.prefs().transparency : undefined; return v == null ? !NX.native : !!v; };
   NX.fast = /[?&]fast(&|=|$)/.test(location.search); // tests skip the boot animation
@@ -148,7 +149,7 @@
       // one click opens it (a slow double-click on a slow computer used to do nothing)
       b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); sel = b.dataset.app; NX.open(b.dataset.app); };
       b.onkeydown = (e) => { if (e.key === "Enter") NX.open(b.dataset.app); };
-      b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; menu(e.clientX, e.clientY, [["Open", () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ["Remove from desktop", () => NX.setPref("desktop", NX.prefs().desktop.filter((x) => x !== id))], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]); };
+      b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; menu(e.clientX, e.clientY, [["Open", () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ["Hide from desktop", () => NX.setPref("desktop", NX.prefs().desktop.filter((x) => x !== id))], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]); };
     });
   }
   const iconsDone = () => document.dispatchEvent(new CustomEvent("nx:icons"));
@@ -164,20 +165,41 @@
 
   // ---------- taskbar ----------
   function taskbar() {
-    if (!NX.me) return; const p = NX.prefs(), running = [...NX.wins.keys()], ids = [...p.pinned.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id))), ...running.filter((id) => !p.pinned.includes(id))];
+    if (!NX.me) return; const p = NX.prefs(), running = [...NX.wins.keys()], ids = [...p.pinned.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id))), ...running.filter((id) => !p.pinned.includes(id)), ...[...(NX.nativeRunning || [])].filter((id) => NX.apps[id] && !p.pinned.includes(id) && !running.includes(id))];
     const top = [...NX.wins.values()].filter((w) => !w.min).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex))[0];
-    $("#tb-apps").innerHTML = ids.map((id) => { const w = NX.wins.get(id) || (id === "google" && NX.browserRunning ? { browser: true } : null); return `<button class="tb-app ${w ? "run" : ""} ${w && (top === w || (w.browser && NX.browserShown)) ? "act" : ""}" data-app="${id}" title="${NX.esc(NX.apps[id].name)}" aria-label="${NX.esc(NX.apps[id].name)}">${NX.icon(NX.apps[id].icon || id, 26)}<i></i></button>`; }).join("");
+    $("#tb-apps").innerHTML = ids.map((id) => { const w = NX.wins.get(id) || (id === "google" && NX.browserRunning ? { browser: true } : null) || (NX.nativeRunning && NX.nativeRunning.has(id) ? { nat: true } : null); return `<button class="tb-app ${w ? "run" : ""} ${w && (top === w || (w.browser && NX.browserShown) || (w.nat && NX.nativeActive.has(id))) ? "act" : ""}" data-app="${id}" title="${NX.esc(NX.apps[id].name)}" aria-label="${NX.esc(NX.apps[id].name)}">${NX.icon(NX.apps[id].icon || id, 26)}<i></i></button>`; }).join("");
     $("#tb-apps").querySelectorAll(".tb-app").forEach((b) => {
-      b.onclick = () => { const id = b.dataset.app, w = NX.wins.get(id); closeFlyouts(); if (id === "google" && NX.browserOK && NX.browserRunning) { NX.browserToggle(); return; } if (NX.browserHide) NX.browserHide(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
+      b.onclick = () => { const id = b.dataset.app, w = NX.wins.get(id); closeFlyouts(); if (id === "google" && NX.browserOK && NX.browserRunning) { NX.browserToggle(); return; }
+        if (NX.nativeRunning && NX.nativeRunning.has(id)) { NX.nativeToggle(id); return; } if (NX.browserHide) NX.browserHide(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
       b.oncontextmenu = (e) => { e.preventDefault(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : [])]); };
     });
   }
   function tray() {
     if (!NX.me) return; const p = NX.prefs();
-    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="Battery ${batt().percent}%${batt().charging ? ", charging" : ""}">${NX.icon("battery", 18)}</span>` : ""}`;
+    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="${battText()}">${NX.battIcon(20)}</span>` : ""}`;
   }
-  // the battery: on the real OS the computer's own (none on a desktop PC); in a browser tab a full one
-  const batt = () => NX.native ? (NX.battery && NX.battery.present ? NX.battery : null) : { percent: 100, charging: false };
+  // the battery: this computer's own, on the real OS and in a browser tab (none on a desktop PC). The bar inside the
+  // icon goes down with it and changes color: green while charging, orange at 20% or less, red at 10% or less, and
+  // yellow while Battery saver is on.
+  const batt = () => NX.battery ? (NX.battery.present ? NX.battery : null) : NX.native ? null : { percent: 100, charging: false };
+  NX.batt = batt;
+  NX.saverOn = () => { const b = batt(), p = NX.prefs(); return !!b && !b.charging && (!!p.saver || (p.saverAuto !== false && b.percent <= 20)); };
+  NX.battIcon = (size) => {
+    const b = batt(); if (!b) return "";
+    const pc = Math.max(0, Math.min(100, b.percent)), w = Math.max(pc > 0 ? 1.5 : 0, 22 * pc / 100);
+    const c = NX.saverOn() ? "saver" : b.charging ? "charging" : pc <= 10 ? "critical" : pc <= 20 ? "low" : "ok";
+    return `<svg class="nx-batt b-${c}" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="15" width="34" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="40" y="20.5" width="3.5" height="7" rx="1.2" fill="currentColor"/><rect class="nx-bfill" x="9" y="19" width="${w.toFixed(1)}" height="10" rx="1.6"/>${b.charging ? `<path d="M23.5 16.5l-5 8.5h4.5l-2 6.5 6-9h-4.6z" fill="#fff" stroke="#0006" stroke-width=".8"/>` : ""}</svg>`;
+  };
+  const battText = () => { const b = batt(); return b ? "Battery " + b.percent + "%" + (b.charging ? ", charging" : NX.saverOn() ? ", Battery saver on" : "") : ""; };
+  // low battery: a warning at 20% and 10% (once each time it gets there)
+  let lowTold = 101;
+  document.addEventListener("nx:prefs", (e) => {
+    if (e.detail === "saver" && NX.me && NX.prefs().saver === false && NX.saverOn()) NX.setPref("saverAuto", false); // turned off by hand while low
+    if (e.detail !== "battery" || !NX.me) return; const b = batt(); if (!b) return;
+    if (b.charging || b.percent > 20) { lowTold = 101; return; }
+    const lvl = b.percent <= 10 ? 10 : 20; if (lvl >= lowTold) return; lowTold = lvl;
+    NX.toast(lvl === 10 ? "Battery is very low (" + b.percent + "%). Plug in your computer soon." : "Battery is at " + b.percent + "%." + (NX.prefs().saverAuto !== false ? " Battery saver is on." : " Turn on Battery saver to make it last longer."));
+  });
   function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d); $("#tb-date").textContent = d.toLocaleDateString(); }
   setInterval(() => { if (NX.me) clock(); }, 5000);
 
@@ -189,14 +211,14 @@
     const list = q ? all.filter((id) => NX.apps[id].name.toLowerCase().includes(q.toLowerCase())) : all;
     const rec = p.recent.filter((id) => all.includes(id)).slice(0, 4);
     $("#start").innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search" value="${NX.esc(q || "")}"></label>
-      <div class="sm-body">${q ? `<h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div>` :
+      <div class="sm-body ${q ? "sm-searching" : ""}">${q ? `<div class="sm-split"><div class="sm-left"><h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div></div><aside class="sm-detail" aria-label="Details"></aside></div>` :
       `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-allapps="1">All apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
       <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
       <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="sleep">${NX.icon("moon", 16)}Sleep</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div>`;
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
     si.onkeydown = (e) => { if (e.key === "Enter") { const f = $(".sm-res", S); if (f) f.click(); } };
-    if (q) startExtras(q, S);
+    if (q) { startExtras(q, S); wireDetail(S); }
     S.querySelectorAll("[data-app]").forEach((b) => { b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }; b.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const id = b.dataset.app, a = NX.apps[id]; const r = S.getBoundingClientRect(); const mx = e.clientX, my = e.clientY; const items = [[p.pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], [p.desktop.includes(id) ? "Remove from desktop" : "Add to desktop", () => NX.setPref("desktop", p.desktop.includes(id) ? p.desktop.filter((x) => x !== id) : [...p.desktop, id])], ...(a.builtIn ? [] : [["Uninstall", () => NX.uninstall(id)]])]; menu(mx, my, items); void r; }; });
     const web = $("[data-web]", S); if (web) web.onclick = () => { closeFlyouts(); NX.searchWeb(q); };
     const st = $("[data-store]", S); if (st) st.onclick = () => { closeFlyouts(); NX.open("store"); };
@@ -229,6 +251,34 @@
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     const si = $(".sm-search input", S); si.oninput = () => { startDraw(si.value); const n = $(".sm-search input"); n.focus(); };
   }
+  // the details panel of Start search
+  function wireDetail(S) {
+    const box = $(".sm-results", S), pane = $(".sm-detail", S); if (!box || !pane) return;
+    const show = (b) => {
+      if (!b) { pane.innerHTML = ""; return; }
+      box.querySelectorAll(".sm-res").forEach((x) => x.classList.toggle("on", x === b));
+      const id = b.dataset.app;
+      if (id && NX.apps[id]) {
+        const a = NX.apps[id], p = NX.prefs(), pinned = p.pinned.includes(id), onDesk = p.desktop.includes(id);
+        pane.innerHTML = `<div class="sm-dt">${NX.icon(a.icon || id, 72)}<b>${NX.esc(a.name)}</b><small>App${a.publisher ? " · " + NX.esc(a.publisher) : ""}</small></div>
+          <div class="sm-dacts"><button data-da="open">${NX.icon("fwd", 16)}Open</button><button data-da="pin">${NX.icon("taskbar", 16)}${pinned ? "Unpin from taskbar" : "Pin to taskbar"}</button><button data-da="desk">${NX.icon("display", 16)}${onDesk ? "Hide from desktop" : "Show on desktop"}</button>${a.builtIn ? "" : `<button data-da="uninstall">${NX.icon("trash", 16)}Uninstall</button>`}</div>`;
+        pane.querySelectorAll("[data-da]").forEach((x) => (x.onclick = async (e) => {
+          e.stopPropagation(); const k = x.dataset.da, P = NX.prefs();
+          if (k === "open") { closeFlyouts(); NX.open(id); return; }
+          if (k === "pin") { pin(id); NX.toast(a.name + (P.pinned.includes(id) ? " is unpinned from the taskbar." : " is pinned to the taskbar.")); }
+          if (k === "desk") NX.setPref("desktop", P.desktop.includes(id) ? P.desktop.filter((v) => v !== id) : [...P.desktop, id]);
+          if (k === "uninstall") { if (NX.isNative && NX.isNative(id)) { x.disabled = true; try { await NX.uninstallNative(id); } catch (er) { NX.toast(er.message); } } NX.uninstall(id); closeFlyouts(); return; }
+          show(b);
+        }));
+        return;
+      }
+      const t = b.querySelector("b"), sm = b.querySelector("small");
+      pane.innerHTML = `<div class="sm-dt">${b.querySelector("svg") ? b.querySelector("svg").outerHTML.replace(/width="\d+" height="\d+"/, 'width="72" height="72"') : ""}<b>${t ? NX.esc(t.textContent) : ""}</b><small>${sm ? NX.esc(sm.textContent) : ""}</small></div><div class="sm-dacts"><button data-da="open">${NX.icon("fwd", 16)}Open</button></div>`;
+      pane.querySelector("[data-da=open]").onclick = (e) => { e.stopPropagation(); b.click(); };
+    };
+    box.addEventListener("pointerover", (e) => { const b = e.target.closest(".sm-res"); if (b && !b.classList.contains("on")) show(b); });
+    show(box.querySelector(".sm-res"));
+  }
   // Settings pages and files that match a Start search (files are looked up in your main folders)
   let searchGen = 0;
   async function startExtras(q, S) {
@@ -245,12 +295,12 @@
     web.insertAdjacentHTML("beforebegin", `<h4 class="sm-sub">Files</h4>` + found.map((e, i) => `<button class="sm-res" data-sfile="${i}">${NX.icon(FI[e.kind] || "file", 28)}<span><b>${NX.esc(e.name)}</b><small>${NX.esc(e.where)}</small></span></button>`).join(""));
     box.querySelectorAll("[data-sfile]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.openFile(found[+b.dataset.sfile]); }));
   }
-  function toggleStart(focus) { if (NX.browserHide) NX.browserHide(); const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
+  function toggleStart(focus) { if (NX.browserHide) NX.browserHide(); if (NX.nativeHideActive) NX.nativeHideActive(); const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
   function qsDraw() {
     const p = NX.prefs(), t = (k, icon, label, on, more) => more ? `<div class="qs-t qs-split ${on ? "on" : ""}"><button class="qs-main" data-k="${k}" aria-label="${label}">${NX.icon(icon, 18)}</button><button class="qs-more" data-more="${k}" aria-label="${label} list">${NX.icon("chevron", 12)}</button><span>${label}</span></div>` : `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
-    $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("dnd", "bell", "Do not disturb", !!p.dnd)}${t("cast", "cast", "Cast", false)}</div>
+    $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("dnd", "bell", "Do not disturb", !!p.dnd)}${batt() ? t("saver", "leaf", "Battery saver", NX.saverOn()) : ""}${t("cast", "cast", "Cast", false)}</div>
       <label class="qs-sl">${NX.icon("sun", 18)}<input type="range" min="30" max="100" value="${p.brightness}" data-s="brightness" aria-label="Brightness"></label><label class="qs-sl">${NX.icon("volume", 18)}<input type="range" min="0" max="100" value="${p.volume}" data-s="volume" aria-label="Volume"></label>
-      <div class="qs-foot"><span>${batt() ? `${NX.icon("battery", 18)} ${batt().percent}%${batt().charging ? " (charging)" : ""}` : ""}</span><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
+      <div class="qs-foot"><button class="qs-batt" aria-label="Power and battery settings" ${batt() ? "" : "hidden"}>${batt() ? `${NX.battIcon(20)} ${batt().percent}%${batt().charging ? " (charging)" : ""}` : ""}</button><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
     const Q = $("#qs");
     Q.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => {
       const k = b.dataset.k, P = NX.prefs();
@@ -259,11 +309,13 @@
       if (k === "theme") NX.setPref("theme", P.theme === "dark" ? "light" : "dark");
       else if (k === "airplane") { NX.setPref("airplane", !P.airplane); if (!P.airplane) { NX.setPref("wifi", false); NX.setPref("bt", false); } }
       else if (k === "dnd") NX.setPref("dnd", !P.dnd);
+      else if (k === "saver") { const on = NX.saverOn(); NX.setPref("saver", !on); if (on) NX.setPref("saverAuto", false); NX.toast(on ? "Battery saver is off." : "Battery saver is on: effects and animations are off to save power."); }
       else { NX.setPref(k, !(P[k] && !P.airplane)); if (k !== "night") NX.setPref("airplane", false); }
       qsDraw();
     }));
     Q.querySelectorAll("[data-s]").forEach((s) => (s.oninput = () => NX.setPref(s.dataset.s, +s.value)));
     $(".qs-set", Q).onclick = () => { closeFlyouts(); NX.open("settings"); };
+    $(".qs-batt", Q).onclick = () => { closeFlyouts(); NX.open("settings", { page: "system" }); };
     Q.querySelectorAll("[data-more]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); qsMore(b.dataset.more); }));
   }
   // ---------- the lists inside quick settings: Wi-Fi networks, Bluetooth devices, Cast ----------
@@ -384,6 +436,7 @@
     boot();
   }
   NX.menu = menu;
-  NX.shell = { closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
+  const openWifi = () => { closeFlyouts("qs"); qsDraw(); $("#qs").hidden = false; qsMore("wifi"); };
+  NX.shell = { openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

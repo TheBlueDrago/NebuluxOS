@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 3.0**.
-3. Under **Assets**, click **`Nebulux-OS-3.0.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 3.1**.
+3. Under **Assets**, click **`Nebulux-OS-3.1.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-3.0.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-3.1.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-3.0.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-3.1.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -82,7 +82,7 @@ QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
 Then start Nebulux OS like this (all on one line):
 
 ```powershell
-& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-3.0.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-3.1.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
 ```
 
 ### If it doesn't start
@@ -122,30 +122,42 @@ Then start Nebulux OS like this (all on one line):
   - **Wireless display:** cast to a TV that supports Miracast ("screen mirroring" on many Samsung, LG and Roku TVs and Fire TV sticks). Press **Connect** and pick the TV. It needs a computer whose Wi-Fi supports Miracast, and not every Wi-Fi card does.
 - **Photos:** see your pictures and screenshots, with zoom and rotate.
 - **Media Player:** plays music and videos (MP4, WebM, MP3, WAV, OGG, M4A, FLAC).
-- **Snipping Tool:** take a screenshot, with an optional timer. You can also press **Windows + Shift + S** or **Print Screen** any time. Screenshots go in Pictures > Screenshots.
+- **Snipping Tool:** take a screenshot, with an optional timer. You can also press **Nebulux + Shift + S** or **Print Screen** any time. Screenshots go in Pictures > Screenshots.
 - **Notepad** opens and saves real text files (Open, Save to Documents). **Paint** saves into Pictures.
 - **Windows 11 look and feel:**
   - The taskbar has Widgets on the left (the weather where you are), Start, a Search box and Task View.
-  - **Task View** (the button, or Windows + Tab) shows all your open windows.
+  - **Task View** (the button, or Nebulux + Tab) shows all your open windows.
   - **Snap layouts:** hover over a window's maximize button and pick where it goes: halves, two-thirds, or quarters.
   - **Start** has Pinned, **All apps** (A to Z) and **Recommended**, with the files you opened recently.
-  - **Widgets** (Windows + W): the weather for your city with the next three days, the date, and recent files. The weather comes from Open-Meteo, a free service.
+  - **Widgets** (Nebulux + W): the weather for your city with the next three days, the date, and recent files. The weather comes from Open-Meteo, a free service.
   - **The desktop** shows the files in your Desktop folder. Right-click it for New folder and New text document.
+- **Updates by themselves (3.1):** once you're on Nebulux OS, you never download a new .iso for an update.
+  - After you sign in (and every few hours) it checks for an update, reminds you, then asks: **Later** installs it tonight (between 2 and 4 in the morning, with the computer on), **Remind me** asks again in 30 minutes, **Never** skips it.
+  - **Settings > Nebulux Update** shows the version, **Check for updates** and **Update now**, even for a skipped update.
+  - Only the Nebulux OS part updates (its screens, apps, helper and browser add-on). It's checked against its fingerprint before it's used, and if an update ever doesn't start, Nebulux OS goes back to the version on the USB.
+  - On a USB that doesn't save changes, an update lasts until the computer restarts.
+- **What's new:** after an update, everyone sees what was added the first time they sign in.
+- **Real apps in the Nebulux Store (3.1):** Steam, Minecraft, Spotify, Discord, Zoom, Slack, Telegram, VLC, OBS Studio, GIMP, Krita, Blender, LibreOffice, Firefox, Google Chrome, Visual Studio Code, Signal and Audacity install as real apps (from Flathub) and open in their own windows. About 70 more open as web apps. Real apps need internet and a USB that saves changes.
+- **Window buttons:** app windows and real apps have minimize, maximize/restore and close, with a Nebulux title bar.
+- **Pin apps your way:** press the Nebulux key (or use the taskbar Search box), search for an app, and the details on the right have **Pin to taskbar**, **Show on desktop** or **Hide from desktop**, and **Uninstall**. Or right-click an app on the desktop. Apps stay on the desktop unless you hide them.
+- **Guest start:** on a USB that doesn't save changes (Rufus persistent partition 0), Nebulux OS offers **Start without setting up**, as Guest.
+- **Battery:** the bar inside the battery icon goes down with the charge: green while charging, orange at 20%, red at 10%. **Battery saver** (quick settings, or Settings > System > Power & battery) turns it yellow and turns off effects and animations; it turns on by itself at 20%.
+- **Mouse speed:** Settings > Bluetooth & devices > Mouse, from Slower to Faster. The Store's rows have arrow buttons, so you don't need to aim at a thin scroll bar.
 - **The Nebulux logo** is the Nebulux nebula, on the Start button, the start-up screen and the sign-in screen.
-- **Keyboard shortcuts** (they work even while a website has the keyboard):
+- **Keyboard shortcuts** with the **Nebulux key**, which is the key with the Windows logo on your keyboard (they work over every window):
 
   | Keys | What it does |
   |---|---|
-  | Windows | Open Start |
+  | Nebulux (the key with the Windows logo) | Open Start |
   | Alt + Tab | Switch between open windows |
-  | Windows + D | Show the desktop (press again to bring the windows back) |
-  | Windows + Left / Right | Snap the window to half the screen |
-  | Windows + Up / Down | Maximize, or restore and minimize |
-  | Windows + L | Lock (your apps stay open) |
-  | Windows + Tab | Task View |
-  | Windows + W | Widgets |
-  | Windows + E | File Explorer |
-  | Windows + Shift + S, or Print Screen | Screenshot |
+  | Nebulux + D | Show the desktop (press again to bring the windows back) |
+  | Nebulux + Left / Right | Snap the window to half the screen |
+  | Nebulux + Up / Down | Maximize, or restore and minimize |
+  | Nebulux + L | Lock (your apps stay open) |
+  | Nebulux + Tab | Task View |
+  | Nebulux + W | Widgets |
+  | Nebulux + E | File Explorer |
+  | Nebulux + Shift + S, or Print Screen | Screenshot |
   | Ctrl + Shift + Esc | Task Manager |
 - **Task Manager:** your open apps, with End task, and live graphs of how busy the processor is and how much memory is in use.
 - **Notifications:** click the clock to see recent notifications, with Clear all. **Do not disturb** in quick settings keeps them quiet.
@@ -199,6 +211,7 @@ At start-up the computer signs in to its own session, starts the system helper, 
   - `root/`: the system files.
   - `nebulux.hook.chroot`: setup steps.
   - `boot-test.sh`: the virtual-computer test.
+  - `make-update.sh`: makes the self-update (`nebulux-update.tar.gz` and `update.json`) that goes in each release.
 - `.github/workflows/iso.yml`: builds the .iso on GitHub, boot-tests it, and puts it in Releases.
 
 ### Make a new .iso
@@ -207,7 +220,9 @@ On GitHub, open **Actions** → **Build Nebulux OS** → **Run workflow**. It ta
 
 1. It starts the new .iso in a virtual computer, once the old way (BIOS) and once the new way (UEFI).
 2. It makes an account, opens Google and Settings, and saves screenshots under **boot-screens**.
-3. Only if that works does it put the .iso in **Releases**.
+3. Only if that works does it put the .iso in **Releases**, with the self-update files. Computers already on Nebulux OS find the update from `update.json` in the newest release.
+
+The version number is in two places: `NX_VERSION` in `.github/workflows/iso.yml` and `NX.version` in `js/whatsnew.js` (with that version's What's new list). The build stops if they don't match.
 
 ### Try it without a USB
 
@@ -215,7 +230,7 @@ Open `index.html` in a browser. That's the same OS in a browser tab; Wi-Fi and B
 
 ### Tests
 
-- `node tests/e2e.cjs [width height]` drives the whole OS in a headless browser. It needs Edge or Chrome with `--remote-debugging-port=9333`.
+- `node tests/e2e.cjs [width height]` and `node tests/files.cjs [width height]` drive the whole OS in a headless browser. It needs Edge or Chrome with `--remote-debugging-port=9333`.
 - `node tests/native.cjs` tests real-computer mode against the helper with made-up devices:
   1. Run `NX_FAKE=1 node system/helper/nebulux-helper.js .`.
   2. Start Edge or Chrome with `--remote-debugging-port=9334 --load-extension=system/browser-ext`.

@@ -25,6 +25,7 @@
     wifi: () => `<g fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M8 19a23 23 0 0132 0"/><path d="M14 26a14 14 0 0120 0"/></g><circle cx="24" cy="34" r="3.5" fill="currentColor"/>`,
     wifioff: () => `<g fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" opacity=".45"><path d="M8 19a23 23 0 0132 0"/><path d="M14 26a14 14 0 0120 0"/></g><circle cx="24" cy="34" r="3.5" fill="currentColor" opacity=".45"/><path d="M10 10l28 28" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`,
     volume: () => `<path d="M9 19h7l9-7v24l-9-7H9z" fill="currentColor"/><path d="M31 18a8 8 0 010 12M35 14a14 14 0 010 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
+    leaf: () => `<path d="M38 9C21 9 10 17 10 29c0 3 .8 5.6 2.2 7.6C15 25 24 20 31 18c-8 4-14 10-17.2 20.4A12 12 0 0 0 20 40c12 0 18-12 18-31z" fill="currentColor"/>`,
     battery: () => `<rect x="7" y="16" width="30" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="3"/><rect x="11" y="20" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="38" y="21" width="3.5" height="6" rx="1" fill="currentColor"/>`,
     bt: () => `<path d="M17 15l14 14-7 6V13l7 6-14 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`,
     plane: () => `<path d="M24 8c2 0 3 2 3 4v9l13 7v4l-13-3v7l4 3v3l-7-2-7 2v-3l4-3v-7L8 32v-4l13-7v-9c0-2 1-4 3-4z" fill="currentColor"/>`,

@@ -1,4 +1,4 @@
-// The Windows 11 touches: Task View (Windows + Tab), Widgets with the weather (Windows + W), snap layouts on the
+// The Windows 11 touches: Task View (Nebulux + Tab), Widgets with the weather (Nebulux + W), snap layouts on the
 // maximize button, and the Desktop folder's files on the desktop.
 "use strict";
 (function () {
@@ -56,7 +56,7 @@
       <div class="wg-grid"><section class="wg-card wg-wx">${place ? (w ? `<div class="wg-wxnow">${wIcon(wx(w.code)[2], 56)}<div><b>${w.now}°${w.unit}</b><span>${wx(w.code)[1]}</span><small>${NX.esc(place.name)}</small></div></div><div class="wg-days">${w.days.slice(1).map((x) => `<div>${new Date(x.t + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}${wIcon(wx(x.code)[2], 26)}<span>${x.hi}° <small>${x.lo}°</small></span></div>`).join("")}</div>` : `<p class="wg-note">${NX.netOK() ? "Getting the weather..." : "Connect to the internet to see the weather."}</p>`) + `<button class="wg-link" data-wx="change">Change city</button>`
         : `<h4>Weather</h4><p class="wg-note">Type your city to see its weather.</p>`}<form class="wg-city" ${place ? "hidden" : ""}><input placeholder="Your city" aria-label="Your city" maxlength="60"><button class="btn primary" type="submit">Show</button></form><p class="wg-err"></p></section>
       <section class="wg-card"><h4>Recent files</h4>${files.length ? files.map((f, i) => `<button class="wg-file" data-rf="${i}">${NX.icon({ image: "fimage", video: "fvideo", audio: "faudio", text: "ftext" }[f.kind] || "file", 22)}<span>${NX.esc(f.name)}</span></button>`).join("") : `<p class="wg-note">Files you open will show up here.</p>`}<button class="wg-link" data-open="files">Open File Explorer</button></section>
-      <section class="wg-card"><h4>Shortcuts</h4><p class="wg-note"><b>Windows + Tab</b> shows all your windows. <b>Windows + Left or Right</b> snaps a window to half the screen. Hover over a window's maximize button for more layouts.</p></section></div>`;
+      <section class="wg-card"><h4>Shortcuts</h4><p class="wg-note"><b>Nebulux + Tab</b> shows all your windows. <b>Nebulux + Left or Right</b> snaps a window to half the screen. Hover over a window's maximize button for more layouts.</p></section></div>`;
     const f = $(".wg-city", W);
     f.onsubmit = async (e) => {
       e.preventDefault(); const q = f.querySelector("input").value.trim(), er = $(".wg-err", W); if (!q) return;

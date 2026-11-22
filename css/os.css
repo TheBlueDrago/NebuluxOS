@@ -600,3 +600,43 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 
 .s-slab{font-size:12px;color:var(--sub);margin:0 6px}
 .ob-guest{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin-top:8px}.ob-guest .btn{min-height:40px;min-width:240px}
+
+/* the Store: arrows on each row, and scroll bars that are easy to grab */
+.st-rowwrap{position:relative}
+.st-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--txt)}
+.st-arrow:hover{background:var(--card2)}.st-arrow.l{left:-6px}.st-arrow.r{right:-6px}.st-arrow[hidden]{display:none}
+.st-row{scrollbar-width:auto;scroll-snap-type:x proximity}.st-row>*{scroll-snap-align:start}
+.win[data-app=store] .st-main{scrollbar-width:auto}
+
+/* Start search: results on the left, details on the right */
+.sm-split{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:14px;height:100%}
+.sm-left{min-width:0;overflow-y:auto}
+.sm-results .sm-res.on{background:var(--card2)}
+.sm-detail{border-radius:10px;background:var(--card);border:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:14px;align-self:start}
+.sm-dt{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sm-dt b{font-size:16px;font-weight:600}.sm-dt small{color:var(--sub);font-size:12px}
+.sm-dacts{display:flex;flex-direction:column;gap:2px}
+.sm-dacts button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13px;text-align:left}.sm-dacts button:hover{background:var(--hover)}
+@media (max-width:640px){.sm-split{grid-template-columns:1fr}.sm-detail{display:none}}
+/* Nebulux Update and What's new pop-ups */
+.nx-pop{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;background:rgba(0,0,0,.38);animation:nxfade .18s ease-out}
+@keyframes nxfade{from{opacity:0}to{opacity:1}}
+.nx-pcard{width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 80px);overflow-y:auto;background:var(--bg2);backdrop-filter:blur(24px);color:var(--txt);border-radius:12px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:14px}
+.nx-pcard.nx-pwide{width:min(620px,calc(100vw - 32px))}
+.nx-ph{display:flex;gap:14px;align-items:center}.nx-ph div{display:flex;flex-direction:column;gap:3px}.nx-ph b{font-size:18px;font-weight:600}.nx-ph small,.nx-pfoot{color:var(--sub);font-size:12px}
+.nx-plist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.nx-pnote{margin:0;font-size:13px;color:var(--sub)}
+.nx-pbtns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.wn-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.wn-item{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:8px;background:var(--card);border:1px solid var(--line);font-size:13px}.wn-item b{font-size:14px;font-weight:600}.wn-item span{color:var(--sub);line-height:1.4}
+.s-updc{margin-left:auto}
+.off-msg small{font-size:13px;opacity:.7;margin-top:-12px}
+
+/* the battery: the bar inside goes down with the charge and changes color */
+.nx-batt .nx-bfill{fill:currentColor}
+.nx-batt.b-charging .nx-bfill{fill:#3ddc84}
+.nx-batt.b-low .nx-bfill{fill:#ff9f1a}
+.nx-batt.b-critical .nx-bfill{fill:#ff4d4f}.nx-batt.b-critical{color:#ff4d4f}
+.nx-batt.b-saver .nx-bfill{fill:#f5c518}.nx-batt.b-saver{color:#f5c518}
+.qs-batt{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;font-size:13px}.qs-batt:hover{background:var(--hover)}
+.s-battc{display:flex;align-items:center;gap:14px}.s-battc div{display:flex;flex-direction:column;gap:2px}.s-battc b{font-size:20px;font-weight:600}.s-battc small{color:var(--sub)}

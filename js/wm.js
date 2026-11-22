@@ -38,7 +38,7 @@
   NX.closeAll = () => { for (const id of [...wins.keys()]) NX.close(id); };
   // the window in front (not minimized)
   NX.topWin = () => [...wins.values()].filter((w) => !w.min).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex))[0] || null;
-  // Windows + arrow keys: left or right half, maximize, restore, minimize
+  // Nebulux + arrow keys: left or right half, maximize, restore, minimize
   NX.snap = (id, where) => {
     const w = wins.get(id); if (!w) return; const A = area();
     if (where === "max") { if (!w.max) NX.toggleMax(id); return; }
@@ -54,7 +54,7 @@
     if (!w.snap) { w.rw = w.w; w.rh = w.h; }
     w.snap = "zone"; w.x = Math.round(A.w * fx); w.y = Math.round(A.h * fy); w.w = Math.round(A.w * fw); w.h = Math.round(A.h * fh); place(w); NX.focus(id); w.onresize && w.onresize();
   };
-  // Windows + D: everything out of the way, and back again
+  // Nebulux + D: everything out of the way, and back again
   let hidden = null;
   NX.showDesktop = () => {
     if (hidden && hidden.length && ![...wins.values()].some((w) => !w.min)) { for (const id of hidden) if (wins.has(id)) NX.focus(id); hidden = null; return; }
@@ -62,6 +62,8 @@
   };
   NX.open = (id, opts) => {
     const app = NX.apps[id]; if (!app) return null;
+    if (NX.isNative && NX.isNative(id)) { NX.openNative(id); NX.shell && NX.shell.recent(id); return null; }
+    if (NX.native && !NX.online() && (app.url || app.browser)) { NX.toast("You're not connected to the internet. Pick a Wi-Fi network first."); NX.shell && NX.shell.openWifi && NX.shell.openWifi(); return null; }
     if (NX.browserOK && (app.url || app.browser)) { NX.browserOpen((opts && opts.url) || (opts && opts.q && "https://www.google.com/search?q=" + encodeURIComponent(opts.q)) || app.url || app.browser, !!app.webapp && !(opts && (opts.url || opts.q))); NX.shell && NX.shell.recent(id); return null; }
     if (NX.browserHide) NX.browserHide();
     if (app.url && !NX.webFrames) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }

@@ -101,7 +101,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   // Store: install every app, open each one, then uninstall one
   await p.click("#tb-apps [data-app=store]"); await wait(400);
   await shot("08-store");
-  const ids = await p.evaluate(() => [...document.querySelectorAll(".st-card")].map((x) => x.dataset.app));
+  const ids = await p.evaluate(() => [...new Set([...document.querySelectorAll(".st-card")].map((x) => x.dataset.app))].filter((id) => NX.apps[id].url || !NX.apps[id].native)); // real apps (Steam and the like) install on the real Nebulux OS only
   ok(ids.length >= 7, "the Store lists the apps (" + ids.join(", ") + ")");
   for (const id of ids) { await p.evaluate((id) => document.querySelector(`[data-get="${id}"]`).click(), id); await wait(60); }
   for (let i = 0; i < 40 && (await p.$(".st-prog")); i++) await wait(250);

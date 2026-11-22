@@ -57,6 +57,10 @@ ntfs-3g
 exfatprogs
 dosfstools
 xdotool
+wmctrl
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gtk
 bluez-tools
 pciutils
 usbutils

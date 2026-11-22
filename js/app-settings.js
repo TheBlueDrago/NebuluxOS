@@ -42,7 +42,7 @@
           const net = NX.online(), bt = p.bt && !p.airplane;
           return `<div class="s-homegrid">
             <button class="s-hcard s-hme" data-p="accounts"><span class="av big" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span><b>${NX.esc(me.name)}</b><small>Local account</small><em>Manage your account ${NX.icon("chevron", 11)}</em></span></button>
-            <button class="s-hcard s-hpc" data-p="about"><img src="${NX.wallpaperURL(p.wallpaper)}" alt=""><span><b>Nebulux PC</b><small>Nebulux OS 3.1</small><em>About this PC ${NX.icon("chevron", 11)}</em></span></button>
+            <button class="s-hcard s-hpc" data-p="about"><img src="${NX.wallpaperURL(p.wallpaper)}" alt=""><span><b>Nebulux PC</b><small>Nebulux OS ${NX.version}</small><em>About this PC ${NX.icon("chevron", 11)}</em></span></button>
             <button class="s-hcard" data-p="network"><span class="s-hic">${NX.icon(net ? "wifi" : "wifioff", 24)}</span><span><b>${net ? "Connected" : "Not connected"}</b><small>Network & internet</small></span></button>
             <button class="s-hcard" data-p="devices"><span class="s-hic">${NX.icon("bt", 24)}</span><span><b>Bluetooth ${bt ? "on" : "off"}</b><small>Bluetooth & devices</small></span></button>
           </div>
@@ -56,12 +56,15 @@
           return `<div class="s-card"><p class="s-note">Nebulux OS keeps your accounts, passwords, files and settings on this computer (and its USB). It doesn't send anything about you to Nebulux.</p></div>
           <h3>App permissions</h3>${row("globe", "Weather where you are", "Widgets sends only the city you type to the weather service (Open-Meteo)", toggle("location", p.location !== false))}
           <h3>Activity</h3>${row("files", "Show recently opened files", "In Start, Widgets and File Explorer", toggle("showrecent", p.showrecent !== false))}${row("trash", "Clear recently opened files", rf ? rf + " files are listed" : "Nothing is listed", `<button class="btn" id="s-clearrecent" ${rf ? "" : "disabled"}>Clear</button>`)}${row("bell", "Tips", "Tips and shortcuts in Widgets", toggle("tips", p.tips !== false))}`; }
-        if (pg === "update") return `<div class="s-upd">${NX.icon("logo", 64)}<div><b>You're on Nebulux OS 3.1</b><small>New versions come as a new .iso file in the Nebulux OS repo's Releases on GitHub.</small></div></div>
-          <h3>How to update</h3><div class="s-card"><p class="s-note">1. Download the newest Nebulux-OS-X.Y.iso from Releases.<br>2. Write it to your USB with Rufus, like the first time.<br>3. Start the computer from the USB.</p><p class="s-note">Your files and settings are kept on the USB's persistent space when Rufus keeps it, but back up important files first.</p></div>`;
-        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 3.1</small></div></div>
+        if (pg === "update") return `<div class="s-upd">${NX.icon("logo", 64)}<div><b>You're on Nebulux OS ${NX.version}</b><small id="s-updnow">${NX.native ? "Checking for updates..." : "Updates come with the Nebulux OS USB."}</small></div><span class="s-updc" id="s-updc"></span></div>
+          <div id="s-updbox"></div>
+          <h3>What's new in ${NX.version}</h3><div class="s-card">${NX.whatsNew.map((w) => `<p class="s-note"><b>${NX.esc(w[0])}</b><br>${NX.esc(w[1])}</p>`).join("")}</div>
+          <h3>Starting fresh</h3><div class="s-card"><p class="s-note">Nebulux OS updates itself. You only need a new .iso from Releases (written with Rufus) for a brand-new USB, or when an update says it needs one.</p></div>`;
+        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS ${NX.version}</small></div></div>
           <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}
           ${screensHTML()}
           <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}
+          ${NX.batt && NX.batt() ? `<h3>Power & battery</h3><div class="s-card s-battc">${NX.battIcon(44)}<div><b>${NX.batt().percent}%</b><small>${NX.batt().charging ? "Charging" : NX.saverOn() ? "Battery saver is on" : "On battery"}</small></div></div>${row("leaf", "Battery saver", "Turns off see-through effects and animations so the battery lasts longer. The battery icon turns yellow.", toggle("saver", NX.saverOn()))}${row("battery", "Turn on Battery saver by itself", "At 20% battery", toggle("saverAuto", p.saverAuto !== false))}` : ""}
           <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
           <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}`;
@@ -89,7 +92,7 @@
         }
         if (pg === "time") { const d = new Date(); return `<div class="s-big-time">${NX.fmtTime(d)}<small>${d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</small></div>
           ${row("time", "24-hour clock", "Show 13:00 instead of 1:00 PM", toggle("clock24", p.clock24))}${row("globe", "Time zone", Intl.DateTimeFormat().resolvedOptions().timeZone || "Set by your browser", "")}${row("globe", "Language", navigator.language || "English", "")}`; }
-        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 3.1 · made by Nebulux</small></div></div>
+        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version ${NX.version} · made by Nebulux</small></div></div>
           <h3>Device specifications</h3><div class="s-card s-spec"><div><span>Device name</span><b>Nebulux PC</b></div><div><span>Processor threads</span><b>${navigator.hardwareConcurrency || "Unknown"}</b></div><div><span>Memory</span><b>${navigator.deviceMemory ? navigator.deviceMemory + " GB or more" : "Unknown"}</b></div><div><span>Screen</span><b>${screen.width} x ${screen.height}</b></div><div><span>Runs in</span><b>${NX.native ? "This computer, from the Nebulux OS USB" : "Your web browser"}</b></div><div id="s-kernel" hidden></div></div>
           <h3>Safe by design</h3><div class="s-card"><p class="s-note">${NX.native ? "Nebulux OS runs from its USB. It never changes this computer's own drive or the system already on it: take the USB out and restart, and the computer starts the way it always did." : "Nebulux OS runs inside a browser tab. It can't change or harm your computer, and closing the tab closes it. Your accounts and settings are saved in this browser only."}</p></div>`;
         return "";
@@ -229,6 +232,7 @@
         body.querySelectorAll("[data-btrm]").forEach((b) => (b.onclick = () => { const L = NX.data("bt-devices", []); L.splice(+b.dataset.btrm, 1); NX.setData("bt-devices", L); draw(); }));
         if (NX.native && page === "network") fillWifi();
         if (NX.native && page === "devices") fillBt();
+        if (page === "update" && NX.update) NX.update.fillSettings(q$);
         if (NX.native && page === "system") { fillScreens(); fillAudio(); fillCast(); const dt = q$("#s-detect"); if (dt) dt.onclick = () => { const b = q$("#s-dlist"); if (b) b.innerHTML = `<p class="s-note">Looking for screens...</p>`; fillScreens(true); }; }
         if (NX.native && page === "about") fillInfo();
         const os = body.querySelector("[data-openstore]"); if (os) os.onclick = () => NX.open("store");

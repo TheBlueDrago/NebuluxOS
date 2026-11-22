@@ -39,6 +39,32 @@
   NX.api("GET", "/system").then((s) => { NX.persistent = s.persistent !== false && !(N.fake && /[?&]nopersist/.test(location.search)); document.dispatchEvent(new CustomEvent("nx:system")); }).catch(() => {});
   document.documentElement.classList.add("native");
   document.addEventListener("nx:winopen", (e) => NX.api("POST", "/diag", { open: e.detail }).catch(() => {}));
+  // ---------- real apps (Flathub) ----------
+  NX.nativeInstalled = new Set(); NX.nativeRunning = new Set(); NX.nativeActive = new Set(); NX.nativeOK = false;
+  const nativeMap = () => { const m = {}; for (const [id, a] of Object.entries(NX.apps)) if (a.native && NX.nativeInstalled.has(a.native.flatpak)) m[id] = a.native.wm; return m; };
+  NX.isNative = (id) => { const a = NX.apps[id]; return !!(a && a.native && NX.nativeInstalled.has(a.native.flatpak)); };
+  const nativeState = () => NX.api("GET", "/native").then((r) => { NX.nativeOK = !!r.available; NX.nativeInstalled = new Set(r.installed || []); return r; });
+  nativeState().catch(() => {});
+  NX.installNative = (id, onTick) => new Promise((done, fail) => {
+    const a = NX.apps[id]; NX.api("POST", "/native/install", { app: a.native.flatpak }).catch(fail);
+    const t = setInterval(async () => {
+      let r; try { r = await nativeState(); } catch (e) { return; }
+      const j = (r.jobs || {})[a.native.flatpak] || {};
+      if (j.state === "done" || NX.nativeInstalled.has(a.native.flatpak)) { clearInterval(t); done(); }
+      else if (j.state === "failed") { clearInterval(t); fail(new Error(j.msg || "The app couldn't be installed.")); }
+      else if (onTick) onTick(j);
+    }, 1500);
+  });
+  NX.uninstallNative = (id) => NX.api("POST", "/native/uninstall", { app: NX.apps[id].native.flatpak }).then(nativeState);
+  NX.openNative = (id) => { const a = NX.apps[id]; if (NX.browserHide) NX.browserHide(); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar(); return NX.api("POST", "/native/open", { app: a.native.flatpak, wm: a.native.wm }).catch((e) => NX.toast(e.message)); };
+  NX.nativeToggle = (id) => { const a = NX.apps[id]; return NX.api("POST", "/native/toggle", { wm: a.native.wm }).then(() => setTimeout(nativeRunning, 300)).catch(() => {}); };
+  NX.nativeHideActive = () => { if (NX.nativeActive.size) NX.api("POST", "/native/hide", { apps: nativeMap() }).catch(() => {}); };
+  async function nativeRunning() {
+    const m = nativeMap(); if (!Object.keys(m).length) { if (NX.nativeRunning.size) { NX.nativeRunning.clear(); NX.shell && NX.shell.taskbar(); } return; }
+    try { const r = await NX.api("POST", "/native/running", { apps: m }); const s = new Set(r.running || []), a = new Set(r.active || []); const changed = [...s].join() !== [...NX.nativeRunning].join() || [...a].join() !== [...NX.nativeActive].join(); NX.nativeRunning = s; NX.nativeActive = a; if (changed && NX.shell) NX.shell.taskbar(); } catch (e) { /* next time */ }
+  }
+  setInterval(() => { if (NX.me) nativeRunning(); }, 3000);
+
   // shortcuts caught by the window manager (so they work over the web browser too) come in here
   try { const es = new EventSource("/api/events?k=" + encodeURIComponent(N.token)); es.onmessage = (e) => { let d = {}; try { d = JSON.parse(e.data); } catch (er) { return; } if (d.key) document.dispatchEvent(new CustomEvent("nx:key", { detail: d.key })); }; } catch (e) { /* no event stream */ }
   // the real web browser (on the USB system): Google, YouTube and websites open in it, with tabs and Google sign-in
@@ -101,7 +127,13 @@
   // the real battery (laptops); desktops have none, and the battery icon goes away
   NX.battery = null;
   const battery = () => NX.api("GET", "/battery").then((b) => { NX.battery = b; document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "battery" })); }).catch(() => {});
-  battery(); setInterval(battery, 60000);
+  const told = () => document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "battery" }));
+  if (N) { battery(); setInterval(battery, 30000); }
+  else if (navigator.getBattery) navigator.getBattery().then((b) => {
+    const read = () => { NX.battery = { present: true, percent: Math.round(b.level * 100), charging: b.charging }; told(); };
+    read();
+    ["levelchange", "chargingchange"].forEach((ev) => b.addEventListener(ev, read));
+  }).catch(() => {});
   // at sign-in: your volume goes to the speakers, and the Wi-Fi and Bluetooth switches show the real state
   document.addEventListener("nx:signin", async () => {
     try { const b = await NX.api("GET", "/brightness"); NX.hw.brightness = b.brightness != null; if (NX.hw.brightness) NX.api("POST", "/brightness", { brightness: NX.prefs().brightness }).catch(() => {}); } catch (e) { NX.hw.brightness = false; }

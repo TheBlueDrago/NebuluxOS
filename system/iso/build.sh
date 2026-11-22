@@ -43,6 +43,8 @@ cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" "$REPO/img" config/includes.chro
 cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" config/includes.chroot/opt/nebulux/helper/
 cp -a "$REPO/system/browser-ext/." config/includes.chroot/opt/nebulux/ext/
 echo "$VERSION" > config/includes.chroot/opt/nebulux/VERSION
+# where Nebulux OS looks for its own updates (an https link to update.json; empty turns updates off)
+echo "${NX_UPDATE_URL:-https://github.com/TheBlueDrago/NebuluxOS/releases/latest/download/update.json}" > config/includes.chroot/opt/nebulux/update-url
 # setup steps run inside the system while it's built
 cp "$REPO/system/iso/nebulux.hook.chroot" config/hooks/normal/9000-nebulux.hook.chroot
 chmod +x config/hooks/normal/9000-nebulux.hook.chroot

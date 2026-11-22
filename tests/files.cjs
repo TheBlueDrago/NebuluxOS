@@ -103,7 +103,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(/No music or videos yet/.test(await txt(".win[data-app=media]")), "Media Player opens and says where music and videos go");
   await p.evaluate(() => NX.close("media")); await wait(200);
   await p.evaluate(() => NX.open("snip")); await wait(400);
-  ok(/Windows \+ Shift \+ S/.test(await txt(".win[data-app=snip]")), "Snipping Tool opens");
+  ok(/Nebulux \+ Shift \+ S/.test(await txt(".win[data-app=snip]")), "Snipping Tool opens");
   await p.evaluate(() => NX.close("snip")); await wait(200);
 
   // ---------- 1.3: transparency, window keys, Alt + Tab, Lock, notifications, Task Manager ----------
@@ -210,7 +210,18 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => document.querySelector('.win[data-app=store] [data-get=netflix]').click());
   ok(await until(() => p.evaluate(() => NX.prefs().installed.includes("netflix")), 6000), "Get installs Netflix");
   ok(await p.evaluate(() => !!document.querySelector("#icons [data-app=netflix]")), "and it shows on the desktop");
+  ok(await p.evaluate(() => { NX.close("store"); return true; })); await wait(300); await p.evaluate(() => NX.open("store")); await wait(500);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=store] .st-rowwrap .st-arrow.r").length >= 5), "every row of apps has arrow buttons");
+  ok(await p.evaluate(() => ["steam", "minecraft", "vlc", "libreoffice", "gimp"].every((id) => NX.apps[id] && NX.apps[id].native)), "the Store has real apps too: Steam, Minecraft, VLC, LibreOffice, GIMP");
   await p.evaluate(() => NX.close("store")); await wait(200);
+
+  // Start search: a details panel with Pin to taskbar (like Windows 11)
+  await p.click("#tb-start"); await wait(300); await p.type("#start .sm-search input", "photos"); await wait(400);
+  ok(await p.evaluate(() => /Pin to taskbar|Unpin from taskbar/.test((document.querySelector("#start .sm-detail") || {}).innerText || "")), "searching shows the app's details, with Pin to taskbar");
+  const pinnedBefore = await p.evaluate(() => NX.prefs().pinned.includes("photos"));
+  await p.evaluate(() => document.querySelector("#start .sm-detail [data-da=pin]").click()); await wait(300);
+  ok(await p.evaluate((b) => NX.prefs().pinned.includes("photos") !== b && !!document.querySelector("#tb-apps [data-app=photos]") !== b, pinnedBefore), "Pin to taskbar in the search details puts it on the taskbar");
+  await p.keyboard.press("Escape"); await wait(200);
 
   // Start search finds settings and files too
   await p.click("#tb-start"); await wait(300); await p.type("#start .sm-search input", "wallpaper"); await wait(500);
@@ -218,6 +229,28 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { const i = document.querySelector("#start .sm-search input"); i.value = ""; i.dispatchEvent(new Event("input")); }); await p.type("#start .sm-search input", "party"); await wait(800);
   ok(await p.evaluate(() => [...document.querySelectorAll("#start [data-sfile]")].some((b) => /Party plans.txt/.test(b.textContent))), "and files (party: Party plans.txt)");
   await p.keyboard.press("Escape"); await wait(200);
+
+  // the battery: the bar goes down with the charge and changes color; Battery saver turns it yellow
+  const setBatt = (percent, charging) => p.evaluate((percent, charging) => { NX.battery = { present: true, percent, charging }; document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "battery" })); }, percent, charging);
+  const bstate = () => p.evaluate(() => { const s = document.querySelector("#tb-tray .nx-batt"); return s ? { cls: s.getAttribute("class"), w: +s.querySelector(".nx-bfill").getAttribute("width"), t: document.querySelector("#tb-tray .tb-batt").title } : null; });
+  await p.evaluate(() => { NX.setPref("saver", false); NX.setPref("saverAuto", true); });
+  await setBatt(90, false); const b90 = await bstate();
+  await setBatt(40, false); const b40 = await bstate();
+  ok(b90 && b40 && b40.w < b90.w && /b-ok/.test(b40.cls) && /Battery 40%/.test(b40.t), "the battery bar goes down with the charge");
+  await setBatt(40, true); ok(/b-charging/.test((await bstate()).cls), "it turns green while charging");
+  await setBatt(9, false); ok(/b-critical/.test((await bstate()).cls) === false && /b-saver/.test((await bstate()).cls), "at 20% or less Battery saver turns on by itself, and the bar turns yellow");
+  ok(await p.evaluate(() => document.documentElement.classList.contains("saver") && document.documentElement.classList.contains("noanim")), "Battery saver turns off effects and animations");
+  await p.evaluate(() => NX.setPref("saver", false)); await wait(100);
+  ok(/b-critical/.test((await bstate()).cls) && await p.evaluate(() => NX.prefs().saverAuto === false), "turning it off by hand keeps it off, and the bar is red at 10% or less");
+  await setBatt(18, false); ok(/b-low/.test((await bstate()).cls), "orange at 20% or less");
+  await setBatt(60, false); await p.click("#tb-tray"); await wait(300);
+  ok(await p.evaluate(() => !!document.querySelector("#qs [data-k=saver]") && !document.querySelector("#qs [data-k=saver]").classList.contains("on")), "quick settings has Battery saver");
+  await p.evaluate(() => document.querySelector("#qs [data-k=saver]").click()); await wait(200);
+  ok(/b-saver/.test((await bstate()).cls) && await p.evaluate(() => document.querySelector("#qs [data-k=saver]").classList.contains("on")), "turning it on turns the battery bar yellow");
+  await p.keyboard.press("Escape"); await wait(200);
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
+  ok(/Power & battery/.test(await txt(".win[data-app=settings]")) && /Battery saver is on/.test(await txt(".win[data-app=settings]")), "Settings > System shows the battery and Battery saver");
+  await p.evaluate(() => { NX.close("settings"); NX.setPref("saver", false); NX.setPref("saverAuto", true); }); await setBatt(100, false); await wait(300);
 
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);

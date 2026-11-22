@@ -343,6 +343,125 @@ module.exports = function more({ api, run, FAKE }) {
     for (const id of w) await run("xdotool", ["windowactivate", id], 4000); return { running: true, shown: true };
   };
 
+  // ---------- real apps (from Flathub, the Linux app store) ----------
+  // Installed for this person (flatpak --user), started with flatpak run, and found on screen by their window class.
+  const okApp = (s) => typeof s === "string" && /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+){2,}$/.test(s) && s.length < 120;
+  const okWm = (s) => typeof s === "string" && /^[A-Za-z0-9._-]{1,60}$/.test(s);
+  const FLATHUB = "https://dl.flathub.org/repo/flathub.flatpakrepo";
+  let jobs = {}, fakeNative = new Set(), fakeRunning = new Set();
+  const nativeList = async () => FAKE ? [...fakeNative] : (await run("flatpak", ["list", "--user", "--app", "--columns=application"], 15000)).out.split("\n").map((x) => x.trim()).filter(okApp);
+  api["GET /native"] = async () => ({ available: FAKE || fs.existsSync("/usr/bin/flatpak"), installed: await nativeList(), jobs });
+  api["POST /native/install"] = async (b) => {
+    if (!okApp(b.app)) throw new Error("That app name doesn't look right.");
+    if (jobs[b.app] && jobs[b.app].state === "installing") return jobs[b.app];
+    jobs[b.app] = { state: "installing", started: Date.now(), msg: "Getting ready..." };
+    if (FAKE) { setTimeout(() => { fakeNative.add(b.app); jobs[b.app] = { state: "done" }; }, 1500); return jobs[b.app]; }
+    if (!fs.existsSync("/usr/bin/flatpak")) { jobs[b.app] = { state: "failed", msg: "App installs aren't available on this copy of Nebulux OS." }; return jobs[b.app]; }
+    (async () => {
+      const add = await run("flatpak", ["remote-add", "--user", "--if-not-exists", "flathub", FLATHUB], 60000);
+      if (!add.ok) { jobs[b.app] = { state: "failed", msg: "Flathub couldn't be reached. Check the internet connection." }; return; }
+      jobs[b.app].msg = "Downloading. The first app also downloads shared parts, so it can take a few minutes.";
+      const p = spawn("flatpak", ["install", "--user", "-y", "--noninteractive", "flathub", b.app], { stdio: ["ignore", "pipe", "pipe"] });
+      let tail = "";
+      const take = (d) => { tail = (tail + d).slice(-2000); const m = /(\d{1,3})%/.exec(String(d)); if (m && jobs[b.app]) jobs[b.app].pct = Math.min(100, +m[1]); };
+      p.stdout.on("data", take); p.stderr.on("data", take);
+      p.on("error", () => { jobs[b.app] = { state: "failed", msg: "The installer couldn't start." }; });
+      p.on("close", (code) => { jobs[b.app] = code === 0 ? { state: "done" } : { state: "failed", msg: /space|ENOSPC/i.test(tail) ? "There isn't enough space. On a USB that doesn't save changes, apps live in the computer's memory." : "The app couldn't be installed: " + (tail.trim().split("\n").pop() || "unknown error").slice(0, 160) }; });
+    })();
+    return jobs[b.app];
+  };
+  api["POST /native/uninstall"] = async (b) => {
+    if (!okApp(b.app)) throw new Error("That app name doesn't look right.");
+    if (FAKE) { fakeNative.delete(b.app); fakeRunning.delete(b.app); return { ok: true }; }
+    await run("flatpak", ["uninstall", "--user", "-y", "--noninteractive", b.app], 180000); return { ok: true };
+  };
+  // the windows on screen with their class (one quick wmctrl call); a window id like 0x03a00004
+  const windows = async () => FAKE ? [] : (await run("wmctrl", ["-lx"], 4000)).out.split("\n").map((l) => { const m = /^(0x[0-9a-f]+)\s+-?\d+\s+(\S+)/i.exec(l); return m ? { id: m[1], cls: m[2].toLowerCase() } : null; }).filter(Boolean);
+  const mineOf = (all, wm) => { const w = String(wm || "").toLowerCase(); return w ? all.filter((x) => x.cls.split(".").includes(w)) : []; };
+  const activeId = async () => +(await run("xdotool", ["getactivewindow"], 3000)).out.trim() || 0;
+  api["POST /native/open"] = async (b) => {
+    if (!okApp(b.app) || (b.wm && !okWm(b.wm))) throw new Error("That app name doesn't look right.");
+    if (FAKE) { fakeRunning.add(b.app); return { ok: true }; }
+    const w = mineOf(await windows(), b.wm);
+    if (w.length) { for (const x of w) await run("wmctrl", ["-i", "-a", x.id], 4000); return { ok: true, shown: true }; }
+    const p = spawn("flatpak", ["run", b.app], { detached: true, stdio: "ignore" }); p.on("error", () => {}); p.unref();
+    return { ok: true, started: true };
+  };
+  // which real apps have windows open (for the taskbar), and showing or hiding them from the taskbar
+  api["POST /native/running"] = async (b) => {
+    if (FAKE) return { running: [...fakeRunning], active: [] };
+    const all = await windows(), act = await activeId(), running = [], active = [];
+    for (const [app, wm] of Object.entries(b.apps || {}).slice(0, 60)) { if (!okWm(wm)) continue; const mine = mineOf(all, wm); if (mine.length) { running.push(app); if (mine.some((x) => parseInt(x.id, 16) === act)) active.push(app); } }
+    return { running, active };
+  };
+  api["POST /native/toggle"] = async (b) => {
+    if (FAKE) return { ok: true };
+    if (!okWm(b.wm)) throw new Error("That app name doesn't look right.");
+    const w = mineOf(await windows(), b.wm); if (!w.length) return { running: false };
+    const act = await activeId();
+    if (w.some((x) => parseInt(x.id, 16) === act)) { for (const x of w) await run("xdotool", ["windowminimize", String(parseInt(x.id, 16))], 4000); await shellFocus(); return { running: true, shown: false }; }
+    for (const x of w) await run("wmctrl", ["-i", "-a", x.id], 4000); return { running: true, shown: true };
+  };
+  api["POST /native/hide"] = async (b) => {
+    if (FAKE) return { ok: true };
+    const all = await windows(), act = await activeId();
+    for (const wm of Object.values(b.apps || {}).slice(0, 60)) { if (!okWm(wm)) continue; for (const x of mineOf(all, wm)) if (parseInt(x.id, 16) === act || b.all) await run("xdotool", ["windowminimize", String(parseInt(x.id, 16))], 4000); }
+    return { ok: true };
+  };
+
+  // ---------- updates: Nebulux OS updates itself ----------
+  // An update is a small bundle of the Nebulux OS part of the system (its screens, apps, helper and browser add-on).
+  // It's downloaded over https, checked against its sha256 fingerprint from the update feed, unpacked next to the
+  // running copy, and switched to; the session starts on it, and goes back to the built-in copy if it doesn't start.
+  const UPD = path.join(HOME, ".local", "share", "nebulux-update");
+  const readTxt = (p) => { try { return fs.readFileSync(p, "utf8").trim(); } catch (e) { return ""; } };
+  const curVersion = () => readTxt(path.join(UPD, "current", "VERSION")) || readTxt("/opt/nebulux/VERSION") || "0";
+  const feedURL = () => readTxt("/opt/nebulux/update-url");
+  const ver = (v) => String(v || "0").split(".").map((n) => parseInt(n, 10) || 0);
+  const newer = (a, b) => { const x = ver(a), y = ver(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+  let fakeUpd = { current: "3.1", latest: "3.2", installed: false }, updJob = null;
+  async function readFeed() {
+    const url = feedURL(); if (!/^https:\/\/\S+$/.test(url)) return null;
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    try { const r = await fetch(url, { signal: ctl.signal, redirect: "follow" }); if (r.status === 404) return { error: "No update has been published for this computer yet." }; if (!r.ok) return { error: "The update service answered " + r.status + "." }; const j = await r.json(); return j && typeof j.version === "string" ? j : { error: "The update service sent something unexpected." }; }
+    catch (e) { return { error: "The update service couldn't be reached." }; } finally { clearTimeout(t); }
+  }
+  api["GET /update"] = async () => {
+    if (FAKE) return { configured: true, current: fakeUpd.current, latest: fakeUpd.latest, available: newer(fakeUpd.latest, fakeUpd.current), notes: ["A made-up update for tests"], job: updJob };
+    const current = curVersion(), f = await readFeed();
+    if (!f) return { configured: false, current };
+    if (f.error) return { configured: true, current, error: f.error, job: updJob };
+    return { configured: true, current, latest: f.version, available: newer(f.version, current), notes: Array.isArray(f.notes) ? f.notes.slice(0, 30).map(String) : [], size: +f.size || 0, needsIso: !!f.needsIso, job: updJob };
+  };
+  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; fakeNative.clear(); fakeRunning.clear(); return { ok: true }; };
+  api["POST /update/install"] = async () => {
+    if (updJob && updJob.state === "installing") return updJob;
+    updJob = { state: "installing", msg: "Downloading the update..." };
+    if (FAKE) { setTimeout(() => { fakeUpd.current = fakeUpd.latest; updJob = { state: "done" }; }, 1200); return updJob; }
+    (async () => {
+      try {
+        const f = await readFeed(); if (!f || f.error) throw new Error((f && f.error) || "Updates aren't set up on this copy of Nebulux OS.");
+        if (!newer(f.version, curVersion())) { updJob = { state: "done", msg: "Nebulux OS is up to date." }; return; }
+        if (!/^https:\/\/\S+$/.test(f.bundle || "") || !/^[0-9a-f]{64}$/i.test(f.sha256 || "")) throw new Error("The update's details are incomplete.");
+        const r = await fetch(f.bundle, { redirect: "follow" }); if (!r.ok) throw new Error("The update couldn't be downloaded (" + r.status + ").");
+        const buf = Buffer.from(await r.arrayBuffer()); if (buf.length > 200 * 1048576) throw new Error("The update is too big.");
+        if (require("crypto").createHash("sha256").update(buf).digest("hex") !== f.sha256.toLowerCase()) throw new Error("The update didn't match its fingerprint, so it wasn't installed.");
+        updJob.msg = "Installing...";
+        const dir = path.join(UPD, "v" + String(f.version).replace(/[^0-9.]/g, "")), tmp = dir + ".part", file = path.join(UPD, "bundle.tar.gz");
+        fs.mkdirSync(UPD, { recursive: true }); fs.rmSync(tmp, { recursive: true, force: true }); fs.mkdirSync(tmp, { recursive: true }); fs.writeFileSync(file, buf);
+        const x = await run("tar", ["-xzf", file, "-C", tmp, "--no-same-owner"], 60000); fs.rmSync(file, { force: true });
+        if (!x.ok) throw new Error("The update couldn't be unpacked.");
+        if (readTxt(path.join(tmp, "VERSION")) !== String(f.version) || !fs.existsSync(path.join(tmp, "www", "index.html")) || !fs.existsSync(path.join(tmp, "helper", "nebulux-helper.js"))) throw new Error("The update is incomplete, so it wasn't installed.");
+        fs.rmSync(dir, { recursive: true, force: true }); fs.renameSync(tmp, dir);
+        const link = path.join(UPD, "current"), tl = link + ".new"; fs.rmSync(tl, { force: true }); fs.symlinkSync(dir, tl); fs.renameSync(tl, link);
+        updJob = { state: "done", version: f.version, restart: true };
+        // start again on the new version: the session restarts the helper and the screen
+        setTimeout(() => { run("pkill", ["-f", "class=NebuluxShell"]); setTimeout(() => process.exit(0), 600); }, 1500);
+      } catch (e) { updJob = { state: "failed", msg: e.message }; }
+    })();
+    return updJob;
+  };
+
   // ---------- screenshots ----------
   api["POST /screenshot"] = async () => {
     const d = new Date(), pad = (n) => String(n).padStart(2, "0");
