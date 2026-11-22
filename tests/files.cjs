@@ -329,6 +329,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => NX.desks.list().length === 1) && await vis("notepad") && await vis("calculator"), "Ctrl + Nebulux + F4 closes a desktop; its windows move over");
   await p.evaluate(() => NX.closeAll()); await wait(300);
 
+  // 3.2: Widgets show Sticky Notes and the battery
+  await p.evaluate(() => { NX.setData("sticky-notes", [{ id: "w1", t: "Widget note", c: "mint", at: Date.now() }]); NX.battery = { present: true, percent: 64, charging: false }; NX.widgets(); }); await wait(700);
+  ok(await p.evaluate(() => /Widget note/.test(document.querySelector("#widgets").innerText) && /64%/.test(document.querySelector("#widgets .wg-batt").innerText)), "Widgets show your Sticky Notes and the battery");
+  await p.evaluate(() => document.querySelector("#widgets [data-note=w1]").click()); await wait(500);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=notes]") && document.querySelector("#widgets").hidden), "a note in Widgets opens Sticky Notes");
+  await p.evaluate(() => { NX.close("notes"); NX.battery = { present: true, percent: 100, charging: false }; }); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

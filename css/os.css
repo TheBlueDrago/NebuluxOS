@@ -712,3 +712,11 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 #deskflash{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:4500;padding:16px 26px;border-radius:14px;background:var(--glass);backdrop-filter:blur(24px);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:16px;pointer-events:none;transition:opacity .25s}
 #deskflash[hidden]{display:none}#deskflash.out{opacity:0}
 .df-dots{display:flex;gap:6px}.df-dots span{width:8px;height:8px;border-radius:50%;background:var(--sub);opacity:.5}.df-dots span.on{background:var(--accent);opacity:1;width:22px;border-radius:4px}
+
+/* Widgets: Sticky Notes and the battery */
+.wg-notes{display:flex;flex-direction:column;gap:6px}
+.wg-note1{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:8px;font-size:12.5px;line-height:1.45;color:#1d1a10;white-space:pre-wrap;max-height:5.6em;overflow:hidden}
+.wg-note1.c-sun{background:#fff3a3}.wg-note1.c-rose{background:#ffc9de}.wg-note1.c-mint{background:#c3f5d6}.wg-note1.c-sky{background:#c4e3ff}.wg-note1.c-violet{background:#dcd0ff}.wg-note1.c-slate{background:#dfe3ea}
+.wg-note1:hover{filter:brightness(.96)}
+.wg-nbtn{align-self:flex-start;margin-top:4px}
+.wg-bnow{display:flex;align-items:center;gap:12px;margin-bottom:10px}.wg-bnow div{display:flex;flex-direction:column}.wg-bnow b{font-size:22px;font-weight:600}.wg-bnow span{color:var(--sub);font-size:12px}
