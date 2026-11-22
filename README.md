@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 2.1**.
-3. Under **Assets**, click **`Nebulux-OS-2.1.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 3.0**.
+3. Under **Assets**, click **`Nebulux-OS-3.0.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-2.1.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-3.0.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-2.1.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-3.0.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -82,7 +82,7 @@ QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
 Then start Nebulux OS like this (all on one line):
 
 ```powershell
-& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-2.1.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-3.0.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
 ```
 
 ### If it doesn't start
@@ -153,6 +153,18 @@ Then start Nebulux OS like this (all on one line):
 - **Start-up:** the Nebulux OS logo with a spinner, then straight to the lock screen.
 - **A real web browser:** Google, YouTube, Nebulux AI, the Arcade and web searches open in a real browser window, with tabs, Google sign-in, Gmail and YouTube that fully work. It sits above the desktop and stops just above the taskbar. Click Google on the taskbar to hide or show it; Start and the other apps tuck it away by themselves.
 - **YouTube** is on the taskbar and the desktop.
+- **The Nebulux Store has about 70 well-known apps**, as their web versions (Windows apps can't run here, but these have full web apps):
+  - Watch: Netflix, Disney+, Prime Video, Hulu, Max, Twitch, Crunchyroll and Tubi.
+  - Listen: Spotify, YouTube Music, SoundCloud and Apple Music.
+  - Chat and share: WhatsApp, Instagram, TikTok, Discord, Facebook, Messenger, X, Reddit, Pinterest, Snapchat, Telegram and LinkedIn.
+  - Work and school: Microsoft 365, Word, Excel, PowerPoint, Outlook, OneDrive, Teams, Gmail, Google Docs, Sheets, Slides, Drive, Calendar and Meet, plus Zoom, Slack, Notion and Trello.
+  - AI: ChatGPT, Microsoft Copilot, Gemini and Claude.
+  - Play: Xbox Cloud Gaming, GeForce NOW, Chess.com, Minecraft Classic, Poki and Wordle.
+  - Create, shop, learn and tools: Canva, Figma, Photopea, CapCut, Amazon, eBay, Walmart, Etsy, Duolingo, Khan Academy, Wikipedia, Google Classroom, Maps, Translate, Photos and Speedtest.
+
+  **Get** puts an app in Start and on the desktop, and on the USB system it opens in its own app window. The tiles use each app's colors and initials.
+- **Settings like Windows 11:** Home (your account, the PC, Wi-Fi and Bluetooth at a glance, recommended settings), System (with About inside), Bluetooth & devices, Network & internet, Personalization, Apps, Accounts, Time & language, Accessibility, Privacy & security and Nebulux Update.
+- **Start search** finds apps, settings and your files.
 - **Quick settings like Windows 11:** the arrows on Wi-Fi and Bluetooth open their lists right in the panel (connect to a network with its password, see your devices). **Cast** shows Nebulux OS on a TV.
 - **Mouse:** a calmer pointer speed by default, tap-to-click on touchpads, and Settings > Bluetooth & devices > Mouse pointer speed.
 - **Desktop icons** open with a single click.

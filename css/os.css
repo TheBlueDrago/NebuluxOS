@@ -80,7 +80,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus
 .dicon{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border-radius:6px;border:1px solid transparent;color:#fff;font-size:12px;text-shadow:0 1px 3px #000,0 0 8px #0008;text-align:center;line-height:1.25}
 .dicon:hover{background:#ffffff1f}.dicon.sel{background:#ffffff33;border-color:#ffffff55}
 .dicon .ico{filter:drop-shadow(0 4px 10px #0007)}
-#windows{position:absolute;left:0;top:0;right:0;bottom:var(--tb)}
+#windows{position:absolute;left:0;top:0;right:0;bottom:var(--tb);pointer-events:none}
+#windows>.win{pointer-events:auto} /* the layer lets clicks through to the desktop icons; only the windows themselves take clicks */
 #snaphint{position:absolute;left:8px;top:8px;bottom:calc(var(--tb) + 8px);right:8px;border-radius:10px;background:color-mix(in srgb,var(--accent) 22%,transparent);border:2px solid color-mix(in srgb,var(--accent) 60%,transparent);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:.15s;z-index:9}
 #snaphint.show{opacity:1}#snaphint.left{right:50%}#snaphint.right{left:50%}
 

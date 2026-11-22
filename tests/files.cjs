@@ -25,6 +25,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await require("./setup.cjs")(p, "Ada", "nebula1");
   ok(await p.evaluate(() => !!document.querySelector("#tb-apps [data-app=files]") && !!document.querySelector("#icons [data-app=files]")), "File Explorer is on the taskbar and the desktop");
 
+  // a real mouse click on a desktop icon opens the app (the windows layer used to swallow these clicks)
+  { const r = await p.evaluate(() => { const e = document.querySelector("#icons [data-app=settings]").getBoundingClientRect(); return { x: e.x + e.width / 2, y: e.y + e.height / 2 }; });
+    await p.mouse.click(r.x, r.y); await wait(600);
+    ok(await p.evaluate(() => !!NX.wins.get("settings")), "a mouse click on a desktop icon opens the app");
+    await p.evaluate(() => NX.close("settings")); await wait(250); }
+
   // the Windows key opens Start when it's let go
   await p.keyboard.down("Meta"); await wait(50); await p.keyboard.up("Meta"); await wait(300);
   ok(await p.evaluate(() => !document.querySelector("#start").hidden), "the Windows key opens Start");
