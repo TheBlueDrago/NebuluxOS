@@ -192,6 +192,15 @@ module.exports = function more({ api, run, FAKE }) {
     return { ok: true };
   };
 
+  // ---------- does this USB keep changes (a persistent partition made by Rufus)? ----------
+  api["GET /system"] = async () => {
+    if (FAKE) return { persistent: process.env.NX_FAKE_PERSIST !== "0" };
+    let persistent = false;
+    try { persistent = fs.readdirSync("/run/live/persistence").length > 0; } catch (e) { persistent = false; }
+    if (!persistent) { const m = await run("findmnt", ["-n", "-o", "TARGET", "-t", "ext4,ext3,ext2,btrfs"], 4000); persistent = /\/run\/live\/persistence/.test(m.out); }
+    return { persistent };
+  };
+
   // ---------- what changed: screens plugged in or out, drives plugged in or out ----------
   api["GET /changes"] = async () => {
     if (FAKE) return { sig: (fakeDisp.tv ? "tv" : "") + (fakeDrive.plugged ? "usb" : "") };

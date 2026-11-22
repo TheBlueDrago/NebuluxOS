@@ -21,7 +21,7 @@ const TOKEN = crypto.randomBytes(24).toString("hex");
 // a second key, in a file only this person can read, for the window manager's shortcut script (nebulux-key)
 const LOCALKEY = crypto.randomBytes(24).toString("hex");
 if (!FAKE) { try { fs.writeFileSync(path.join(os.homedir(), ".nebulux-key"), LOCALKEY, { mode: 0o600 }); fs.chmodSync(path.join(os.homedir(), ".nebulux-key"), 0o600); } catch (e) { /* no home folder */ } }
-const listeners = new Set();
+const listeners = new Set(); let pageMarked = false;
 const pushEvent = (obj) => { const line = "data: " + JSON.stringify(obj) + "\n\n"; for (const r of listeners) { try { r.write(line); } catch (e) { listeners.delete(r); } } };
 const TYPES = { ".webp": "image/webp", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".json": "application/json", ".woff2": "font/woff2" };
 
@@ -41,6 +41,14 @@ const okMAC = (s) => typeof s === "string" && /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i.
 const pct = (n) => Math.max(0, Math.min(100, Math.round(+n || 0)));
 const cleanErr = (s) => String(s || "").replace(/^Error:\s*/i, "").split("\n").filter(Boolean)[0] || "Something went wrong.";
 
+// the Wi-Fi or Bluetooth chip this computer has, by name (lspci and lsusb), or "" when there is none
+async function chip(kind) {
+  const re = kind === "wifi" ? /(network controller|wireless|wi-?fi|802\.11|wlan)/i : /bluetooth/i;
+  const pci = await run("lspci", [], 5000), usb = await run("lsusb", [], 5000);
+  const line = [...pci.out.split("\n"), ...usb.out.split("\n")].find((l) => re.test(l) && !(kind === "wifi" && /ethernet/i.test(l)));
+  return line ? line.replace(/^[0-9a-f:.]+\s+|^Bus \d+ Device \d+: ID [0-9a-f:]+\s+/i, "").replace(/^[^:]*controller:\s*/i, "").replace(/\s*\(rev [^)]*\)/, "").trim().slice(0, 80) : "";
+}
+
 // ---------- made-up devices for tests ----------
 const fakeStart = () => ({ wifiOn: true, conn: "Home Wi-Fi", nets: [{ ssid: "Home Wi-Fi", signal: 82, secure: true }, { ssid: "Cafe Guest", signal: 55, secure: false }, { ssid: "Neighbor 5G", signal: 31, secure: true }],
   btOn: true, bt: [{ mac: "11:22:33:44:55:66", name: "Nebulux Earbuds", paired: false, connected: false }, { mac: "AA:BB:CC:DD:EE:01", name: "Wireless Mouse", paired: true, connected: true }], vol: 60, bright: 80, power: null });
@@ -56,10 +64,15 @@ const api = {
     if (FAKE) return { on: fake.wifiOn, device: true, connected: fake.wifiOn ? fake.conn : null, networks: fake.wifiOn ? fake.nets.map((n) => Object.assign({ active: n.ssid === fake.conn }, n)) : [] };
     const radio = await run("nmcli", ["-t", "radio", "wifi"]);
     if (!radio.ok) return { on: false, device: false, connected: null, networks: [], error: "Wi-Fi control isn't available on this computer." };
+    const hw = (await run("nmcli", ["-t", "-f", "WIFI-HW", "general"])).out.trim();
     const on = radio.out.trim() === "enabled";
     const dev = await run("nmcli", ["-t", "-f", "TYPE", "device"]);
     const hasWifi = dev.out.split("\n").some((l) => l.trim() === "wifi");
-    if (!hasWifi) return { on, device: false, connected: null, networks: [] };
+    if (!hasWifi) {
+      const c = await chip("wifi");
+      return { on, device: false, connected: null, networks: [], error: c ? "This computer's Wi-Fi chip (" + c + ") has no driver in Nebulux OS yet. A network cable or a USB Wi-Fi adapter works." : "This computer has no Wi-Fi chip that Nebulux OS can see (virtual computers like QEMU have none). A network cable works." };
+    }
+    if (/disabled|missing/i.test(hw) && !on) return { on, device: true, connected: null, networks: [], error: "Wi-Fi is switched off on the computer itself. Press its Wi-Fi or airplane key (or slide its Wi-Fi switch), then turn Wi-Fi on here." };
     if (!on) return { on, device: true, connected: null, networks: [] };
     const list = await run("nmcli", ["-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "auto"], 20000);
     const seen = new Map();
@@ -74,6 +87,7 @@ const api = {
   },
   async "POST /wifi/radio"(b) {
     const on = !!b.on; if (FAKE) { fake.wifiOn = on; return { ok: true }; }
+    if (on) await run("rfkill", ["unblock", "wifi"]);
     const r = await run("nmcli", ["radio", "wifi", on ? "on" : "off"]); if (!r.ok) throw new Error(cleanErr(r.err)); return { ok: true };
   },
   async "POST /wifi/connect"(b) {
@@ -100,7 +114,7 @@ const api = {
   async "GET /bt"() {
     if (FAKE) return { available: true, on: fake.btOn, devices: fake.btOn ? fake.bt.filter((d) => d.paired) : [] };
     const show = await run("bluetoothctl", ["show"], 6000);
-    if (!show.ok || /No default controller/i.test(show.out + show.err)) return { available: false, on: false, devices: [] };
+    if (!show.ok || /No default controller/i.test(show.out + show.err)) { const c = await chip("bt"); return { available: false, on: false, devices: [], chip: c, error: c ? "This computer's Bluetooth chip (" + c + ") isn't working in Nebulux OS yet." : "This computer has no Bluetooth chip that Nebulux OS can see (virtual computers like QEMU have none)." }; }
     const on = /Powered:\s*yes/i.test(show.out);
     return { available: true, on, devices: on ? await btList(true) : [] };
   },
@@ -111,7 +125,8 @@ const api = {
   },
   async "POST /bt/scan"() {
     if (FAKE) return { devices: fake.bt };
-    await run("bluetoothctl", ["--timeout", "8", "scan", "on"], 12000);
+    await run("rfkill", ["unblock", "bluetooth"]); await run("bluetoothctl", ["pairable", "on"], 5000);
+    await run("bluetoothctl", ["--timeout", "10", "scan", "on"], 14000);
     return { devices: await btList(false) };
   },
   async "POST /bt/pair"(b) {
@@ -164,12 +179,15 @@ const api = {
     return { present: false };
   },
   async "POST /diag"(b) {
+    if (b.stage) { if (!FAKE) fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT " + String(b.stage).replace(/[^a-z-]/g, "").slice(0, 20) + " at " + os.uptime().toFixed(1) + "s\n", () => {}); return { ok: true }; }
     const line = "NEBULUX-DIAG " + (b.open ? "open=" + String(b.open).replace(/[^a-z0-9-]/gi, "").slice(0, 20) : ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ")) + "\n";
     if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
     if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);
       const lines = tree.out.split("\n").filter((l) => /0x[0-9a-f]+/.test(l)).slice(0, 40).map((l) => "NEBULUX-X " + l.trim()).join("\n");
       fs.appendFile("/dev/ttyS0", lines + "\nNEBULUX-X mouse " + mouse.out.replace(/\n/g, " ") + " active=" + act.out.trim() + "\n", () => {});
+      // what Wi-Fi and Bluetooth say on this computer
+      try { const w = await api["GET /wifi"](), bt = await api["GET /bt"](); fs.appendFile("/dev/ttyS0", "NEBULUX-HW wifi: " + (w.error || (w.device ? (w.on ? "on, " + w.networks.length + " networks" : "off") : "no device")) + "\nNEBULUX-HW bluetooth: " + (bt.error || (bt.available ? (bt.on ? "on" : "off") : "none")) + "\n", () => {}); } catch (e) { /* skip */ }
       // how long start-up took, and its slowest parts (to make it faster)
       const t = await run("systemd-analyze", ["time"], 8000), bl = await run("systemd-analyze", ["blame", "--no-pager"], 8000);
       fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT " + t.out.replace(/\n/g, " ") + "\n" + bl.out.split("\n").slice(0, 15).map((l) => "NEBULUX-BOOT " + l.trim()).join("\n") + "\nNEBULUX-BOOT page-ready-after " + Math.round(os.uptime()) + "s\n", () => {});
@@ -251,6 +269,7 @@ const server = http.createServer((req, res) => {
   fs.readFile(file, (err, data) => {
     if (err) return send(res, 404, "Not found", "text/plain");
     const ext = path.extname(file).toLowerCase();
+    if (rel === "/index.html" && !FAKE && !pageMarked) { pageMarked = true; fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT page-requested at " + os.uptime().toFixed(1) + "s\n", () => {}); }
     if (rel === "/index.html") data = Buffer.from(String(data).replace("<head>", `<head><script>window.NX_NATIVE=${JSON.stringify({ token: TOKEN, fake: FAKE })};</script>`));
     send(res, 200, data, TYPES[ext] || "application/octet-stream", { "Cache-Control": "no-cache" });
   });

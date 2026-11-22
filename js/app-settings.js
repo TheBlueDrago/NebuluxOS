@@ -42,7 +42,7 @@
           const net = NX.online(), bt = p.bt && !p.airplane;
           return `<div class="s-homegrid">
             <button class="s-hcard s-hme" data-p="accounts"><span class="av big" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span><b>${NX.esc(me.name)}</b><small>Local account</small><em>Manage your account ${NX.icon("chevron", 11)}</em></span></button>
-            <button class="s-hcard s-hpc" data-p="about"><img src="${NX.wallpaperURL(p.wallpaper)}" alt=""><span><b>Nebulux PC</b><small>Nebulux OS 3.0</small><em>About this PC ${NX.icon("chevron", 11)}</em></span></button>
+            <button class="s-hcard s-hpc" data-p="about"><img src="${NX.wallpaperURL(p.wallpaper)}" alt=""><span><b>Nebulux PC</b><small>Nebulux OS 3.1</small><em>About this PC ${NX.icon("chevron", 11)}</em></span></button>
             <button class="s-hcard" data-p="network"><span class="s-hic">${NX.icon(net ? "wifi" : "wifioff", 24)}</span><span><b>${net ? "Connected" : "Not connected"}</b><small>Network & internet</small></span></button>
             <button class="s-hcard" data-p="devices"><span class="s-hic">${NX.icon("bt", 24)}</span><span><b>Bluetooth ${bt ? "on" : "off"}</b><small>Bluetooth & devices</small></span></button>
           </div>
@@ -56,9 +56,9 @@
           return `<div class="s-card"><p class="s-note">Nebulux OS keeps your accounts, passwords, files and settings on this computer (and its USB). It doesn't send anything about you to Nebulux.</p></div>
           <h3>App permissions</h3>${row("globe", "Weather where you are", "Widgets sends only the city you type to the weather service (Open-Meteo)", toggle("location", p.location !== false))}
           <h3>Activity</h3>${row("files", "Show recently opened files", "In Start, Widgets and File Explorer", toggle("showrecent", p.showrecent !== false))}${row("trash", "Clear recently opened files", rf ? rf + " files are listed" : "Nothing is listed", `<button class="btn" id="s-clearrecent" ${rf ? "" : "disabled"}>Clear</button>`)}${row("bell", "Tips", "Tips and shortcuts in Widgets", toggle("tips", p.tips !== false))}`; }
-        if (pg === "update") return `<div class="s-upd">${NX.icon("logo", 64)}<div><b>You're on Nebulux OS 3.0</b><small>New versions come as a new .iso file in the Nebulux OS repo's Releases on GitHub.</small></div></div>
+        if (pg === "update") return `<div class="s-upd">${NX.icon("logo", 64)}<div><b>You're on Nebulux OS 3.1</b><small>New versions come as a new .iso file in the Nebulux OS repo's Releases on GitHub.</small></div></div>
           <h3>How to update</h3><div class="s-card"><p class="s-note">1. Download the newest Nebulux-OS-X.Y.iso from Releases.<br>2. Write it to your USB with Rufus, like the first time.<br>3. Start the computer from the USB.</p><p class="s-note">Your files and settings are kept on the USB's persistent space when Rufus keeps it, but back up important files first.</p></div>`;
-        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 3.0</small></div></div>
+        if (pg === "system") return `<div class="s-hero"><img src="${NX.wallpaperURL(p.wallpaper, 320, 180)}" alt=""><div><b>Nebulux PC</b><small>Nebulux OS 3.1</small></div></div>
           <h3>Display</h3>${row("sun", "Brightness", "Make the screen brighter or dimmer", slider("brightness", p.brightness, 30, 100))}${row("moon", "Night light", "Warmer colors to help you sleep", toggle("night", p.night))}
           ${screensHTML()}
           <h3>Sound</h3>${row("sound", "Volume", NX.native ? "How loud this computer is" : "How loud the OS sounds are", slider("volume", p.volume, 0, 100))}${NX.native ? `<div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("volume", 20)}<b>Play sound on</b></span></div><div id="s-alist"><p class="s-note">Checking...</p></div></div>` : ""}
@@ -89,12 +89,12 @@
         }
         if (pg === "time") { const d = new Date(); return `<div class="s-big-time">${NX.fmtTime(d)}<small>${d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</small></div>
           ${row("time", "24-hour clock", "Show 13:00 instead of 1:00 PM", toggle("clock24", p.clock24))}${row("globe", "Time zone", Intl.DateTimeFormat().resolvedOptions().timeZone || "Set by your browser", "")}${row("globe", "Language", navigator.language || "English", "")}`; }
-        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 3.0 · made by Nebulux</small></div></div>
+        if (pg === "about") return `<div class="s-about">${NX.icon("logo", 64)}<div><b>Nebulux OS</b><small>Version 3.1 · made by Nebulux</small></div></div>
           <h3>Device specifications</h3><div class="s-card s-spec"><div><span>Device name</span><b>Nebulux PC</b></div><div><span>Processor threads</span><b>${navigator.hardwareConcurrency || "Unknown"}</b></div><div><span>Memory</span><b>${navigator.deviceMemory ? navigator.deviceMemory + " GB or more" : "Unknown"}</b></div><div><span>Screen</span><b>${screen.width} x ${screen.height}</b></div><div><span>Runs in</span><b>${NX.native ? "This computer, from the Nebulux OS USB" : "Your web browser"}</b></div><div id="s-kernel" hidden></div></div>
           <h3>Safe by design</h3><div class="s-card"><p class="s-note">${NX.native ? "Nebulux OS runs from its USB. It never changes this computer's own drive or the system already on it: take the USB out and restart, and the computer starts the way it always did." : "Nebulux OS runs inside a browser tab. It can't change or harm your computer, and closing the tab closes it. Your accounts and settings are saved in this browser only."}</p></div>`;
         return "";
       }
-      const devicesMouse = (p) => `<h3>Mouse</h3>${row("mouse", "Mouse pointer speed", NX.native ? "How fast the pointer moves when you move the mouse or touchpad" : "On the real Nebulux OS this sets how fast the pointer moves", slider("mouse", p.mouse, 0, 10))}`;
+      const devicesMouse = (p) => `<h3>Mouse</h3>${row("mouse", "Mouse pointer speed", NX.native ? "How fast the pointer moves when you move the mouse or touchpad" : "On the real Nebulux OS this sets how fast the pointer moves", `<span class="s-slab">Slower</span>${slider("mouse", p.mouse, 0, 10)}<span class="s-slab">Faster</span>`)}`;
       // ---------- screens: a TV or monitor on HDMI, and wireless displays ----------
       function screensHTML() {
         if (!NX.native) return `<h3>Screens and TV</h3><div class="s-card"><p class="s-note">On the real Nebulux OS (started from the USB), plug a TV or monitor into the computer's HDMI port to show Nebulux OS on it, or cast to a wireless TV.</p></div>`;
@@ -147,7 +147,7 @@
         let w; try { w = await NX.api("GET", "/wifi"); } catch (e) { const b0 = q$("#s-wlist"); if (b0) b0.innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; return; }
         const b = q$("#s-wlist"); if (!b || wifiBusy) return;
         if (!w.device) { b.innerHTML = `<p class="s-note">${NX.esc(w.error || "This computer has no Wi-Fi that Nebulux OS can use. A network cable works too.")}</p>`; return; }
-        if (!w.on) { b.innerHTML = `<p class="s-note">Wi-Fi is off. Turn it on to see networks near you.</p>`; return; }
+        if (!w.on) { b.innerHTML = `<p class="s-note">${NX.esc(w.error || "Wi-Fi is off. Turn it on to see networks near you.")}</p>`; return; }
         nets = w.networks;
         b.innerHTML = nets.length ? nets.map((n, i) => `<div class="s-net ${n.active ? "on" : ""}"><span class="s-sig">${NX.icon("wifi", 20)}</span><span class="s-nn"><b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"} · signal ${n.signal}%</small></span><button class="btn ${n.active ? "" : "primary"}" data-wc="${i}">${n.active ? "Disconnect" : "Connect"}</button></div>`).join("") : `<p class="s-note">No networks found yet. Press Refresh in a moment.</p>`;
         b.querySelectorAll("[data-wc]").forEach((btn) => (btn.onclick = () => {
@@ -174,7 +174,7 @@
         if (!q$("#s-blist")) return;
         let s; try { s = await NX.api("GET", "/bt"); } catch (e) { const b0 = q$("#s-blist"); if (b0) b0.innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; return; }
         const b = q$("#s-blist"); if (!b) return; const scan = q$("#s-bscan");
-        if (!s.available) { b.innerHTML = `<p class="s-note">This computer has no Bluetooth that Nebulux OS can use.</p>`; if (scan) scan.hidden = true; return; }
+        if (!s.available) { b.innerHTML = `<p class="s-note">${NX.esc(s.error || "This computer has no Bluetooth that Nebulux OS can use.")}</p>`; if (scan) scan.hidden = true; return; }
         if (!s.on) { b.innerHTML = `<p class="s-note">Bluetooth is off. Turn it on to connect headphones, mice and more.</p>`; return; }
         const mine = s.devices, near = (found || []).filter((d) => !d.paired);
         const dev = (d, btn) => `<div class="s-net"><span class="s-sig">${NX.icon("bt", 20)}</span><span class="s-nn"><b>${NX.esc(d.name)}</b><small>${d.paired ? (d.connected ? "Connected" : "Paired") : "Ready to pair"}</small></span>${btn}</div>`;

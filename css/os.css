@@ -597,3 +597,6 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 #tb-widgets:focus:not(:focus-visible),#tb-widgets:focus{outline:none}
 
 .sm-sub{margin:12px 0 4px;font-size:12px;color:var(--sub);font-weight:600}
+
+.s-slab{font-size:12px;color:var(--sub);margin:0 6px}
+.ob-guest{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin-top:8px}.ob-guest .btn{min-height:40px;min-width:240px}

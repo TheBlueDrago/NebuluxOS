@@ -57,6 +57,9 @@ ntfs-3g
 exfatprogs
 dosfstools
 xdotool
+bluez-tools
+pciutils
+usbutils
 curl
 openbox
 xinput

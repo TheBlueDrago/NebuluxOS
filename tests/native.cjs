@@ -190,6 +190,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.close("notepad")); await wait(200);
   ok(await p.evaluate(() => NX.browserOK === false && NX.webFrames === true), "with no real browser (the test helper), websites open in OS windows instead");
 
+  // ---------- 3.1: a USB that doesn't save changes offers a guest start ----------
+  await p.evaluate(() => localStorage.clear()); await p.goto(OS + "?fast&nopersist", { waitUntil: "load" }); await wait(1200);
+  ok(await until(() => p.evaluate(() => /doesn't save changes/.test((document.querySelector("#oobe h1") || {}).textContent || ""))), "a USB that doesn't save changes offers to skip setup");
+  await p.click("#oobe .ob-guestgo");
+  ok(await until(() => p.evaluate(() => !document.querySelector("#desktop").hidden && NX.me && NX.me.guest)), "Start without setting up goes straight to the desktop as Guest");
+  await p.evaluate(() => NX.shell.signOut()); await wait(1200);
+  ok(await p.evaluate(() => !!document.querySelector("#lk-panel .lk-guest") && !document.querySelector("#lk-panel input[type=password]")), "Guest signs in without a password");
+  await p.evaluate(() => document.querySelector("#lk-panel .lk-guest").click()); await wait(900);
+  ok(await p.evaluate(() => !document.querySelector("#desktop").hidden), "and one press signs Guest in");
+
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

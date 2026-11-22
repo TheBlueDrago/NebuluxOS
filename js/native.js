@@ -33,8 +33,10 @@
     document.dispatchEvent(new CustomEvent("nx:framefocus"));
   }, 0));
 
-  NX.browserOK = false; NX.browserRunning = false;
+  NX.browserOK = false; NX.browserRunning = false; NX.persistent = true;
   if (!N) return;
+  addEventListener("load", () => NX.api("POST", "/diag", { stage: "page-ready" }).catch(() => {}));
+  NX.api("GET", "/system").then((s) => { NX.persistent = s.persistent !== false && !(N.fake && /[?&]nopersist/.test(location.search)); document.dispatchEvent(new CustomEvent("nx:system")); }).catch(() => {});
   document.documentElement.classList.add("native");
   document.addEventListener("nx:winopen", (e) => NX.api("POST", "/diag", { open: e.detail }).catch(() => {}));
   // shortcuts caught by the window manager (so they work over the web browser too) come in here

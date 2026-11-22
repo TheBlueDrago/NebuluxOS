@@ -74,11 +74,16 @@
       };
     } else {
       const u = chosen;
+      if (u.guest) {
+        box.innerHTML = `<div class="lk-av" style="background:${u.color}">${NX.esc(u.name[0].toUpperCase())}</div><h2>${NX.esc(u.name)}</h2><button class="btn primary wide lk-guest">Sign in</button>`;
+        $(".lk-guest", box).onclick = async () => enter(await NX.checkPassword(u.id, ""));
+        setTimeout(() => { const g = $(".lk-guest", box); if (g) g.focus(); }, 60);
+      } else
       box.innerHTML = `<div class="lk-av" style="background:${u.color}">${NX.esc(u.name[0].toUpperCase())}</div><h2>${NX.esc(u.name)}</h2>
         <form class="lk-form pw"><input name="p" type="password" maxlength="64" placeholder="Password" aria-label="Password" autocomplete="current-password"><button class="lk-go" type="submit" aria-label="Sign in">${NX.icon("arrow", 18)}</button></form><p class="lk-err" role="alert"></p>
         <button class="lk-link" data-a="forgot">I forgot my password</button>`;
       const f = $(".lk-form", box), er = $(".lk-err", box);
-      f.onsubmit = async (e) => {
+      if (f) f.onsubmit = async (e) => {
         e.preventDefault(); const p = f.p.value; if (!p) { er.textContent = "Type your password."; return; }
         const btn = $("button", f); btn.disabled = true; er.textContent = ""; box.classList.add("busy");
         try { const me = await NX.checkPassword(u.id, p); enter(me); } catch (err) { er.textContent = err.message; f.p.value = ""; btn.disabled = false; box.classList.remove("busy"); f.p.focus(); box.classList.add("shake"); setTimeout(() => box.classList.remove("shake"), 400); }
@@ -278,7 +283,7 @@
     if (kind === "wifi") {
       if (!on) return note("Wi-Fi is off.");
       NX.api("GET", "/wifi").then((w) => {
-        if (!w.device) return note("This computer has no Wi-Fi that Nebulux OS can use. A network cable works too.");
+        if (!w.device) return note(w.error || "This computer has no Wi-Fi that Nebulux OS can use. A network cable works too.");
         if (!w.networks.length) return note("No networks found yet.");
         list.innerHTML = w.networks.slice(0, 12).map((n, i) => `<div class="qs-item ${n.active ? "on" : ""}" data-i="${i}"><button class="qs-row" data-row="${i}">${NX.icon("wifi", 18)}<span><b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"}</small></span></button></div>`).join("");
         list.querySelectorAll("[data-row]").forEach((r) => (r.onclick = (e) => {
@@ -295,7 +300,7 @@
     if (kind === "bt") {
       if (!on) return note("Bluetooth is off.");
       NX.api("GET", "/bt").then((b) => {
-        if (!b.available) return note("This computer has no Bluetooth that Nebulux OS can use.");
+        if (!b.available) return note(b.error || "This computer has no Bluetooth that Nebulux OS can use.");
         list.innerHTML = (b.devices.length ? b.devices.map((d) => `<div class="qs-item"><div class="qs-row">${NX.icon("bt", 18)}<span><b>${NX.esc(d.name)}</b><small>${d.connected ? "Connected" : "Paired"}</small></span></div></div>`).join("") : `<p class="qs-note">No devices yet.</p>`) + `<button class="btn sm" data-add="1">Add a device</button>`;
         list.querySelector("[data-add]").onclick = () => { closeFlyouts(); NX.open("settings", { page: "devices" }); setTimeout(() => { const s = document.querySelector("#s-bscan"); if (s && !s.disabled) s.click(); }, 700); };
       }).catch((e) => note(e.message));

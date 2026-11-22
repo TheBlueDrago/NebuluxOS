@@ -1,6 +1,9 @@
 #!/bin/bash
 # The Nebulux OS session: the system helper, then Nebulux OS full screen in the built-in browser engine.
 # If the browser engine ever closes, or the OS page doesn't load within 45 seconds, it starts again by itself.
+# start-up timing for the boot test (the serial port is only there on virtual computers)
+mark() { [ -w /dev/ttyS0 ] && echo "NEBULUX-BOOT $1 at $(cut -d" " -f1 /proc/uptime)s" > /dev/ttyS0; }
+mark session-start
 xset s off -dpms s noblank 2>/dev/null
 mkdir -p "$HOME/Downloads"
 P="$HOME/.config/nebulux-browser"
@@ -30,6 +33,10 @@ start_helper() {
 }
 start_helper
 
+# Bluetooth pairing: an agent that accepts pairing requests (without one, many devices refused to pair)
+pkill -u "$(id -u)" -x bt-agent 2>/dev/null
+( while true; do bt-agent --capability=NoInputNoOutput >/dev/null 2>&1; sleep 5; done ) &
+
 
 while true; do
   helper_up || start_helper
@@ -38,6 +45,7 @@ while true; do
   [ -n "$W" ] || { W=1280; H=800; }
   # never show "restore pages?" after the power was cut
   sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$P/Default/Preferences" 2>/dev/null
+  mark browser-engine-starting
   START=$(date +%s)
   chromium --class=NebuluxShell --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
     --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter,OptimizationHints,InterestFeedContentSuggestions,CalculateNativeWinOcclusion,HeavyAdIntervention \

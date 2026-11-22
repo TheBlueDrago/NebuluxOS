@@ -65,6 +65,18 @@
         f.onsubmit = (e) => { e.preventDefault(); next(); };
         box.querySelector(".ob-skip").onclick = next;
       }
+      if (k === "name" && first && NX.native && NX.persistent === false && !back) {
+        // this USB doesn't keep changes, so setup would come back at every start: offer a quick guest start too
+        if (!box.dataset.guestOffered) {
+          box.dataset.guestOffered = "1";
+          const f = frame("This USB doesn't save changes", "Your account, files and settings won't be kept after you turn the computer off, so you can skip setup and start right away. To keep things, write the USB again with Rufus and set Persistent partition size to about 4 GB.",
+            `<div class="ob-guest"><button type="button" class="btn primary ob-guestgo">Start without setting up</button><button type="button" class="btn ob-guestset">Set up an account anyway</button></div>`, { next: "Set up" });
+          f.querySelector(".ob-guestgo").onclick = async () => { try { const u = await NX.addUser("Guest", "", { guest: true }); box.hidden = true; box.innerHTML = ""; done(u); } catch (e) { err(e.message); } };
+          f.querySelector(".ob-guestset").onclick = () => draw();
+          f.onsubmit = (e) => { e.preventDefault(); draw(); };
+          return;
+        }
+      }
       if (k === "name") {
         const f = frame(first ? "Who's going to use this computer?" : "Add an account", first ? "Let's make your account. What name do you want to use?" : "What name should the new account use?", `<input class="ob-in" name="n" maxlength="24" placeholder="Name" aria-label="Name" value="${NX.esc(st.name)}" autocomplete="off">`);
         const n = f.querySelector("[name=n]"); setTimeout(() => n.focus(), 30);

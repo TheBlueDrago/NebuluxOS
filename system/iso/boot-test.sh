@@ -43,7 +43,7 @@ boot() { # BIOS or UEFI
   rm -f "$SHOTS/$MODE-now.png"
   if [ "$up" != 1 ]; then echo "FAIL ($MODE): Nebulux OS didn't show up"; shot 9-stuck; FAILS=$((FAILS + 1)); kill $QPID; wait $QPID 2>/dev/null; return; fi
   echo "ok   ($MODE): Nebulux OS is on screen, $(( $(date +%s) - T0 )) seconds after turning on"
-  sleep 3; grep -a "NEBULUX-BOOT" "$SHOTS/$MODE-serial.log" | head -18
+  sleep 3; grep -aE "NEBULUX-(BOOT|HW)" "$SHOTS/$MODE-serial.log" | head -20
   sleep 4; shot 3-lock
   # first-time setup: name, password, region, keyboard, network, Google sign-in, privacy, look (Enter takes each step)
   typeword "Ada"; keys ret; sleep 2

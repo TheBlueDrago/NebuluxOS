@@ -55,16 +55,17 @@ window.NX = window.NX || {};
     if (!/^[\p{L}\p{N} ._'-]+$/u.test(n)) return "Use letters, numbers, spaces and . _ ' - only.";
     return "";
   };
-  NX.addUser = async (name, pw) => {
-    name = String(name || "").trim(); const bad = NX.nameProblem(name); if (bad) throw new Error(bad);
-    if (String(pw || "").length < 4) throw new Error("Use at least 4 characters for your password.");
+  NX.addUser = async (name, pw, opts) => {
+    opts = opts || {}; name = String(name || "").trim(); const bad = NX.nameProblem(name); if (bad) throw new Error(bad);
+    if (!opts.guest && String(pw || "").length < 4) throw new Error("Use at least 4 characters for your password.");
     const L = NX.users(); if (L.some((u) => u.name.toLowerCase() === name.toLowerCase())) throw new Error("There's already an account with that name.");
     if (L.length >= 8) throw new Error("This device already has 8 accounts.");
-    const salt = rand(16), u = { id: NX.uid(), name, salt, hash: await NX.hash(pw, salt), color: ["#7c5cff", "#ff4fa3", "#22c3ee", "#f5a524", "#34d399"][L.length % 5], at: Date.now(), fails: 0, lock: 0 };
+    const salt = rand(16), u = { id: NX.uid(), name, guest: !!opts.guest, salt, hash: await NX.hash(opts.guest ? rand(16) : pw, salt), color: ["#7c5cff", "#ff4fa3", "#22c3ee", "#f5a524", "#34d399"][L.length % 5], at: Date.now(), fails: 0, lock: 0 };
     L.push(u); saveUsers(L); return u;
   };
   NX.checkPassword = async (id, pw) => {
     const L = NX.users(), u = L.find((x) => x.id === id); if (!u) throw new Error("That account is gone.");
+    if (u.guest) return u; // the guest account has no password
     if (u.lock > Date.now()) throw new Error("Too many wrong tries. Wait " + Math.ceil((u.lock - Date.now()) / 1000) + " seconds and try again.");
     const ok = (await NX.hash(pw, u.salt)) === u.hash;
     u.fails = ok ? 0 : (u.fails || 0) + 1; if (u.fails >= 5) { u.fails = 0; u.lock = Date.now() + 30000; }
@@ -85,7 +86,7 @@ window.NX = window.NX || {};
 
   // ---- per-user preferences and app data ----
   const DEF = { theme: "dark", accent: "#7c5cff", wallpaper: 0, align: "center", clock24: false, brightness: 100, volume: 60, night: false,
-    installed: [], pinned: ["files", "settings", "google", "youtube", "store"], desktop: ["files", "settings", "google", "youtube", "store"], recent: [], wifi: true, bt: true, airplane: false, mouse: 3 };
+    installed: [], pinned: ["files", "settings", "google", "youtube", "store"], desktop: ["files", "settings", "google", "youtube", "store"], recent: [], wifi: true, bt: true, airplane: false, mouse: 6 };
   NX.prefs = () => Object.assign({}, DEF, NX.me ? NX.get("prefs:" + NX.me.id, {}) : {});
   NX.setPref = (k, v) => { if (!NX.me) return; const p = NX.get("prefs:" + NX.me.id, {}); p[k] = v; NX.set("prefs:" + NX.me.id, p); document.dispatchEvent(new CustomEvent("nx:prefs", { detail: k })); };
   NX.data = (k, d) => { const all = NX.me ? NX.get("data:" + NX.me.id, {}) : {}; return k in all ? all[k] : d; };
