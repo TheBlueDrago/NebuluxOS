@@ -40,4 +40,7 @@
     ["Shortcuts with the Nebulux key", "Nebulux opens Start; Nebulux + Tab, D, E, L, W and the arrow keys do the rest, even over websites. Alt + Tab switches windows."],
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
+  // what came in earlier versions (shown under "Earlier updates")
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Updates by themselves");
+  NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

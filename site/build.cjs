@@ -9,7 +9,7 @@ const fs = require("fs"), path = require("path");
 const SITE = __dirname, REPO = path.join(SITE, ".."), PUB = path.join(SITE, "public");
 
 global.NX = {}; require(path.join(REPO, "js", "whatsnew.js"));
-const VERSION = NX.version, NEWS = NX.whatsNew;
+const VERSION = NX.version, NEWS = NX.whatsNew, BEFORE = NX.whatsNewBefore || [];
 const REL = { version: VERSION, file: "Nebulux-OS-" + VERSION + ".iso", size: 1286799360, sha256: "37430a103a62ce3b78e7c3ee489d149fcdb679a0a6d632e52b3df972600a7144" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -89,6 +89,7 @@ const fill = (s) => s
   .replace(/\{\{size\}\}/g, (REL.size / 1e9).toFixed(1) + " GB")
   .replace(/\{\{sha\}\}/g, REL.sha256)
   .replace(/\{\{news\}\}/g, NEWS.map((w) => `<div class="card rise"><h4>${esc(w[0])}</h4><p>${esc(w[1])}</p></div>`).join("\n"))
+  .replace(/\{\{newsold\}\}/g, BEFORE.map((w) => `<div class="card rise"><h4>${esc(w[0])}</h4><p>${esc(w[1])}</p></div>`).join("\n"))
   .replace(/\{\{newstitles\}\}/g, NEWS.slice(0, 6).map((w) => `<li>${esc(w[0])}</li>`).join(""));
 
 for (const f of fs.readdirSync(path.join(SITE, "pages"))) {

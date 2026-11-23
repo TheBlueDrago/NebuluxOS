@@ -867,3 +867,6 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .sn-box{position:absolute;border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent);box-shadow:0 0 0 9999px #0007;pointer-events:none}
 .sn-box[hidden]{display:none}
 .sn-hint{color:var(--sub);font-size:13px;margin-right:auto}
+
+.wn-before{margin-top:4px}.wn-before summary{cursor:pointer;color:var(--sub);font-size:13px;padding:6px 2px}.wn-before[open] summary{margin-bottom:8px}
+.wn-old{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:8px;background:var(--card);font-size:12.5px;opacity:.85}.wn-old b{font-size:13px;font-weight:600}.wn-old span{color:var(--sub);line-height:1.4}

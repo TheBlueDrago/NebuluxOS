@@ -95,6 +95,7 @@
     const d = document.createElement("div"); d.className = "wn-pop nx-pop"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "What's new");
     d.innerHTML = `<div class="nx-pcard nx-pwide"><div class="nx-ph">${NX.icon("logo", 40)}<div><b>What's new in Nebulux OS ${NX.esc(NX.version)}</b><small>Everything that was added, in one place.</small></div></div>
       <div class="wn-list">${NX.whatsNew.map((w) => `<div class="wn-item"><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div>`).join("")}</div>
+      ${(NX.whatsNewBefore || []).length ? `<details class="wn-before"><summary>Earlier updates</summary><div class="wn-list">${NX.whatsNewBefore.map((w) => `<div class="wn-old"><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div>`).join("")}</div></details>` : ""}
       <div class="nx-pbtns"><button class="btn" data-w="more">See it in Settings</button><button class="btn primary" data-w="ok">OK</button></div></div>`;
     document.body.appendChild(d);
     d.querySelector("[data-w=ok]").onclick = () => d.remove();
