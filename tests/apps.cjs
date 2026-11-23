@@ -23,6 +23,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-tile").click()); await wait(700);
   await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-wall").click()); await wait(1500);
   ok(await p.evaluate(() => NX.prefs().wallpaper === "custom" && !!NX.data("wall-custom", null)), "Photos makes a picture your background");
+  // and Edit: a look, brighter, saved as a copy
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=edit]").click()); await wait(300);
+  await p.evaluate(() => { const r = document.querySelector(".ph-ed [data-ed=b]"); r.value = 130; r.dispatchEvent(new Event("input", { bubbles: true })); document.querySelector(".ph-ed [data-look=bw]").click(); });
+  ok(await p.evaluate(() => /grayscale\(1\)/.test(document.querySelector(".win[data-app=photos] .ph-view img").style.filter) && /brightness\(1\.3\)/.test(document.querySelector(".win[data-app=photos] .ph-view img").style.filter)), "Photos > Edit shows the changes right away");
+  await shot("photos-edit");
+  await p.evaluate(() => document.querySelector(".ph-ed [data-ed2=save]").click()); await wait(1500);
+  ok((await p.evaluate(async () => (await NX.fs.list(await NX.folder("Pictures"))).entries.map((e) => e.name))).some((n) => /\(edited\)\.jpg$/.test(n)) && await p.evaluate(() => !document.querySelector(".ph-ed")), "and saves the edited picture as a copy");
   await p.evaluate(() => { NX.setPref("wallpaper", 0); NX.closeAll(); });
   await shot("camera-after");
   await p.evaluate(() => { NX.closeAll(); NX.open("recorder"); }); await wait(500);

@@ -305,7 +305,7 @@
       body.innerHTML = `<div class="ph-bar"><button class="wv-b" data-p="prev" aria-label="Previous" title="Previous">${NX.icon("back", 16)}</button><button class="wv-b" data-p="next" aria-label="Next" title="Next">${NX.icon("fwd", 16)}</button><span class="ph-name"></span><button class="wv-b" data-p="out" aria-label="Zoom out" title="Zoom out">${NX.icon("zoomout", 16)}</button><button class="wv-b" data-p="in" aria-label="Zoom in" title="Zoom in">${NX.icon("zoomin", 16)}</button><button class="wv-b" data-p="turn" aria-label="Rotate" title="Rotate">${NX.icon("rotate", 16)}</button><button class="wv-b" data-p="all" aria-label="All pictures" title="All pictures">${NX.icon("grid", 16)}</button></div><div class="ph-view"></div>`;
       const v = body.querySelector(".ph-view"), nm = body.querySelector(".ph-name");
       // the slideshow: every picture, one after another, the whole window; Esc or a click stops it
-      body.querySelector(".ph-bar").insertAdjacentHTML("beforeend", `<button class="btn sm ph-wall" data-p="wall" title="Make this picture your background" hidden>${NX.icon("display", 14)}Set as background</button><button class="btn sm ph-slide" data-p="slide" title="Slideshow">${NX.icon("media", 14)}Slideshow</button>`);
+      body.querySelector(".ph-bar").insertAdjacentHTML("beforeend", `<button class="btn sm ph-edit-b" data-p="edit" title="Brightness, colors and filters" hidden>${NX.icon("brush", 14)}Edit</button><button class="btn sm ph-wall" data-p="wall" title="Make this picture your background" hidden>${NX.icon("display", 14)}Set as background</button><button class="btn sm ph-slide" data-p="slide" title="Slideshow">${NX.icon("media", 14)}Slideshow</button>`);
       let slideT = 0;
       const slideStop = () => { if (!slideT) return; clearInterval(slideT); slideT = 0; body.classList.remove("ph-show"); };
       const slideGo = async () => {
@@ -316,16 +316,45 @@
         clearInterval(slideT); slideT = setInterval(() => { i = (i + 1) % list.length; show(); }, 4000);
       };
       v.addEventListener("click", () => slideStop());
+      // Edit: brightness, contrast and color, a few looks, and rotating; the picture is saved as a copy next to it
+      const LOOKS = { none: ["Original", ""], warm: ["Warm", "sepia(.25) saturate(1.2) hue-rotate(-8deg)"], cool: ["Cool", "saturate(1.05) hue-rotate(12deg) brightness(1.02)"], bw: ["Black and white", "grayscale(1)"], vintage: ["Vintage", "sepia(.55) contrast(.92) brightness(1.05)"], vivid: ["Vivid", "saturate(1.6) contrast(1.08)"] };
+      let ed = null;
+      const edFilter = () => ed ? `brightness(${ed.b / 100}) contrast(${ed.c / 100}) saturate(${ed.s / 100}) ${LOOKS[ed.look][1]}`.trim() : "";
+      function editClose() { const p = body.querySelector(".ph-ed"); if (p) p.remove(); ed = null; const img = v.querySelector("img"); if (img) img.style.filter = ""; }
+      function editOpen() {
+        const img = v.querySelector("img"); if (!img || !list[i]) return; editClose(); ed = { b: 100, c: 100, s: 100, look: "none" };
+        const pane = document.createElement("div"); pane.className = "ph-ed";
+        const sl = (k, label, min, max) => `<label><span>${label}</span><input type="range" min="${min}" max="${max}" value="100" data-ed="${k}" aria-label="${label}"></label>`;
+        pane.innerHTML = `${sl("b", "Brightness", 40, 160)}${sl("c", "Contrast", 40, 160)}${sl("s", "Color", 0, 200)}<div class="ph-looks">${Object.entries(LOOKS).map(([k, [n]]) => `<button class="${k === "none" ? "on" : ""}" data-look="${k}">${n}</button>`).join("")}</div><div class="ph-edacts"><button class="btn" data-ed2="rot">${NX.icon("rotate", 14)}Rotate</button><button class="btn" data-ed2="reset">Reset</button><span class="fx-sp"></span><button class="btn" data-ed2="cancel">Cancel</button><button class="btn primary" data-ed2="save">Save a copy</button></div>`;
+        body.appendChild(pane);
+        const apply = () => { img.style.filter = edFilter(); };
+        pane.oninput = (e) => { const r = e.target.closest("[data-ed]"); if (!r) return; ed[r.dataset.ed] = +r.value; apply(); };
+        pane.onclick = async (e) => {
+          const lk = e.target.closest("[data-look]"); if (lk) { ed.look = lk.dataset.look; pane.querySelectorAll("[data-look]").forEach((x) => x.classList.toggle("on", x === lk)); apply(); return; }
+          const a = e.target.closest("[data-ed2]"); if (!a) return; const k2 = a.dataset.ed2;
+          if (k2 === "rot") { turn = (turn + 90) % 360; tf(); }
+          if (k2 === "reset") { ed = { b: 100, c: 100, s: 100, look: "none" }; pane.querySelectorAll("[data-ed]").forEach((x) => (x.value = 100)); pane.querySelectorAll("[data-look]").forEach((x) => x.classList.toggle("on", x.dataset.look === "none")); turn = 0; tf(); apply(); }
+          if (k2 === "cancel") { turn = 0; tf(); editClose(); }
+          if (k2 === "save") {
+            const it = list[i], W0 = img.naturalWidth, H0 = img.naturalHeight, side = turn % 180 !== 0, c = document.createElement("canvas"); c.width = side ? H0 : W0; c.height = side ? W0 : H0;
+            const g = c.getContext("2d"); g.filter = edFilter() || "none"; g.translate(c.width / 2, c.height / 2); g.rotate(turn * Math.PI / 180); g.drawImage(img, -W0 / 2, -H0 / 2);
+            const png = /\.png$/i.test(it.name), blob = await new Promise((ok) => c.toBlob(ok, png ? "image/png" : "image/jpeg", .92));
+            try { const name = it.name.replace(/( \(edited\))?\.[^.]+$/, "") + " (edited)." + (png ? "png" : "jpg"), out = await NX.fs.upload(NX.fs.parent(it.path), name, blob); NX.filesChanged && NX.filesChanged(); NX.toast("Saved as " + out.name + ".");
+              list.splice(i + 1, 0, { name: out.name, path: out.path, kind: "image" }); i++; show(); }
+            catch (er) { NX.toast(er.message || "The picture couldn't be saved."); }
+          }
+        };
+      }
       async function show() {
         const e = list[i]; if (!e) return gallery();
         nm.textContent = e.name + (list.length > 1 ? `  (${i + 1} of ${list.length})` : ""); win.el.querySelector(".wt-name").textContent = e.name + " - Photos";
-        zoom = 1; turn = 0; v.innerHTML = `<img alt="${NX.esc(e.name)}" draggable="false">`; const img = v.querySelector("img"); body.querySelector(".ph-wall").hidden = false;
+        zoom = 1; turn = 0; v.innerHTML = `<img alt="${NX.esc(e.name)}" draggable="false">`; const img = v.querySelector("img"); body.querySelector(".ph-wall").hidden = false; body.querySelector(".ph-edit-b").hidden = false; editClose();
         try { img.src = await NX.fs.url(e.path); } catch (er) { v.innerHTML = `<p class="ph-msg">${NX.esc(er.message)}</p>`; }
         img.onerror = () => { v.innerHTML = `<p class="ph-msg">This picture couldn't be shown.</p>`; };
       }
       const tf = () => { const img = v.querySelector("img"); if (img) img.style.transform = `scale(${zoom}) rotate(${turn}deg)`; };
       async function gallery() {
-        nm.textContent = "Pictures"; win.el.querySelector(".wt-name").textContent = "Photos"; body.querySelector(".ph-wall").hidden = true;
+        nm.textContent = "Pictures"; win.el.querySelector(".wt-name").textContent = "Photos"; body.querySelector(".ph-wall").hidden = true; body.querySelector(".ph-edit-b").hidden = true; editClose();
         let r; try { r = await NX.fs.list(opts.dir || await NX.folder("Pictures")); } catch (e) { v.innerHTML = `<p class="ph-msg">${NX.esc(e.message)}</p>`; return; }
         const shots = r.entries.find((x) => x.dir && x.name === "Screenshots"); let more = [];
         if (shots) { try { more = (await NX.fs.list(shots.path)).entries; } catch (e) { more = []; } }
@@ -335,6 +364,7 @@
       }
       body.querySelector(".ph-bar").onclick = (e) => {
         const b = e.target.closest("[data-p]"); if (!b) return; const k = b.dataset.p;
+        if (k === "edit") { editOpen(); return; }
         if (k === "wall" && list[i] && NX.setWallpaperFile) { const it = list[i]; (async () => { try { const blob = await (await fetch(await NX.fs.url(it.path))).blob(); const ext = (it.name.split(".").pop() || "").toLowerCase(); await NX.setWallpaperFile(new File([blob], it.name, { type: blob.type && blob.type.startsWith("image/") ? blob.type : "image/" + (ext === "jpg" ? "jpeg" : ext || "jpeg") })); } catch (er) { NX.toast(er.message || "That picture couldn't be used."); } })(); return; }
         if (k === "prev" && list.length) { i = (i - 1 + list.length) % list.length; show(); } if (k === "next" && list.length) { i = (i + 1) % list.length; show(); }
         if (k === "in") { zoom = Math.min(6, zoom * 1.25); tf(); } if (k === "out") { zoom = Math.max(0.2, zoom / 1.25); tf(); } if (k === "turn") { turn = (turn + 90) % 360; tf(); } if (k === "all") { slideStop(); gallery(); } if (k === "slide") { if (slideT) slideStop(); else slideGo(); }
