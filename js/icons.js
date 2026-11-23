@@ -112,15 +112,13 @@
     const t = String(text || "").slice(0, 4), fs2 = t.length <= 1 ? 26 : t.length === 2 ? 20 : t.length === 3 ? 15 : 12;
     return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">${stops}</linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="11" fill="url(#${id})"/><rect x="2" y="2" width="44" height="22" rx="11" fill="#ffffff" opacity=".08"/><text x="24" y="${24 + fs2 * 0.36}" text-anchor="middle" font-family="Segoe UI Variable Display,Segoe UI,Inter,Arial,sans-serif" font-weight="700" font-size="${fs2}" fill="${/^#[0-9a-f]{3,8}$/i.test(fg) ? fg : "#fff"}" letter-spacing="-.3">${esc(t)}</text>`;
   };
-  // Apps that aren't Nebulux OS's own show their own logo: "|f:<flatpak id>" is the app's icon from Flathub, "|w:<host>"
-  // the website's own icon (on a white tile). If a logo can't load (no internet), the drawn tile is shown instead.
-  const FLAT = (id) => "https://dl.flathub.org/repo/appstream/x86_64/icons/128x128/" + id + ".png";
-  const FAV = (h) => "https://t1.gstatic.com/faviconV2?client=SOCIAL&amp;type=FAVICON&amp;fallback_opts=TYPE,SIZE,URL&amp;url=https://" + h + "&amp;size=128";
+  // Apps that aren't Nebulux OS's own show their own logo, shipped in img/logos so it is there at once, even offline:
+  // "|f:<app>" is the app's own icon (full size), "|w:<app>" a website's icon on a white tile. A missing file shows the drawn tile.
   const failed = new Set(); NX.logoFailed = (u) => failed.add(u);
   const logo = (spec) => {
     const [b, src] = String(spec).split("|"), tile = brand(b); if (!src) return tile;
     const kind = src[0], val = src.slice(2); if (!/^[A-Za-z0-9._-]{2,120}$/.test(val)) return tile;
-    const u = kind === "f" ? FLAT(val) : kind === "g" ? "https://www.gstatic.com/images/branding/product/2x/" + val + "_2020q4_96dp.png" : FAV(val); if (failed.has(u)) return tile;
+    const u = "img/logos/" + val + ".png"; if (failed.has(u)) return tile;
     const id = "l" + ++gid, swap = "NX.logoFailed(this.getAttribute('href'));this.parentNode.querySelector('.lg-t').style.display='';this.parentNode.querySelector('.lg-w')&&this.parentNode.querySelector('.lg-w').remove();this.remove()";
     return `<g class="lg-t" style="display:none">${tile}</g>${kind !== "f" ? `<defs><clipPath id="${id}"><rect x="2" y="2" width="44" height="44" rx="11"/></clipPath></defs><rect class="lg-w" x="2" y="2" width="44" height="44" rx="11" fill="#fff"/><image href="${u}" x="9" y="9" width="30" height="30" clip-path="url(#${id})" onerror="${swap}"/>` : `<image href="${u}" x="1" y="1" width="46" height="46" onerror="${swap}"/>`}`;
   };
