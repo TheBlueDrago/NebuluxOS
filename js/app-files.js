@@ -178,15 +178,22 @@
       function tools() {
         const one = sel.size === 1, any = sel.size > 0, t = (k, icon, label, on) => `<button class="fx-t" data-t="${k}" ${on === false ? "disabled" : ""} title="${label}">${NX.icon(icon, 16)}<span>${label}</span></button>`;
         $(".fx-tools").innerHTML = isTrash() ? t("restore", "restart", "Restore", any) + t("purge", "trash", "Delete for good", any) + `<span class="fx-sp"></span>` + t("empty", "recycle", "Empty Recycle Bin", items.length > 0)
-          : (isHome() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
+          : (isHome() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
         $(".fx-tools").querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => act(b.dataset.t)));
+        const sb = $(".fx-tools [data-t=sort]"); if (sb) sb.onclick = () => { const r = sb.getBoundingClientRect(); NX.menu(r.left, r.bottom + 4, [["Name", () => setSort("name")], ["Date changed", () => setSort("date")], ["Type", () => setSort("type")], ["Size", () => setSort("size")]].map(([t2, f]) => [t2 + ({ Name: "name", "Date changed": "date", Type: "type", Size: "size" }[t2] === sort.k ? (sort.d > 0 ? "  (up)" : "  (down)") : ""), f])); };
       }
       function status() { const s = selected(); $(".fx-status").textContent = (loading ? "Loading... " : "") + items.length + (items.length === 1 ? " item" : " items") + (s.length ? `  ·  ${s.length} selected${s.length === 1 && s[0].size != null ? "  ·  " + size(s[0].size) : ""}` : ""); }
+      // sorting: by name, date, type or size (folders stay first); click a column in Details view, or Sort in Icons view
+      let sort = NX.data("fx-sort", { k: "name", d: 1 });
+      const ext = (e) => (e.dir ? "" : (e.name.includes(".") ? e.name.split(".").pop().toLowerCase() : ""));
+      const sorted = (list) => isHome() ? list : [...list].sort((a, b) => (b.dir - a.dir) || sort.d * (sort.k === "date" ? (a.mtime || a.deleted || 0) - (b.mtime || b.deleted || 0) : sort.k === "size" ? (a.size || 0) - (b.size || 0) : sort.k === "type" ? ext(a).localeCompare(ext(b)) || a.name.localeCompare(b.name, undefined, { numeric: true }) : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })));
+      const setSort = (k) => { sort = { k, d: sort.k === k ? -sort.d : (k === "date" || k === "size" ? -1 : 1) }; NX.setData("fx-sort", sort); render(); };
+      const arrow = (k) => (sort.k === k ? (sort.d > 0 ? " \u2191" : " \u2193") : "");
       function render() {
-        const shown = q ? items.filter((e) => e.name.toLowerCase().includes(q)) : items;
+        const shown = sorted(q ? items.filter((e) => e.name.toLowerCase().includes(q)) : items);
         listEl.className = "fx-list " + view; tools(); status();
         if (!shown.length) { listEl.innerHTML = `<div class="fx-empty">${NX.icon(isTrash() ? "recycle" : "folder", 56)}<p>${q ? "Nothing here matches." : isTrash() ? "The Recycle Bin is empty." : "This folder is empty."}</p></div>`; return; }
-        listEl.innerHTML = (view === "list" ? `<div class="fx-head"><span>Name</span><span>${isTrash() ? "Deleted" : "Date changed"}</span><span>Type</span><span>Size</span></div>` : "") + shown.map((e) => { const key = e.path || e.id;
+        listEl.innerHTML = (view === "list" ? `<div class="fx-head"><button data-sort="name">Name${arrow("name")}</button><button data-sort="date">${isTrash() ? "Deleted" : "Date changed"}${arrow("date")}</button><button data-sort="type">Type${arrow("type")}</button><button data-sort="size">Size${arrow("size")}</button></div>` : "") + shown.map((e) => { const key = e.path || e.id;
           return `<button class="fx-item ${sel.has(key) ? "sel" : ""} ${NX.fsClip && NX.fsClip.move && NX.fsClip.paths.includes(e.path) ? "cutting" : ""}" data-k="${NX.esc(key)}" title="${NX.esc(e.name)}">${e.kind === "image" && view === "grid" && !isTrash() ? `<span class="fx-thumb" data-thumb="${NX.esc(e.path)}">${NX.icon("fimage", 44)}</span>` : NX.icon(ICON[e.kind] || "file", view === "grid" ? 44 : 20)}<span class="fx-n">${NX.esc(e.name)}</span>${view === "list" ? `<span class="fx-d">${NX.esc(isTrash() ? (e.deleted || "").replace("T", " ") : when(e.mtime))}</span><span class="fx-d">${e.dir ? "Folder" : (e.kind === "file" ? (e.name.includes(".") ? e.name.split(".").pop().toUpperCase() + " file" : "File") : e.kind[0].toUpperCase() + e.kind.slice(1))}</span><span class="fx-d">${e.dir ? "" : size(e.size)}</span>` : ""}</button>`; }).join("");
         listEl.querySelectorAll("[data-thumb]").forEach(async (t) => { try { const u = await NX.fs.url(t.dataset.thumb); t.innerHTML = `<img src="${NX.esc(u)}" alt="" loading="lazy">`; } catch (e) { /* keep the icon */ } });
       }
@@ -242,6 +249,7 @@
       function openItem(e) { if (isTrash()) { NX.toast("Restore it first to open it."); return; } if (e.dir) go(e.path); else NX.openFile(e, items); }
       let lastClick = null;
       listEl.addEventListener("click", (ev) => {
+        const sb = ev.target.closest("[data-sort]"); if (sb) { setSort(sb.dataset.sort); return; }
         const b = ev.target.closest(".fx-item"); if (!b) { if (ev.target === listEl || ev.target.closest(".fx-empty")) { sel.clear(); marks(); } return; }
         const k = b.dataset.k, e = items.find((x) => (x.path || x.id) === k);
         if (ev.ctrlKey || ev.metaKey) { sel.has(k) ? sel.delete(k) : sel.add(k); }

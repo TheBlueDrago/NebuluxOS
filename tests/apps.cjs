@@ -89,6 +89,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.mouse.move(f0.x, f0.y); await p.mouse.down(); await p.mouse.move(f0.x + 20, f0.y, { steps: 3 }); await p.mouse.move(y0.x + y0.w * .4, f0.y, { steps: 8 }); await p.mouse.up(); await wait(400);
   const order = await p.evaluate(() => NX.prefs().pinned.slice(0, 5).join(","));
   ok(order === "settings,google,youtube,files,store" && await p.evaluate(() => [...document.querySelectorAll("#tb-apps .tb-app")].map((b) => b.dataset.app).slice(0, 5).join(",")) === order && !(await p.evaluate(() => !!document.querySelector(".win[data-app=files]"))), "Dragging a taskbar app moves it (and doesn't open it): " + order);
+  // File Explorer: sorting
+  await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Pictures" }); }); await wait(900);
+  await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=sort]").click()); await wait(200);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /^Size/.test(b.textContent)).click()); await wait(400);
+  const sizes = await p.evaluate(async () => { const names = [...document.querySelectorAll(".win[data-app=files] .fx-item")].map((b) => b.title), all = (await NX.fs.list(await NX.folder("Pictures"))).entries; return names.map((n) => (all.find((e) => e.name === n) || {}).size || 0); });
+  ok(sizes.length >= 2 && sizes.every((s, i) => !i || sizes[i - 1] >= s) && /Size/.test(await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=sort]").textContent)), "File Explorer sorts by size, largest first");
+  await p.evaluate(() => NX.setData("fx-sort", { k: "name", d: 1 }));
   // Notepad: line and column, word wrap
   await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(500);
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.focus(); }); await p.keyboard.type("ab"); await p.keyboard.press("Enter"); await p.keyboard.type("cd");
