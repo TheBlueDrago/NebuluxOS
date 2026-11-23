@@ -1068,3 +1068,12 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .ph-looks{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}.ph-looks button{padding:6px 12px;border-radius:16px;font-size:12.5px;background:var(--card2);border:1px solid var(--line)}.ph-looks button.on{background:var(--accent);color:#fff;border-color:transparent}
 .ph-edacts{grid-column:1/-1;display:flex;gap:8px;align-items:center}
 @media (max-width:560px){.ph-ed{grid-template-columns:1fr}}
+
+/* Notepad: tabs */
+.np-tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);flex:none}.np-tabs::-webkit-scrollbar{display:none}
+.np-tab{display:flex;align-items:center;max-width:200px;min-width:0;border-radius:8px 8px 0 0;color:var(--sub)}.np-tab:hover{background:var(--hover)}
+.np-tab.on{background:var(--card2);color:var(--txt);box-shadow:inset 0 2px 0 var(--accent)}
+.np-tn{display:flex;align-items:center;gap:6px;min-width:0;padding:7px 4px 7px 10px;font-size:12.5px}.np-tn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.np-tx{width:22px;height:22px;margin-right:4px;border-radius:5px;display:grid;place-items:center;opacity:.6}.np-tx:hover{opacity:1;background:var(--hover)}
+.np-tadd{width:28px;height:28px;margin:0 0 3px 2px;border-radius:6px;display:grid;place-items:center;flex:none}.np-tadd:hover{background:var(--hover)}
+.np-status{gap:18px}

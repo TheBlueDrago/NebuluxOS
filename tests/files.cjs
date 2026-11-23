@@ -76,6 +76,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // Notepad: Save to Documents
   await p.evaluate(() => NX.open("notepad")); await wait(400);
+  ok(await p.evaluate(() => [...document.querySelectorAll(".win[data-app=notepad] .np-tn")].some((b) => /Groceries\.txt/.test(b.textContent))), "Notepad comes back with its tabs, like Groceries.txt");
+  await p.click(".win[data-app=notepad] [data-a=new]"); await wait(400);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=notepad] .np-tab").length >= 2 && /Untitled/.test(document.querySelector(".win[data-app=notepad] .np-tab.on").textContent)), "New tab opens a new note next to it");
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); }); await p.type(".win[data-app=notepad] textarea", "Party plans\nCake"); await wait(600);
   await p.click(".win[data-app=notepad] [data-a=save]"); await wait(600);
   ok(await p.evaluate(async () => (await NX.fs.read("/Documents/Party plans.txt")) === "Party plans\nCake"), "Notepad's Save to Documents makes a text file named from the first line");
@@ -169,7 +172,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   if (narrow) { await winKey("Tab"); await wait(200); } else { await p.click("#tb-tview"); await wait(300); }
   ok(await p.evaluate(() => !document.querySelector("#taskview").hidden && document.querySelectorAll("#taskview .tv-card").length === NX.wins.size), "Task View shows every open window");
   await shot("taskview");
-  await p.evaluate(() => [...document.querySelectorAll("#taskview .tv-card")].find((c) => /Notepad/.test(c.innerText)).click()); await wait(250);
+  await p.evaluate(() => [...document.querySelectorAll("#taskview .tv-card")].find((c) => /Notepad|Party plans/.test(c.innerText)).click()); await wait(250);
   ok(await p.evaluate(() => document.querySelector("#taskview").hidden && NX.topWin().id === "notepad"), "clicking a window in Task View switches to it");
   const mx = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wb-max").getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   if (!narrow) { await p.mouse.move(mx.x, mx.y); await wait(900);

@@ -7,7 +7,7 @@
   A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
     open(body, win, opts) {
       body.classList.add("np");
-      body.innerHTML = `<div class="np-bar"><button class="btn sm" data-a="new">New</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
+      body.innerHTML = `<div class="np-tabs" role="tablist" aria-label="Notes"></div><div class="np-bar"><button class="btn sm" data-a="new">New tab</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
       const ta = body.querySelector("textarea"), cnt = body.querySelector(".np-count"), sv = body.querySelector(".np-saved"), saveBtn = body.querySelector("[data-a=save]");
       let size = NX.data("np-size", 15), t = 0, file = null; ta.style.fontSize = size + "px";
       // word wrap (on by default, kept for next time) and where the cursor is
@@ -16,30 +16,50 @@
       const pos = body.querySelector(".np-pos"), where = () => { const before = ta.value.slice(0, ta.selectionStart).split("\n"); pos.textContent = "Ln " + before.length + ", Col " + (before[before.length - 1].length + 1); };
       ["keyup", "click", "input", "select"].forEach((ev) => ta.addEventListener(ev, where));
       const title = () => { win.el.querySelector(".wt-name").textContent = (file ? NX.fs.base(file) : "Notepad"); saveBtn.hidden = !!file; };
+      // tabs: each one is a note Notepad keeps for you ("Untitled" until it has a first line) or a text file; they come back next time
+      let tabs = (NX.data("np-tabs", null) || [{ id: 1 }]).filter((x) => x && x.id); if (!tabs.length) tabs = [{ id: 1 }];
+      let ti = Math.max(0, Math.min(+NX.data("np-tab", 0) || 0, tabs.length - 1));
+      const keyOf = (tb) => (tb.id === 1 ? "np-text" : "np-text-" + tb.id), strip = body.querySelector(".np-tabs");
+      const tabsSave = () => { NX.setData("np-tabs", tabs.map((x) => (x.file ? { id: x.id, file: x.file } : { id: x.id }))); NX.setData("np-tab", ti); };
+      const tabName = (tb, k) => { if (tb.file) return NX.fs.base(tb.file); const txt = k === ti ? ta.value : NX.data(keyOf(tb), ""); return (txt.split("\n").find((x) => x.trim()) || "").trim().slice(0, 24) || "Untitled"; };
+      const drawTabs = () => { strip.innerHTML = tabs.map((tb, k) => `<div class="np-tab ${k === ti ? "on" : ""}"><button class="np-tn" role="tab" aria-selected="${k === ti}" data-ti="${k}" title="${NX.esc(tb.file || tabName(tb, k))}">${NX.icon(tb.file ? "ftext" : "notepad", 14)}<span>${NX.esc(tabName(tb, k))}</span></button><button class="np-tx" data-tx="${k}" aria-label="Close ${NX.esc(tabName(tb, k))}">${NX.icon("close", 10)}</button></div>`).join("") + `<button class="np-tadd" data-tadd="1" aria-label="New tab" title="New tab">${NX.icon("plus", 14)}</button>`; };
+      const newId = () => Math.max(1, ...tabs.map((x) => x.id)) + 1;
+      async function loadTab(k) {
+        await flush(); ti = k; const tb = tabs[ti]; file = tb.file || null;
+        if (file) { try { ta.value = await NX.fs.read(file); sv.textContent = "Opened"; } catch (e) { NX.toast(e.message); tb.file = null; file = null; ta.value = NX.data(keyOf(tb), ""); } }
+        else { ta.value = NX.data(keyOf(tb), ""); sv.textContent = "Saved"; }
+        title(); count(); where(); drawTabs(); tabsSave(); ta.focus();
+      }
+      async function newTab() { await flush(); const id = newId(); tabs.push({ id }); NX.setData("np-text-" + id, ""); await loadTab(tabs.length - 1); }
+      async function closeTab(k) {
+        await flush(); const tb = tabs[k]; if (!tb) return; if (!tb.file) NX.setData(keyOf(tb), "");
+        tabs.splice(k, 1); if (!tabs.length) tabs = [{ id: 1 }];
+        if (k < ti) ti--; ti = Math.max(0, Math.min(ti, tabs.length - 1)); t = 0; await loadTab(ti);
+      }
+      strip.onclick = (e) => { const x = e.target.closest("[data-tx]"); if (x) { closeTab(+x.dataset.tx); return; } if (e.target.closest("[data-tadd]")) { newTab(); return; } const b = e.target.closest("[data-ti]"); if (b && +b.dataset.ti !== ti) loadTab(+b.dataset.ti); };
+      strip.onauxclick = (e) => { const b = e.target.closest("[data-ti]"); if (e.button === 1 && b) closeTab(+b.dataset.ti); };
+      win.np2 = { tabs: () => tabs.map((x, k) => ({ file: x.file || null, name: tabName(x, k), on: k === ti })), newTab, closeTab, loadTab };
       const count = () => { const v = ta.value; cnt.textContent = (v.trim() ? v.trim().split(/\s+/).length : 0) + " words · " + v.length + " characters"; };
       const saveNow = () => {
-        if (!file) { NX.setData("np-text", ta.value); sv.textContent = "Saved"; return Promise.resolve(); }
+        if (!file) { NX.setData(keyOf(tabs[ti]), ta.value); sv.textContent = "Saved"; drawTabs(); return Promise.resolve(); }
         const p = file, text = ta.value;
         return NX.fs.write(p, text).then(() => { if (p === file) sv.textContent = "Saved in " + NX.fs.base(NX.fs.parent(p)); NX.filesChanged && NX.filesChanged(); }).catch((e) => { sv.textContent = "Not saved: " + e.message; });
       };
       ta.oninput = () => { count(); sv.textContent = "Saving..."; clearTimeout(t); t = setTimeout(saveNow, 400); };
       const flush = () => { if (t) { clearTimeout(t); t = 0; return saveNow(); } return Promise.resolve(); };
+      // a file opens in its own tab (or in this one, if it's an empty note)
       async function openFile(p) {
-        await flush();
-        try { const text = await NX.fs.read(p); file = p; ta.value = text; sv.textContent = "Opened"; } catch (e) { NX.toast(e.message); return; }
-        title(); count(); ta.focus();
+        await flush(); const ex = tabs.findIndex((x) => x.file === p); if (ex >= 0) return loadTab(ex);
+        const cur = tabs[ti]; if (!cur.file && !ta.value.trim()) { cur.file = p; return loadTab(ti); }
+        tabs.push({ id: newId(), file: p }); return loadTab(tabs.length - 1);
       }
-      function scratch() { file = null; ta.value = NX.data("np-text", ""); title(); count(); }
       body.querySelector(".np-bar").onclick = async (e) => {
         const a = e.target.closest("button"); if (!a) return; const k = a.dataset.a;
-        if (k === "new") {
-          if (file) { await flush(); file = null; ta.value = ""; NX.setData("np-text", ""); title(); count(); return; }
-          if (!ta.value || a.dataset.sure) { ta.value = ""; NX.setData("np-text", ""); count(); a.textContent = "New"; delete a.dataset.sure; } else { a.dataset.sure = 1; a.textContent = "Clear note?"; setTimeout(() => { a.textContent = "New"; delete a.dataset.sure; }, 3000); }
-        }
+        if (k === "new") { newTab(); return; }
         if (k === "open") { await flush(); NX.open("files", { place: "Documents" }); NX.toast("Double-click a text file to open it in Notepad."); }
         if (k === "save") {
           const first = (ta.value.split("\n").find((x) => x.trim()) || "Note").trim().replace(/[\\/:*?"<>|\x00-\x1f]/g, "").replace(/^\.+/, "").slice(0, 40).trim() || "Note";
-          try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, first + ".txt", false); file = r.path; await NX.fs.write(file, ta.value); NX.setData("np-text", ""); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
+          try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, first + ".txt", false); file = r.path; await NX.fs.write(file, ta.value); NX.setData(keyOf(tabs[ti]), ""); tabs[ti].file = file; tabsSave(); drawTabs(); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
         }
         if (k === "dl") { const url = URL.createObjectURL(new Blob([ta.value], { type: "text/plain" })), l = document.createElement("a"); l.href = url; l.download = file ? NX.fs.base(file) : "note.txt"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
         if (k === "wrap") { const on = ta.wrap === "off"; setWrap(on); NX.setData("np-wrap", on); }
@@ -47,7 +67,7 @@
       };
       win.onopts = (o) => { if (o.file) openFile(o.file); };
       win.onclose = () => { flush(); };
-      if (opts && opts.file) { scratch(); openFile(opts.file); } else scratch();
+      loadTab(ti).then(() => { if (opts && opts.file) openFile(opts.file); });
       // Find (Ctrl + F) and Replace (Ctrl + H), not case-sensitive
       const fb = body.querySelector(".np-find"), fi = fb.f, ri = fb.r, fmsg = body.querySelector(".np-fmsg");
       const findOpen = (rep) => { fb.hidden = false; ri.hidden = !rep; fb.querySelector("[data-f=rep]").hidden = !rep; fb.querySelector("[data-f=all]").hidden = !rep; const sel = ta.value.slice(ta.selectionStart, ta.selectionEnd); if (sel && !sel.includes("\n")) fi.value = sel; fi.focus(); fi.select(); };
