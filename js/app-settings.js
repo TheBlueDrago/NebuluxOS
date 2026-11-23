@@ -97,6 +97,7 @@
           <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
           <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}
+          ${NX.native ? `<h3>Mobile hotspot</h3><div class="s-card s-hw" id="s-hot"><p class="s-note">Checking...</p></div>` : ""}
           ${NX.native ? `<h3>Known networks</h3><div class="s-card s-hw" id="s-known"><p class="s-note">Checking...</p></div>
           <div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("wifi", 20)}<b>Join a hidden network</b></span><span class="s-hwc"><button class="btn" id="s-hidgo">Join</button></span></div><form class="s-hidf" id="s-hidf" hidden><input name="ssid" maxlength="32" placeholder="Network name" aria-label="Network name" autocomplete="off"><input name="pw" type="password" maxlength="63" placeholder="Password (leave empty if it has none)" aria-label="Password" autocomplete="off"><button class="btn primary" type="submit">Connect</button><p class="s-msg" id="s-hidmsg"></p></form></div>` : ""}
           ${NX.native ? `<h3>Troubleshoot</h3><div class="s-card s-hw" id="s-trouble"><div class="s-bth"><span class="s-hwt">${NX.icon("wifi", 20)}<b>Network troubleshooter</b></span><span class="s-hwc"><button class="btn primary" id="s-diag">Run</button></span></div><p class="s-note">Checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, and says what's wrong.</p><div id="s-diagout"></div></div>` : ""}`;
@@ -154,6 +155,21 @@
           catch (e) { NX.toast(e.message); }
           fillScreens(); fillAudio();
         }));
+      }
+      // Mobile hotspot: share this computer's internet over Wi-Fi (its name and password are kept for next time)
+      async function fillHot() {
+        const box = q$("#s-hot"); if (!box) return; let h;
+        try { h = await NX.api("GET", "/hotspot"); } catch (e) { box.innerHTML = "<p class=\"s-note\">" + NX.esc(e.message) + "</p>"; return; }
+        if (!q$("#s-hot")) return;
+        let saved = NX.data("hotspot", null); if (!saved) { const abc = "abcdefghjkmnpqrstuvwxyz23456789", pick = (n) => Array.from({ length: n }, () => abc[Math.floor(Math.random() * abc.length)]).join(""); saved = { name: "Nebulux-" + pick(4).toUpperCase(), pw: pick(10) }; NX.setData("hotspot", saved); }
+        box.innerHTML = h.on
+          ? "<div class=\"s-bth\"><span class=\"s-hwt\"><b>Sharing as " + NX.esc(h.name) + "</b></span><span class=\"s-hwc\"><button class=\"btn\" id=\"s-hotoff\">Turn off</button></span></div><p class=\"s-note\">On your phone or other computer, pick <b>" + NX.esc(h.name) + "</b> and type the password <b>" + NX.esc(saved.pw) + "</b>.</p>"
+          : "<p class=\"s-note\">Share this computer's internet with your phone or another computer over Wi-Fi. Works best when this computer is on a network cable: most Wi-Fi chips can't use Wi-Fi and share it at the same time.</p><form class=\"s-hidf\" id=\"s-hotf\"><input name=\"n\" maxlength=\"32\" aria-label=\"Hotspot name\" value=\"" + NX.esc(saved.name) + "\"><input name=\"p\" maxlength=\"63\" aria-label=\"Hotspot password\" value=\"" + NX.esc(saved.pw) + "\"><button class=\"btn primary\" type=\"submit\">Turn on</button><p class=\"s-msg\" id=\"s-hotmsg\"></p></form>";
+        const off = q$("#s-hotoff"); if (off) off.onclick = async () => { off.disabled = true; try { await NX.api("POST", "/hotspot", { on: false }); NX.toast("Mobile hotspot is off."); } catch (e) { NX.toast(e.message); } fillHot(); fillWifi(); };
+        const f = q$("#s-hotf"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const name = f.n.value.trim(), pw = f.p.value, m = q$("#s-hotmsg"), b = f.querySelector("[type=submit]");
+          b.disabled = true; m.textContent = "Turning on...";
+          try { await NX.api("POST", "/hotspot", { on: true, name, password: pw }); NX.setData("hotspot", { name, pw }); NX.toast("Mobile hotspot is on: " + name + "."); fillHot(); }
+          catch (er) { m.textContent = er.message; b.disabled = false; } };
       }
       // networks this computer remembers (Forget one that keeps failing)
       async function fillKnown() {
@@ -345,7 +361,7 @@
           } catch (e) { m.textContent = e && e.name === "NotFoundError" ? "No device was picked." : e && e.name === "SecurityError" ? "The browser blocked Bluetooth here. Open Nebulux OS from a web address (https) to use it." : "Couldn't reach Bluetooth: " + (e && e.message || "unknown error"); }
         };
         body.querySelectorAll("[data-btrm]").forEach((b) => (b.onclick = () => { const L = NX.data("bt-devices", []); L.splice(+b.dataset.btrm, 1); NX.setData("bt-devices", L); draw(); }));
-        if (NX.native && page === "network") { fillWifi(); wireTrouble(); fillKnown(); wireHidden(); }
+        if (NX.native && page === "network") { fillWifi(); wireTrouble(); fillKnown(); wireHidden(); fillHot(); }
         if (NX.native && page === "devices") fillBt();
         if (page === "update" && NX.update) NX.update.fillSettings(q$);
         const cc = q$("#s-clipclear"); if (cc) cc.onclick = () => { NX.setData("clip-history", NX.data("clip-history", []).filter((x) => x.pin)); NX.toast("Clipboard history cleared. Pinned items stay."); draw(); };

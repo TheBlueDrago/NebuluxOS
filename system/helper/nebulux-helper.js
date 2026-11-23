@@ -112,6 +112,25 @@ const api = {
     if (!r.ok) { const e = cleanErr(r.err + " " + r.out); throw new Error(/secrets were required|password/i.test(e) ? "The password is wrong, or the network needs one." : e); }
     return { ok: true };
   },
+  // Mobile hotspot: this computer shares its internet over Wi-Fi (NetworkManager's hotspot)
+  async "GET /hotspot"() {
+    if (FAKE) return { on: !!fake.hotspot, name: fake.hotspot ? fake.hotspot.name : "", clients: fake.hotspot ? 1 : 0 };
+    const act = (await run("nmcli", ["-t", "-f", "NAME,TYPE,DEVICE", "connection", "show", "--active"])).out.split("\n").map(nmSplit).find((x) => x[0] === "Hotspot");
+    if (!act) return { on: false };
+    const ssid = (await run("nmcli", ["-g", "802-11-wireless.ssid", "connection", "show", "Hotspot"])).out.trim();
+    return { on: true, name: ssid, device: act[2] };
+  },
+  async "POST /hotspot"(b) {
+    if (!b.on) { if (FAKE) { fake.hotspot = null; return { ok: true }; } await run("nmcli", ["connection", "down", "Hotspot"], 15000); return { ok: true }; }
+    if (!okSSID(b.name)) throw new Error("Give the hotspot a name.");
+    if (typeof b.password !== "string" || b.password.length < 8 || b.password.length > 63 || /[\x00-\x1f]/.test(b.password)) throw new Error("The hotspot password needs 8 to 63 characters.");
+    if (FAKE) { if (!fake.wifiOn) throw new Error("Turn on Wi-Fi first."); fake.hotspot = { name: b.name }; return { ok: true }; }
+    const dev = (await run("nmcli", ["-t", "-f", "DEVICE,TYPE", "device"])).out.split("\n").map(nmSplit).find((x) => x[1] === "wifi");
+    if (!dev) throw new Error("This computer has no Wi-Fi to share with.");
+    const r = await run("nmcli", ["device", "wifi", "hotspot", "ifname", dev[0], "con-name", "Hotspot", "ssid", b.name, "password", b.password], 30000);
+    if (!r.ok) throw new Error(/not support|AP mode|failed to/i.test(r.err) ? "This computer's Wi-Fi chip can't share a hotspot." : cleanErr(r.err));
+    return { ok: true };
+  },
   // the connected Wi-Fi network's details: signal, band and channel, speed, security, addresses
   async "GET /wifi/details"() {
     if (FAKE) return fake.conn ? { ssid: fake.conn, signal: 82, freq: 5180, band: "5 GHz", channel: 36, rate: "866 Mbit/s", security: "WPA2", ip: "192.168.1.42/24", gateway: "192.168.1.1", dns: ["192.168.1.1"], device: "wlp2s0", mac: "3C:21:9C:00:11:22" } : { ssid: null };

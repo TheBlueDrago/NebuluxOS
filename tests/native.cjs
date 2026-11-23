@@ -255,6 +255,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => { const w = NX.wins.get("snip"), i = document.querySelector(".win[data-app=snip] .sn-view img"); return !!w.snipLast && w.snipLast.name.endsWith("(cropped).png") && i.naturalWidth === 160 && i.naturalHeight === 100; }), 8000), "Snipping Tool crops a screenshot and saves just that part");
   await p.evaluate(() => NX.closeAll()); await wait(300);
 
+  // ---------- 3.2: Mobile hotspot ----------
+  await p.evaluate(() => NX.open("settings", { page: "network" }));
+  await until(() => p.evaluate(() => !!document.querySelector("#s-hotf")));
+  await p.evaluate(() => { const f = document.querySelector("#s-hotf"); f.n.value = "Ada Phone Share"; f.p.value = "share12345"; f.querySelector("[type=submit]").click(); });
+  ok(await until(async () => (await fake()).hotspot && (await fake()).hotspot.name === "Ada Phone Share"), "Mobile hotspot turns on with its name and password");
+  ok(await until(() => p.evaluate(() => /Sharing as Ada Phone Share/.test(document.querySelector("#s-hot").innerText) && /share12345/.test(document.querySelector("#s-hot").innerText))), "and shows what to pick on the phone");
+  await p.evaluate(() => document.querySelector("#s-hotoff").click());
+  ok(await until(async () => !(await fake()).hotspot), "and turns off");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");
