@@ -191,7 +191,7 @@
         if (NX.nativeRunning && NX.nativeRunning.has(id)) { NX.nativeToggle(id); return; } if (NX.browserHide) NX.browserHide(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
       b.onpointerenter = (e) => { if (e.pointerType === "mouse") peekSoon(b); };
       b.onpointerleave = () => peekLeave();
-      b.oncontextmenu = (e) => { e.preventDefault(); peekHide(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : [])]); };
+      b.oncontextmenu = (e) => { e.preventDefault(); peekHide(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : NX.nativeRunning && NX.nativeRunning.has(id) && NX.nativeClose ? [["Close window", () => NX.nativeClose(id)]] : [])]); };
       // drag a pinned app sideways to put it somewhere else on the taskbar
       b.onpointerdown = (e) => {
         if (e.button !== 0 || !NX.prefs().pinned.includes(b.dataset.app)) return;

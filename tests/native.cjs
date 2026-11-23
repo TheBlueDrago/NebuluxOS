@@ -303,6 +303,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await opened()).some((a) => a.id === "poki" && a.url === "https://poki.com/" && !a.drm)) && await p.evaluate(() => !document.querySelector(".win[data-app=poki]")), "Poki opens as its own app, not in a browser or a Nebulux OS window");
   ok(await until(() => p.evaluate(() => !!document.querySelector("#tb-apps [data-app=poki].run"))), "and it has its own place on the taskbar");
   ok(await p.evaluate(() => /Opening Poki/.test(window.__launchSeen)) && await until(() => p.evaluate(() => !document.querySelector("#nx-launch .nl-card"))), "a launch card says Opening Poki, and goes away once its window is up");
+  await p.evaluate(() => { const b = document.querySelector("#tb-apps [data-app=poki]"), r = b.getBoundingClientRect(); b.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.x + 5, clientY: r.y + 5 })); });
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Close window/.test(b.textContent)).click());
+  ok(await until(() => p.evaluate(() => !document.querySelector("#tb-apps [data-app=poki]"))), "right-click Close window on the taskbar closes it");
   await p.evaluate(() => NX.open("netflix"));
   ok(await until(async () => (await opened()).some((a) => a.id === "netflix"), 4000) && await until(() => p.evaluate(() => NX.drmReady === true && NX.isNative("chrome")), 15000), "Netflix opens at once while its movie player is set up in the background");
   await p.evaluate(() => NX.open("google", { q: "nebulux os" }));

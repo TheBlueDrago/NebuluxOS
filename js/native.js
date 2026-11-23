@@ -82,6 +82,7 @@
     return close;
   };
   NX.openNative = (id) => { const a = NX.apps[id]; if (NX.browserHide) NX.browserHide(); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar(); const close = NX.launchCard(id, a.native.wm); return NX.api("POST", "/native/open", { app: a.native.flatpak, wm: a.native.wm }).then((r) => { if (r && r.shown && close) close(); return r; }).catch((e) => { if (close) close(); NX.toast(e.message); }); };
+  NX.nativeClose = (id) => { const a = NX.apps[id]; return NX.api("POST", "/native/close", { wm: NX.isNative(id) ? a.native.wm : webWm(id) }).then(() => { NX.webOpened.delete(id); setTimeout(nativeRunning, 400); }).catch((e) => NX.toast(e.message)); };
   NX.nativeToggle = (id) => { const a = NX.apps[id]; return NX.api("POST", "/native/toggle", { wm: NX.isNative(id) ? a.native.wm : webWm(id) }).then(() => setTimeout(nativeRunning, 300)).catch(() => {}); };
   NX.nativeHideActive = () => { if (NX.nativeActive.size) NX.api("POST", "/native/hide", { apps: nativeMap() }).catch(() => {}); };
   async function nativeRunning() {

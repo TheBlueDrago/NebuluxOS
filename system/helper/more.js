@@ -438,6 +438,13 @@ module.exports = function more({ api, run, FAKE }) {
     if (w.some((x) => parseInt(x.id, 16) === act)) { for (const x of w) await run("xdotool", ["windowminimize", String(parseInt(x.id, 16))], 4000); await shellFocus(); return { running: true, shown: false }; }
     for (const x of w) await run("wmctrl", ["-i", "-a", x.id], 4000); return { running: true, shown: true };
   };
+  // closing a real app or web app from the taskbar: its windows are asked to close (wmctrl -c), like pressing its X
+  api["POST /native/close"] = async (b) => {
+    if (!okWm(b.wm)) throw new Error("That app name doesn't look right.");
+    if (FAKE) { fakeRunning.delete(b.wm); return { ok: true }; }
+    for (const x of mineOf(await windows(), b.wm)) await run("wmctrl", ["-i", "-c", x.id], 4000);
+    await shellFocus(); return { ok: true };
+  };
   api["POST /native/hide"] = async (b) => {
     if (FAKE) return { ok: true };
     const all = await windows(), act = await activeId();
