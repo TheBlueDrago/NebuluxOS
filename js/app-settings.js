@@ -116,8 +116,8 @@
           const all = Object.entries(NX.apps).filter(([id, a]) => a.builtIn || p.installed.includes(id));
           const startable = all.filter(([id, a]) => !a.url && !a.browser && !a.webapp && id !== "settings").slice(0, 30), su = p.startup || [];
           return `<h3>Startup apps</h3><p class="s-note">These open by themselves when you sign in.</p><div class="s-card s-startup">${startable.map(([id, a]) => `<label class="s-su"><input type="checkbox" data-su="${id}" ${su.includes(id) ? "checked" : ""}>${NX.icon(a.icon || id, 22)}<span>${NX.esc(a.name)}</span></label>`).join("")}</div>
-          <h3>Installed apps</h3><p class="s-note">${all.length} apps. Get more in the Nebulux Store.</p>${all.map(([id, a]) => row(null, `<span class="s-appname">${NX.icon(a.icon || id, 28)}${NX.esc(a.name)}</span>`, a.builtIn ? "Part of Nebulux OS" : (a.size || "1 MB") + " · " + (a.url ? "Opens on the web" : "Runs on this PC"),
-            a.builtIn ? `<span class="s-tag">System app</span>` : `<button class="btn" data-uninstall="${id}">Uninstall</button>`)).join("")}
+          <h3>Installed apps</h3><input class="s-appq" type="search" placeholder="Search your apps" aria-label="Search your apps"><p class="s-note">${all.length} apps. Get more in the Nebulux Store.</p>${all.map(([id, a]) => row(null, `<span class="s-appname">${NX.icon(a.icon || id, 28)}${NX.esc(a.name)}</span>`, a.builtIn ? "Part of Nebulux OS" : (a.size || "1 MB") + " · " + (a.url ? "Opens on the web" : "Runs on this PC"),
+            a.builtIn ? `<span class="s-tag">System app</span>` : `<button class="btn" data-uninstall="${id}">Uninstall</button>`).replace("<div class=\"s-row","<div data-appn=\"" + NX.esc(a.name.toLowerCase()) + "\" class=\"s-row")).join("")}
             <div class="s-row s-link" data-openstore="1"><span class="s-ri">${NX.icon("store", 20)}</span><div class="s-rt"><b>Nebulux Store</b><small>Find new apps and games</small></div><div class="s-rc">${NX.icon("chevron", 16)}</div></div>`;
         }
         if (pg === "accounts") {
@@ -367,6 +367,7 @@
         body.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = () => { NX.setPref("accent", b.dataset.acc); draw(); }));
         body.querySelectorAll("[data-align]").forEach((b) => (b.onclick = () => { NX.setPref("align", b.dataset.align); draw(); }));
         body.querySelectorAll("[data-uninstall]").forEach((b) => (b.onclick = () => { NX.uninstall(b.dataset.uninstall); draw(); }));
+        const aq = body.querySelector(".s-appq"); if (aq) aq.oninput = () => { const q = aq.value.trim().toLowerCase(); body.querySelectorAll("[data-appn]").forEach((r) => (r.hidden = !!q && !r.dataset.appn.includes(q))); };
         // Bluetooth: the browser's own device chooser (Web Bluetooth); the chosen device is remembered for this account
         const bt = body.querySelector("#s-btadd"); if (bt) bt.onclick = async () => {
           const m = body.querySelector("#s-btmsg"); m.textContent = "";

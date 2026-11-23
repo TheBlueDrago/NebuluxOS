@@ -143,6 +143,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.focus("clock")); await wait(200);
   ok(await p.evaluate(() => +getComputedStyle(document.querySelector(".win[data-app=notepad]")).zIndex > +getComputedStyle(document.querySelector(".win[data-app=clock]")).zIndex), "Keep on top keeps a window above the others");
   await p.evaluate(() => NX.closeAll());
+  // Settings > Apps: search your apps
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
+  await p.type(".win[data-app=settings] .s-appq", "camer"); await wait(200);
+  ok(await p.evaluate(() => { const v = [...document.querySelectorAll(".win[data-app=settings] [data-appn]")].filter((r) => !r.hidden).map((r) => r.dataset.appn); return v.length === 1 && v[0] === "camera"; }), "Settings > Apps finds an app as you type");
   // Accessibility: the large mouse pointer
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "access" }); }); await wait(700);
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=settings] [data-pref=bigcursor]"); t.checked = true; t.dispatchEvent(new Event("change", { bubbles: true })); }); await wait(300);
