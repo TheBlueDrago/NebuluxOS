@@ -274,7 +274,7 @@ const server = http.createServer((req, res) => {
   // shortcuts from the window manager (nebulux-key), sent on to the OS page
   if (url.pathname === "/local/key" && req.method === "POST") {
     if (req.headers["x-nx-local"] !== LOCALKEY) return send(res, 403, "");
-    const k = url.searchParams.get("k") || ""; if (/^[a-z-]{2,12}$/.test(k)) pushEvent({ key: k });
+    const k = url.searchParams.get("k") || ""; if (/^[a-z0-9-]{2,12}$/.test(k)) pushEvent({ key: k });
     return send(res, 200, '{"ok":true}');
   }
   // the OS page listens here for shortcuts and other news from the system

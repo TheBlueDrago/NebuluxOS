@@ -464,6 +464,19 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const e = NX.data("events", [])[0]; const d = new Date(e.date + "T15:30"); NX.eventsTick(d); NX.eventsTick(d); return NX.data("events", [])[0].told === "1" && NX.notes.some((n) => /Now: Soccer practice/.test(n.text)); }), "you get a reminder when it starts, once");
   await p.evaluate(() => NX.setData("events", []));
 
+  // 3.2: the laptop's volume and brightness keys, and Nebulux + 1 to 9
+  await p.evaluate(() => { NX.setPref("volume", 60); NX.setPref("brightness", 80); });
+  await p.evaluate(() => { NX.hwKey("vol-up"); NX.hwKey("vol-up"); });
+  ok(await p.evaluate(() => NX.prefs().volume === 70 && !document.querySelector("#osd").hidden && document.querySelector("#osd b").textContent === "70"), "the volume keys turn it up, with an indicator");
+  await p.evaluate(() => NX.hwKey("mute")); const muted = await p.evaluate(() => NX.prefs().volume); await p.evaluate(() => NX.hwKey("mute"));
+  ok(muted === 0 && await p.evaluate(() => NX.prefs().volume === 70), "mute, and back to where it was");
+  await p.evaluate(() => { NX.hwKey("bright-down"); NX.hwKey("bright-down"); NX.hwKey("bright-down"); NX.hwKey("bright-down"); NX.hwKey("bright-down"); NX.hwKey("bright-down"); });
+  ok(await p.evaluate(() => NX.prefs().brightness === 30), "the brightness keys stop at a screen you can still see");
+  await p.evaluate(() => { NX.setPref("volume", 60); NX.setPref("brightness", 100); NX.closeAll(); }); await wait(300);
+  await p.keyboard.down("Meta"); await p.keyboard.press("2"); await p.keyboard.up("Meta"); await wait(500);
+  ok(await p.evaluate(() => { const b = document.querySelectorAll("#tb-apps .tb-app")[1]; return !!b && !!NX.wins.get(b.dataset.app) || NX.browserRunning || !!document.querySelector(".win"); }), "Nebulux + 2 opens the second app on the taskbar");
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

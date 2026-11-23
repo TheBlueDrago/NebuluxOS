@@ -23,6 +23,20 @@
     <keybind key="C-W-Right"><action name="Execute"><command>/usr/local/bin/nebulux-key desk-next</command></action></keybind>
     <keybind key="C-W-d"><action name="Execute"><command>/usr/local/bin/nebulux-key desk-new</command></action></keybind>
     <keybind key="C-W-F4"><action name="Execute"><command>/usr/local/bin/nebulux-key desk-close</command></action></keybind>
+    <keybind key="XF86AudioRaiseVolume"><action name="Execute"><command>/usr/local/bin/nebulux-key vol-up</command></action></keybind>
+    <keybind key="XF86AudioLowerVolume"><action name="Execute"><command>/usr/local/bin/nebulux-key vol-down</command></action></keybind>
+    <keybind key="XF86AudioMute"><action name="Execute"><command>/usr/local/bin/nebulux-key mute</command></action></keybind>
+    <keybind key="XF86MonBrightnessUp"><action name="Execute"><command>/usr/local/bin/nebulux-key bright-up</command></action></keybind>
+    <keybind key="XF86MonBrightnessDown"><action name="Execute"><command>/usr/local/bin/nebulux-key bright-down</command></action></keybind>
+    <keybind key="W-1"><action name="Execute"><command>/usr/local/bin/nebulux-key app-1</command></action></keybind>
+    <keybind key="W-2"><action name="Execute"><command>/usr/local/bin/nebulux-key app-2</command></action></keybind>
+    <keybind key="W-3"><action name="Execute"><command>/usr/local/bin/nebulux-key app-3</command></action></keybind>
+    <keybind key="W-4"><action name="Execute"><command>/usr/local/bin/nebulux-key app-4</command></action></keybind>
+    <keybind key="W-5"><action name="Execute"><command>/usr/local/bin/nebulux-key app-5</command></action></keybind>
+    <keybind key="W-6"><action name="Execute"><command>/usr/local/bin/nebulux-key app-6</command></action></keybind>
+    <keybind key="W-7"><action name="Execute"><command>/usr/local/bin/nebulux-key app-7</command></action></keybind>
+    <keybind key="W-8"><action name="Execute"><command>/usr/local/bin/nebulux-key app-8</command></action></keybind>
+    <keybind key="W-9"><action name="Execute"><command>/usr/local/bin/nebulux-key app-9</command></action></keybind>
     <keybind key="W-w"><action name="Execute"><command>/usr/local/bin/nebulux-key widgets</command></action></keybind>
     <keybind key="W-Left"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-left</command></action></keybind>
     <keybind key="W-Right"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-right</command></action></keybind>
