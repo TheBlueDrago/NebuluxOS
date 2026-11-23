@@ -15,7 +15,7 @@ const BASE = "https://nebuluxos.thebluedragonstriker.workers.dev", OUT = path.jo
   await p.evaluate(() => { document.querySelector(".nav").style.position = "static"; });
   await p.screenshot({ path: path.join(OUT, "web-full.jpg"), type: "jpeg", quality: 85, fullPage: true }); console.log("shot web-full");
   // where the ad's website clip stops (in the picture's pixels: page pixels times the 1.2 scale)
-  const stops = await p.evaluate(() => { scrollTo(0, 0); const top = (s) => { const e = document.querySelector(s); return e ? Math.round((e.getBoundingClientRect().top + scrollY - 40) * 1.2) : 0; }; const d = document.querySelector(".nav .btn.primary").getBoundingClientRect(); return { device: top("#hero-device"), new: top("#new"), compare: top("#compare"), dl: [Math.round((d.left + d.width / 2) * 1.2), Math.round((d.top + d.height / 2) * 1.2)] }; });
+  const stops = await p.evaluate(() => { scrollTo(0, 0); const top = (s) => { const e = document.querySelector(s); return e ? Math.round((e.getBoundingClientRect().top + scrollY - 40) * 1.2) : 0; }; const d = document.querySelector(".nav .btn.primary").getBoundingClientRect(); return { device: top("#hero-device"), new: top("#new"), compare: top("#compare"), dl: [Math.round((d.left + d.width / 2) * 1.2), Math.round((d.top + scrollY + d.height / 2) * 1.2)] }; });
   require("fs").writeFileSync(path.join(OUT, "web-stops.json"), JSON.stringify(stops)); console.log("stops", JSON.stringify(stops));
   await open("/download");
   await at("web-download", null);
