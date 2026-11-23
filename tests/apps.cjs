@@ -68,6 +68,11 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   ok(await cv("Temperature", "100", "Celsius", "Fahrenheit") === "212", "and 100 C to 212 F");
   ok(await cv("Weight", "1", "Kilograms", "Pounds") === "2.204622622", "and 1 kg to 2.204622622 lb");
   await shot("converter"); await p.evaluate(() => NX.closeAll());
+  // Media Player: shuffle and repeat
+  await p.evaluate(() => { NX.closeAll(); NX.open("media"); }); await wait(700);
+  await p.click(".win[data-app=media] [data-mpc=shuffle]"); await p.click(".win[data-app=media] [data-mpc=repeat]"); await p.click(".win[data-app=media] [data-mpc=repeat]"); await wait(200);
+  ok(await p.evaluate(() => NX.data("mp-shuffle", false) === true && NX.data("mp-repeat", "off") === "one" && document.querySelector("[data-mpc=repeat]").classList.contains("on") && document.querySelector("[data-mpc=repeat] i").textContent === "1"), "Media Player has Shuffle and Repeat (all, then this one)");
+  await shot("media"); await p.evaluate(() => NX.closeAll());
   // the taskbar: drag File Explorer to after YouTube
   const tbr = async (id) => p.evaluate((id) => { const r = document.querySelector(`#tb-apps [data-app="${id}"]`).getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }, id);
   const f0 = await tbr("files"), y0 = await tbr("youtube");

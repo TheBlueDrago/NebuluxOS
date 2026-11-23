@@ -1031,3 +1031,9 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .c-disp[hidden],.c-keys[hidden],.c-conv[hidden]{display:none!important}
 /* dragging a taskbar app to a new place */
 .tb-app.tb-drag{z-index:5;transition:none;background:var(--hover);box-shadow:0 8px 20px #0007;cursor:grabbing}
+
+/* Media Player: shuffle and repeat */
+.mp-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.mp-head h4{margin:0}.mp-head span{display:flex;gap:4px}
+.mp-c{position:relative;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--sub)}.mp-c:hover{background:var(--hover)}
+.mp-c.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.mp-c i{position:absolute;right:3px;bottom:2px;font-style:normal;font-size:9px;font-weight:800}

@@ -1,8 +1,15 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.3";
+  NX.version = "3.4";
   NX.whatsNew = [
+    ["Auto mode", "Settings > Personalization > Choose your mode has Auto: light windows and menus from 7 AM, dark from 7 PM."],
+    ["Weather on the lock screen", "The lock screen shows the weather under the date."],
+    ["World clocks", "The Clock app shows the time in other cities, like London or Tokyo, and how far ahead or behind they are."],
+    ["A unit converter", "Calculator > Converter changes length, weight, temperature, volume, speed and time."],
+    ["Your photo as your background", "Photos has Set as background for the picture you're looking at, like one from the Camera."],
+    ["Shuffle and Repeat", "Media Player can shuffle your music and videos, and repeat them all or just one."],
+    ["Arrange your taskbar", "Drag a pinned app sideways on the taskbar to put it where you want."],
     ["Camera", "Take photos and videos with your computer's camera. Photos go to Pictures and videos to Videos, with a self-timer of 3 or 10 seconds."],
     ["Voice Recorder", "Record your voice, a lesson or a meeting, and see it move as you talk. Recordings are saved in Music, ready to play."],
     ["Weather", "A full Weather app: the weather now, the next 24 hours and the whole week, for any city or wherever you are."],
@@ -63,6 +70,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "A faster screen");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Camera");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

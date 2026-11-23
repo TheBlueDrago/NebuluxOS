@@ -343,14 +343,17 @@
     open(body, win, opts) {
       body.classList.add("mp");
       let list = [], i = 0;
-      body.innerHTML = `<div class="mp-stage"></div><div class="mp-side"><h4>Up next</h4><div class="mp-list"></div><button class="btn" data-lib="1">Music and videos</button></div>`;
+      body.innerHTML = `<div class="mp-stage"></div><div class="mp-side"><div class="mp-head"><h4>Up next</h4><span><button class="mp-c" data-mpc="shuffle" title="Shuffle" aria-label="Shuffle" aria-pressed="false"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button><button class="mp-c" data-mpc="repeat" title="Repeat: off" aria-label="Repeat: off"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><i></i></button></span></div><div class="mp-list"></div><button class="btn" data-lib="1">Music and videos</button></div>`;
       const st = body.querySelector(".mp-stage"), li = body.querySelector(".mp-list");
       async function play() {
         const e = list[i]; if (!e) return library(); win.el.querySelector(".wt-name").textContent = e.name + " - Media Player";
         const video = e.kind === "video";
         st.innerHTML = `${video ? "" : `<div class="mp-art">${NX.icon("faudio", 120)}<b>${NX.esc(e.name)}</b></div>`}<${video ? "video" : "audio"} controls autoplay playsinline></${video ? "video" : "audio"}><p class="mp-msg" hidden></p>`;
         const m = st.querySelector("video,audio"); m.volume = Math.max(0, Math.min(1, NX.prefs().volume / 100));
-        m.onended = () => { if (i < list.length - 1) { i++; play(); } };
+        // what plays next: the same one again (Repeat one), a random one (Shuffle), the next one, or the first again (Repeat all)
+        m.onended = () => { const rp = NX.data("mp-repeat", "off"); if (rp === "one") { m.currentTime = 0; m.play().catch(() => {}); return; }
+          if (NX.data("mp-shuffle", false) && list.length > 1) { let k = i; while (k === i) k = Math.floor(Math.random() * list.length); i = k; play(); return; }
+          if (i < list.length - 1) { i++; play(); } else if (rp === "all" && list.length) { i = 0; play(); } };
         m.onerror = () => { const p = st.querySelector(".mp-msg"); p.hidden = false; p.textContent = "This file can't be played. Nebulux OS plays MP4, WebM, MP3, WAV, OGG, M4A and FLAC."; };
         try { m.src = await NX.fs.url(e.path); } catch (er) { m.onerror(); }
         drawList();
@@ -362,6 +365,10 @@
         st.innerHTML = `<div class="mp-art">${NX.icon("media", 96)}<b>${list.length ? "Pick something to play" : "No music or videos yet"}</b><small>${list.length ? "" : "Put them in your Music or Videos folders, or open them from a USB drive in File Explorer."}</small></div>`; i = -1; drawList();
       }
       body.querySelector("[data-lib]").onclick = library;
+      const ctl = () => { const sh = NX.data("mp-shuffle", false), rp = NX.data("mp-repeat", "off"), s = body.querySelector("[data-mpc=shuffle]"), r = body.querySelector("[data-mpc=repeat]");
+        s.classList.toggle("on", sh); s.setAttribute("aria-pressed", sh); r.classList.toggle("on", rp !== "off"); r.querySelector("i").textContent = rp === "one" ? "1" : ""; const t = "Repeat: " + { off: "off", all: "all", one: "this one" }[rp]; r.title = t; r.setAttribute("aria-label", t); };
+      body.querySelector(".mp-head").onclick = (e) => { const b = e.target.closest("[data-mpc]"); if (!b) return; if (b.dataset.mpc === "shuffle") NX.setData("mp-shuffle", !NX.data("mp-shuffle", false)); else NX.setData("mp-repeat", { off: "all", all: "one", one: "off" }[NX.data("mp-repeat", "off")]); ctl(); };
+      ctl();
       const start = (o) => { if (o.path) { list = o.list && o.list.length ? o.list : [{ name: NX.fs.base(o.path), path: o.path, kind: kindOf(o.path, false) }]; i = Math.max(0, list.findIndex((x) => x.path === o.path)); play(); } else library(); };
       win.onopts = start; win.onclose = () => { const m = st.querySelector("video,audio"); if (m) { m.pause(); m.removeAttribute("src"); m.load(); } };
       start(opts);
