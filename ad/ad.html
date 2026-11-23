@@ -129,14 +129,16 @@ function sStart(l, d, t) {
   ["Apps, settings and", "files in one search.", "Pin it to the taskbar."].forEach((s, i) => text(s, 1560, 650 + i * 46, F(600, 32), "#d9d0ff", "left", ease((l - 1 - i * .15) / .5)));
 }
 // 4. New in 3.2: a quick picture on every second beat
-const MONTAGE = [["desks", "Virtual desktops", .5, .78], ["clip", "Clipboard history", .86, .72], ["notes", "Sticky Notes", .45, .38], ["tabs", "Tabs in File Explorer", .35, .18], ["settings", "Settings that make sense", .45, .4], ["store", "Real apps from the Store", .5, .45]];
+// [picture, label, where to zoom in (x, y as fractions), how close]: each one pushes in on the feature itself
+const MONTAGE = [["desks", "Virtual desktops", .5, .86, 1.9], ["clip", "Clipboard history", .86, .74, 2.1], ["notes", "Sticky Notes", .45, .36, 1.55], ["tabs", "Tabs in File Explorer", .26, .14, 2.3], ["settings", "Settings that make sense", .55, .36, 1.5], ["store", "Real apps from the Store", .5, .38, 1.45]];
+const mz = (it, v) => 1.08 + (it[4] - 1.08) * inout(v); // the zoom of a montage picture, v = 0 to 1 through its two beats
 function sMontage(l, d, t) {
   bg(t, .8 + .2 * punch(t));
   const each = BEAT * 2, i = Math.min(MONTAGE.length - 1, Math.floor(l / each)), li = l - i * each, [k, label, fx, fy] = MONTAGE[i];
   const fw = 1500, fh = 937, X = (W - fw) / 2, Y = 40, dir = i % 2 ? -1 : 1;
-  const inn = ease(li / .22), off = (1 - inn) * W * .9 * dir, z = 1.04 + .1 * ease(li / each) + .015 * punch(t);
+  const inn = ease(li / .22), off = (1 - inn) * W * .9 * dir, z = mz(MONTAGE[i], (li - .1) / (each - .1)) * (1 + .012 * punch(t));
   // the previous picture leaving the other way, with a blur streak
-  if (i > 0 && li < .22) { const [pk, , pfx, pfy] = MONTAGE[i - 1]; x.save(); x.translate(-inn * W * .9 * dir, 0); for (let s = 0; s < 3; s++) zoomed(IMG[pk], X - dir * s * 40, Y, fw, fh, 1.14, pfx, pfy, (1 - inn) * (.6 - s * .18)); x.restore(); }
+  if (i > 0 && li < .22) { const pv = MONTAGE[i - 1], [pk, , pfx, pfy] = pv; x.save(); x.translate(-inn * W * .9 * dir, 0); for (let s = 0; s < 3; s++) zoomed(IMG[pk], X - dir * s * 40, Y, fw, fh, mz(pv, 1), pfx, pfy, (1 - inn) * (.6 - s * .18)); x.restore(); }
   x.save(); x.translate(off, 0); for (let s = (li < .22 ? 2 : 0); s >= 0; s--) zoomed(IMG[k], X + dir * s * 50 * (1 - inn), Y, fw, fh, z, fx, fy, s ? .25 * (1 - inn) : 1); x.restore();
   // the label
   const la = ease((li - .12) / .25);
@@ -226,7 +228,7 @@ function endCard(l, d, t, a) {
   text("Free. Download it today.", W / 2, 760, F(700, 48), "#fff", "center", ease((l - .55) / .5));
   // the address of the website, on a white pill
   const pa = ease((l - .9) / .5); if (pa > 0) { x.save(); x.globalAlpha *= pa; x.translate(0, (1 - pa) * 20); x.font = F(800, 40); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 96; rr(W / 2 - w / 2, 822, w, 84, 42); x.fillStyle = "#fff"; x.shadowColor = "rgba(192,132,252,.7)"; x.shadowBlur = 40; x.fill(); x.shadowColor = "transparent"; text(s0, W / 2, 865, F(800, 40), "#1d1040"); x.restore(); }
-  text("Nebulux OS 3.2  ·  For PCs from about 2010 on  ·  Runs from a USB stick", W / 2, 960, F(600, 28), "#b9b0dc", "center", ease((l - 1.3) / .5));
+  text("Nebulux OS 3.2  ·  Runs from a USB stick  ·  Or try it in your browser first", W / 2, 960, F(600, 28), "#b9b0dc", "center", ease((l - 1.3) / .5));
   text("© 2026 Nebulux LLC", W / 2, 1030, F(500, 22), "#7d76a3", "center", ease((l - 1.5) / .5));
   x.restore();
 }
