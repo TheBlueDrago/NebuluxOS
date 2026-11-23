@@ -178,9 +178,31 @@
     $("#tb-apps").querySelectorAll(".tb-app").forEach((b) => {
       b.onclick = () => { const id = b.dataset.app, w = NX.wins.get(id); closeFlyouts(); if (id === "google" && NX.browserOK && NX.browserRunning) { NX.browserToggle(); return; }
         if (NX.nativeRunning && NX.nativeRunning.has(id)) { NX.nativeToggle(id); return; } if (NX.browserHide) NX.browserHide(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
-      b.oncontextmenu = (e) => { e.preventDefault(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : [])]); };
+      b.onpointerenter = (e) => { if (e.pointerType === "mouse") peekSoon(b); };
+      b.onpointerleave = () => peekLeave();
+      b.oncontextmenu = (e) => { e.preventDefault(); peekHide(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : [])]); };
     });
   }
+  // taskbar previews: hovering an open app shows a small picture of its window, its title and a close button
+  let peekT = 0, peekOut = 0;
+  function peekSoon(b) { clearTimeout(peekOut); clearTimeout(peekT); peekT = setTimeout(() => peek(b), $("#tb-peek") && !$("#tb-peek").hidden ? 0 : 450); }
+  function peekLeave() { clearTimeout(peekT); clearTimeout(peekOut); peekOut = setTimeout(peekHide, 250); }
+  function peekHide() { clearTimeout(peekT); const P = $("#tb-peek"); if (P) { P.hidden = true; P.innerHTML = ""; } }
+  function peek(b) {
+    const id = b.dataset.app, w = NX.wins.get(id); if (!w || !document.body.contains(b)) { peekHide(); return; }
+    let P = $("#tb-peek"); if (!P) { P = document.createElement("div"); P.id = "tb-peek"; P.hidden = true; document.body.appendChild(P); P.onpointerenter = () => clearTimeout(peekOut); P.onpointerleave = peekLeave; }
+    const title = w.el.querySelector(".wt-name").textContent, W = 220, r = w.el.getBoundingClientRect(), k = W / Math.max(1, r.width), H = Math.round(Math.min(140, r.height * k));
+    P.innerHTML = `<div class="pk-top">${NX.icon(w.app.icon || id, 16)}<span>${NX.esc(title)}</span><button class="pk-x" aria-label="Close ${NX.esc(w.app.name)}">${NX.icon("close", 12)}</button></div><div class="pk-shot" style="height:${H}px"></div>`;
+    // a still picture of the window (a copy, so nothing in it runs); web pages show the app's icon instead
+    const shot = P.querySelector(".pk-shot");
+    if (w.el.querySelector("iframe") || w.min || !r.width) shot.innerHTML = `<div class="pk-ico">${NX.icon(w.app.icon || id, 44)}</div>`;
+    else { const c = w.el.cloneNode(true); c.removeAttribute("id"); c.removeAttribute("data-app"); c.removeAttribute("role"); c.classList.add("pk-clone"); c.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id")); c.classList.remove("opening", "closing", "minimized", "offdesk"); Object.assign(c.style, { position: "absolute", left: "0", top: "0", width: r.width + "px", height: r.height + "px", transform: "scale(" + k + ")", transformOrigin: "0 0", pointerEvents: "none", zIndex: 0, margin: 0 }); c.setAttribute("aria-hidden", "true"); c.inert = true; shot.appendChild(c); }
+    P.querySelector(".pk-x").onclick = (e) => { e.stopPropagation(); peekHide(); NX.close(id); };
+    P.onclick = () => { peekHide(); if (NX.browserHide) NX.browserHide(); NX.focus(id); };
+    const br = b.getBoundingClientRect(); P.hidden = false; const pw = P.offsetWidth;
+    P.style.left = Math.round(Math.max(8, Math.min(innerWidth - pw - 8, br.left + br.width / 2 - pw / 2))) + "px"; P.style.bottom = Math.round(innerHeight - br.top + 8) + "px";
+  }
+  NX.peek = { show: peek, hide: peekHide };
   function tray() {
     if (!NX.me) return; const p = NX.prefs();
     $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="${battText()}">${NX.battIcon(20)}</span>` : ""}`;
@@ -444,6 +466,10 @@
       if (d.key === "start") toggleStart(true); else if (typeof d.key === "string") winKeys(d.key); });
     let ty = null; $("#lock").addEventListener("touchstart", (e) => (ty = e.touches[0].clientY), { passive: true });
     $("#lock").addEventListener("touchend", (e) => { if (ty != null && ty - e.changedTouches[0].clientY > 40) reveal(); ty = null; }, { passive: true });
+    // the preview goes away with any click or key (and isn't left showing a copy of a window)
+    addEventListener("pointerdown", (e) => { if (!e.target.closest || !e.target.closest("#tb-peek")) peekHide(); }, true);
+    addEventListener("keydown", () => peekHide(), true);
+    document.addEventListener("nx:winopen", () => peekHide());
     $("#tb-showdesk").onclick = () => { closeFlyouts(); if (NX.browserHide) NX.browserHide(); NX.showDesktop(); };
     $("#lk-power").onclick = (e) => { e.stopPropagation(); const m = $("#lk-pmenu"); m.hidden = !m.hidden; };
     $("#lk-pmenu").addEventListener("click", (e) => { const b = e.target.closest("[data-pw]"); if (!b) return; $("#lk-pmenu").hidden = true; power(b.dataset.pw === "restart" ? "restart" : "off"); });

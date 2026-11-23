@@ -446,6 +446,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !NX.users().find((u) => u.id === NX.me.id).pic && !document.querySelector(".win[data-app=settings] .s-acct .av-pic")), "Remove goes back to your initial");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  // 3.2: taskbar previews
+  await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
+  await p.hover("#tb-apps [data-app=calculator]"); await wait(900);
+  ok(await p.evaluate(() => { const P = document.querySelector("#tb-peek"); return !!P && !P.hidden && /Calculator/.test(P.textContent) && !!P.querySelector(".pk-shot .win"); }), "hovering an open app on the taskbar shows a preview of its window");
+  await p.click("#tb-peek .pk-x"); await wait(400);
+  ok(await p.evaluate(() => !NX.wins.get("calculator") && document.querySelector("#tb-peek").hidden), "the preview's x closes the app");
+  await p.mouse.move(W / 2, H / 3); await wait(200);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");
