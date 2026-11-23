@@ -192,6 +192,19 @@
       b.onpointerenter = (e) => { if (e.pointerType === "mouse") peekSoon(b); };
       b.onpointerleave = () => peekLeave();
       b.oncontextmenu = (e) => { e.preventDefault(); peekHide(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : [])]); };
+      // drag a pinned app sideways to put it somewhere else on the taskbar
+      b.onpointerdown = (e) => {
+        if (e.button !== 0 || !NX.prefs().pinned.includes(b.dataset.app)) return;
+        const x0 = e.clientX; let moved = false;
+        const move = (ev) => { const dx = ev.clientX - x0; if (!moved && Math.abs(dx) < 8) return; if (!moved) { moved = true; peekHide(); b.classList.add("tb-drag"); try { b.setPointerCapture(ev.pointerId); } catch (er) { /* fine */ } } b.style.transform = `translateX(${dx}px)`; };
+        const up = (ev) => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); if (!moved) return;
+          b.classList.remove("tb-drag"); b.style.transform = ""; const swallow = (ce) => { ce.stopPropagation(); ce.preventDefault(); }; b.addEventListener("click", swallow, { capture: true, once: true }); setTimeout(() => b.removeEventListener("click", swallow, true), 50);
+          const pins = NX.prefs().pinned.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || NX.prefs().installed.includes(id))), others = [...$("#tb-apps").querySelectorAll(".tb-app")].filter((x) => x !== b && pins.includes(x.dataset.app));
+          let at = others.findIndex((x) => { const r = x.getBoundingClientRect(); return ev.clientX < r.left + r.width / 2; }); if (at < 0) at = others.length;
+          const order = others.map((x) => x.dataset.app); order.splice(at, 0, b.dataset.app);
+          const rest = NX.prefs().pinned.filter((id) => !order.includes(id)); NX.setPref("pinned", [...order, ...rest]); taskbar(); };
+        addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
+      };
     });
   }
   // taskbar previews: hovering an open app shows a small picture of its window, its title and a close button

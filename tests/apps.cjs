@@ -68,6 +68,12 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   ok(await cv("Temperature", "100", "Celsius", "Fahrenheit") === "212", "and 100 C to 212 F");
   ok(await cv("Weight", "1", "Kilograms", "Pounds") === "2.204622622", "and 1 kg to 2.204622622 lb");
   await shot("converter"); await p.evaluate(() => NX.closeAll());
+  // the taskbar: drag File Explorer to after YouTube
+  const tbr = async (id) => p.evaluate((id) => { const r = document.querySelector(`#tb-apps [data-app="${id}"]`).getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }, id);
+  const f0 = await tbr("files"), y0 = await tbr("youtube");
+  await p.mouse.move(f0.x, f0.y); await p.mouse.down(); await p.mouse.move(f0.x + 20, f0.y, { steps: 3 }); await p.mouse.move(y0.x + y0.w * .4, f0.y, { steps: 8 }); await p.mouse.up(); await wait(400);
+  const order = await p.evaluate(() => NX.prefs().pinned.slice(0, 5).join(","));
+  ok(order === "settings,google,youtube,files,store" && await p.evaluate(() => [...document.querySelectorAll("#tb-apps .tb-app")].map((b) => b.dataset.app).slice(0, 5).join(",")) === order && !(await p.evaluate(() => !!document.querySelector(".win[data-app=files]"))), "Dragging a taskbar app moves it (and doesn't open it): " + order);
   // Auto mode: light by day, dark at night
   await p.evaluate(() => { NX.open("settings", { page: "personal" }); }); await wait(700);
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] [data-theme=auto]")][0].click()); await wait(300);
