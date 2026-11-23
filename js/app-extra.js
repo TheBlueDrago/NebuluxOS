@@ -61,7 +61,7 @@
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
-      body.innerHTML = `<div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
+      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="conv">Converter</button></div><div class="c-conv" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
       let cur = "0", prev = null, op = null, fresh = true, expr = "";
       const val = body.querySelector(".c-val"), ex = body.querySelector(".c-expr");
       const fmt = (n) => { if (!isFinite(n)) return "Can't divide by zero"; const s = Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0) ? n.toExponential(8) : String(+n.toPrecision(15)); return s; };
@@ -98,6 +98,38 @@
         if (m) { e.preventDefault(); press(m); }
       };
       addEventListener("keydown", key); win.onclose = () => removeEventListener("keydown", key);
+      // the unit converter: length, weight, temperature, volume, speed and time
+      const U = {
+        Length: { Millimeters: .001, Centimeters: .01, Meters: 1, Kilometers: 1000, Inches: .0254, Feet: .3048, Yards: .9144, Miles: 1609.344 },
+        Weight: { Grams: .001, Kilograms: 1, Ounces: .028349523125, Pounds: .45359237, Stones: 6.35029318, "Metric tons": 1000 },
+        Temperature: { Celsius: 0, Fahrenheit: 0, Kelvin: 0 },
+        Volume: { Milliliters: .001, Liters: 1, Teaspoons: .00492892159375, Tablespoons: .01478676478125, "Fluid ounces": .0295735295625, Cups: .2365882365, Gallons: 3.785411784 },
+        Speed: { "Meters per second": 1, "Kilometers per hour": 1 / 3.6, "Miles per hour": .44704, Knots: .514444 },
+        Time: { Seconds: 1, Minutes: 60, Hours: 3600, Days: 86400, Weeks: 604800 },
+      };
+      const toC = { Celsius: (v) => v, Fahrenheit: (v) => (v - 32) * 5 / 9, Kelvin: (v) => v - 273.15 }, fromC = { Celsius: (v) => v, Fahrenheit: (v) => v * 9 / 5 + 32, Kelvin: (v) => v + 273.15 };
+      const conv = body.querySelector(".c-conv"); let cat = "Length";
+      const opts = (sel) => Object.keys(U[cat]).map((u) => `<option ${u === sel ? "selected" : ""}>${u}</option>`).join("");
+      const convDraw = () => {
+        const us = Object.keys(U[cat]), a = us[cat === "Temperature" ? 0 : cat === "Length" ? 2 : cat === "Weight" ? 1 : 0], b = us[cat === "Temperature" ? 1 : cat === "Length" ? 5 : cat === "Weight" ? 3 : us.length - 1];
+        conv.innerHTML = `<select class="cv-cat" aria-label="What to convert">${Object.keys(U).map((c) => `<option ${c === cat ? "selected" : ""}>${c}</option>`).join("")}</select>
+          <label class="cv-box"><input class="cv-a" type="number" inputmode="decimal" value="1" aria-label="Amount"><select class="cv-ua" aria-label="From">${opts(a)}</select></label>
+          <button class="cv-swap" type="button" aria-label="Swap" title="Swap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/></svg></button>
+          <label class="cv-box out"><output class="cv-b"></output><select class="cv-ub" aria-label="To">${opts(b)}</select></label><p class="cv-note"></p>`;
+        const q = (s) => conv.querySelector(s), go = () => {
+          const v = parseFloat(q(".cv-a").value), ua = q(".cv-ua").value, ub = q(".cv-ub").value;
+          if (!isFinite(v)) { q(".cv-b").textContent = ""; q(".cv-note").textContent = ""; return; }
+          const r = cat === "Temperature" ? fromC[ub](toC[ua](v)) : (v * U[cat][ua]) / U[cat][ub];
+          const s = Math.abs(r) >= 1e12 || (Math.abs(r) < 1e-6 && r !== 0) ? r.toExponential(6) : String(+r.toPrecision(10));
+          q(".cv-b").textContent = s; q(".cv-note").textContent = v + " " + ua.toLowerCase() + " = " + s + " " + ub.toLowerCase();
+        };
+        q(".cv-cat").onchange = (e) => { cat = e.target.value; convDraw(); };
+        q(".cv-a").oninput = go; q(".cv-ua").onchange = go; q(".cv-ub").onchange = go;
+        q(".cv-swap").onclick = () => { const x = q(".cv-ua").value; q(".cv-ua").value = q(".cv-ub").value; q(".cv-ub").value = x; go(); };
+        go();
+      };
+      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const c = b.dataset.m === "conv";
+        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; body.querySelector(".c-disp").hidden = c; body.querySelector(".c-keys").hidden = c; hist.hidden = true; if (c && !conv.innerHTML) convDraw(); };
     } };
 
   // ---------- Paint: brush, colors, sizes, eraser, save as a picture ----------

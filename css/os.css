@@ -1018,3 +1018,14 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .wc-list{display:flex;flex-direction:column;gap:6px}
 .wc-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
 .wc-row span{flex:1;display:flex;flex-direction:column;min-width:0}.wc-row small{color:var(--sub);font-size:12px}.wc-row strong{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Calculator: Standard or Converter */
+.c-mode{margin:10px 12px 0;align-self:center}
+.c-conv{display:flex;flex-direction:column;gap:10px;padding:14px 16px}
+.c-conv select,.cv-box input{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--txt);font-size:14px}
+.cv-box{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.cv-box input,.cv-box output{font-size:28px;font-weight:600;border:0;background:none;padding:2px 0;color:var(--txt);min-height:40px}
+.cv-box input:focus{outline:0}.cv-box.out output{word-break:break-all}
+.cv-swap{align-self:center;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line)}
+.cv-note{margin:0;color:var(--sub);font-size:12px;text-align:center;min-height:1em}
+.c-disp[hidden],.c-keys[hidden],.c-conv[hidden]{display:none!important}

@@ -59,6 +59,15 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-wcdel]").click()); await wait(1200);
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=clock] .wc-row") && NX.data("world-clocks", []).length === 0), "and removes it");
   await p.evaluate(() => NX.closeAll());
+  // Calculator: the unit converter
+  await p.evaluate(() => { NX.open("calculator"); }); await wait(600);
+  await p.evaluate(() => document.querySelector(".win[data-app=calculator] [data-m=conv]").click()); await wait(300);
+  const cv = async (cat, a, ua, ub) => p.evaluate((cat, a, ua, ub) => { const w = document.querySelector(".win[data-app=calculator]"), set = (s, v) => { const e = w.querySelector(s); e.value = v; e.dispatchEvent(new Event(e.tagName === "INPUT" ? "input" : "change", { bubbles: true })); };
+    set(".cv-cat", cat); set(".cv-a", a); set(".cv-ua", ua); set(".cv-ub", ub); return w.querySelector(".cv-b").textContent; }, cat, a, ua, ub);
+  ok(await cv("Length", "1", "Miles", "Kilometers") === "1.609344", "Calculator converts 1 mile to 1.609344 km");
+  ok(await cv("Temperature", "100", "Celsius", "Fahrenheit") === "212", "and 100 C to 212 F");
+  ok(await cv("Weight", "1", "Kilograms", "Pounds") === "2.204622622", "and 1 kg to 2.204622622 lb");
+  await shot("converter"); await p.evaluate(() => NX.closeAll());
   // Auto mode: light by day, dark at night
   await p.evaluate(() => { NX.open("settings", { page: "personal" }); }); await wait(700);
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] [data-theme=auto]")][0].click()); await wait(300);
