@@ -17,6 +17,12 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   await p.click(".win[data-app=camera] .cam-shoot"); await wait(1500);
   const pics = await p.evaluate(async () => (await NX.fs.list(await NX.folder("Pictures"))).entries.map((e) => e.name).filter((n) => /^Photo/.test(n)));
   ok(pics.length === 1 && await p.evaluate(() => !document.querySelector(".cam-last").hidden), "Camera takes a photo and saves it in Pictures");
+  // that photo as the background, from Photos
+  await p.click(".win[data-app=camera] .cam-last"); await wait(800);
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-tile").click()); await wait(700);
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-wall").click()); await wait(1500);
+  ok(await p.evaluate(() => NX.prefs().wallpaper === "custom" && !!NX.data("wall-custom", null)), "Photos makes a picture your background");
+  await p.evaluate(() => { NX.setPref("wallpaper", 0); NX.closeAll(); });
   await shot("camera-after");
   await p.evaluate(() => { NX.closeAll(); NX.open("recorder"); }); await wait(500);
   await p.click(".win[data-app=recorder] .vr-go"); await wait(2500); await shot("recorder-rec"); await p.click(".win[data-app=recorder] .vr-go"); await wait(1500);

@@ -297,7 +297,7 @@
       body.innerHTML = `<div class="ph-bar"><button class="wv-b" data-p="prev" aria-label="Previous" title="Previous">${NX.icon("back", 16)}</button><button class="wv-b" data-p="next" aria-label="Next" title="Next">${NX.icon("fwd", 16)}</button><span class="ph-name"></span><button class="wv-b" data-p="out" aria-label="Zoom out" title="Zoom out">${NX.icon("zoomout", 16)}</button><button class="wv-b" data-p="in" aria-label="Zoom in" title="Zoom in">${NX.icon("zoomin", 16)}</button><button class="wv-b" data-p="turn" aria-label="Rotate" title="Rotate">${NX.icon("rotate", 16)}</button><button class="wv-b" data-p="all" aria-label="All pictures" title="All pictures">${NX.icon("grid", 16)}</button></div><div class="ph-view"></div>`;
       const v = body.querySelector(".ph-view"), nm = body.querySelector(".ph-name");
       // the slideshow: every picture, one after another, the whole window; Esc or a click stops it
-      body.querySelector(".ph-bar").insertAdjacentHTML("beforeend", `<button class="btn sm ph-slide" data-p="slide" title="Slideshow">${NX.icon("media", 14)}Slideshow</button>`);
+      body.querySelector(".ph-bar").insertAdjacentHTML("beforeend", `<button class="btn sm ph-wall" data-p="wall" title="Make this picture your background" hidden>${NX.icon("display", 14)}Set as background</button><button class="btn sm ph-slide" data-p="slide" title="Slideshow">${NX.icon("media", 14)}Slideshow</button>`);
       let slideT = 0;
       const slideStop = () => { if (!slideT) return; clearInterval(slideT); slideT = 0; body.classList.remove("ph-show"); };
       const slideGo = async () => {
@@ -311,13 +311,13 @@
       async function show() {
         const e = list[i]; if (!e) return gallery();
         nm.textContent = e.name + (list.length > 1 ? `  (${i + 1} of ${list.length})` : ""); win.el.querySelector(".wt-name").textContent = e.name + " - Photos";
-        zoom = 1; turn = 0; v.innerHTML = `<img alt="${NX.esc(e.name)}" draggable="false">`; const img = v.querySelector("img");
+        zoom = 1; turn = 0; v.innerHTML = `<img alt="${NX.esc(e.name)}" draggable="false">`; const img = v.querySelector("img"); body.querySelector(".ph-wall").hidden = false;
         try { img.src = await NX.fs.url(e.path); } catch (er) { v.innerHTML = `<p class="ph-msg">${NX.esc(er.message)}</p>`; }
         img.onerror = () => { v.innerHTML = `<p class="ph-msg">This picture couldn't be shown.</p>`; };
       }
       const tf = () => { const img = v.querySelector("img"); if (img) img.style.transform = `scale(${zoom}) rotate(${turn}deg)`; };
       async function gallery() {
-        nm.textContent = "Pictures"; win.el.querySelector(".wt-name").textContent = "Photos";
+        nm.textContent = "Pictures"; win.el.querySelector(".wt-name").textContent = "Photos"; body.querySelector(".ph-wall").hidden = true;
         let r; try { r = await NX.fs.list(opts.dir || await NX.folder("Pictures")); } catch (e) { v.innerHTML = `<p class="ph-msg">${NX.esc(e.message)}</p>`; return; }
         const shots = r.entries.find((x) => x.dir && x.name === "Screenshots"); let more = [];
         if (shots) { try { more = (await NX.fs.list(shots.path)).entries; } catch (e) { more = []; } }
@@ -327,6 +327,7 @@
       }
       body.querySelector(".ph-bar").onclick = (e) => {
         const b = e.target.closest("[data-p]"); if (!b) return; const k = b.dataset.p;
+        if (k === "wall" && list[i] && NX.setWallpaperFile) { const it = list[i]; (async () => { try { const blob = await (await fetch(await NX.fs.url(it.path))).blob(); const ext = (it.name.split(".").pop() || "").toLowerCase(); await NX.setWallpaperFile(new File([blob], it.name, { type: blob.type && blob.type.startsWith("image/") ? blob.type : "image/" + (ext === "jpg" ? "jpeg" : ext || "jpeg") })); } catch (er) { NX.toast(er.message || "That picture couldn't be used."); } })(); return; }
         if (k === "prev" && list.length) { i = (i - 1 + list.length) % list.length; show(); } if (k === "next" && list.length) { i = (i + 1) % list.length; show(); }
         if (k === "in") { zoom = Math.min(6, zoom * 1.25); tf(); } if (k === "out") { zoom = Math.max(0.2, zoom / 1.25); tf(); } if (k === "turn") { turn = (turn + 90) % 360; tf(); } if (k === "all") { slideStop(); gallery(); } if (k === "slide") { if (slideT) slideStop(); else slideGo(); }
       };
