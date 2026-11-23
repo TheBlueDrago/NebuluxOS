@@ -45,7 +45,7 @@
       const u = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4${fahrenheit() ? "&temperature_unit=fahrenheit" : ""}`;
       const j = await (await fetch(u)).json();
       const w = { key: place.name, at: Date.now(), unit: fahrenheit() ? "F" : "C", now: Math.round(j.current.temperature_2m), code: j.current.weather_code, days: j.daily.time.map((t, i) => ({ t, code: j.daily.weather_code[i], hi: Math.round(j.daily.temperature_2m_max[i]), lo: Math.round(j.daily.temperature_2m_min[i]) })) };
-      NX.setData("wx", w); return w;
+      NX.setData("wx", w); NX.set("wx-lock", { now: w.now, unit: w.unit, code: w.code, at: w.at }); return w; // (the lock screen shows the last weather too)
     } catch (e) { return cached; } finally { wxBusy = false; }
   }
   function tbWidget(w) {

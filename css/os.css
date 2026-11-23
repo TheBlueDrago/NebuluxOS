@@ -1008,3 +1008,7 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .nk-row span{display:flex;align-items:center;gap:4px;flex:none}.nk-row i{font-style:normal;color:var(--sub);font-size:12px}
 kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;background:var(--card2);border:1px solid var(--line);border-bottom-width:2px;font:600 12px var(--font);text-align:center}
 @media (max-width:520px){.nk-grid{grid-template-columns:1fr}}
+
+/* the lock screen's weather, under the date */
+#lk-wx{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;font-size:18px;color:#fff;text-shadow:0 2px 12px #0008}
+#lk-wx[hidden]{display:none}

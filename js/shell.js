@@ -57,9 +57,16 @@
     const html = `<span title="${net ? "Connected" : "Not connected"}">${NX.icon(net ? "wifi" : "wifioff", 18)}</span>${b ? `<span class="lk-batt" title="${battText()}">${NX.battIcon(22)}<small>${b.percent}%</small></span>` : ""}`;
     if (el.innerHTML !== html) el.innerHTML = html;
   }
+  // the lock screen's weather: the last forecast Widgets got (up to 3 hours old)
+  function lkWeather() {
+    let el = $("#lk-wx"); const d = $("#lk-date"); if (!el && d) { el = document.createElement("div"); el.id = "lk-wx"; d.after(el); } if (!el) return;
+    const w = NX.get("wx-lock", null), fresh = !!(w && Date.now() - w.at < 3 * 3600000 && NX.wxInfo);
+    const html = fresh ? NX.wxInfo.icon(w.code, 30) + "<span>" + w.now + "°" + w.unit + "  " + NX.esc(NX.wxInfo.name(w.code)) + "</span>" : "";
+    if (el.innerHTML !== html) el.innerHTML = html; el.hidden = !fresh;
+  }
   function lock(clockFirst) {
     NX.me = null; applyLook(); const L = $("#lock"); L.hidden = false; L.className = clockFirst ? "locked" : "signin"; $("#desktop").hidden = true;
-    const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); lkStatus(); };
+    const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); lkStatus(); lkWeather(); };
     tick(); clearInterval(lockT); lockT = setInterval(tick, 1000);
     const users = NX.users(); chosen = (users.find((u) => u.id === NX.get("lastUser")) || users[0] || null); mode = users.length ? "signin" : "setup";
     if (!users.length && NX.oobe) { L.hidden = true; clearInterval(lockT); NX.oobe((u) => { L.hidden = false; enter(u); }); return; }

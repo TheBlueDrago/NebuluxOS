@@ -33,6 +33,14 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   const online = await p.waitForFunction(() => document.querySelector(".wa-now"), { timeout: 15000 }).then(() => true).catch(() => false); await shot("weather");
   if (online) ok(await p.evaluate(() => /Chicago/.test(document.querySelector(".wa-head h2").textContent) && document.querySelectorAll(".wa-hours > div").length >= 20 && document.querySelectorAll(".wa-days > div").length === 7), "it shows now, 24 hours and 7 days");
   else console.log("(offline: the forecast part was skipped)");
+  if (online) {
+    await p.evaluate(() => NX.wxInfo.refresh()); await wait(1500);
+    await p.evaluate(() => NX.shell.lockKeep()); await wait(1300); await shot("lock-weather");
+    ok(await p.evaluate(() => { const e = document.querySelector("#lk-wx"); return e && !e.hidden && /°/.test(e.textContent); }), "the lock screen shows the weather under the date");
+    await p.keyboard.press("Enter"); await wait(400);
+    const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); }
+    await p.waitForFunction(() => !document.querySelector("#desktop").hidden, { timeout: 8000 }).catch(() => {});
+  }
   await p.evaluate(() => { NX.closeAll(); NX.shortcuts(); }); await shot("keys");
   ok(await p.evaluate(() => document.querySelectorAll("#nx-keys .nk-row").length >= 18), "Nebulux + / shows the keyboard shortcuts");
   await p.keyboard.press("Escape"); ok(await p.evaluate(() => !document.querySelector("#nx-keys")), "and Escape closes it");
