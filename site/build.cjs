@@ -10,7 +10,7 @@ const SITE = __dirname, REPO = path.join(SITE, ".."), PUB = path.join(SITE, "pub
 
 global.NX = {}; require(path.join(REPO, "js", "whatsnew.js"));
 const VERSION = NX.version, NEWS = NX.whatsNew, BEFORE = NX.whatsNewBefore || [];
-const REL = { version: VERSION, file: "Nebulux-OS-" + VERSION + ".iso", size: 1248460800, sha256: "caacc42932f1e4ada67a98fc4d690b7a58f71bf80503d2180891e3756447134c" };
+const REL = { version: VERSION, file: "Nebulux-OS-" + VERSION + ".iso", size: 1249689600, sha256: "586d7b8d701428771df9df687585a91285537277236aeb09e0b09c5336221da6" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // line icons (no emojis)
@@ -35,6 +35,9 @@ const I = {
   play: '<circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z" fill="currentColor"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  camera: '<rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7l1.5-3h5L16 7"/><circle cx="12" cy="13.5" r="3.5"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',
+  cloud: '<path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z"/>',
 };
 const icon = (n, s) => `<svg viewBox="0 0 24 24" width="${s || 22}" height="${s || 22}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 const NAV = [["/", "Home"], ["/features", "Features"], ["/#compare", "Compare"], ["/whats-new", "What's new"], ["/download", "Download"], ["/help", "Help"]];
