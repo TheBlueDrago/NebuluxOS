@@ -6,34 +6,35 @@
 <script src="mp4-muxer.js"></script>
 <script>
 // The Nebulux OS ad: 1920x1080, 30 frames a second, drawn frame by frame (the same picture every time), cut to the
-// beat of the Nebulux ad's music (130 beats a minute). Nine scenes, real Nebulux OS and website pictures.
+// beat of the Nebulux ad's music (130 beats a minute).
+// A splash to open (no logo), the desktop, the highlights with a spotlight on each one, laptops, updates, the
+// comparison, the website, a click on Download right on the boom, and the logo splash with the end card.
 "use strict";
 const W = 1920, H = 1080, FPS = 30, BEAT = 60 / 130;
 const cv = document.getElementById("c"), main = cv.getContext("2d");
-let x = main; // the canvas being drawn on (scenes can be drawn off screen for transitions)
+let x = main; // the canvas being drawn on (scenes are drawn off screen for transitions)
 const IMG = {};
 const load = (k, src) => fetch(src).then((r) => r.blob()).then(createImageBitmap).then((b) => (IMG[k] = b));
-const SHOTS = ["lock", "desktop", "start", "search", "desks", "clip", "notes", "tabs", "settings", "store", "quick", "whatsnew", "files", "web-hero", "web-full", "web-download", "web-new", "logo", "wall"];
-window.__ready = Promise.all(SHOTS.map((k) => load(k, "shots/" + k + (k === "logo" ? ".png" : ".jpg")))).then(() => document.fonts.ready);
+const SHOTS = ["lock", "desktop", "start", "search", "desks", "clip", "notes", "tabs", "settings", "store", "quick", "whatsnew", "web-full", "web-download", "logo-big", "wall"];
+window.__ready = Promise.all(SHOTS.map((k) => load(k, "shots/" + k + (k === "logo-big" ? ".png" : ".jpg")))).then(() => document.fonts.ready);
 
 // ---------- helpers ----------
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ease = (v) => { v = clamp(v); return 1 - Math.pow(1 - v, 3); };
 const inout = (v) => { v = clamp(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
-const back = (v) => { v = clamp(v); const c = 1.6; return 1 + (c + 1) * Math.pow(v - 1, 3) + c * Math.pow(v - 1, 2); };
+const back = (v) => { v = clamp(v); const c = 1.5; return 1 + (c + 1) * Math.pow(v - 1, 3) + c * Math.pow(v - 1, 2); };
 const F = (w, s) => `${w} ${s}px "Segoe UI Variable Display", "Segoe UI", Inter, sans-serif`;
-function rr(X, Y, w, h, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); }
+function rr(X, Y, w, h, r, keep) { if (!keep) x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); }
 function grad(x0, x1) { const g = x.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, "#c4b5fd"); g.addColorStop(.5, "#a78bfa"); g.addColorStop(1, "#f0abfc"); return g; }
 function text(s, X, Y, font, fill, align = "center", a = 1) { if (a <= 0) return; x.save(); x.globalAlpha *= a; x.font = font; x.fillStyle = fill; x.textAlign = align; x.textBaseline = "middle"; x.fillText(s, X, Y); x.restore(); }
 // a headline: parts [{ s, g }] (g = the gradient word), rising in word by word
 function headline(parts, l, Y, size, X = W / 2, align = "center") {
-  x.save(); x.font = F(800, size); const sp = size * .28;
+  x.save(); const base = x.globalAlpha; x.font = F(800, size); const sp = size * .28;
   const widths = parts.map((p) => x.measureText(p.s).width), total = widths.reduce((a, b) => a + b, 0) + sp * (parts.length - 1);
   let cx = align === "center" ? X - total / 2 : X;
-  parts.forEach((p, i) => { const u = ease((l - i * .09) / .45); if (u > 0) { x.globalAlpha = u; x.fillStyle = p.g ? grad(cx, cx + widths[i]) : "#fff"; x.textAlign = "left"; x.textBaseline = "middle"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 24; x.fillText(p.s, cx, Y + (1 - u) * 40); } cx += widths[i] + sp; });
+  parts.forEach((p, i) => { const u = ease((l - i * .08) / .4); if (u > 0) { x.globalAlpha = base * u; x.fillStyle = p.g ? grad(cx, cx + widths[i]) : "#fff"; x.textAlign = "left"; x.textBaseline = "middle"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 24; x.fillText(p.s, cx, Y + (1 - u) * 36); } cx += widths[i] + sp; });
   x.restore();
 }
-// seeded stars
 const STARS = Array.from({ length: 220 }, (_, i) => { const r = (n) => { const s = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453; return s - Math.floor(s); }; return [r(1) * W, r(2) * H, r(3) * 1.6 + .3, r(4) * 6.28]; });
 function bg(t, dim = 1) {
   x.fillStyle = "#05030c"; x.fillRect(0, 0, W, H);
@@ -42,43 +43,47 @@ function bg(t, dim = 1) {
   for (const [sx, sy, sr, ph] of STARS) { x.globalAlpha = (.35 + .65 * (.5 + .5 * Math.sin(t * 2.1 + ph))) * dim; x.fillStyle = "#fff"; x.fillRect(sx, sy, sr, sr); }
   x.globalAlpha = 1;
 }
-// a beat punch: 1 right on a beat, fading over a quarter beat
 const punch = (t) => { const p = (t / BEAT) % 1; return Math.exp(-p * 7); };
 // a framed screen: the picture inside a glowing rounded frame
 function screen(img, X, Y, w, h, a = 1, opt = {}) {
   if (!img || a <= 0) return; x.save(); x.globalAlpha *= a;
-  x.shadowColor = "rgba(124,92,255,.55)"; x.shadowBlur = 90; rr(X, Y, w, h, 22); x.fillStyle = "#000"; x.fill();
+  x.shadowColor = "rgba(124,92,255,.5)"; x.shadowBlur = 80; rr(X, Y, w, h, 22); x.fillStyle = "#000"; x.fill();
   x.shadowColor = "transparent"; x.save(); rr(X, Y, w, h, 22); x.clip();
-  const sx = opt.sx || 0, sy = opt.sy || 0, sw = opt.sw || img.width, sh = opt.sh || img.height;
-  x.drawImage(img, sx, sy, sw, sh, X, Y, w, h); x.restore();
+  x.drawImage(img, opt.sx || 0, opt.sy || 0, opt.sw || img.width, opt.sh || img.height, X, Y, w, h); x.restore();
   x.strokeStyle = "rgba(255,255,255,.18)"; x.lineWidth = 2; rr(X, Y, w, h, 22); x.stroke(); x.restore();
 }
-// a picture zoomed into: scale z around a point (fx, fy) of the frame, as fractions
-function zoomed(img, X, Y, w, h, z, fx, fy, a = 1) { const sw = img.width / z, sh = img.height / z; screen(img, X, Y, w, h, a, { sx: clamp(fx * img.width - sw / 2, 0, img.width - sw), sy: clamp(fy * img.height - sh / 2, 0, img.height - sh), sw, sh }); }
-// a pill label
+// a picture zoomed in by z around (fx, fy), as fractions; returns how to find a point of the picture in the frame
+function zoomed(img, X, Y, w, h, z, fx, fy, a = 1) {
+  const sw = img.width / z, sh = img.height / z, sx = clamp(fx * img.width - sw / 2, 0, img.width - sw), sy = clamp(fy * img.height - sh / 2, 0, img.height - sh);
+  screen(img, X, Y, w, h, a, { sx, sy, sw, sh });
+  return (u, v) => [X + (u * img.width - sx) / sw * w, Y + (v * img.height - sy) / sh * h];
+}
+// the spotlight: everything darker except one part, with a glowing outline around it
+function spotlight(X, Y, w, h, a, frame) {
+  if (a <= 0) return; x.save(); x.globalAlpha = a;
+  x.beginPath(); rr(frame[0], frame[1], frame[2], frame[3], 22); x.save(); x.clip();
+  x.fillStyle = "rgba(5,3,12,.62)"; x.beginPath(); x.rect(frame[0], frame[1], frame[2], frame[3]); rr(X, Y, w, h, 14, true); x.fill("evenodd"); x.restore();
+  x.shadowColor = "rgba(240,171,252,.9)"; x.shadowBlur = 30; x.strokeStyle = "#f0abfc"; x.lineWidth = 4; rr(X, Y, w, h, 14); x.stroke();
+  x.restore();
+}
 function chip(s, X, Y, a, size = 30, fill = "rgba(255,255,255,.1)", col = "#fff", align = "left") {
   if (a <= 0) return; x.save(); x.globalAlpha *= clamp(a); x.font = F(700, size); const w = x.measureText(s).width + size * 1.4, h = size * 1.9;
-  const X0 = align === "center" ? X - w / 2 : X; x.translate(0, (1 - ease(a)) * 24);
+  const X0 = align === "center" ? X - w / 2 : X; x.translate(0, (1 - ease(a)) * 20);
   rr(X0, Y - h / 2, w, h, h / 2); x.fillStyle = fill; x.fill(); x.strokeStyle = "rgba(255,255,255,.16)"; x.lineWidth = 1.5; x.stroke();
   x.fillStyle = col; x.textAlign = "left"; x.textBaseline = "middle"; x.fillText(s, X0 + size * .7, Y + 1); x.restore();
 }
 function kicker(s, X, Y, a, align = "left") { text(s.toUpperCase().split("").join(String.fromCharCode(8202)), X, Y, F(800, 24), "#b9a6ff", align, a); }
-// the Nebulux logo with its glow
-function logo(X, Y, r, a = 1, glow = 1) {
-  if (!IMG.logo || a <= 0) return; x.save(); x.globalAlpha *= a;
-  const g = x.createRadialGradient(X, Y, r * .2, X, Y, r * 2.6); g.addColorStop(0, `rgba(192,132,252,${.55 * glow})`); g.addColorStop(1, "rgba(192,132,252,0)"); x.fillStyle = g; x.fillRect(X - r * 3, Y - r * 3, r * 6, r * 6);
-  x.beginPath(); x.arc(X, Y, r, 0, 7); x.clip(); x.drawImage(IMG.logo, X - r, Y - r, r * 2, r * 2); x.restore();
+// the Nebulux logo, as it is: the square nebula picture with rounded corners, and a soft glow
+function logo(X, Y, size, a = 1, glow = 1) {
+  const img = IMG["logo-big"]; if (!img || a <= 0) return; x.save(); x.globalAlpha *= a; const s = size, r = s * .22;
+  const g = x.createRadialGradient(X, Y, s * .2, X, Y, s * 1.4); g.addColorStop(0, `rgba(192,132,252,${.5 * glow})`); g.addColorStop(1, "rgba(192,132,252,0)"); x.fillStyle = g; x.fillRect(X - s * 1.5, Y - s * 1.5, s * 3, s * 3);
+  x.shadowColor = "rgba(0,0,0,.5)"; x.shadowBlur = 40; rr(X - s / 2, Y - s / 2, s, s, r); x.fillStyle = "#000"; x.fill(); x.shadowColor = "transparent";
+  x.save(); rr(X - s / 2, Y - s / 2, s, s, r); x.clip(); x.drawImage(img, X - s / 2, Y - s / 2, s, s); x.restore();
+  x.strokeStyle = "rgba(255,255,255,.22)"; x.lineWidth = 2; rr(X - s / 2, Y - s / 2, s, s, r); x.stroke(); x.restore();
 }
-// orbit rings around a point, like the Nebulux wallpaper
-function rings(X, Y, t, a) {
-  if (a <= 0) return; x.save(); x.translate(X, Y); x.rotate(-.42 + Math.sin(t * .3) * .03); x.globalAlpha = a;
-  [[560, 150, 9, .55], [470, 122, 7, .45], [385, 98, 5, .35]].forEach(([rx, ry, lw, al], i) => { const g = x.createLinearGradient(-rx, 0, rx, 0); g.addColorStop(0, `rgba(167,139,250,${al})`); g.addColorStop(.5, `rgba(240,171,252,${al + .15})`); g.addColorStop(1, `rgba(124,92,255,${al})`); x.strokeStyle = g; x.lineWidth = lw; x.beginPath(); x.ellipse(0, 0, rx * (1 + i * 0), ry, 0, 0, 7); x.stroke(); });
-  x.restore();
-}
-// a browser window around a picture of the website
 function browser(img, X, Y, w, h, scrollY, a = 1) {
   if (a <= 0) return; x.save(); x.globalAlpha *= a; const bar = 64;
-  x.shadowColor = "rgba(124,92,255,.5)"; x.shadowBlur = 90; rr(X, Y, w, h + bar, 20); x.fillStyle = "#16112a"; x.fill(); x.shadowColor = "transparent";
+  x.shadowColor = "rgba(124,92,255,.5)"; x.shadowBlur = 80; rr(X, Y, w, h + bar, 20); x.fillStyle = "#16112a"; x.fill(); x.shadowColor = "transparent";
   ["#ff5f57", "#febc2e", "#28c840"].forEach((c, i) => { x.fillStyle = c; x.beginPath(); x.arc(X + 32 + i * 26, Y + bar / 2, 8, 0, 7); x.fill(); });
   rr(X + 130, Y + 14, w - 260, bar - 28, 18); x.fillStyle = "rgba(255,255,255,.08)"; x.fill();
   text("nebuluxos.thebluedragonstriker.workers.dev", X + 160, Y + bar / 2 + 1, F(600, 22), "#e9e4ff", "left");
@@ -86,71 +91,70 @@ function browser(img, X, Y, w, h, scrollY, a = 1) {
   x.strokeStyle = "rgba(255,255,255,.16)"; x.lineWidth = 2; rr(X, Y, w, h + bar, 20); x.stroke(); x.restore();
 }
 function cursor(X, Y, down) { x.save(); x.translate(X, Y); x.scale(down ? .9 : 1, down ? .9 : 1); x.fillStyle = "#fff"; x.strokeStyle = "#000"; x.lineWidth = 2.5; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, 46); x.lineTo(12, 35); x.lineTo(21, 54); x.lineTo(29, 50); x.lineTo(20, 32); x.lineTo(36, 32); x.closePath(); x.fill(); x.stroke(); x.restore(); }
+// the bottom caption strip used by the highlight scenes
+function captionStrip(a) { if (a <= 0) return; x.save(); x.globalAlpha = a; const g = x.createLinearGradient(0, H - 340, 0, H); g.addColorStop(0, "rgba(5,3,12,0)"); g.addColorStop(1, "rgba(5,3,12,.94)"); x.fillStyle = g; x.fillRect(0, H - 340, W, 340); x.restore(); }
 
-// ---------- the scenes (l = seconds into the scene, d = its length) ----------
-// 1. The name: the logo arrives, the rings, "Nebulux OS"
-function sIntro(l, d, t) {
-  bg(t, .9 + .1 * punch(t));
-  const u = back((l - .15) / .9), r = 120 * u * (1 + .04 * punch(t));
-  rings(W / 2, 440, t, ease((l - .5) / 1.2) * .9);
-  logo(W / 2, 440, r, ease(l / .4), 1 + .6 * punch(t));
-  x.save(); x.font = F(900, 150); const ws = "Nebulux OS".split(""); let tw = 0; ws.forEach((c) => (tw += x.measureText(c).width)); let cx = W / 2 - tw / 2;
-  ws.forEach((c, i) => { const v = ease((l - 1.4 - i * .05) / .5); const cw = x.measureText(c).width; if (v > 0) { x.globalAlpha = v; x.fillStyle = grad(W / 2 - tw / 2, W / 2 + tw / 2); x.textAlign = "left"; x.textBaseline = "middle"; x.shadowColor = "rgba(124,92,255,.6)"; x.shadowBlur = 40; x.fillText(c, cx, 720 + (1 - v) * 60); } cx += cw; });
-  x.restore();
-  text("A whole computer on a USB stick.", W / 2, 840, F(600, 46), "#d9d0ff", "center", ease((l - 2.5) / .6));
-  // the last half beat: everything rushes toward you into the flash
-  if (l > d - .5) { const v = (l - (d - .5)) / .5; x.fillStyle = `rgba(255,255,255,${v * v * .9})`; x.fillRect(0, 0, W, H); }
+// ---------- the scenes (l = seconds into the scene, d = its length, t = seconds into the ad) ----------
+// 1. The opening splash: a line of light, then the words land on the beat
+function sOpen(l, d, t) {
+  bg(t, .55 + .45 * ease(l / 1.5));
+  const line = ease(l / .7), lw = W * .8 * line; x.save(); const lg = x.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0); lg.addColorStop(0, "rgba(240,171,252,0)"); lg.addColorStop(.5, `rgba(255,255,255,${.9 * (1 - ease((l - 1.2) / .6))})`); lg.addColorStop(1, "rgba(240,171,252,0)"); x.fillStyle = lg; x.fillRect(W / 2 - lw / 2, H / 2 - 2, lw, 4); x.restore();
+  const b = l / BEAT;
+  // beat 2: "A whole computer." beat 4: "On a USB stick." beat 6: "This is Nebulux OS."
+  const out1 = ease((b - 5.6) / .5);
+  if (b > 1.8 && out1 < 1) { x.save(); x.globalAlpha = 1 - out1; x.translate(0, -out1 * 60); headline([{ s: "A whole computer." }], (b - 2) * BEAT, H / 2 - 70, 100); headline([{ s: "On a USB stick.", g: true }], (b - 4) * BEAT, H / 2 + 70, 100); x.restore(); }
+  if (b > 5.9) { const z = 1 + .05 * ease((b - 6) / 4); x.save(); x.translate(W / 2, H / 2); x.scale(z, z); x.translate(-W / 2, -H / 2); headline([{ s: "This is" }, { s: "Nebulux OS.", g: true }], (b - 6) * BEAT, H / 2, 140); x.restore(); }
+  if (l > d - .35) { const v = (l - (d - .35)) / .35; x.fillStyle = `rgba(255,255,255,${v * v * .95})`; x.fillRect(0, 0, W, H); }
 }
 // 2. Signing in: the lock screen lifts away to show the desktop
 function sDesktop(l, d, t) {
   bg(t, .7);
   const fw = 1560, fh = 975, X = (W - fw) / 2, Y = 36, z = 1 + .03 * (l / d);
   x.save(); x.translate(W / 2, Y + fh / 2); x.scale(z, z); x.translate(-W / 2, -(Y + fh / 2));
-  const lift = inout((l - 1.5) / .7);
+  const lift = inout((l - 1.3) / .7);
   screen(IMG.desktop, X, Y, fw, fh);
   if (lift < 1) { x.save(); rr(X, Y, fw, fh, 22); x.clip(); x.drawImage(IMG.lock, X, Y - lift * fh, fw, fh); x.restore(); }
   x.restore();
-  // the caption on a dark strip at the bottom
-  const a = ease((l - 2.2) / .5) * (1 - ease((l - (d - .25)) / .25));
-  if (a > 0) { x.save(); x.globalAlpha = a; const g = x.createLinearGradient(0, H - 330, 0, H); g.addColorStop(0, "rgba(5,3,12,0)"); g.addColorStop(1, "rgba(5,3,12,.92)"); x.fillStyle = g; x.fillRect(0, H - 330, W, 330); x.restore(); }
-  headline([{ s: "Your desktop." }, { s: "On any PC.", g: true }], l - 2.2, 905, 96);
-  text("Plug in the USB, start up, sign in.", W / 2, 1000, F(600, 36), "#d9d0ff", "center", ease((l - 2.6) / .5));
+  captionStrip(ease((l - 2) / .5));
+  headline([{ s: "Your desktop." }, { s: "On any PC.", g: true }], l - 2, 905, 96);
+  text("Plug in the USB, start up, sign in. Your computer's own drive is never touched.", W / 2, 1000, F(600, 34), "#d9d0ff", "center", ease((l - 2.4) / .5));
 }
-// 3. Start and search
-function sStart(l, d, t) {
+// 3. Start and search, with the spotlight on Pin to taskbar
+function sSearch(l, d, t) {
   bg(t, .7);
-  const fw = 1400, fh = 875, X = 90, Y = (H - fh) / 2;
-  const s1 = ease(l / .45), sw = inout((l - 2.1) / .5);
-  screen(IMG.desktop, X, Y, fw, fh, 1 - s1);
-  if (sw < 1) zoomed(IMG.start, X, Y, fw, fh, 1 + .02 * s1, .5, .55, s1 * (1 - sw));
-  if (sw > 0) zoomed(IMG.search, X, Y, fw, fh, 1 + .25 * inout((l - 2.4) / 1.6), .52, .4, sw);
-  kicker("Start and search", 1560, 360, ease((l - .3) / .4));
-  x.save(); x.font = F(800, 76); ["Find", "anything."].forEach((s, i) => { const v = ease((l - .45 - i * .12) / .45); x.globalAlpha = v; x.fillStyle = i ? grad(1560, 1860) : "#fff"; x.textAlign = "left"; x.textBaseline = "middle"; x.fillText(s, 1560, 450 + i * 88 + (1 - v) * 30); }); x.restore();
-  ["Apps, settings and", "files in one search.", "Pin it to the taskbar."].forEach((s, i) => text(s, 1560, 650 + i * 46, F(600, 32), "#d9d0ff", "left", ease((l - 1 - i * .15) / .5)));
+  const fw = 1400, fh = 875, X = 80, Y = (H - fh) / 2, sw = inout((l - 1.6) / .45), z = 1 + .45 * inout((l - 2) / 1.4);
+  if (sw < 1) zoomed(IMG.start, X, Y, fw, fh, 1, .5, .5, 1 - sw);
+  if (sw > 0) { const at = zoomed(IMG.search, X, Y, fw, fh, z, .6, .42, sw); const [a0, b0] = at(.543, .434), [a1, b1] = at(.698, .484); spotlight(a0, b0, a1 - a0, b1 - b0, ease((l - 2.7) / .4), [X, Y, fw, fh]); }
+  kicker("Start and search", 1550, 360, ease((l - .2) / .4));
+  x.save(); x.font = F(800, 76); ["Find", "anything."].forEach((s, i) => { const v = ease((l - .35 - i * .1) / .4); x.globalAlpha = v; x.fillStyle = i ? grad(1550, 1860) : "#fff"; x.textAlign = "left"; x.textBaseline = "middle"; x.fillText(s, 1550, 450 + i * 88 + (1 - v) * 30); }); x.restore();
+  ["Apps, settings and files", "in one search.", "Then Pin to taskbar."].forEach((s, i) => text(s, 1550, 650 + i * 46, F(600, 32), i === 2 ? "#f0abfc" : "#d9d0ff", "left", ease((l - (i === 2 ? 2.8 : .9 + i * .15)) / .4)));
 }
-// 4. New in 3.2: a quick picture on every second beat
-// [picture, label, where to zoom in (x, y as fractions), how close]: each one pushes in on the feature itself
-const MONTAGE = [["desks", "Virtual desktops", .5, .86, 1.9], ["clip", "Clipboard history", .86, .74, 2.1], ["notes", "Sticky Notes", .45, .36, 1.55], ["tabs", "Tabs in File Explorer", .26, .14, 2.3], ["settings", "Settings that make sense", .55, .36, 1.5], ["store", "Real apps from the Store", .5, .38, 1.45]];
-const mz = (it, v) => 1.08 + (it[4] - 1.08) * inout(v); // the zoom of a montage picture, v = 0 to 1 through its two beats
-function sMontage(l, d, t) {
-  bg(t, .8 + .2 * punch(t));
-  const each = BEAT * 2, i = Math.min(MONTAGE.length - 1, Math.floor(l / each)), li = l - i * each, [k, label, fx, fy] = MONTAGE[i];
-  const fw = 1500, fh = 937, X = (W - fw) / 2, Y = 40, dir = i % 2 ? -1 : 1;
-  const inn = ease(li / .22), off = (1 - inn) * W * .9 * dir, z = mz(MONTAGE[i], (li - .1) / (each - .1)) * (1 + .012 * punch(t));
-  // the previous picture leaving the other way, with a blur streak
-  if (i > 0 && li < .22) { const pv = MONTAGE[i - 1], [pk, , pfx, pfy] = pv; x.save(); x.translate(-inn * W * .9 * dir, 0); for (let s = 0; s < 3; s++) zoomed(IMG[pk], X - dir * s * 40, Y, fw, fh, mz(pv, 1), pfx, pfy, (1 - inn) * (.6 - s * .18)); x.restore(); }
-  x.save(); x.translate(off, 0); for (let s = (li < .22 ? 2 : 0); s >= 0; s--) zoomed(IMG[k], X + dir * s * 50 * (1 - inn), Y, fw, fh, z, fx, fy, s ? .25 * (1 - inn) : 1); x.restore();
-  // the label
-  const la = ease((li - .12) / .25);
-  if (i < 4) chip("New in 3.2", 150, 840, la, 26, "rgba(124,92,255,.85)");
-  chip(label, 150, 925, la, 50, "rgba(10,6,24,.82)");
+// 4. The highlights: three beats each, zoomed in, with a spotlight on the feature and its name
+// [picture, kicker, title, line, spotlight (x0, y0, x1, y1 as fractions of the picture), zoom center, zoom]
+const HIGHLIGHTS = [
+  ["desks", "New in 3.2", "Virtual desktops", "One for school, one for games. Drag windows between them.", [.27, .77, .73, .93], .5, .8, 1.5],
+  ["clip", "New in 3.2", "Clipboard history", "Nebulux + V: everything you copied, one click to paste.", [.726, .5, .992, .92], .82, .68, 1.45],
+  ["store", "The Nebulux Store", "Your apps, ready to go", "Netflix and 70 web apps, plus real apps like Steam, Spotify and Discord.", [.165, .145, .79, .665], .48, .42, 1.25],
+  ["tabs", "New in 3.2", "Tabs in File Explorer", "Ctrl + T for a new tab. Pin folders to Quick access.", [.115, .1, .37, .15], .3, .2, 1.9],
+];
+function sHighlights(l, d, t) {
+  bg(t, .75);
+  const each = BEAT * 3, i = Math.min(HIGHLIGHTS.length - 1, Math.floor(l / each)), li = l - i * each;
+  const fw = 1500, fh = 937, X = (W - fw) / 2, Y = 28;
+  const draw = (k, lk, dx, a) => { const [img, kick, title, line, sp, fx, fy, zz] = HIGHLIGHTS[k]; x.save(); x.translate(dx, 0); const z = 1.05 + (zz - 1.05) * inout((lk - .15) / .9);
+    const at = zoomed(IMG[img], X, Y, fw, fh, z, fx, fy, a); const [a0, b0] = at(sp[0], sp[1]), [a1, b1] = at(sp[2], sp[3]); spotlight(a0 - 10, b0 - 10, a1 - a0 + 20, b1 - b0 + 20, a * ease((lk - .75) / .3), [X, Y, fw, fh]); x.restore();
+    captionStrip(a); x.save(); x.globalAlpha = a; x.translate(dx, 0); kicker(kick, 150, 860, a * ease((lk - .2) / .3)); headline([{ s: title }], lk - .25, 925, 70, 150, "left"); text(line, 150, 1000, F(600, 32), "#d9d0ff", "left", a * ease((lk - .45) / .35)); x.restore(); };
+  // a clean push: the next highlight slides in from the right while the last one slides away
+  if (i > 0 && li < .38) { const p = inout(li / .38); draw(i - 1, each + li, -p * W * .35, 1 - p); draw(i, li, (1 - p) * W, 1); }
+  else draw(i, li, 0, 1);
 }
-// 5. Built for laptops: quick settings, and what works
+// 5. Built for laptops
 const LAPTOP = ["Wi-Fi 6 and 6E drivers", "School and work Wi-Fi", "Mobile hotspot", "Battery saver", "Volume and brightness keys", "Sleep when you close the lid"];
 function sLaptop(l, d, t) {
   bg(t, .75);
   const fw = 1120, fh = 700, X = 90, Y = (H - fh) / 2;
-  zoomed(IMG.quick, X, Y, fw, fh, 1 + 1.1 * inout(l / d), .86, .7, ease(l / .3));
+  const at = zoomed(IMG.quick, X, Y, fw, fh, 1 + .9 * inout(l / d), .86, .72, 1);
+  const [a0, b0] = at(.74, .482), [a1, b1] = at(.992, .935); spotlight(a0, b0, a1 - a0, b1 - b0, ease((l - 1.4) / .4), [X, Y, fw, fh]);
   kicker("Built for laptops", 1300, 250, ease((l - .1) / .4));
   headline([{ s: "Everything" }], l - .15, 320, 70, 1300, "left");
   headline([{ s: "just works.", g: true }], l - .25, 400, 70, 1300, "left");
@@ -159,23 +163,23 @@ function sLaptop(l, d, t) {
 // 6. It updates itself
 function sUpdates(l, d, t) {
   bg(t, .75);
-  const fw = 1240, fh = 775, X = (W - fw) / 2, rise = ease(l / .6), Y = 300 + (1 - rise) * 200;
+  const fw = 1240, fh = 775, X = (W - fw) / 2, rise = ease(l / .6), Y = 300 + (1 - rise) * 160;
   zoomed(IMG.whatsnew, X, Y, fw, fh, 1.25, .5, .3, rise);
-  headline([{ s: "It" }, { s: "updates itself.", g: true }], l - .2, 130, 92);
-  ["Later", "Remind me", "Never"].forEach((s, i) => chip(s, W / 2 + (i - 1) * 260, 236, ease((l - .8 - i * BEAT) / .3), 30, i === 0 ? "rgba(124,92,255,.9)" : "rgba(255,255,255,.12)", "#fff", "center"));
+  headline([{ s: "It" }, { s: "updates itself.", g: true }], l - .15, 130, 92);
+  ["Later", "Remind me", "Never"].forEach((s, i) => chip(s, W / 2 + (i - 1) * 260, 236, ease((l - .7 - i * BEAT) / .3), 30, i === 0 ? "rgba(124,92,255,.9)" : "rgba(255,255,255,.12)", "#fff", "center"));
 }
 // 7. Nebulux OS and Windows 11 side by side
 const ROWS = [["Price", "Free", "Paid license"], ["Older computers", "PCs from about 2010 on", "Needs TPM 2.0"], ["Try it first", "Runs from a USB", "Installs on your drive"], ["Your current system", "Never touched", "Replaced or changed"], ["Ads and suggestions", "None, ever", "Suggested apps"], ["Updates", "You choose when", "Pause for a few weeks"]];
 function sCompare(l, d, t) {
   bg(t, .8);
   headline([{ s: "Everything you like about a PC." }], l - .1, 120, 64);
-  headline([{ s: "None of the catches.", g: true }], l - .4, 205, 64);
+  headline([{ s: "None of the catches.", g: true }], l - .35, 205, 64);
   const X = 260, w = 1400, rowH = 104, Y0 = 300;
-  const ta = ease((l - .5) / .4); x.save(); x.globalAlpha = ta; rr(X, Y0, w, rowH * (ROWS.length + 1), 26); x.fillStyle = "rgba(255,255,255,.05)"; x.fill(); x.strokeStyle = "rgba(255,255,255,.12)"; x.lineWidth = 2; x.stroke();
+  const ta = ease((l - .45) / .4); x.save(); x.globalAlpha = ta; rr(X, Y0, w, rowH * (ROWS.length + 1), 26); x.fillStyle = "rgba(255,255,255,.05)"; x.fill(); x.strokeStyle = "rgba(255,255,255,.12)"; x.lineWidth = 2; x.stroke();
   x.save(); rr(X, Y0, w, rowH * (ROWS.length + 1), 26); x.clip(); const g = x.createLinearGradient(X + 420, 0, X + 920, 0); g.addColorStop(0, "rgba(124,92,255,.32)"); g.addColorStop(1, "rgba(192,79,240,.18)"); x.fillStyle = g; x.fillRect(X + 420, Y0, 500, rowH * (ROWS.length + 1)); x.restore(); x.restore();
-  logo(X + 470, Y0 + rowH / 2, 22, ta, .4); text("Nebulux OS", X + 506, Y0 + rowH / 2, F(800, 34), "#fff", "left", ta); text("Windows 11", X + 960, Y0 + rowH / 2, F(700, 34), "#b9b0dc", "left", ta);
+  text("Nebulux OS", X + 452, Y0 + rowH / 2, F(800, 36), "#fff", "left", ta); text("Windows 11", X + 960, Y0 + rowH / 2, F(700, 34), "#b9b0dc", "left", ta);
   ROWS.forEach(([k, a, b], i) => {
-    const v = ease((l - .9 - i * BEAT * .75) / .3), Y = Y0 + rowH * (i + 1.5); if (v <= 0) return;
+    const v = ease((l - .85 - i * BEAT * .75) / .3), Y = Y0 + rowH * (i + 1.5); if (v <= 0) return;
     x.save(); x.globalAlpha = v; x.fillStyle = "rgba(255,255,255,.1)"; x.fillRect(X + 24, Y - rowH / 2, w - 48, 1.5); x.restore();
     text(k, X + 40, Y, F(600, 30), "#b9b0dc", "left", v);
     x.save(); x.globalAlpha = v; x.strokeStyle = "#3ddc84"; x.lineWidth = 6; x.lineCap = "round"; x.lineJoin = "round"; x.beginPath(); x.moveTo(X + 452, Y); x.lineTo(X + 466, Y + 14); x.lineTo(X + 492, Y - 14); x.stroke(); x.restore();
@@ -187,86 +191,75 @@ function sCompare(l, d, t) {
 function sWebsite(l, d, t) {
   bg(t, .7);
   const fw = 1500, fh = 820, X = (W - fw) / 2, Y = 150, img = IMG["web-full"], k = fw / img.width;
-  const sc = inout((l - .25) / (d - .25)) * (img.height * k * .26);
-  browser(img, X, Y, fw, fh, sc, ease(l / .3));
-  headline([{ s: "Get it from the" }, { s: "Nebulux OS website.", g: true }], l - .05, 82, 58);
+  browser(img, X, Y, fw, fh, inout((l - .2) / (d - .2)) * (img.height * k * .26), 1);
+  headline([{ s: "Get it from the" }, { s: "Nebulux OS website.", g: true }], 9, 82, 58);
 }
-// 9. Download: the cursor presses Download right on the boom, then the end card
+// 9. Download: the cursor presses Download right on the boom, then the logo splash and the end card
 const BOOM = BEAT * 1.5;
+const SPARKS = Array.from({ length: 120 }, (_, i) => { const r = (n) => { const s = Math.sin(i * 91.17 + n * 13.7) * 9137.3; return s - Math.floor(s); }; return [r(1) * 6.28, 380 + r(2) * 900, 2 + r(3) * 5, r(4)]; });
 function sFinale(l, d, t) {
-  const f = clamp((l - BOOM) / .35);
-  if (l < BOOM + .35) {
+  if (l < BOOM) {
     bg(t, .7);
-    const fw = 1500, fh = 820, X = (W - fw) / 2, Y = 150, img = IMG["web-download"], zz = 1 + .05 * ease(l / BOOM), kk = fw / img.width;
-    headline([{ s: "Get it from the" }, { s: "Nebulux OS website.", g: true }], 9, 82, 58);
+    const fw = 1500, fh = 820, X = (W - fw) / 2, Y = 150, img = IMG["web-download"], kk = fw / img.width, zz = 1 + .05 * ease(l / BOOM);
     x.save(); x.translate(W / 2, Y + fh / 2); x.scale(zz, zz); x.translate(-W / 2, -(Y + fh / 2));
-    browser(img, X, Y, fw, fh, 0, 1 - f);
-    // the Download button in the picture is at (1521, 506) of 1920x1080
+    browser(img, X, Y, fw, fh, 0, 1);
     const bx = X + 1521 * kk, by = Y + 64 + 506 * kk, m = inout(l / BOOM);
-    if (f < 1) { x.save(); x.globalAlpha = 1 - f; cursor(bx + 320 * (1 - m), by + 260 * (1 - m), l > BOOM - .06); x.restore(); }
-    if (l > BOOM - .06) { const r = (l - BOOM + .06) * 900; x.save(); x.globalAlpha = clamp(1 - (l - BOOM) / .4) * .8; x.strokeStyle = "#f0abfc"; x.lineWidth = 6; x.beginPath(); x.arc(bx, by, r, 0, 7); x.stroke(); x.restore(); }
+    cursor(bx + 320 * (1 - m), by + 260 * (1 - m), l > BOOM - .06);
     x.restore();
-  }
-  if (l >= BOOM) endCard(l - BOOM, d - BOOM, t, f);
-  // the boom: a flash and a burst of light
-  if (l >= BOOM - .02 && l < BOOM + .6) { const v = 1 - (l - BOOM) / .6; x.fillStyle = `rgba(255,255,255,${clamp(v) * .75})`; x.fillRect(0, 0, W, H); }
+    headline([{ s: "Get it from the" }, { s: "Nebulux OS website.", g: true }], 9, 82, 58);
+  } else splash(l - BOOM, d - BOOM, t);
   if (l > d - .7) { x.fillStyle = `rgba(0,0,0,${ease((l - (d - .7)) / .7)})`; x.fillRect(0, 0, W, H); }
 }
-const SPARKS = Array.from({ length: 90 }, (_, i) => { const r = (n) => { const s = Math.sin(i * 91.17 + n * 13.7) * 9137.3; return s - Math.floor(s); }; return [r(1) * 6.28, 300 + r(2) * 900, 2 + r(3) * 5, r(4)]; });
-function endCard(l, d, t, a) {
-  x.save(); x.globalAlpha = a;
+// the logo splash: a flash, a ring of light, sparks flying out, the logo, then the name and the address
+function splash(l, d, t) {
   bg(t, 1);
-  if (IMG.wall) { x.save(); x.globalAlpha = a * .28; const z = 1.1 + .06 * (l / d); x.translate(W / 2, H / 2); x.scale(z, z); x.drawImage(IMG.wall, -W / 2, -H / 2, W, H); x.restore(); }
-  // the burst of sparks from the middle
-  if (l < 1.6) for (const [ang, sp, sz, ph] of SPARKS) { const r = ease(l / 1.4) * sp, v = 1 - l / 1.6; x.globalAlpha = a * v; x.fillStyle = ph > .5 ? "#f0abfc" : "#c4b5fd"; x.beginPath(); x.arc(W / 2 + Math.cos(ang) * r, 420 + Math.sin(ang) * r * .7, sz, 0, 7); x.fill(); }
-  x.globalAlpha = a;
-  rings(W / 2, 420, t, ease(l / .8) * .8);
-  logo(W / 2, 420, 150 * back(l / .7) * (1 + .03 * punch(t)), 1, 1.2 + .6 * punch(t));
-  x.restore();
-  x.save(); x.globalAlpha = a;
-  text("Nebulux OS", W / 2, 655, F(900, 120), grad(W / 2 - 360, W / 2 + 360), "center", ease((l - .25) / .5));
-  text("Free. Download it today.", W / 2, 760, F(700, 48), "#fff", "center", ease((l - .55) / .5));
-  // the address of the website, on a white pill
-  const pa = ease((l - .9) / .5); if (pa > 0) { x.save(); x.globalAlpha *= pa; x.translate(0, (1 - pa) * 20); x.font = F(800, 40); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 96; rr(W / 2 - w / 2, 822, w, 84, 42); x.fillStyle = "#fff"; x.shadowColor = "rgba(192,132,252,.7)"; x.shadowBlur = 40; x.fill(); x.shadowColor = "transparent"; text(s0, W / 2, 865, F(800, 40), "#1d1040"); x.restore(); }
-  text("Nebulux OS 3.2  ·  Runs from a USB stick  ·  Or try it in your browser first", W / 2, 960, F(600, 28), "#b9b0dc", "center", ease((l - 1.3) / .5));
-  text("© 2026 Nebulux LLC", W / 2, 1030, F(500, 22), "#7d76a3", "center", ease((l - 1.5) / .5));
-  x.restore();
+  if (IMG.wall) { x.save(); x.globalAlpha = .25 * ease(l / .6); const z = 1.12 + .05 * (l / d); x.translate(W / 2, H / 2); x.scale(z, z); x.drawImage(IMG.wall, -W / 2, -H / 2, W, H); x.restore(); }
+  const cy = 400;
+  // the shockwave ring
+  if (l < 1.1) { const r = ease(l / 1.1) * 1100; x.save(); x.globalAlpha = 1 - l / 1.1; x.strokeStyle = "#f0abfc"; x.lineWidth = 10 * (1 - l / 1.1) + 2; x.shadowColor = "#f0abfc"; x.shadowBlur = 40; x.beginPath(); x.arc(W / 2, cy, r, 0, 7); x.stroke(); x.restore(); }
+  // the sparks
+  if (l < 1.8) for (const [ang, sp, sz, ph] of SPARKS) { const r = ease(l / 1.6) * sp, v = 1 - l / 1.8; x.globalAlpha = v; x.fillStyle = ph > .5 ? "#f0abfc" : "#c4b5fd"; x.beginPath(); x.arc(W / 2 + Math.cos(ang) * r, cy + Math.sin(ang) * r * .7, sz, 0, 7); x.fill(); }
+  x.globalAlpha = 1;
+  logo(W / 2, cy, 300 * back(l / .6) * (1 + .025 * punch(t)), ease(l / .15), 1 + .5 * punch(t));
+  text("Nebulux OS", W / 2, 655, F(900, 116), grad(W / 2 - 350, W / 2 + 350), "center", ease((l - .3) / .45));
+  text("Free. Download it today.", W / 2, 760, F(700, 48), "#fff", "center", ease((l - .6) / .45));
+  const pa = ease((l - .95) / .45); if (pa > 0) { x.save(); x.globalAlpha = pa; x.translate(0, (1 - pa) * 20); x.font = F(800, 40); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 96; rr(W / 2 - w / 2, 822, w, 84, 42); x.fillStyle = "#fff"; x.shadowColor = "rgba(192,132,252,.7)"; x.shadowBlur = 40; x.fill(); x.shadowColor = "transparent"; text(s0, W / 2, 865, F(800, 40), "#1d1040"); x.restore(); }
+  text("Nebulux OS 3.2  ·  Runs from a USB stick  ·  Or try it in your browser first", W / 2, 960, F(600, 28), "#b9b0dc", "center", ease((l - 1.3) / .45));
+  text("© 2026 Nebulux LLC", W / 2, 1030, F(500, 22), "#7d76a3", "center", ease((l - 1.5) / .45));
+  // the flash right on the boom
+  if (l < .5) { x.fillStyle = `rgba(255,255,255,${(1 - l / .5) * .85})`; x.fillRect(0, 0, W, H); }
 }
 
 // ---------- the timeline (the same cut points as the Nebulux ad's music) ----------
-const SCENES = [[sIntro, 10], [sDesktop, 12], [sStart, 10], [sMontage, 12], [sLaptop, 8], [sUpdates, 8], [sCompare, 12], [sWebsite, 6], [sFinale, 22]].map(([f, b]) => [f, b * BEAT]);
-// the cuts: how each scene comes in
-const TRANS = [null, "flash", "zoom", "whip", "sweep", "rise", "zoom", "whip", null];
-window.__LEN = 46.6; SCENES[SCENES.length - 1][1] += window.__LEN - SCENES.reduce((a, s) => a + s[1], 0); // the end card holds to the end of the music
+const SCENES = [[sOpen, 10], [sDesktop, 12], [sSearch, 10], [sHighlights, 12], [sLaptop, 8], [sUpdates, 8], [sCompare, 12], [sWebsite, 6], [sFinale, 22]].map(([f, b]) => [f, b * BEAT]);
+// how each scene comes in: only clean ones (a flash on the drop, pushes and quick fades; the website to Download is a cut)
+const TRANS = [null, "flash", "push", "push", "fade", "push", "fade", "push", null];
+window.__LEN = 46.6; SCENES[SCENES.length - 1][1] += window.__LEN - SCENES.reduce((a, s) => a + s[1], 0);
 const STARTS = []; { let a = 0; for (const s of SCENES) { STARTS.push(a); a += s[1]; } }
 const off = [document.createElement("canvas"), document.createElement("canvas")]; off.forEach((c) => { c.width = W; c.height = H; });
 function scene(i, l, t, on) { const prev = x; x = on; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; SCENES[i][0](l, SCENES[i][1], t); x.restore(); x = prev; }
-const TR = .42;
+const TR = .4;
 window.__frame = (t) => {
   let i = SCENES.length - 1; for (let k = 0; k < SCENES.length; k++) if (t < STARTS[k] + SCENES[k][1]) { i = k; break; }
   const l = t - STARTS[i], tr = TRANS[i];
   if (i > 0 && l < TR && tr) {
     const p = inout(l / TR), A = off[0].getContext("2d"), B = off[1].getContext("2d");
     scene(i - 1, SCENES[i - 1][1] + l, t, A); scene(i, l, t, B);
-    main.save(); main.fillStyle = "#000"; main.fillRect(0, 0, W, H);
-    if (tr === "flash" || tr === "fade") { main.globalAlpha = 1; main.drawImage(off[1], 0, 0); if (tr === "flash") { main.fillStyle = `rgba(255,255,255,${(1 - p) * .9})`; main.fillRect(0, 0, W, H); } else { main.globalAlpha = 1 - p; main.drawImage(off[0], 0, 0); } }
-    if (tr === "zoom") { main.drawImage(off[1], 0, 0); main.globalAlpha = 1 - p; const z = 1 + p * .5; main.translate(W / 2, H / 2); main.scale(z, z); main.drawImage(off[0], -W / 2, -H / 2); }
-    if (tr === "whip") { const dx = p * W; for (let s = 0; s < 4; s++) { main.globalAlpha = s ? .18 : 1; main.drawImage(off[0], -dx - s * 60 * (1 - p), 0); } for (let s = 0; s < 4; s++) { main.globalAlpha = s ? .18 : 1; main.drawImage(off[1], W - dx + s * 60 * (1 - p), 0); } }
-    if (tr === "rise") { main.drawImage(off[0], 0, -p * H * .35); main.globalAlpha = 1; main.save(); main.beginPath(); main.rect(0, H * (1 - p), W, H * p); main.clip(); main.drawImage(off[1], 0, (1 - p) * H * .2); main.restore(); }
-    if (tr === "sweep") { main.drawImage(off[0], 0, 0); main.save(); const xs = -W * .3 + p * W * 1.6; main.beginPath(); main.moveTo(xs - 400, 0); main.lineTo(xs + 200, 0); main.lineTo(xs - 200, H); main.lineTo(xs - 800, H); main.closePath(); main.lineTo(-2000, H); main.lineTo(-2000, 0); main.clip(); main.drawImage(off[1], 0, 0); main.restore(); const g = main.createLinearGradient(xs - 600, 0, xs + 200, 0); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.7, "rgba(240,171,252,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); main.globalAlpha = 1 - Math.abs(p - .5) * 1.2; main.fillStyle = g; main.fillRect(0, 0, W, H); }
+    main.save(); main.fillStyle = "#05030c"; main.fillRect(0, 0, W, H);
+    if (tr === "flash") { main.drawImage(off[1], 0, 0); main.fillStyle = `rgba(255,255,255,${(1 - p) * .9})`; main.fillRect(0, 0, W, H); }
+    // a dip: the last scene fades to dark, then the next one comes up (the two never show at once)
+    if (tr === "fade") { const q = l / TR; if (q < .5) { main.globalAlpha = 1 - ease(q * 2); main.drawImage(off[0], 0, 0); } else { main.globalAlpha = ease(q * 2 - 1); const z = 1.03 - .03 * ease(q * 2 - 1); main.translate(W / 2, H / 2); main.scale(z, z); main.drawImage(off[1], -W / 2, -H / 2); } }
+    if (tr === "push") { main.globalAlpha = 1 - p * .6; main.drawImage(off[0], -p * W * .3, 0); main.globalAlpha = 1; main.shadowColor = "rgba(0,0,0,.6)"; main.shadowBlur = 60; main.drawImage(off[1], (1 - p) * W, 0); }
     main.restore();
   } else scene(i, l, t, main);
   if (t < .3) { main.fillStyle = `rgba(0,0,0,${1 - t / .3})`; main.fillRect(0, 0, W, H); }
 };
-window.__still = (t, v) => { if (v) { window.__vframe(t); return vcv.toDataURL("image/jpeg", .82); } window.__frame(t); return cv.toDataURL("image/jpeg", .82); };
 
-// ---------- making the MP4: every frame through the H.264 encoder, the music through AAC ----------
 // the phone version (9:16): the ad in the middle over a blurred copy of itself, the name above, the address below
 const VW = 1080, VH = 1920, vcv = document.createElement("canvas"); vcv.width = VW; vcv.height = VH; const vg = vcv.getContext("2d");
-const FIN = () => STARTS[SCENES.length - 1] + BOOM; // the end card starts here (it has the address itself)
+const FIN = () => STARTS[SCENES.length - 1] + BOOM;
 window.__vframe = (t) => {
   window.__frame(t);
-  // on the end card the picture zooms in on its middle, so the name and the address are big
   const e = inout((t - FIN()) / .5), sw = W - (W - 1100) * e, sx = (W - sw) / 2;
   const mh = Math.round(VW * H / sw), my = Math.round((VH - mh) / 2) + 40 * (1 - e);
   vg.save(); vg.fillStyle = "#05030c"; vg.fillRect(0, 0, VW, VH);
@@ -274,14 +267,15 @@ window.__vframe = (t) => {
   vg.fillStyle = "rgba(5,3,12,.55)"; vg.fillRect(0, 0, VW, VH);
   vg.shadowColor = "rgba(124,92,255,.6)"; vg.shadowBlur = 60; vg.fillStyle = "#000"; vg.fillRect(0, my, VW, mh); vg.shadowColor = "transparent";
   vg.drawImage(cv, sx, 0, sw, H, 0, my, VW, mh);
-  // above: the logo and the name (from the first cut on)
   const prev = x; x = vg;
   const ta = clamp((t - STARTS[1]) / .5) * (1 - clamp((t - (FIN() - .2)) / .3));
-  if (ta > 0) { logo(VW / 2 - 250, my - 190, 46, ta, .6); text("Nebulux OS", VW / 2 - 180, my - 190, F(900, 84), grad(VW / 2 - 180, VW / 2 + 260), "left", ta); text("A whole computer on a USB stick", VW / 2, my - 100, F(600, 36), "#d9d0ff", "center", ta); }
-  // below: where to get it
+  if (ta > 0) { text("Nebulux OS", VW / 2, my - 190, F(900, 92), grad(VW / 2 - 260, VW / 2 + 260), "center", ta); text("A whole computer on a USB stick", VW / 2, my - 100, F(600, 36), "#d9d0ff", "center", ta); }
   if (ta > 0) { x.save(); x.globalAlpha = ta; text("Free download", VW / 2, my + mh + 110, F(800, 44), "#fff"); x.font = F(800, 32); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 64; rr(VW / 2 - w / 2, my + mh + 160, w, 70, 35); x.fillStyle = "#fff"; x.fill(); text(s0, VW / 2, my + mh + 196, F(800, 32), "#1d1040"); x.restore(); }
   x = prev; vg.restore();
 };
+window.__still = (t, v) => { if (v) { window.__vframe(t); return vcv.toDataURL("image/jpeg", .82); } window.__frame(t); return cv.toDataURL("image/jpeg", .82); };
+
+// ---------- making the MP4: every frame through the H.264 encoder, the music through AAC ----------
 window.__render = async (musicURL, upTo, vertical) => {
   const len = upTo || window.__LEN, frames = Math.round(len * FPS);
   const OW = vertical ? VW : W, OH = vertical ? VH : H, src = vertical ? vcv : cv;
@@ -296,9 +290,7 @@ window.__render = async (musicURL, upTo, vertical) => {
     const vf = new VideoFrame(src, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
     venc.encode(vf, { keyFrame: f % 60 === 0 }); vf.close();
     while (venc.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 2));
-    if (f % 150 === 0) window.__progress = f / frames;
   }
-  // the music, to the same length, fading out over its last half second
   const n = Math.min(music.length, Math.round(len * 48000)), L = music.getChannelData(0), R = music.numberOfChannels > 1 ? music.getChannelData(1) : L, CH = 1024;
   for (let at = 0; at < n; at += CH) {
     const m = Math.min(CH, n - at), data = new Float32Array(m * 2);
