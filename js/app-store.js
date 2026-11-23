@@ -34,7 +34,7 @@
         if (view.startsWith("app:")) {
           const id = view.slice(4), a = NX.apps[id];
           main = !a ? `<p>That app isn't here.</p>` : `<button class="st-back" data-view="all">${NX.icon("back", 16)} Back</button>
-            <div class="st-detail"><div class="st-dh">${NX.icon(a.icon || id, 96)}<div><h2>${NX.esc(a.name)}</h2><p class="st-pub">${NX.esc(a.publisher || "Nebulux")} · ${a.category}</p><p class="st-rate big">${NX.icon("star", 14)} ${a.rating || "4.5"} average</p>${btn(id)}${isIn(id) ? `<button class="btn ghost" data-remove="${id}">Uninstall</button>` : ""}</div></div>
+            <div class="st-detail"><div class="st-dh"${(() => { const m = String(a.icon || "").match(/^brand:([^:|]+)/); return m ? ` style="--tint:${m[1].split(",")[0]}"` : ""; })()}>${NX.icon(a.icon || id, 96)}<div><h2>${NX.esc(a.name)}</h2><p class="st-pub">${NX.esc(a.publisher || "Nebulux")} · ${a.category}</p><p class="st-rate big">${NX.icon("star", 14)} ${a.rating || "4.5"} average</p>${btn(id)}${isIn(id) ? `<button class="btn ghost" data-remove="${id}">Uninstall</button>` : ""}</div></div>
             <h3>Description</h3><p>${NX.esc(a.desc)}</p><h3>Details</h3><div class="st-facts"><div><span>Size</span><b>${a.size || "1 MB"}</b></div><div><span>Works</span><b>${a.native && NX.native ? "As a real app on this computer" : a.native && !a.url ? "On the real Nebulux OS (from the USB)" : a.url ? (NX.webFrames ? "On the web, in its own window" : "On the web, opens in a new tab") : "On this PC, no internet needed"}</b></div><div><span>Price</span><b>Free</b></div></div></div>`;
         } else if (view === "library") {
           const mine = storeApps().filter(([id]) => isIn(id));

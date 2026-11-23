@@ -937,3 +937,6 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .nx-lite[data-theme=light]{--bg:#f6f4fbfc;--bg2:#fbfaff;--glass:#f1edfbf5}
 
 .wg-city{flex-wrap:wrap}.wg-here{flex-basis:100%;display:inline-flex;align-items:center;gap:6px;justify-content:flex-start}
+/* a Store app page glows in the app's own color */
+.st-dh{position:relative;overflow:hidden;--tint:var(--accent);background:radial-gradient(120% 140% at 8% 20%,color-mix(in srgb,var(--tint) 34%,transparent),transparent 62%),linear-gradient(120deg,color-mix(in srgb,var(--tint) 10%,var(--card)),var(--card));padding:26px}
+.st-dh>.ico{filter:drop-shadow(0 12px 28px color-mix(in srgb,var(--tint) 45%,#0008))}
