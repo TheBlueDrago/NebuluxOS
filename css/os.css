@@ -1105,3 +1105,12 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .dn-un{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:inherit}.dn-un:hover{background:#0002}
 .dn-note textarea{flex:1;border:0;background:none;resize:none;padding:8px 10px;font:14px/1.45 var(--font);color:inherit;outline:0}
 .dn-note.c-sun{background:#fde68a}.dn-note.c-rose{background:#fbcfe8}.dn-note.c-mint{background:#bbf7d0}.dn-note.c-sky{background:#bae6fd}.dn-note.c-violet{background:#ddd6fe}.dn-note.c-slate{background:#e2e8f0}
+
+/* Star Tiles */
+.win-body.tl{display:flex;flex-direction:column;gap:14px;padding:18px;align-items:center;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 70%)}
+.tl-top{display:flex;gap:22px;font-size:13px;color:var(--sub)}.tl-top b{color:var(--txt);font-variant-numeric:tabular-nums}
+.tl-board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(100%,380px);aspect-ratio:1;padding:10px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.tl-c{border-radius:12px;font-size:clamp(18px,6vw,30px);font-weight:800;color:#fff;background:linear-gradient(135deg,#7c5cff,#c04ff0);box-shadow:0 6px 16px #0006,inset 0 1px 0 #ffffff40;transition:transform .08s}
+.tl-c:active{transform:scale(.94)}.tl-c.ok{background:linear-gradient(135deg,#22d3ee,#3b82f6)}
+.tl-gap{border-radius:12px;border:2px dashed var(--line)}
+.tl-bar{display:flex;align-items:center;gap:14px}.tl-msg{font-weight:600}

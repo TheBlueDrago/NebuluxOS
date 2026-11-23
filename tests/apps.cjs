@@ -154,6 +154,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("desk-note");
   await p.evaluate(() => document.querySelector("#nx-dnotes .dn-un").click()); await wait(500);
   ok(await p.evaluate(() => !document.querySelector("#nx-dnotes") && !NX.data("sticky-notes", []).some((n) => n.pin)), "and comes off the desktop with its x");
+  // Star Tiles: one move from solved, then solve it
+  await p.evaluate(() => { NX.closeAll(); NX.install("tiles"); NX.open("tiles"); }); await wait(500);
+  ok(await p.evaluate(() => { const c = NX.wins.get("tiles").tiles.cells(); return c.length === 16 && new Set(c).size === 16 && document.querySelectorAll(".win[data-app=tiles] .tl-c").length === 15; }), "Star Tiles deals a puzzle of 15 tiles");
+  await p.evaluate(() => NX.wins.get("tiles").tiles.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 15]));
+  await p.evaluate(() => document.querySelector(".win[data-app=tiles] [data-i='15']").click()); await wait(200);
+  ok(await p.evaluate(() => /Solved|New best/.test(document.querySelector(".win[data-app=tiles] .tl-msg").textContent) && NX.data("tiles-best", null).moves === 1), "and knows when it's solved, keeping your best");
+  await shot("tiles");
   // Settings > Apps: search your apps
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
   await p.type(".win[data-app=settings] .s-appq", "camer"); await wait(200);

@@ -139,6 +139,39 @@
       draw();
     } };
 
+  // ---------- Star Tiles: a sliding puzzle. Put the tiles in order 1 to 15 by sliding them into the empty space ----------
+  A.tiles = { name: "Star Tiles", icon: "tiles", category: "Games", rating: "4.7", size: "1 MB", w: 460, h: 580, minW: 340, minH: 460, desc: "A sliding puzzle: put the tiles in order from 1 to 15. Click a tile next to the gap, or use the arrow keys.",
+    open(body, win) {
+      body.classList.add("tl");
+      body.innerHTML = `<div class="tl-top"><span>Moves <b class="tl-m">0</b></span><span>Time <b class="tl-t">0:00</b></span><span>Best <b class="tl-b"></b></span></div><div class="tl-board" role="grid" aria-label="Puzzle"></div><div class="tl-bar"><button class="btn primary" data-tl="new">New game</button><span class="tl-msg" role="status"></span></div>`;
+      const board = $(".tl-board", body), mEl = $(".tl-m", body), tEl = $(".tl-t", body), bEl = $(".tl-b", body), msg = $(".tl-msg", body);
+      let cells = [], moves = 0, t0 = 0, tick = 0, done = false;
+      const best = () => NX.data("tiles-best", null), fmtT = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+      const showBest = () => { const b = best(); bEl.textContent = b ? b.moves + (b.moves === 1 ? " move" : " moves") : "none yet"; };
+      const solved = () => cells.every((v, i) => v === (i === 15 ? 0 : i + 1));
+      const draw = () => { board.innerHTML = cells.map((v, i) => v ? `<button class="tl-c ${v === i + 1 ? "ok" : ""}" data-i="${i}" aria-label="Tile ${v}">${v}</button>` : `<span class="tl-gap" aria-hidden="true"></span>`).join(""); mEl.textContent = moves; };
+      const slide = (i) => {
+        if (done) return false; const g = cells.indexOf(0), r = (x) => Math.floor(x / 4), c = (x) => x % 4;
+        if (!((r(i) === r(g) && Math.abs(c(i) - c(g)) === 1) || (c(i) === c(g) && Math.abs(r(i) - r(g)) === 1))) return false;
+        [cells[g], cells[i]] = [cells[i], cells[g]]; moves++; if (!t0) { t0 = Date.now(); tick = setInterval(() => (tEl.textContent = fmtT(Date.now() - t0)), 500); }
+        draw();
+        if (solved()) { done = true; clearInterval(tick); const ms = Date.now() - t0, b = best(); const rec = !b || moves < b.moves; if (rec) NX.setData("tiles-best", { moves, ms }); showBest(); msg.textContent = (rec ? "New best! " : "Solved! ") + moves + (moves === 1 ? " move in " : " moves in ") + fmtT(ms) + "."; if (NX.beep) NX.beep(); }
+        return true;
+      };
+      const fresh = () => { // a random puzzle that can be solved: random moves away from the finished board
+        cells = [...Array(15)].map((_, i) => i + 1).concat(0); let last = -1;
+        for (let k = 0; k < 220; k++) { const g = cells.indexOf(0), opts = [g - 4, g + 4, g % 4 ? g - 1 : -1, g % 4 < 3 ? g + 1 : -1].filter((x) => x >= 0 && x < 16 && x !== last); const pick = opts[Math.floor(Math.random() * opts.length)]; [cells[g], cells[pick]] = [cells[pick], cells[g]]; last = g; }
+        if (solved()) return fresh();
+        moves = 0; t0 = 0; clearInterval(tick); tEl.textContent = "0:00"; done = false; msg.textContent = ""; draw(); showBest();
+      };
+      board.onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) slide(+b.dataset.i); };
+      $("[data-tl=new]", body).onclick = fresh;
+      const key = (e) => { if (!win.el.classList.contains("active")) return; const g = cells.indexOf(0), m = { ArrowUp: g + 4, ArrowDown: g - 4, ArrowLeft: g % 4 < 3 ? g + 1 : -1, ArrowRight: g % 4 ? g - 1 : -1 }[e.key]; if (m == null) return; e.preventDefault(); if (m >= 0 && m < 16) slide(m); };
+      addEventListener("keydown", key); win.onclose = () => { removeEventListener("keydown", key); clearInterval(tick); };
+      win.tiles = { cells: () => cells.slice(), set: (c) => { cells = c.slice(); moves = 0; done = false; draw(); }, slide };
+      fresh();
+    } };
+
   // ---------- The keyboard shortcut guide: Nebulux + / (or from Get Started) ----------
   const KEYS = [
     ["The basics", [["Nebulux", "Open or close Start"], ["Nebulux + D", "Show the desktop"], ["Nebulux + E", "Open File Explorer"], ["Nebulux + L", "Lock the computer"], ["Nebulux + W", "Widgets"], ["Nebulux + /", "This list of shortcuts"]]],
