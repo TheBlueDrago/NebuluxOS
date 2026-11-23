@@ -357,6 +357,17 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok((await tabsOf()).length === 1 && await p.evaluate(() => !!NX.wins.get("files")), "Ctrl + W closes the tab you're on");
   await p.evaluate(() => NX.close("files")); await wait(300);
 
+  // 3.2: Get Started
+  await p.evaluate(() => NX.open("tips")); await wait(500);
+  ok(await p.evaluate(() => /Welcome to Nebulux OS/.test(document.querySelector(".win[data-app=tips]").innerText)), "Get Started opens with a welcome");
+  await p.evaluate(() => document.querySelector(".win[data-app=tips] .gs-hero [data-p=basics]").click()); await wait(200);
+  await p.evaluate(() => document.querySelector(".win[data-app=tips] .gs-foot [data-p=keys]").click()); await wait(200);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=tips] .gs-keys kbd").length > 20 && /Clipboard history/.test(document.querySelector(".win[data-app=tips]").innerText)), "it lists the shortcuts");
+  await p.evaluate(() => document.querySelector(".win[data-app=tips] .gs-nav [data-p=more]").click()); await wait(200);
+  await p.evaluate(() => document.querySelector(".win[data-app=tips] [data-go=personal]").click()); await wait(500);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=settings]") && /Personalization|Background/.test(document.querySelector(".win[data-app=settings]").innerText)), "its buttons open the right place");
+  await p.evaluate(() => { NX.close("settings"); NX.close("tips"); }); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

@@ -52,6 +52,8 @@ boot() { # BIOS or UEFI
   keys ret; sleep 2; keys ret; sleep 12; shot 4-desktop
   if python3 "$(dirname "$0")/ppm2png.py" --full /tmp/nx.ppm; then echo "ok   ($MODE): Nebulux OS fills the whole screen"; else echo "FAIL ($MODE): Nebulux OS doesn't fill the screen"; FAILS=$((FAILS + 1)); fi
   if grep -q "NEBULUX-DIAG ext=1" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): the web-windows extension is running"; else echo "FAIL ($MODE): the web-windows extension isn't running ($(grep -a NEBULUX-DIAG "$SHOTS/$MODE-serial.log" | tail -1))"; FAILS=$((FAILS + 1)); fi
+  # the network troubleshooter may run its fixes (Wi-Fi switch, driver restart) without a password
+  if grep -aq "NEBULUX-HW netfix: allowed" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): the Wi-Fi fixes are allowed"; else echo "FAIL ($MODE): the Wi-Fi fixes aren't allowed ($(grep -a "NEBULUX-HW netfix" "$SHOTS/$MODE-serial.log" | tail -1))"; FAILS=$((FAILS + 1)); fi
   # the mouse: one click on the Settings icon on the desktop opens Settings
   click 52 145; sleep 6; shot 4b-click
   click 430 776; sleep 2; shot 4c-start-click; keys esc; sleep 1

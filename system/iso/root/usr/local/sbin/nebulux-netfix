@@ -1,0 +1,17 @@
+#!/bin/sh
+# Nebulux OS network fixes that need the system's permission (allowed for the person at the computer, nothing else):
+#   nebulux-netfix unblock          turn every radio switch back on
+#   nebulux-netfix ideapad          remove Lenovo's laptop driver when its Wi-Fi switch wrongly says "off"
+#   nebulux-netfix reload DRIVER    start the Wi-Fi driver again (only Wi-Fi drivers)
+#   nebulux-netfix restart-nm       start NetworkManager again
+set -u
+case "${1:-}" in
+  unblock) exec /usr/sbin/rfkill unblock all ;;
+  ideapad) /usr/sbin/modprobe -r ideapad_laptop; echo "blacklist ideapad_laptop" > /etc/modprobe.d/nebulux-ideapad.conf; /usr/sbin/rfkill unblock wifi ;;
+  reload)
+    d="${2:-}"
+    case "$d" in rtw88_*|rtw89_*|rtl8*|mt76*|mt79*|iwlwifi|ath9k|ath10k_pci|ath11k_pci|ath12k|brcmfmac|brcmsmac|wl) ;; *) echo "not a Wi-Fi driver" >&2; exit 2 ;; esac
+    /usr/sbin/modprobe -r "$d"; sleep 1; exec /usr/sbin/modprobe "$d" ;;
+  restart-nm) exec /usr/bin/systemctl restart NetworkManager ;;
+  *) echo "usage: nebulux-netfix unblock|ideapad|reload DRIVER|restart-nm" >&2; exit 2 ;;
+esac

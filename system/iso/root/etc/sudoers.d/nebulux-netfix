@@ -1,0 +1,2 @@
+# The Nebulux OS network troubleshooter may run its fixes (and only them) without a password.
+nebulux ALL=(root) NOPASSWD: /usr/local/sbin/nebulux-netfix

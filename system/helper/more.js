@@ -498,13 +498,52 @@ module.exports = function more({ api, run, FAKE }) {
     return { checks: out, ok: !bad, summary: bad ? bad.title : "Everything works", chip: tidy(chipName), driver };
   }
   const nm = (l) => { const o = []; let c = ""; for (let i = 0; i < l.length; i++) { if (l[i] === "\\" && i + 1 < l.length) c += l[++i]; else if (l[i] === ":") { o.push(c); c = ""; } else c += l[i]; } o.push(c); return o; };
+  // Try to fix: everything that has helped on real laptops, from the gentlest step up. The fixes that need the
+  // system's permission go through /usr/local/sbin/nebulux-netfix, which the person at the computer may run without a
+  // password (and nothing else as root).
+  const fix = (args, ms) => run("sudo", ["-n", "/usr/local/sbin/nebulux-netfix", ...args], ms || 20000);
+  const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+  // The Lenovo IdeaPad switch that says "off" while the Wi-Fi chip itself isn't blocked: that's the known bug (these
+  // laptops have no Wi-Fi switch), so it's fixed by itself at start-up, and by Try to fix.
+  async function ideapadFix() {
+    const rk = (await run("rfkill", ["list"], 5000)).out.split(/\n(?=\d+:)/);
+    const idea = rk.some((x) => /ideapad/i.test(x) && /wireless lan|wlan/i.test(x) && /Hard blocked:\s*yes/i.test(x));
+    const phy = rk.some((x) => /^\d+:\s*phy\d/i.test(x) && /Hard blocked:\s*yes/i.test(x));
+    if (!idea || phy) return false;
+    await fix(["ideapad"]);
+    await run("rfkill", ["unblock", "wifi"]); await run("nmcli", ["radio", "wifi", "on"]);
+    return true;
+  }
+  if (!FAKE) setTimeout(() => ideapadFix().catch(() => {}), 4000);
+  async function netFix() {
+    const done = [];
+    await run("rfkill", ["unblock", "all"]); await fix(["unblock"]); done.push("unblocked");
+    // Some Lenovo IdeaPads have no Wi-Fi switch, but Lenovo's laptop driver says it's off, which blocks Wi-Fi for good.
+    // When a "Wireless LAN" switch from that driver is still hard-blocked, the driver is removed (and kept off).
+    if (await ideapadFix()) done.push("ideapad");
+    await run("nmcli", ["networking", "on"]); await run("nmcli", ["radio", "wifi", "on"]);
+    await pause(2500);
+    // the chip has a driver but no Wi-Fi came up, or it's stuck: start the driver again
+    const dev = (await run("nmcli", ["-t", "-f", "TYPE,STATE", "device"], 5000)).out;
+    const pci = (await run("lspci", ["-nnk"], 5000)).out.split(/\n(?=\S)/).find((x) => /network controller|wireless|802\.11/i.test(x.split("\n")[0]) && !/ethernet/i.test(x.split("\n")[0]));
+    const drv = pci ? ((pci.match(/Kernel driver in use:\s*([\w-]+)/) || pci.match(/Kernel modules:\s*([\w-]+)/) || [])[1] || "") : "";
+    if (drv && !/^wifi:connected/m.test(dev)) {
+      await fix(["reload", drv], 30000); done.push("driver " + drv);
+      await pause(3500);
+    }
+    if (!/^wifi:connected/m.test((await run("nmcli", ["-t", "-f", "TYPE,STATE", "device"], 5000)).out)) {
+      await fix(["restart-nm"], 30000); done.push("networkmanager"); await pause(4000);
+      await run("nmcli", ["radio", "wifi", "on"]);
+    }
+    return done;
+  }
   api["POST /net/diagnose"] = async (b) => {
     if (FAKE) {
       const raw = { kernel: "6.12.9+bpo-amd64", pci: "02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller [10ec:b852]\n\tKernel driver in use: rtw89_8852be\n\tKernel modules: rtw89_8852be", usb: "", rfkill: "0: phy0: Wireless LAN\n\tSoft blocked: no\n\tHard blocked: no", general: "connected:full:enabled:enabled:enabled", devices: "wlp2s0:wifi:connected:Home Wi-Fi", kernelLog: "rtw89_8852be 0000:02:00.0: loaded firmware rtw89/rtw8852b_fw-1.bin", modules: "rtw89_8852be" };
       if (b && b.fix) { /* nothing to fix in the made-up computer */ }
       lastNet = { raw, at: new Date().toISOString() }; return Object.assign(netChecks(raw, true), { fixed: !!(b && b.fix) });
     }
-    if (b && b.fix) { await run("rfkill", ["unblock", "wifi"]); await run("nmcli", ["networking", "on"]); await run("nmcli", ["radio", "wifi", "on"]); await new Promise((r) => setTimeout(r, 2500)); }
+    if (b && b.fix) await netFix();
     const raw = await netRaw(), isOnline = await online();
     lastNet = { raw, at: new Date().toISOString() };
     return Object.assign(netChecks(raw, isOnline), { fixed: !!(b && b.fix) });

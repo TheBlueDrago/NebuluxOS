@@ -72,7 +72,7 @@ const api = {
       const c = await chip("wifi");
       return { on, device: false, connected: null, networks: [], error: c ? "This computer's Wi-Fi chip (" + c + ") has no driver in Nebulux OS yet. A network cable or a USB Wi-Fi adapter works." : "This computer has no Wi-Fi chip that Nebulux OS can see (virtual computers like QEMU have none). A network cable works." };
     }
-    if (/disabled|missing/i.test(hw) && !on) return { on, device: true, connected: null, networks: [], error: "Wi-Fi is switched off on the computer itself. Press its Wi-Fi or airplane key (or slide its Wi-Fi switch), then turn Wi-Fi on here." };
+    if (/disabled|missing/i.test(hw) && !on) return { on, device: true, connected: null, networks: [], error: "Wi-Fi is switched off on the computer itself. Press its Wi-Fi or airplane key (or slide its Wi-Fi switch), then turn Wi-Fi on here. No such key or switch? Use Troubleshoot below and press Try to fix." };
     if (!on) return { on, device: true, connected: null, networks: [] };
     const list = await run("nmcli", ["-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "auto"], 20000);
     const seen = new Map();
@@ -87,7 +87,7 @@ const api = {
   },
   async "POST /wifi/radio"(b) {
     const on = !!b.on; if (FAKE) { fake.wifiOn = on; return { ok: true }; }
-    if (on) await run("rfkill", ["unblock", "wifi"]);
+    if (on) { const u = await run("rfkill", ["unblock", "wifi"]); if (!u.ok) await run("sudo", ["-n", "/usr/local/sbin/nebulux-netfix", "unblock"]); }
     const r = await run("nmcli", ["radio", "wifi", on ? "on" : "off"]); if (!r.ok) throw new Error(cleanErr(r.err)); return { ok: true };
   },
   async "POST /wifi/connect"(b) {
@@ -188,6 +188,8 @@ const api = {
       fs.appendFile("/dev/ttyS0", lines + "\nNEBULUX-X mouse " + mouse.out.replace(/\n/g, " ") + " active=" + act.out.trim() + "\n", () => {});
       // what Wi-Fi and Bluetooth say on this computer
       try { const w = await api["GET /wifi"](), bt = await api["GET /bt"](); fs.appendFile("/dev/ttyS0", "NEBULUX-HW wifi: " + (w.error || (w.device ? (w.on ? "on, " + w.networks.length + " networks" : "off") : "no device")) + "\nNEBULUX-HW bluetooth: " + (bt.error || (bt.available ? (bt.on ? "on" : "off") : "none")) + "\n", () => {}); } catch (e) { /* skip */ }
+      // the network troubleshooter's fixes are allowed (sudo answers with the script's usage, not a password prompt)
+      try { const nf = await run("sudo", ["-n", "/usr/local/sbin/nebulux-netfix"], 5000); fs.appendFile("/dev/ttyS0", "NEBULUX-HW netfix: " + (/usage: nebulux-netfix/.test(nf.err + nf.out) ? "allowed" : "NOT allowed: " + (nf.err || nf.out).trim().slice(0, 120)) + "\n", () => {}); } catch (e) { /* skip */ }
       // how long start-up took, and its slowest parts (to make it faster)
       const t = await run("systemd-analyze", ["time"], 8000), bl = await run("systemd-analyze", ["blame", "--no-pager"], 8000);
       fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT " + t.out.replace(/\n/g, " ") + "\n" + bl.out.split("\n").slice(0, 15).map((l) => "NEBULUX-BOOT " + l.trim()).join("\n") + "\nNEBULUX-BOOT page-ready-after " + Math.round(os.uptime()) + "s\n", () => {});
