@@ -100,13 +100,15 @@
     ["audacity", "Audacity", "Music", "#0000cc,#ff6600", "Au", "#fff", "Audacity", "4.6", "Record and edit audio.", "org.audacityteam.Audacity", "audacity"],
   ];
   // apps above that also have a real app on Flathub (the real app is used on the Nebulux OS USB)
-  const ALSO = { spotify: ["com.spotify.Client", "spotify"], discord: ["com.discordapp.Discord", "discord"], zoom: ["us.zoom.Zoom", "zoom"], slack: ["com.slack.Slack", "slack"], telegram: ["org.telegram.desktop", "telegramdesktop"] };
+  const LOGO = { mcclassic: "w:www.minecraft.net", gmaps: "w:maps.google.com", word: "w:word.cloud.microsoft", excel: "w:excel.office.com", powerpoint: "w:powerpoint.cloud.microsoft", gdocs: "g:docs", gsheets: "g:sheets", gslides: "g:slides" }, ALSO = { spotify: ["com.spotify.Client", "spotify"], discord: ["com.discordapp.Discord", "discord"], zoom: ["us.zoom.Zoom", "zoom"], slack: ["com.slack.Slack", "slack"], telegram: ["org.telegram.desktop", "telegramdesktop"] };
   NX.webApps = [];
   for (const [id, name, url, category, cols, text, fg, publisher, rating, desc] of L) {
     NX.webApps.push(id);
-    NX.apps[id] = { name, url, category, rating, publisher, webapp: true, size: "Web app", desc, icon: "brand:" + cols + ":" + text + ":" + fg };
+    // its own logo: the real app's icon from Flathub when there is one, otherwise the website's own icon
+    const logo = ALSO[id] ? "|f:" + ALSO[id][0] : "|" + (LOGO[id] || "w:" + new URL(url).hostname);
+    NX.apps[id] = { name, url, category, rating, publisher, webapp: true, size: "Web app", desc, icon: "brand:" + cols + ":" + text + ":" + fg + logo };
     if (ALSO[id]) NX.apps[id].native = { flatpak: ALSO[id][0], wm: ALSO[id][1] };
   }
   for (const [id, name, category, cols, text, fg, publisher, rating, desc, flatpak, wm] of NATIVE)
-    NX.apps[id] = { name, category, rating, publisher, desc, native: { flatpak, wm }, size: "App", icon: "brand:" + cols + ":" + text + ":" + fg };
+    NX.apps[id] = { name, category, rating, publisher, desc, native: { flatpak, wm }, size: "App", icon: "brand:" + cols + ":" + text + ":" + fg + "|f:" + flatpak };
 })();

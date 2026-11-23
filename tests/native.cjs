@@ -289,6 +289,20 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(async () => (await (await fetch("/api/scale", { headers: { "x-nx": window.NX_NATIVE.token } })).json()).scale === "1.25")), "Settings > System > Display > Scale saves the new size");
   await p.evaluate(async () => { await fetch("/api/scale", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: JSON.stringify({ scale: "1" }) }); NX.close("settings"); }); await wait(300);
 
+  // ---------- 3.2.1: apps from the web open as their own apps (no browser), streaming apps get protected video ----------
+  const HDR = () => ({ "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" });
+  await p.evaluate(async (h) => fetch("/api/fake/webapps-on", { method: "POST", headers: h, body: JSON.stringify({ on: true }) }), await p.evaluate(HDR));
+  await p.evaluate(() => fetch("/api/webapp", { headers: { "x-nx": window.NX_NATIVE.token } }).then((r) => r.json()).then((r) => { NX.webAppOK = r.available; NX.drmReady = r.drm; }));
+  await p.evaluate(() => NX.open("poki")); await wait(600);
+  const opened = async () => (await p.evaluate(async () => (await (await fetch("/api/fake/webapps", { headers: { "x-nx": window.NX_NATIVE.token } })).json()).opened));
+  ok(await until(async () => (await opened()).some((a) => a.id === "poki" && a.url === "https://poki.com/" && !a.drm)) && await p.evaluate(() => !document.querySelector(".win[data-app=poki]")), "Poki opens as its own app, not in a browser or a Nebulux OS window");
+  ok(await until(() => p.evaluate(() => !!document.querySelector("#tb-apps [data-app=poki].run"))), "and it has its own place on the taskbar");
+  await p.evaluate(() => NX.open("netflix"));
+  ok(await until(async () => (await opened()).some((a) => a.id === "netflix" && a.drm), 15000) && await p.evaluate(() => NX.drmReady === true && NX.isNative("chrome")), "Netflix gets protected video set up once, then opens as its own app");
+  await p.evaluate(() => NX.open("google", { q: "nebulux os" }));
+  ok(await until(async () => (await opened()).some((a) => a.id === "google" && a.url === "https://www.google.com/search?q=nebulux%20os")), "Google opens as its own Google app, with the search");
+  await p.evaluate(async (h) => fetch("/api/fake/webapps-on", { method: "POST", headers: h, body: JSON.stringify({ on: false }) }), await p.evaluate(HDR)); await p.evaluate(() => { NX.webAppOK = false; });
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

@@ -43,7 +43,10 @@
   let tzDone = false;
   NX.scale = "1"; if (N) NX.api("GET", "/scale").then((r) => { NX.scale = r.scale || "1"; }).catch(() => {});
   NX.nativeInstalled = new Set(); NX.nativeRunning = new Set(); NX.nativeActive = new Set(); NX.nativeOK = false;
-  const nativeMap = () => { const m = {}; for (const [id, a] of Object.entries(NX.apps)) if (a.native && NX.nativeInstalled.has(a.native.flatpak)) m[id] = a.native.wm; return m; };
+  // apps from the web opened as their own apps this session (window class NebuluxApp-<id>)
+  NX.webOpened = new Set();
+  const webWm = (id) => "nebuluxapp-" + id;
+  const nativeMap = () => { const m = {}; for (const [id, a] of Object.entries(NX.apps)) if (a.native && NX.nativeInstalled.has(a.native.flatpak)) m[id] = a.native.wm; for (const id of NX.webOpened) if (!m[id]) m[id] = webWm(id); return m; };
   NX.isNative = (id) => { const a = NX.apps[id]; return !!(a && a.native && NX.nativeInstalled.has(a.native.flatpak)); };
   const nativeState = () => NX.api("GET", "/native").then((r) => { NX.nativeOK = !!r.available; NX.nativeInstalled = new Set(r.installed || []); return r; });
   nativeState().catch(() => {});
@@ -59,7 +62,7 @@
   });
   NX.uninstallNative = (id) => NX.api("POST", "/native/uninstall", { app: NX.apps[id].native.flatpak }).then(nativeState);
   NX.openNative = (id) => { const a = NX.apps[id]; if (NX.browserHide) NX.browserHide(); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar(); return NX.api("POST", "/native/open", { app: a.native.flatpak, wm: a.native.wm }).catch((e) => NX.toast(e.message)); };
-  NX.nativeToggle = (id) => { const a = NX.apps[id]; return NX.api("POST", "/native/toggle", { wm: a.native.wm }).then(() => setTimeout(nativeRunning, 300)).catch(() => {}); };
+  NX.nativeToggle = (id) => { const a = NX.apps[id]; return NX.api("POST", "/native/toggle", { wm: NX.isNative(id) ? a.native.wm : webWm(id) }).then(() => setTimeout(nativeRunning, 300)).catch(() => {}); };
   NX.nativeHideActive = () => { if (NX.nativeActive.size) NX.api("POST", "/native/hide", { apps: nativeMap() }).catch(() => {}); };
   async function nativeRunning() {
     const m = nativeMap(); if (!Object.keys(m).length) { if (NX.nativeRunning.size) { NX.nativeRunning.clear(); NX.shell && NX.shell.taskbar(); } return; }
@@ -67,6 +70,26 @@
   }
   setInterval(() => { if (NX.me) nativeRunning(); }, 3000);
 
+  // Apps from the web (Netflix, Poki, YouTube, Google...) open as their own apps: their own window, no tabs and no
+  // address bar. Streaming apps need protected video, so the first one sets that up once (the Google Chrome engine,
+  // from Flathub, out of sight: the window is still just "Netflix").
+  // (and the cloud gaming services, which only accept Google Chrome)
+  const DRM = new Set(["netflix", "disneyplus", "primevideo", "hulu", "max", "crunchyroll", "tubi", "spotify", "applemusic", "xboxcloud", "geforcenow"]);
+  NX.webAppOK = false; NX.drmReady = false;
+  const webState = () => NX.api("GET", "/webapp").then((r) => { NX.webAppOK = !!r.available; NX.drmReady = !!r.drm; }).catch(() => {});
+  webState();
+  let drmJob = null;
+  NX.webAppOpen = async (id, url) => {
+    const a = NX.apps[id]; url = url || a.url || a.browser; if (!url) return;
+    const drm = DRM.has(id);
+    if (drm && !NX.drmReady && NX.apps.chrome && NX.apps.chrome.native) {
+      if (!drmJob) { NX.toast("Getting " + a.name + " ready to play videos. This happens once and takes a few minutes."); drmJob = NX.installNative("chrome").then(() => { NX.drmReady = true; }).catch((e) => { NX.toast("Videos couldn't be set up: " + e.message + " " + a.name + " opens anyway."); }).finally(() => { drmJob = null; }); }
+      await drmJob;
+    }
+    NX.webOpened.add(id); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar();
+    try { await NX.api("POST", "/webapp/open", { id, url, drm }); } catch (e) { NX.toast(e.message); }
+    setTimeout(nativeRunning, 1500);
+  };
   // shortcuts caught by the window manager (so they work over the web browser too) come in here
   try { const es = new EventSource("/api/events?k=" + encodeURIComponent(N.token)); es.onmessage = (e) => { let d = {}; try { d = JSON.parse(e.data); } catch (er) { return; } if (d.key) document.dispatchEvent(new CustomEvent("nx:key", { detail: d.key })); if (d.resumed) document.dispatchEvent(new CustomEvent("nx:resumed", { detail: d.resumed })); }; } catch (e) { /* no event stream */ }
   // the real web browser (on the USB system): Google, YouTube and websites open in it, with tabs and Google sign-in

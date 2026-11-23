@@ -127,8 +127,17 @@ const api = {
     if (FAKE) { if (!fake.wifiOn) throw new Error("Turn on Wi-Fi first."); fake.hotspot = { name: b.name }; return { ok: true }; }
     const dev = (await run("nmcli", ["-t", "-f", "DEVICE,TYPE", "device"])).out.split("\n").map(nmSplit).find((x) => x[1] === "wifi");
     if (!dev) throw new Error("This computer has no Wi-Fi to share with.");
-    const r = await run("nmcli", ["device", "wifi", "hotspot", "ifname", dev[0], "con-name", "Hotspot", "ssid", b.name, "password", b.password], 30000);
-    if (!r.ok) throw new Error(/not support|AP mode|failed to/i.test(r.err) ? "This computer's Wi-Fi chip can't share a hotspot." : cleanErr(r.err));
+    // The hotspot is made with settings every phone and Wi-Fi chip agrees on: WPA2 with AES only, no protected
+    // management frames, 2.4 GHz channel 6. (NetworkManager's quick hotspot turns on options that Realtek RTW89 chips
+    // handle badly, and phones then say the right password is wrong.)
+    await run("nmcli", ["connection", "down", "Hotspot"], 10000); await run("nmcli", ["connection", "delete", "id", "Hotspot"], 10000);
+    const add = await run("nmcli", ["connection", "add", "type", "wifi", "ifname", dev[0], "con-name", "Hotspot", "autoconnect", "no", "ssid", b.name,
+      "802-11-wireless.mode", "ap", "802-11-wireless.band", "bg", "802-11-wireless.channel", "6",
+      "ipv4.method", "shared", "ipv6.method", "ignore",
+      "wifi-sec.key-mgmt", "wpa-psk", "wifi-sec.proto", "rsn", "wifi-sec.pairwise", "ccmp", "wifi-sec.group", "ccmp", "wifi-sec.pmf", "disable", "wifi-sec.psk", b.password], 20000);
+    if (!add.ok) throw new Error(cleanErr(add.err));
+    const r = await run("nmcli", ["connection", "up", "id", "Hotspot"], 40000);
+    if (!r.ok) { await run("nmcli", ["connection", "delete", "id", "Hotspot"], 10000); throw new Error(/not support|AP mode|failed to|802-11-wireless/i.test(r.err) ? "This computer's Wi-Fi chip can't share a hotspot." : cleanErr(r.err)); }
     return { ok: true };
   },
   // the connected Wi-Fi network's details: signal, band and channel, speed, security, addresses

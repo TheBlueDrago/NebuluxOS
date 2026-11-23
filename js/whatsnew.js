@@ -1,8 +1,13 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.2";
+  NX.version = "3.2.1";
   NX.whatsNew = [
+    ["Apps open as their own apps", "Poki, Netflix, Hulu, Disney+, Spotify and every other app from the Nebulux Store open in their own window with their own taskbar button, not in a browser tab. Games and videos get the graphics card, so pages no longer say the browser is unsupported."],
+    ["Netflix, Disney+ and other movie apps play", "Apps with protected movies and music set up their video player by themselves the first time you open one (it takes a minute, once)."],
+    ["Google as its own app", "Google opens as the real Google app in its own window, with your searches, sign-in and Gmail, instead of a web page inside another app."],
+    ["Real app logos", "Netflix, Hulu, Spotify, Discord, Docs, Sheets, Word, Excel and every other app that isn't part of Nebulux OS shows its own logo. New icons for File Explorer, the Nebulux Store and Settings."],
+    ["A hotspot your phone joins", "Mobile hotspot now uses standard WPA2 security on 2.4 GHz, so phones accept the right password instead of saying it is wrong."],
     ["Wi-Fi on newer laptops", "Nebulux OS now runs on the newer Linux kernel 6.12, with drivers for Wi-Fi 6 and 6E chips that had none before: Realtek RTL8852BE, RTL8852AE, RTL8852CE and RTL8922AE (in many Lenovo, HP and ASUS laptops), MediaTek MT7921 and MT7922, and the newest Intel chips. Their Bluetooth works too."],
     ["Wi-Fi that stays connected", "Wi-Fi power saving and changing addresses are off, which kept Realtek and MediaTek chips dropping the connection. Lenovo IdeaPads whose Wi-Fi said it was switched off are fixed by themselves."],
     ["Network troubleshooter", "Settings > Network & internet > Troubleshoot checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, says what is wrong in plain words, and Try to fix restarts the Wi-Fi driver and the network for you. It can also save a report to Documents."],
@@ -43,6 +48,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Updates by themselves");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Wi-Fi on newer laptops");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

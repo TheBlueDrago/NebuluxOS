@@ -323,6 +323,34 @@ module.exports = function more({ api, run, FAKE }) {
   const browserOK = () => !FAKE && fs.existsSync("/usr/bin/chromium") && !!process.env.DISPLAY && fs.existsSync("/usr/bin/openbox");
   const webWins = async () => (await run("xdotool", ["search", "--class", "NebuluxWeb"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
   api["GET /browser"] = async () => ({ available: browserOK(), running: !!(web && web.exitCode == null) });
+
+  // ---------- apps from the Store that are websites (Netflix, Poki, YouTube, Google...) open as their own apps ----------
+  // Each one is its own window (no tabs, no address bar) with the Nebulux title bar, its own place on the taskbar
+  // (window class NebuluxApp-<id>), and its own sign-in. Graphics are on (games need WebGL), with a software fallback.
+  // Netflix and the other streaming apps need protected video (Widevine): they run on the Google Chrome engine from
+  // Flathub when it's there (the OS installs it once), still as their own app window.
+  const APPDIR = path.join(HOME, ".config", "nebulux-apps"), CHROMEDIR = path.join(HOME, ".var", "app", "com.google.Chrome", "nebulux-apps");
+  const okId = (s) => typeof s === "string" && /^[a-z0-9-]{1,30}$/.test(s);
+  const hasChrome = async () => FAKE ? !!fakeNative.has("com.google.Chrome") : (await nativeList()).includes("com.google.Chrome");
+  let fakeWebOn = false;
+  api["GET /webapp"] = async () => ({ available: FAKE ? fakeWebOn : browserOK(), drm: await hasChrome() });
+  if (FAKE) api["POST /fake/webapps-on"] = async (b) => { fakeWebOn = !!(b && b.on); return { ok: true }; };
+  api["POST /webapp/open"] = async (b) => {
+    const url = String(b.url || ""); if (!okId(b.id) || !/^https:\/\/[^\s]{1,2000}$/i.test(url)) throw new Error("That app doesn't look right.");
+    const cls = "NebuluxApp-" + b.id, wm = cls.toLowerCase();
+    if (FAKE) { fakeRunning.add(wm); fakeWebApps.push({ id: b.id, url, drm: !!b.drm }); return { ok: true, engine: b.drm && await hasChrome() ? "chrome" : "chromium" }; }
+    if (!browserOK()) throw new Error("Apps from the web can't open here.");
+    const mine = mineOf(await windows(), wm);
+    if (mine.length && !b.url2) { for (const w of mine) await run("wmctrl", ["-i", "-a", w.id], 4000); return { ok: true, shown: true }; }
+    const sc = readScale(), common = ["--class=" + cls, "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--start-maximized", "--ignore-gpu-blocklist", "--enable-unsafe-swiftshader", ...(sc !== "1" ? ["--force-device-scale-factor=" + sc] : []), "--app=" + url];
+    const drm = !!b.drm && await hasChrome();
+    let p;
+    if (drm) { fs.mkdirSync(CHROMEDIR, { recursive: true }); p = spawn("flatpak", ["run", "com.google.Chrome", "--user-data-dir=" + path.join(CHROMEDIR, b.id), ...common], { detached: true, stdio: "ignore" }); }
+    else { fs.mkdirSync(APPDIR, { recursive: true }); p = spawn("chromium", ["--user-data-dir=" + path.join(APPDIR, b.id), "--password-store=basic", ...common], { detached: true, stdio: "ignore" }); }
+    p.on("error", () => {}); p.unref();
+    for (let k = 0; k < 30; k++) { await new Promise((ok) => setTimeout(ok, 300)); const w = mineOf(await windows(), wm); if (w.length) { await run("wmctrl", ["-i", "-a", w[w.length - 1].id], 4000); break; } }
+    return { ok: true, engine: drm ? "chrome" : "chromium" };
+  };
   api["POST /browser/open"] = async (b) => {
     const url = String(b.url || ""); if (!/^https?:\/\/[^\s]{1,2000}$/i.test(url)) throw new Error("That web address doesn't look right.");
     if (!browserOK()) throw new Error("The web browser isn't available here.");
@@ -349,7 +377,8 @@ module.exports = function more({ api, run, FAKE }) {
   const okApp = (s) => typeof s === "string" && /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+){2,}$/.test(s) && s.length < 120;
   const okWm = (s) => typeof s === "string" && /^[A-Za-z0-9._-]{1,60}$/.test(s);
   const FLATHUB = "https://dl.flathub.org/repo/flathub.flatpakrepo";
-  let jobs = {}, fakeNative = new Set(), fakeRunning = new Set();
+  let jobs = {}, fakeNative = new Set(), fakeRunning = new Set(), fakeWebApps = [];
+  if (FAKE) api["GET /fake/webapps"] = async () => ({ opened: fakeWebApps });
   const nativeList = async () => FAKE ? [...fakeNative] : (await run("flatpak", ["list", "--user", "--app", "--columns=application"], 15000)).out.split("\n").map((x) => x.trim()).filter(okApp);
   api["GET /native"] = async () => ({ available: FAKE || fs.existsSync("/usr/bin/flatpak"), installed: await nativeList(), jobs });
   api["POST /native/install"] = async (b) => {
@@ -594,7 +623,7 @@ module.exports = function more({ api, run, FAKE }) {
     if (f.error) return { configured: true, current, error: f.error, job: updJob };
     return { configured: true, current, latest: f.version, available: newer(f.version, current), notes: Array.isArray(f.notes) ? f.notes.slice(0, 30).map(String) : [], size: +f.size || 0, needsIso: !!f.needsIso, job: updJob };
   };
-  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; jobs = {}; fakeNative.clear(); fakeRunning.clear(); return { ok: true }; };
+  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; jobs = {}; fakeNative.clear(); fakeRunning.clear(); fakeWebApps = []; return { ok: true }; };
   api["POST /update/install"] = async () => {
     if (updJob && updJob.state === "installing") return updJob;
     updJob = { state: "installing", msg: "Downloading the update..." };
