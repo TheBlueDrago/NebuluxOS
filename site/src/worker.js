@@ -43,7 +43,9 @@ async function release(env, ctx) {
   const hit = await caches.default.match(key);
   if (hit) return hit.json();
   const r = await gh(env, "/releases/latest");
-  if (!r.ok) throw new Error("GitHub answered " + r.status);
+  // GitHub's API limits how often Cloudflare's shared addresses may ask. Then the newest release is read straight from
+  // its files (releases/latest/download/...), which has no such limit, so updates and downloads keep working.
+  if (!r.ok) { const rel = await releaseFromFiles(env); ctx.waitUntil(caches.default.put(key, new Response(JSON.stringify(rel), { headers: { "cache-control": "max-age=600" } }))); return rel; }
   const j = await r.json();
   const iso = (j.assets || []).find((a) => /^Nebulux-OS-[\d.]+\.iso$/.test(a.name));
   const sum = (j.assets || []).find((a) => /\.iso\.sha256$/.test(a.name));
@@ -56,6 +58,20 @@ async function release(env, ctx) {
   ctx.waitUntil(caches.default.put(key, new Response(JSON.stringify(rel), { headers: { "cache-control": "max-age=600" } })));
   return rel;
 }
+async function releaseFromFiles(env) {
+  const base = "https://github.com/" + (env.GH_REPO || "TheBlueDrago/NebuluxOS") + "/releases";
+  const u = await fetch(base + "/latest/download/update.json", { headers: UA });
+  if (!u.ok) throw new Error("No update.json in the newest release (" + u.status + ")");
+  const feed = await u.json(), v = String(feed.version || ""); if (!/^\d+(\.\d+)*$/.test(v)) throw new Error("Bad version");
+  const at = (name, size) => ({ id: 0, name, size: size || 0, url: base + "/download/v" + v + "/" + name });
+  const isoName = "Nebulux-OS-" + v + ".iso";
+  let sha = "", size = 0;
+  const s = await fetch(base + "/download/v" + v + "/" + isoName + ".sha256", { headers: UA }).catch(() => null);
+  if (s && s.ok) sha = ((await s.text()).match(/^[0-9a-f]{64}/i) || [""])[0];
+  const h = await fetch(base + "/download/v" + v + "/" + isoName, { method: "HEAD", headers: UA }).catch(() => null);
+  if (h && h.ok) size = +h.headers.get("content-length") || 0;
+  return { version: v, iso: at(isoName, size), sha256: sha, update: at("update.json"), bundle: at("nebulux-update.tar.gz", +feed.size || 0) };
+}
 const pick = (a) => ({ id: a.id, name: a.name, size: a.size, url: a.browser_download_url });
 const publicInfo = (rel) => ({ version: rel.version, file: rel.iso.name, size: rel.iso.size, sha256: rel.sha256 });
 async function fallback(env, request) {
@@ -64,7 +80,7 @@ async function fallback(env, request) {
 }
 // where an asset actually downloads from: a short-lived link straight to GitHub's file storage
 async function assetLink(env, a) {
-  if (!env.GITHUB_TOKEN) return a.url; // works when the repo is public
+  if (!env.GITHUB_TOKEN || !a.id) return a.url; // works when the repo is public
   const r = await gh(env, "/releases/assets/" + a.id, { accept: "application/octet-stream" });
   const loc = r.headers.get("location");
   if (r.status >= 300 && r.status < 400 && loc) return loc;
