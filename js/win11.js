@@ -55,7 +55,7 @@
     const files = NX.prefs().showrecent === false ? [] : NX.data("recent-files", []).slice(0, 4);
     W.innerHTML = `<div class="wg-head"><b>${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</b><span>${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</span></div>
       <div class="wg-grid"><section class="wg-card wg-wx">${place ? (w ? `<div class="wg-wxnow">${wIcon(wx(w.code)[2], 56)}<div><b>${w.now}°${w.unit}</b><span>${wx(w.code)[1]}</span><small>${NX.esc(place.name)}</small></div></div><div class="wg-days">${w.days.slice(1).map((x) => `<div>${new Date(x.t + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}${wIcon(wx(x.code)[2], 26)}<span>${x.hi}° <small>${x.lo}°</small></span></div>`).join("")}</div>` : `<p class="wg-note">${NX.netOK() ? "Getting the weather..." : "Connect to the internet to see the weather."}</p>`) + `<button class="wg-link" data-wx="change">Change city</button>`
-        : `<h4>Weather</h4><p class="wg-note">Type your city to see its weather.</p>`}<form class="wg-city" ${place ? "hidden" : ""}><input placeholder="Your city" aria-label="Your city" maxlength="60"><button class="btn primary" type="submit">Show</button></form><p class="wg-err"></p></section>
+        : `<h4>Weather</h4><p class="wg-note">Type your city to see its weather.</p>`}<form class="wg-city" ${place ? "hidden" : ""}><input placeholder="Your city" aria-label="Your city" maxlength="60"><button class="btn primary" type="submit">Show</button><button class="wg-link wg-here" type="button" data-wx="here">Use my location</button></form><p class="wg-err"></p></section>
       <section class="wg-card"><h4>Recent files</h4>${files.length ? files.map((f, i) => `<button class="wg-file" data-rf="${i}">${NX.icon({ image: "fimage", video: "fvideo", audio: "faudio", text: "ftext" }[f.kind] || "file", 22)}<span>${NX.esc(f.name)}</span></button>`).join("") : `<p class="wg-note">Files you open will show up here.</p>`}<button class="wg-link" data-open="files">Open File Explorer</button></section>
       <section class="wg-card wg-notes"><h4>Sticky Notes</h4>${(() => { const ns = NX.data("sticky-notes", []).filter((n) => n.t.trim()).slice(0, 3); return ns.length ? ns.map((n) => `<button class="wg-note1 c-${n.c}" data-note="${n.id}">${NX.esc(n.t.length > 120 ? n.t.slice(0, 120) + "..." : n.t)}</button>`).join("") : `<p class="wg-note">Notes you write in Sticky Notes show up here.</p>`; })()}<button class="btn wg-nbtn" data-open="notes">${NX.icon("plus", 14)}New note</button></section>
       ${NX.batt && NX.batt() ? `<section class="wg-card wg-batt"><h4>Battery</h4><div class="wg-bnow">${NX.battIcon(48)}<div><b>${NX.batt().percent}%</b><span>${NX.batt().charging ? "Charging" : NX.saverOn() ? "Battery saver is on" : "On battery"}</span>${NX.battLeft() ? `<span>${NX.battLeft()}</span>` : ""}</div></div><button class="btn" data-open="power">Power &amp; battery settings</button></section>` : ""}
@@ -73,6 +73,17 @@
       } catch (er2) { er.textContent = "The weather service didn't answer. Try again in a moment."; }
     };
     const ch = $("[data-wx=change]", W); if (ch) ch.onclick = () => { f.hidden = false; f.querySelector("input").focus(); };
+    // Use my location: the city this internet connection is in (only when you press it; nothing is saved but the city)
+    $("[data-wx=here]", W).onclick = async () => {
+      const er = $(".wg-err", W); if (!NX.netOK()) { er.textContent = NX.netWhy(); return; }
+      er.textContent = "Finding where you are...";
+      try {
+        const j = await (await fetch("https://ipapi.co/json/")).json();
+        if (!(isFinite(j.latitude) && isFinite(j.longitude))) throw new Error("no place");
+        NX.setData("wx-place", { name: (j.city || "Your area") + (j.region ? ", " + j.region : j.country_name ? ", " + j.country_name : ""), lat: +j.latitude, lon: +j.longitude });
+        const w2 = await weather(true); tbWidget(w2); widgetsDraw();
+      } catch (e) { er.textContent = "Your location couldn't be found. Type your city instead."; }
+    };
     W.querySelectorAll("[data-rf]").forEach((b) => (b.onclick = () => { const file = NX.data("recent-files", [])[+b.dataset.rf]; NX.shell.closeFlyouts(); if (file) NX.openFile(file); }));
     $("[data-open=files]", W).onclick = () => { NX.shell.closeFlyouts(); NX.open("files"); };
     $("[data-open=notes]", W).onclick = () => { NX.shell.closeFlyouts(); NX.open("notes"); setTimeout(() => { const b = document.querySelector(".win[data-app=notes] [data-a=new]"); if (b) b.click(); }, 80); };
