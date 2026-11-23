@@ -216,6 +216,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   // ---------- 3.2: Settings > System > Storage ----------
   await p.evaluate(() => NX.open("settings", { page: "system" }));
   ok(await until(() => p.evaluate(() => /19.5 GB free/.test((document.querySelector("#s-store") || {}).innerText || "") && document.querySelectorAll("#s-store .s-str").length >= 5)), "Storage shows how full the USB is and what uses it");
+  ok(await until(() => p.evaluate(() => !!document.querySelector("#s-stclean"))), "it offers to clean up temporary files");
+  await p.evaluate(() => document.querySelector("#s-stclean").click());
+  ok(await until(() => p.evaluate(() => [...document.querySelectorAll(".toast")].some((t) => /Cleaned up 320 MB/.test(t.textContent)) && !document.querySelector("#s-stclean"))), "Clean up frees them and says how much");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
   // ---------- 3.2: the connected network's Properties, and the battery time left ----------

@@ -477,14 +477,33 @@ module.exports = function more({ api, run, FAKE }) {
 
   // ---------- storage: how full the USB is, and what uses it ----------
   api["GET /storage"] = async () => {
-    if (FAKE) return { persistent: true, total: 28.6e9, used: 9.1e9, free: 19.5e9, folders: [["Documents", 2.4e8], ["Downloads", 1.9e9], ["Pictures", 4.1e8], ["Music", 0], ["Videos", 1.2e9], ["Desktop", 2e6]], apps: 3.3e9, trash: 5.2e7 };
+    if (FAKE) return { persistent: true, total: 28.6e9, used: 9.1e9, free: 19.5e9, folders: [["Documents", 2.4e8], ["Downloads", 1.9e9], ["Pictures", 4.1e8], ["Music", 0], ["Videos", 1.2e9], ["Desktop", 2e6]], apps: 3.3e9, trash: 5.2e7, cache: fakeCache };
     const persist = fs.existsSync("/run/live/persistence") && fs.readdirSync("/run/live/persistence").length > 0;
     // where your changes are kept: the USB's persistent space, or memory when it doesn't save changes
     const df = await run("df", ["-B1", "--output=size,used,avail", HOME], 4000);
     const n = (df.out.trim().split("\n")[1] || "").trim().split(/\s+/).map(Number);
     const du = async (p) => { const r = await run("du", ["-sb", p], 8000); return +(r.out.split(/\s/)[0]) || 0; };
     const folders = []; for (const f of FOLDERS) folders.push([f, await du(path.join(HOME, f))]);
-    return { persistent: persist, total: n[0] || 0, used: n[1] || 0, free: n[2] || 0, folders, apps: await du(path.join(HOME, ".local", "share", "flatpak")), trash: await du(TRASH) };
+    let cache = 0; for (const d of await cacheDirs()) cache += await du(d);
+    return { persistent: persist, total: n[0] || 0, used: n[1] || 0, free: n[2] || 0, folders, apps: await du(path.join(HOME, ".local", "share", "flatpak")), trash: await du(TRASH), cache };
+  };
+  // Clean up: the caches websites and apps keep (they fill up the USB over time and come back by themselves), and app
+  // parts no app uses any more. Your files, sign-ins and settings stay. Apps that are open keep their cache.
+  let fakeCache = 3.2e8;
+  const cacheDirs = async () => {
+    const out = [path.join(HOME, ".cache")], open = FAKE ? [] : (await windows()).map((w) => w.cls.toLowerCase());
+    const prof = (dir) => ["Cache", "Code Cache", "GPUCache", path.join("Service Worker", "CacheStorage")].map((s) => path.join(dir, "Default", s));
+    out.push(...prof(WEBDIR));
+    for (const base of [APPDIR, CHROMEDIR]) { let ids = []; try { ids = fs.readdirSync(base); } catch (e) { /* none yet */ } for (const id of ids) if (!open.some((c) => c.includes("nebuluxapp-" + id.toLowerCase()))) out.push(...prof(path.join(base, id))); }
+    return out.filter((d) => { try { return fs.statSync(d).isDirectory(); } catch (e) { return false; } });
+  };
+  api["POST /storage/clean"] = async () => {
+    if (FAKE) { const freed = fakeCache; fakeCache = 0; return { ok: true, freed }; }
+    const dfFree = async () => +(((await run("df", ["-B1", "--output=avail", HOME], 4000)).out.trim().split("\n")[1]) || 0);
+    const before = await dfFree();
+    for (const d of await cacheDirs()) { try { fs.rmSync(d, { recursive: true, force: true }); } catch (e) { /* in use: skip it */ } }
+    await run("flatpak", ["uninstall", "--user", "--unused", "-y", "--noninteractive"], 120000);
+    return { ok: true, freed: Math.max(0, (await dfFree()) - before) };
   };
 
   // ---------- display scale: how big everything is (100% to 200%); the screen starts again to change it ----------
@@ -629,7 +648,7 @@ module.exports = function more({ api, run, FAKE }) {
     if (f.error) return { configured: true, current, error: f.error, job: updJob };
     return { configured: true, current, latest: f.version, available: newer(f.version, current), notes: Array.isArray(f.notes) ? f.notes.slice(0, 30).map(String) : [], size: +f.size || 0, needsIso: !!f.needsIso, job: updJob };
   };
-  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; jobs = {}; fakeNative.clear(); fakeRunning.clear(); fakeWebApps = []; return { ok: true }; };
+  if (FAKE) api["POST /fake/update-reset"] = async () => { fakeCache = 3.2e8; fakeUpd = { current: "3.1", latest: "3.2" }; updJob = null; jobs = {}; fakeNative.clear(); fakeRunning.clear(); fakeWebApps = []; return { ok: true }; };
   api["POST /update/install"] = async () => {
     if (updJob && updJob.state === "installing") return updJob;
     updJob = { state: "installing", msg: "Downloading the update..." };

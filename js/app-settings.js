@@ -219,14 +219,15 @@
         if (!q$("#s-store")) return;
         const gb = (b) => b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? Math.round(b / 1e6) + " MB" : b > 0 ? Math.max(1, Math.round(b / 1e3)) + " KB" : "0 KB";
         const pct = s.total ? Math.min(100, Math.round((s.used / s.total) * 100)) : 0;
-        const rows = [...s.folders, ["Apps from the Nebulux Store", s.apps], ["Recycle Bin", s.trash]].filter((r) => r[1] > 0).sort((a, b) => b[1] - a[1]);
+        const rows = [...s.folders, ["Apps from the Nebulux Store", s.apps], ["Recycle Bin", s.trash], ["Temporary files (website and app caches)", s.cache || 0]].filter((r) => r[1] > 0).sort((a, b) => b[1] - a[1]);
         const max = Math.max(1, ...rows.map((r) => r[1]));
         box.innerHTML = `<div class="s-sth"><b>${gb(s.free)} free</b><small>of ${gb(s.total)} ${s.persistent ? "on this USB" : "(in memory: this USB doesn't save changes)"}</small></div>
           <div class="s-stbar ${pct > 90 ? "full" : pct > 75 ? "high" : ""}"><i style="width:${pct}%"></i></div>
           ${rows.length ? `<div class="s-stlist">${rows.map((r) => `<div class="s-str"><span>${NX.esc(r[0])}</span><span class="s-strb"><i style="width:${Math.max(2, Math.round((r[1] / max) * 100))}%"></i></span><b>${gb(r[1])}</b></div>`).join("")}</div>` : ""}
-          ${s.trash > 0 ? `<div class="s-dacts"><button class="btn" id="s-stempty">Empty the Recycle Bin (${gb(s.trash)})</button></div>` : ""}
+          <div class="s-dacts">${(s.cache || 0) > 0 ? `<button class="btn primary" id="s-stclean" title="Website and app caches. Your files, sign-ins and settings stay.">Clean up ${gb(s.cache)} of temporary files</button>` : ""}${s.trash > 0 ? `<button class="btn" id="s-stempty">Empty the Recycle Bin (${gb(s.trash)})</button>` : ""}</div>
           ${pct > 90 ? `<p class="s-note">The USB is almost full. Delete files you don't need, empty the Recycle Bin, or uninstall apps.</p>` : ""}`;
         const em = q$("#s-stempty"); if (em) em.onclick = async () => { em.disabled = true; try { await NX.fs.emptyTrash(); NX.toast("The Recycle Bin is empty."); } catch (e) { NX.toast(e.message); } fillStorage(); };
+        const cl = q$("#s-stclean"); if (cl) cl.onclick = async () => { cl.disabled = true; cl.textContent = "Cleaning up..."; try { const r = await NX.api("POST", "/storage/clean"); NX.toast(r.freed > 0 ? "Cleaned up " + gb(r.freed) + "." : "Cleaned up. There wasn't much to free."); } catch (e) { NX.toast(e.message); } fillStorage(); };
       }
       async function fillAudio() {
         if (!q$("#s-alist")) return; let a;
