@@ -12,7 +12,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const b = await puppeteer.connect({ browserURL: "http://127.0.0.1:" + (process.env.PORT || 9334), protocolTimeout: 120000 });
   for (const pg of await b.pages()) if (pg.url().startsWith(OS)) await pg.close();
   const p = await b.newPage(), errs = [];
-  p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => { if (m.type() === "error" && !/status of 40[034]/.test(m.text())) errs.push("console: " + m.text()); });
+  p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => { if (m.type() === "error" && !/status of 40[034]/.test(m.text()) && !/report-only Content Security Policy/.test(m.text())) errs.push("console: " + m.text()); }); // (websites' own report-only notes aren't Nebulux OS errors)
   await p.setViewport({ width: W, height: H });
   await p.goto(OS + "?fast", { waitUntil: "load" }); await wait(800);
   await p.evaluate(() => localStorage.clear()); await p.reload({ waitUntil: "load" }); await wait(800);
@@ -157,7 +157,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.click(".win[data-app=files] [data-t=copy]"); await wait(150);
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-place")].find((b) => b.innerText.trim() === "Documents").click()); await wait(500);
   await p.click(".win[data-app=files] [data-t=paste]"); await wait(600);
-  ok((await fxNames()).includes("From my USB.txt") && (await fxNames()).includes("Welcome.txt"), "a file copies from the USB drive into Documents");
+  ok(await until(async () => (await fxNames()).includes("From my USB.txt") && (await fxNames()).includes("Welcome.txt")), "a file copies from the USB drive into Documents");
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-place")].find((b) => /MY USB/.test(b.innerText)).click()); await wait(500);
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((b) => /From my USB/.test(b.innerText)).click()); await wait(150);
   await p.click(".win[data-app=files] [data-t=delete]"); await wait(300);

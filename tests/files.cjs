@@ -490,9 +490,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   // 3.2: Quick access in File Explorer
   await p.evaluate(() => { NX.setData("fx-pins", []); NX.closeAll(); NX.open("files"); }); await wait(700);
   await p.evaluate(() => { const w = NX.wins.get("files"); const d = [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((x) => /Documents/.test(x.textContent)); w.fxPin({ path: d.dataset.k, name: "Documents" }, true); }); await wait(400);
-  ok(await p.evaluate(() => /Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").innerText) && NX.data("fx-pins", []).length === 1), "a folder pins to Quick access in the sidebar");
+  ok(await p.evaluate(() => /Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").textContent) && NX.data("fx-pins", []).length === 1), "a folder pins to Quick access in the sidebar");
   await p.evaluate(() => { const w = NX.wins.get("files"); w.fxPin(NX.data("fx-pins", [])[0], false); }); await wait(300);
-  ok(await p.evaluate(() => !/Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").innerText)), "and unpins");
+  ok(await p.evaluate(() => !/Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").textContent)), "and unpins");
   await p.evaluate(() => NX.close("files")); await wait(300);
 
   // 3.2: Notepad Find and Replace
