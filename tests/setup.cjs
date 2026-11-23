@@ -1,7 +1,7 @@
 // Goes through first-time setup like a person would: region, keyboard, (network), name, password, privacy, look.
 // Used by the other tests. checks(true) also tries a too-short and a mismatched password first.
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-module.exports = async function setup(p, name, pw, ok) {
+module.exports = async function setup(p, name, pw, ok, hooks) {
   const step = () => p.evaluate(() => (document.querySelector("#oobe h1") || {}).textContent || "");
   const next = async () => { await p.click("#oobe .ob-next"); await wait(250); };
   await p.waitForSelector("#oobe:not([hidden]) .ob-next", { timeout: 10000 });
@@ -17,7 +17,7 @@ module.exports = async function setup(p, name, pw, ok) {
   await next();
   if (ok) ok(/right keyboard layout/.test(await step()), "then your keyboard layout");
   await next();
-  if (/connect you to a network/.test(await step())) { if (ok) ok(true, "then the network"); await next(); }
+  if (/connect you to a network/.test(await step())) { if (ok) ok(true, "then the network"); if (hooks && hooks.network) await hooks.network(); await next(); }
   if (/Sign in with Google/.test(await step())) await next();
   if (ok) ok(/privacy settings/.test(await step()), "then privacy settings");
   await next();

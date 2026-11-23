@@ -105,11 +105,27 @@
       }
       const focusEl = box.querySelector(".ob-in") || box.querySelector(".ob-next"); if (focusEl && !box.querySelector(".ob-in")) setTimeout(() => focusEl.focus(), 30);
     }
+    let obTries = 0;
     async function obNets() {
       const host = box.querySelector(".ob-nets"); if (!host) return; let w;
       try { w = await NX.api("GET", "/wifi"); } catch (e) { host.innerHTML = `<p class="ob-sub">${NX.esc(e.message)}</p>`; return; }
       if (!box.querySelector(".ob-nets")) return;
-      if (!w.device) { host.innerHTML = `<p class="ob-sub">This computer has no Wi-Fi that Nebulux OS can use. Plug in a network cable, or press "I don't have internet".</p>`; return; }
+      // Wi-Fi isn't working: say why (the chip by name), and fix it right here
+      const fixer = (text, btn) => {
+        host.innerHTML = `<p class="ob-sub">${NX.esc(text)}</p><div class="ob-fixw"><button type="button" class="btn primary ob-fix">${btn}</button></div><p class="ob-sub ob-fixmsg"></p>`;
+        const b = host.querySelector(".ob-fix"), m = host.querySelector(".ob-fixmsg");
+        b.onclick = async () => {
+          b.disabled = true; m.textContent = btn === "Turn on Wi-Fi" ? "Turning on Wi-Fi..." : "Trying to fix Wi-Fi. This takes up to half a minute...";
+          try { if (btn === "Turn on Wi-Fi") await NX.api("POST", "/wifi/radio", { on: true }); else { const d = await NX.api("POST", "/net/diagnose", { fix: true }); if (!d.ok) m.textContent = d.summary; } } catch (e) { m.textContent = e.message; }
+          obTries = 0; setTimeout(obNets, 1500);
+        };
+      };
+      if (!w.device) { fixer((w.error || "This computer has no Wi-Fi that Nebulux OS can use.") + " A network cable works too, or press \"I don't have internet\".", "Try to fix"); return; }
+      if (!w.on) { fixer(w.error || "Wi-Fi is off.", w.error ? "Try to fix" : "Turn on Wi-Fi"); return; }
+      if (!(w.networks || []).length) {
+        if (obTries++ < 5) { host.innerHTML = `<p class="ob-sub">Looking for networks...</p>`; setTimeout(obNets, 3000); return; }
+        fixer("No Wi-Fi networks were found nearby.", "Try to fix"); return;
+      }
       host.innerHTML = (w.networks || []).slice(0, 8).map((n, k) => `<div class="ob-net" data-n="${k}"><span>${NX.icon("wifi", 20)}<b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"}</small></span><button type="button" class="btn" data-c="${k}">${n.active ? "Connected" : "Connect"}</button></div>`).join("") || `<p class="ob-sub">No networks found yet.</p>`;
       host.querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => {
         const n = w.networks[+b.dataset.c], row = b.closest(".ob-net"); if (n.active) return;

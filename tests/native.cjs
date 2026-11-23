@@ -30,7 +30,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // sign up
   ok(await until(() => p.evaluate(() => !document.querySelector("#oobe").hidden)), "the first start goes to first-time setup");
-  await require("./setup.cjs")(p, "Ada", "nebula1", ok);
+  // 3.2: with Wi-Fi off, the network step of setup offers to turn it on, and then lists the networks
+  await p.evaluate(async () => { NX.realOnline = NX.online; NX.online = () => false; await fetch("/api/wifi/radio", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: JSON.stringify({ on: false }) }); });
+  await require("./setup.cjs")(p, "Ada", "nebula1", ok, { network: async () => {
+    ok(await until(() => p.evaluate(() => /Turn on Wi-Fi/.test((document.querySelector("#oobe .ob-fix") || {}).textContent || ""))), "with Wi-Fi off, setup offers Turn on Wi-Fi");
+    await p.evaluate(() => document.querySelector("#oobe .ob-fix").click());
+    ok(await until(() => p.evaluate(() => document.querySelectorAll("#oobe .ob-net").length === 3)), "and then lists the networks nearby");
+    await p.evaluate(() => { NX.online = NX.realOnline; });
+  } });
   ok(await p.evaluate(() => !document.querySelector("#desktop").hidden), "signed in");
   ok(await until(() => p.evaluate(() => { const b = document.querySelector("#tb-tray .tb-batt"); return !!b && /76%/.test(b.title); })), "the taskbar shows the real battery level");
 

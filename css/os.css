@@ -803,3 +803,5 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .s-browse{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}.s-browse .s-rt{display:flex;flex-direction:column;gap:2px}.s-browse small{color:var(--sub)}.s-browse .btn{cursor:pointer}
 .qs-left{color:var(--sub);font-size:12px;margin-left:4px}
 .s-wprops{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 18px;padding:10px 14px 12px 46px;font-size:13px}.s-wprops div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:4px 0}.s-wprops span{color:var(--sub)}.s-wprops b{font-weight:500;text-align:right;word-break:break-all}
+.ob-fixw{display:flex;justify-content:center;margin:10px 0}
+.ob-fixmsg{min-height:1.2em}
