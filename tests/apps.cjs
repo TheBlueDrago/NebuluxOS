@@ -5,8 +5,9 @@ const puppeteer = require("C:/nebulux-orbit/node_modules/puppeteer-core"), path 
 const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m); } else console.log("ok  ", m); };
 (async () => {
   const b = await puppeteer.connect({ browserURL: "http://127.0.0.1:9333", protocolTimeout: 120000 }); const c = await b.createBrowserContext(), p = await c.newPage();
-  const errs = []; p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
+  const errs = []; p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => { if (m.type() === "error" && !/status of (429|50\d)/.test(m.text())) errs.push("console: " + m.text()); }); // (a busy weather service isn't a Nebulux OS error)
   // a made-up camera and microphone (a moving picture and a tone), so the test never uses the real ones
+  await p.evaluateOnNewDocument(() => { navigator.mediaDevices.getDisplayMedia = async () => { const cv = document.createElement("canvas"); cv.width = 800; cv.height = 450; const g = cv.getContext("2d"); g.fillStyle = "#334"; g.fillRect(0, 0, 800, 450); g.fillStyle = "#fff"; g.font = "bold 40px sans-serif"; g.fillText("Test screen", 40, 100); setInterval(() => g.fillRect(0, 0, 1, 1), 50); return cv.captureStream(10); }; });
   await p.evaluateOnNewDocument(() => { navigator.mediaDevices.getUserMedia = async (c) => { const tracks = []; if (c.video) { const cv = document.createElement("canvas"); cv.width = 640; cv.height = 360; const g = cv.getContext("2d"); let t = 0; setInterval(() => { t++; g.fillStyle = "hsl(" + (t * 3 % 360) + ",70%,45%)"; g.fillRect(0, 0, 640, 360); g.fillStyle = "#fff"; g.font = "bold 60px sans-serif"; g.fillText("Test camera " + t, 40, 200); }, 50); tracks.push(...cv.captureStream(20).getVideoTracks()); } if (c.audio) { const ac = new AudioContext(), o = ac.createOscillator(), d = ac.createMediaStreamDestination(); o.connect(d); o.start(); tracks.push(...d.stream.getAudioTracks()); } return new MediaStream(tracks); }; });
   await p.setViewport({ width: 1366, height: 768 }); await p.goto("file:///C:/NebuluxOS/index.html?fast"); await wait(500);
   await require("C:/NebuluxOS/tests/setup.cjs")(p, "Ada", "nebula1");
@@ -68,6 +69,15 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   ok(await cv("Temperature", "100", "Celsius", "Fahrenheit") === "212", "and 100 C to 212 F");
   ok(await cv("Weight", "1", "Kilograms", "Pounds") === "2.204622622", "and 1 kg to 2.204622622 lb");
   await shot("converter"); await p.evaluate(() => NX.closeAll());
+  // Snipping Tool: draw on a screenshot
+  await p.evaluate(() => { NX.closeAll(); NX.open("snip"); }); await wait(500);
+  await p.click(".win[data-app=snip] [data-s]"); await p.waitForFunction(() => { const i = document.querySelector(".win[data-app=snip] .sn-view img"); return i && i.naturalWidth > 0; }, { timeout: 10000 }).catch(() => {});
+  await p.evaluate(() => { NX.focus("snip"); document.querySelector(".win[data-app=snip] [data-o=draw]").click(); }); await wait(300);
+  await p.evaluate(() => { const w = NX.wins.get("snip"); w.snipInk.line(20, 20, 200, 120); }); await shot("snip-draw");
+  await p.evaluate(() => document.querySelector(".win[data-app=snip] [data-d=save]").click()); await wait(1500);
+  const snipNames = await p.evaluate(async () => (await NX.fs.list(await NX.folder("Pictures"))).entries.map((e) => e.name).join(", "));
+  ok(/\(drawing\)\.png/.test(snipNames), "Snipping Tool draws on a screenshot and saves it as a copy");
+  await p.evaluate(() => NX.closeAll());
   // Media Player: shuffle and repeat
   await p.evaluate(() => { NX.closeAll(); NX.open("media"); }); await wait(700);
   await p.click(".win[data-app=media] [data-mpc=shuffle]"); await p.click(".win[data-app=media] [data-mpc=repeat]"); await p.click(".win[data-app=media] [data-mpc=repeat]"); await wait(200);

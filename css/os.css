@@ -1037,3 +1037,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .mp-c{position:relative;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--sub)}.mp-c:hover{background:var(--hover)}
 .mp-c.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
 .mp-c i{position:absolute;right:3px;bottom:2px;font-style:normal;font-size:9px;font-weight:800}
+
+/* Snipping Tool: drawing on a screenshot */
+.sn-view{position:relative}.sn-ink{position:absolute;cursor:crosshair;touch-action:none;z-index:3}
+.sn-pens{display:flex;gap:6px;align-items:center;margin-right:4px}.sn-pens button{width:24px;height:24px;border-radius:50%;border:2px solid #0006;box-shadow:0 0 0 1px #fff4}.sn-pens button.on{box-shadow:0 0 0 3px var(--accent)}

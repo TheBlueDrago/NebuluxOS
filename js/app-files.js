@@ -417,6 +417,38 @@
         };
       };
       win.snipCrop = crop;
+      // Draw: a pen over the screenshot (four colors, Undo), saved as a copy at full size next to it
+      const draw = (r) => {
+        const v = body.querySelector(".sn-view"), img = v.querySelector("img"); if (!img || !img.naturalWidth) return;
+        const b0 = img.getBoundingClientRect(), vb = v.getBoundingClientRect(), cv = document.createElement("canvas"); cv.className = "sn-ink";
+        cv.width = Math.round(b0.width); cv.height = Math.round(b0.height); cv.style.left = (b0.left - vb.left + v.scrollLeft) + "px"; cv.style.top = (b0.top - vb.top + v.scrollTop) + "px"; v.appendChild(cv); v.classList.add("sn-drawing");
+        const g = cv.getContext("2d"), COLS = ["#ef4444", "#facc15", "#3b82f6", "#ffffff"], strokes = []; let col = COLS[0], cur = null;
+        const acts = v.querySelector(".sn-acts"); acts.innerHTML = `<span class="sn-pens">${COLS.map((c, i) => `<button class="${i ? "" : "on"}" data-pen="${c}" style="background:${c}" aria-label="Pen color ${c}"></button>`).join("")}</span><button class="btn" data-d="undo">Undo</button><button class="btn primary" data-d="save">Save drawing</button><button class="btn" data-d="cancel">Cancel</button>`;
+        const paint = () => { g.clearRect(0, 0, cv.width, cv.height); g.lineCap = g.lineJoin = "round"; for (const s of strokes) { g.strokeStyle = s.c; g.lineWidth = 4; g.beginPath(); s.p.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.p.length === 1) g.lineTo(s.p[0][0] + .1, s.p[0][1]); g.stroke(); } };
+        const at = (e) => { const b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+        cv.onpointerdown = (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); cur = { c: col, p: [at(e)] }; strokes.push(cur); paint(); };
+        cv.onpointermove = (e) => { if (!cur) return; cur.p.push(at(e)); paint(); };
+        cv.onpointerup = cv.onpointercancel = () => { cur = null; };
+        win.snipInk = { strokes: () => strokes.length, line: (x0, y0, x1, y1) => { strokes.push({ c: col, p: [[x0, y0], [x1, y1]] }); paint(); } };
+        const done = () => { cv.remove(); v.classList.remove("sn-drawing"); delete win.snipInk; };
+        const back = (path) => { acts.innerHTML = `<button class="btn primary" data-o="crop">Crop</button><button class="btn primary" data-o="draw">Draw</button><button class="btn" data-o="open">Open in Photos</button>`; acts.querySelector("[data-o=open]").onclick = () => NX.open("photos", { path }); acts.querySelector("[data-o=crop]").onclick = () => crop({ path }); acts.querySelector("[data-o=draw]").onclick = () => draw({ path }); };
+        acts.onclick = async (e) => {
+          const pen = e.target.closest("[data-pen]"); if (pen) { col = pen.dataset.pen; acts.querySelectorAll("[data-pen]").forEach((x) => x.classList.toggle("on", x === pen)); return; }
+          const d = e.target.closest("[data-d]"); if (!d) return;
+          if (d.dataset.d === "undo") { strokes.pop(); paint(); }
+          if (d.dataset.d === "cancel") { acts.onclick = null; done(); back(r.path); }
+          if (d.dataset.d === "save") {
+            if (!strokes.length) { NX.toast("Draw something first."); return; }
+            const k = img.naturalWidth / cv.width, c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; const x = c.getContext("2d");
+            x.drawImage(img, 0, 0); x.scale(k, img.naturalHeight / cv.height); x.lineCap = x.lineJoin = "round";
+            for (const s of strokes) { x.strokeStyle = s.c; x.lineWidth = 4; x.beginPath(); s.p.forEach(([px, py], i) => (i ? x.lineTo(px, py) : x.moveTo(px, py))); if (s.p.length === 1) x.lineTo(s.p[0][0] + .1, s.p[0][1]); x.stroke(); }
+            const blob = await new Promise((ok) => c.toBlob(ok, "image/png"));
+            try { const name = NX.fs.base(r.path).replace(/( \(drawing\))?\.png$/i, "") + " (drawing).png", out = await NX.fs.upload(NX.fs.parent(r.path), name, blob); acts.onclick = null; done(); img.src = await NX.fs.url(out.path); win.snipLast = out; NX.toast("Saved as " + out.name + "."); NX.filesChanged && NX.filesChanged(); back(out.path); }
+            catch (er) { NX.toast(er.message); }
+          }
+        };
+      };
+      win.snipDraw = draw;
       body.innerHTML = `<div class="sn-bar"><button class="btn primary" data-s="0">${NX.icon("camera", 16)}New screenshot</button><label class="sn-delay">Wait <select aria-label="Wait before taking it"><option value="0">no time</option><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label></div><div class="sn-view"><p class="sn-tip">Tip: press <b>Nebulux + Shift + S</b> or <b>Print Screen</b> any time. Screenshots go in Pictures${NX.native ? " > Screenshots" : ""}.</p></div>`;
       const v = body.querySelector(".sn-view"), btn = body.querySelector("[data-s]");
       btn.onclick = async () => {
@@ -426,7 +458,7 @@
         try { const r = await NX.screenshot(true); NX.focus("snip"); v.innerHTML = `<img alt="Your screenshot"><div class="sn-acts"><button class="btn" data-o="open">Open in Photos</button><button class="btn" data-o="folder">Show in File Explorer</button></div>`;
           v.querySelector("img").src = await NX.fs.url(r.path); v.querySelector("[data-o=open]").onclick = () => NX.open("photos", { path: r.path });
           v.querySelector("[data-o=folder]").onclick = () => NX.open("files", { path: NX.fs.parent(r.path) }); NX.toast("Screenshot saved.");
-          v.querySelector(".sn-acts").insertAdjacentHTML("afterbegin", `<button class="btn primary" data-o="crop">Crop</button>`); v.querySelector("[data-o=crop]").onclick = () => crop(r);
+          v.querySelector(".sn-acts").insertAdjacentHTML("afterbegin", `<button class="btn primary" data-o="crop">Crop</button><button class="btn primary" data-o="draw">Draw</button>`); v.querySelector("[data-o=crop]").onclick = () => crop(r); v.querySelector("[data-o=draw]").onclick = () => draw(r);
         } catch (e) { NX.focus("snip"); NX.toast(e.message); }
         btn.disabled = false; btn.innerHTML = `${NX.icon("camera", 16)}New screenshot`;
       };
