@@ -51,7 +51,7 @@ async function chip(kind) {
 
 // ---------- made-up devices for tests ----------
 const fakeStart = () => ({ wifiOn: true, conn: "Home Wi-Fi", nets: [{ ssid: "Home Wi-Fi", signal: 82, secure: true }, { ssid: "Cafe Guest", signal: 55, secure: false }, { ssid: "Neighbor 5G", signal: 31, secure: true }],
-  btOn: true, bt: [{ mac: "11:22:33:44:55:66", name: "Nebulux Earbuds", paired: false, connected: false }, { mac: "AA:BB:CC:DD:EE:01", name: "Wireless Mouse", paired: true, connected: true }], vol: 60, bright: 80, power: null });
+  btOn: true, bt: [{ mac: "11:22:33:44:55:66", name: "Nebulux Earbuds", paired: false, connected: false }, { mac: "AA:BB:CC:DD:EE:01", name: "Wireless Mouse", paired: true, connected: true, battery: 64 }], vol: 60, bright: 80, power: null });
 let fake = fakeStart();
 
 // ---------- the API ----------
@@ -254,7 +254,7 @@ async function btList(pairedOnly) {
   const parse = (s) => s.split("\n").map((l) => /^Device\s+(\S+)\s+(.*)$/.exec(l.trim())).filter(Boolean).map((m) => ({ mac: m[1], name: m[2].trim() }));
   const pairedSet = new Set(parse(paired.out).map((d) => d.mac));
   const list = (pairedOnly ? parse(paired.out) : parse(all.out)).filter((d) => okMAC(d.mac)).slice(0, 40);
-  for (const d of list) { d.paired = pairedSet.has(d.mac); d.connected = false; if (d.paired) { const i = await run("bluetoothctl", ["info", d.mac], 5000); d.connected = /Connected:\s*yes/i.test(i.out); } }
+  for (const d of list) { d.paired = pairedSet.has(d.mac); d.connected = false; if (d.paired) { const i = await run("bluetoothctl", ["info", d.mac], 5000); d.connected = /Connected:\s*yes/i.test(i.out); const bp = /Battery Percentage:\s*\S+\s*\((\d+)\)/i.exec(i.out); if (bp) d.battery = Math.min(100, +bp[1]); } }
   // devices with no real name show their address as the name; list named ones first
   return list.sort((a, b) => (b.paired - a.paired) || ((a.name.replace(/-/g, ":") === a.mac) - (b.name.replace(/-/g, ":") === b.mac)));
 }

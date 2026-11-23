@@ -219,6 +219,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.close("settings")); await wait(300);
   ok(await until(() => p.evaluate(() => NX.battLeft() === "About 3 h 25 min left"), 35000), "the real battery says how long it lasts");
 
+  await p.evaluate(() => NX.open("settings", { page: "devices" }));
+  ok(await until(() => p.evaluate(() => /Wireless Mouse[\s\S]*battery 64%/.test((document.querySelector("#s-blist") || {}).innerText || ""))), "Bluetooth devices show their battery");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");
