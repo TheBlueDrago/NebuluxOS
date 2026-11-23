@@ -1,8 +1,12 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.2.1";
+  NX.version = "3.2.2";
   NX.whatsNew = [
+    ["Apps open fast", "YouTube, Poki, Xbox Cloud Gaming and every other app now use the same safe graphics as Nebulux OS, so they load right away instead of hanging on a blank page, and they keep their cache in memory instead of writing it to the USB stick."],
+    ["Xbox Cloud Gaming and GeForce NOW open right away", "They no longer wait for the movie player to install first."],
+    ["Movie apps don't make you wait", "Netflix, Disney+ and the other movie apps open at once while their movie player sets itself up in the background."],
+    ["A sharper look", "Rounder windows and menus with a light edge, a soft glow behind the window you're using, a taskbar with a sheen, and smoother hover effects."],
     ["Apps open as their own apps", "Poki, Netflix, Hulu, Disney+, Spotify and every other app from the Nebulux Store open in their own window with their own taskbar button, not in a browser tab. Games and videos get the graphics card, so pages no longer say the browser is unsupported."],
     ["Netflix, Disney+ and other movie apps play", "Apps with protected movies and music set up their video player by themselves the first time you open one (it takes a minute, once)."],
     ["Google as its own app", "Google opens as the real Google app in its own window, with your searches, sign-in and Gmail, instead of a web page inside another app."],
@@ -48,6 +52,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Wi-Fi on newer laptops");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Apps open as their own apps");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

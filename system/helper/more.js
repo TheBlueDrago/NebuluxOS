@@ -342,11 +342,17 @@ module.exports = function more({ api, run, FAKE }) {
     if (!browserOK()) throw new Error("Apps from the web can't open here.");
     const mine = mineOf(await windows(), wm);
     if (mine.length && !b.url2) { for (const w of mine) await run("wmctrl", ["-i", "-a", w.id], 4000); return { ok: true, shown: true }; }
-    const sc = readScale(), common = ["--class=" + cls, "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--start-maximized", "--ignore-gpu-blocklist", "--enable-unsafe-swiftshader", ...(sc !== "1" ? ["--force-device-scale-factor=" + sc] : []), "--app=" + url];
+    // Graphics like the rest of Nebulux OS: the graphics chip only when /etc/nebulux/use-gpu says so (on some chips it hangs
+    // on a blank page for minutes). Otherwise games still get WebGL, drawn by the processor (SwiftShader), so they don't say
+    // the browser is unsupported. The cache lives in memory, not on the USB stick, so apps start and load fast.
+    const gpuOn = /--ignore-gpu-blocklist/.test(process.env.NX_BROWSER_FLAGS || "");
+    const gfx = gpuOn ? ["--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"] : ["--disable-gpu-compositing", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu-rasterization"];
+    const run2 = process.env.XDG_RUNTIME_DIR || "/tmp", cache = path.join(run2, "nebulux-app-cache", b.id);
+    const sc = readScale(), common = ["--class=" + cls, "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--start-maximized", "--disk-cache-dir=" + cache, "--disable-features=Translate,MediaRouter,OptimizationHints", ...gfx, ...(sc !== "1" ? ["--force-device-scale-factor=" + sc] : []), "--app=" + url];
     const drm = !!b.drm && await hasChrome();
     let p;
     if (drm) { fs.mkdirSync(CHROMEDIR, { recursive: true }); p = spawn("flatpak", ["run", "com.google.Chrome", "--user-data-dir=" + path.join(CHROMEDIR, b.id), ...common], { detached: true, stdio: "ignore" }); }
-    else { fs.mkdirSync(APPDIR, { recursive: true }); p = spawn("chromium", ["--user-data-dir=" + path.join(APPDIR, b.id), "--password-store=basic", ...common], { detached: true, stdio: "ignore" }); }
+    else { fs.mkdirSync(APPDIR, { recursive: true }); p = spawn("chromium", ["--user-data-dir=" + path.join(APPDIR, b.id), "--password-store=basic", "--disable-component-update", ...common], { detached: true, stdio: "ignore" }); }
     p.on("error", () => {}); p.unref();
     for (let k = 0; k < 30; k++) { await new Promise((ok) => setTimeout(ok, 300)); const w = mineOf(await windows(), wm); if (w.length) { await run("wmctrl", ["-i", "-a", w[w.length - 1].id], 4000); break; } }
     return { ok: true, engine: drm ? "chrome" : "chromium" };

@@ -163,7 +163,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.click(".win[data-app=files] [data-t=delete]"); await wait(300);
   ok(await p.evaluate(() => /USB drives have no Recycle Bin/.test((document.querySelector(".nx-ask") || {}).innerText || "")), "deleting on a USB drive warns it can't be brought back");
   await p.click(".nx-ask [type=submit]"); await wait(600);
-  ok(!(await fxNames()).includes("From my USB.txt"), "and then deletes it");
+  ok(await until(async () => !(await fxNames()).includes("From my USB.txt")), "and then deletes it");
   await p.evaluate(() => document.querySelector(".win[data-app=files] [data-eject]").click());
   ok(await until(() => p.evaluate(() => /safe to take out MY USB/.test(document.querySelector("#toasts").innerText))), "Eject says it's safe to take the drive out");
   ok(await until(() => p.evaluate(() => !/MY USB/.test(document.querySelector(".win[data-app=files] .fx-side").innerText))), "and the drive leaves the list");
@@ -298,7 +298,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await opened()).some((a) => a.id === "poki" && a.url === "https://poki.com/" && !a.drm)) && await p.evaluate(() => !document.querySelector(".win[data-app=poki]")), "Poki opens as its own app, not in a browser or a Nebulux OS window");
   ok(await until(() => p.evaluate(() => !!document.querySelector("#tb-apps [data-app=poki].run"))), "and it has its own place on the taskbar");
   await p.evaluate(() => NX.open("netflix"));
-  ok(await until(async () => (await opened()).some((a) => a.id === "netflix" && a.drm), 15000) && await p.evaluate(() => NX.drmReady === true && NX.isNative("chrome")), "Netflix gets protected video set up once, then opens as its own app");
+  ok(await until(async () => (await opened()).some((a) => a.id === "netflix"), 4000) && await until(() => p.evaluate(() => NX.drmReady === true && NX.isNative("chrome")), 15000), "Netflix opens at once while its movie player is set up in the background");
   await p.evaluate(() => NX.open("google", { q: "nebulux os" }));
   ok(await until(async () => (await opened()).some((a) => a.id === "google" && a.url === "https://www.google.com/search?q=nebulux%20os")), "Google opens as its own Google app, with the search");
   await p.evaluate(async (h) => fetch("/api/fake/webapps-on", { method: "POST", headers: h, body: JSON.stringify({ on: false }) }), await p.evaluate(HDR)); await p.evaluate(() => { NX.webAppOK = false; });

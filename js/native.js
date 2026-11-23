@@ -74,7 +74,7 @@
   // address bar. Streaming apps need protected video, so the first one sets that up once (the Google Chrome engine,
   // from Flathub, out of sight: the window is still just "Netflix").
   // (and the cloud gaming services, which only accept Google Chrome)
-  const DRM = new Set(["netflix", "disneyplus", "primevideo", "hulu", "max", "crunchyroll", "tubi", "spotify", "applemusic", "xboxcloud", "geforcenow"]);
+  const DRM = new Set(["netflix", "disneyplus", "primevideo", "hulu", "max", "crunchyroll", "tubi", "spotify", "applemusic"]);
   NX.webAppOK = false; NX.drmReady = false;
   const webState = () => NX.api("GET", "/webapp").then((r) => { NX.webAppOK = !!r.available; NX.drmReady = !!r.drm; }).catch(() => {});
   webState();
@@ -82,9 +82,10 @@
   NX.webAppOpen = async (id, url) => {
     const a = NX.apps[id]; url = url || a.url || a.browser; if (!url) return;
     const drm = DRM.has(id);
-    if (drm && !NX.drmReady && NX.apps.chrome && NX.apps.chrome.native) {
-      if (!drmJob) { NX.toast("Getting " + a.name + " ready to play videos. This happens once and takes a few minutes."); drmJob = NX.installNative("chrome").then(() => { NX.drmReady = true; }).catch((e) => { NX.toast("Videos couldn't be set up: " + e.message + " " + a.name + " opens anyway."); }).finally(() => { drmJob = null; }); }
-      await drmJob;
+    // the movie player (Google's engine) installs once in the background; the app opens right away and doesn't wait for it
+    if (drm && !NX.drmReady && NX.apps.chrome && NX.apps.chrome.native && !drmJob) {
+      NX.toast(a.name + " is opening. Its movie player is being set up in the background (a few minutes, only once); then close and open " + a.name + " again to watch.");
+      drmJob = NX.installNative("chrome").then(() => { NX.drmReady = true; NX.toast("The movie player is ready. Close and open " + a.name + " again to watch."); }).catch((e) => { NX.toast("The movie player couldn't be set up: " + e.message); }).finally(() => { drmJob = null; });
     }
     NX.webOpened.add(id); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar();
     try { await NX.api("POST", "/webapp/open", { id, url, drm }); } catch (e) { NX.toast(e.message); }

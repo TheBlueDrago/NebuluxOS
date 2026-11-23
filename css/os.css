@@ -873,3 +873,25 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .s-sel{padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:13px;color-scheme:dark;max-width:220px}
 #osd .osd-t{font-weight:500;font-size:14px;text-align:left;min-width:0}
 #cal{max-height:calc(100vh - var(--tb) - 80px)}
+
+/* 3.2.2 look: softer, deeper glass. Rounder windows and menus with a thin light edge on top, a glow behind the window
+   you're using, a taskbar with a sheen, and smoother hover and press feedback everywhere. */
+.win{border-radius:12px;box-shadow:0 24px 60px #000a,0 2px 8px #0006,0 0 0 1px #ffffff17,inset 0 1px 0 #ffffff1a}
+.win.active{box-shadow:0 30px 80px #000b,0 2px 10px #0007,0 0 0 1px color-mix(in srgb,var(--accent) 35%,#ffffff1a),0 0 60px -10px color-mix(in srgb,var(--accent) 45%,transparent),inset 0 1px 0 #ffffff21}
+.win.maxed{border-radius:0}
+[data-theme=light] .win{box-shadow:0 24px 60px #2b1d5a38,0 2px 8px #2b1d5a1f,0 0 0 1px #1b123a17,inset 0 1px 0 #ffffffcc}
+[data-theme=light] .win.active{box-shadow:0 30px 80px #2b1d5a4a,0 2px 10px #2b1d5a24,0 0 0 1px color-mix(in srgb,var(--accent) 30%,#1b123a14),inset 0 1px 0 #fff}
+.flyout{border-radius:14px;box-shadow:0 28px 70px #000b,0 0 0 1px #ffffff17,inset 0 1px 0 #ffffff1f;background-image:radial-gradient(120% 60% at 50% -10%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%)}
+[data-theme=light] .flyout{box-shadow:0 28px 70px #2b1d5a40,0 0 0 1px #1b123a17,inset 0 1px 0 #fff}
+#taskbar{background-image:linear-gradient(180deg,#ffffff0d,#ffffff00 60%);box-shadow:0 -10px 40px #0005,inset 0 1px 0 #ffffff14}
+[data-theme=light] #taskbar{box-shadow:0 -10px 40px #2b1d5a1f,inset 0 1px 0 #fff}
+.tb-app,.tb-btn{border-radius:8px;transition:background .15s,transform .15s}
+.tb-app:hover{background:var(--hover)}
+.tb-app:hover .ico{transform:translateY(-1px)}
+.tb-app .ico{transition:transform .15s}
+.tb-app.act{background:color-mix(in srgb,var(--accent) 16%,var(--hover))}
+.tb-app.act i{width:18px;background:linear-gradient(90deg,var(--accent),#38bdf8)}
+.dicon{border-radius:8px;transition:background .12s}
+.dicon .ico{transition:transform .15s}
+.dicon:hover .ico{transform:translateY(-2px) scale(1.04)}
+.titlebar{letter-spacing:.1px}
