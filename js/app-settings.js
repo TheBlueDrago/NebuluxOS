@@ -70,6 +70,8 @@
           <h3>More</h3>${link("info", "About", "Device specifications, kernel and version", "about")}`;
         if (pg === "network") return `<h3>Wi-Fi</h3>${NX.native ? nativeWifi(p) : `${row("wifi", "Wi-Fi", p.airplane ? "Airplane mode is on" : !p.wifi ? "Off: web searches and web apps won't open" : NX.online() ? "Connected to the internet (through this computer's connection)" : "Not connected: this computer is offline", toggle("wifi", p.wifi && !p.airplane))}`}
           <h3>More</h3>${row("plane", "Airplane mode", "Turns off Wi-Fi and Bluetooth", toggle("airplane", p.airplane))}
+          ${NX.native ? `<h3>Known networks</h3><div class="s-card s-hw" id="s-known"><p class="s-note">Checking...</p></div>
+          <div class="s-card s-hw"><div class="s-bth"><span class="s-hwt">${NX.icon("wifi", 20)}<b>Join a hidden network</b></span><span class="s-hwc"><button class="btn" id="s-hidgo">Join</button></span></div><form class="s-hidf" id="s-hidf" hidden><input name="ssid" maxlength="32" placeholder="Network name" aria-label="Network name" autocomplete="off"><input name="pw" type="password" maxlength="63" placeholder="Password (leave empty if it has none)" aria-label="Password" autocomplete="off"><button class="btn primary" type="submit">Connect</button><p class="s-msg" id="s-hidmsg"></p></form></div>` : ""}
           ${NX.native ? `<h3>Troubleshoot</h3><div class="s-card s-hw" id="s-trouble"><div class="s-bth"><span class="s-hwt">${NX.icon("wifi", 20)}<b>Network troubleshooter</b></span><span class="s-hwc"><button class="btn primary" id="s-diag">Run</button></span></div><p class="s-note">Checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, and says what's wrong.</p><div id="s-diagout"></div></div>` : ""}`;
         if (pg === "devices") return devicesMouse(p) + `<h3>Bluetooth</h3>${NX.native ? nativeBt(p) : `${row("bt", "Bluetooth", p.airplane ? "Airplane mode is on" : p.bt ? (navigator.bluetooth ? "On. Add a device to connect it." : "This browser can't reach Bluetooth devices. Try Edge or Chrome on a computer.") : "Off", toggle("bt", p.bt && !p.airplane))}
           ${p.bt && !p.airplane ? `<div class="s-card"><div class="s-bth"><b>Bluetooth devices</b><button class="btn primary" id="s-btadd" ${navigator.bluetooth ? "" : "disabled"}>Add device</button></div>${(NX.data("bt-devices", []).length ? NX.data("bt-devices", []).map((d, i) => `<div class="s-user">${NX.icon("bt", 20)}<b>${NX.esc(d.name)}</b><span class="s-tag">${d.at}</span><button class="btn" data-btrm="${i}">Remove</button></div>`).join("") : `<p class="s-note">No devices yet. Add device opens your browser's Bluetooth list, where you pick a device near you.</p>`)}<p class="s-msg" id="s-btmsg"></p></div>` : ""}`}`;
@@ -121,6 +123,26 @@
           catch (e) { NX.toast(e.message); }
           fillScreens(); fillAudio();
         }));
+      }
+      // networks this computer remembers (Forget one that keeps failing)
+      async function fillKnown() {
+        const box = q$("#s-known"); if (!box) return; let k;
+        try { k = (await NX.api("GET", "/wifi/known")).known; } catch (e) { box.innerHTML = `<p class="s-note">${NX.esc(e.message)}</p>`; return; }
+        if (!q$("#s-known")) return;
+        box.innerHTML = k.length ? k.map((n, i) => `<div class="s-net"><span class="s-sig">${NX.icon("wifi", 20)}</span><span class="s-nn"><b>${NX.esc(n)}</b><small>Saved</small></span><button class="btn" data-forget="${i}">Forget</button></div>`).join("") : `<p class="s-note">No saved networks yet. Networks you connect to are remembered here.</p>`;
+        box.querySelectorAll("[data-forget]").forEach((b) => (b.onclick = async () => { const n = k[+b.dataset.forget]; b.disabled = true; try { await NX.api("POST", "/wifi/forget", { name: n }); NX.toast("Forgot " + n + ". Connect again to type its password."); } catch (e) { NX.toast(e.message); } fillKnown(); fillWifi(); }));
+      }
+      function wireHidden() {
+        const go = q$("#s-hidgo"), f = q$("#s-hidf"); if (!go || !f) return;
+        go.onclick = () => { f.hidden = !f.hidden; if (!f.hidden) f.querySelector("[name=ssid]").focus(); };
+        f.onsubmit = async (e) => {
+          e.preventDefault(); const msg = q$("#s-hidmsg"), ssid = f.ssid.value.trim(), password = f.pw.value, sub = f.querySelector("[type=submit]");
+          if (!ssid) { msg.textContent = "Type the network's name."; return; }
+          sub.disabled = true; msg.textContent = "Connecting...";
+          try { await NX.api("POST", "/wifi/hidden", { ssid, password }); msg.textContent = ""; f.reset(); f.hidden = true; NX.toast("Connected to " + ssid + "."); fillWifi(); fillKnown(); }
+          catch (er) { msg.textContent = er.message; }
+          sub.disabled = false;
+        };
       }
       // the network troubleshooter: run, try to fix, save a report to Documents
       function wireTrouble() {
@@ -201,9 +223,10 @@
           if (!n.secure) { btn.disabled = true; btn.textContent = "Connecting..."; connect("", (m) => { btn.disabled = false; btn.textContent = "Connect"; NX.toast(m); }); return; }
           if (row.querySelector(".s-pwf")) { row.querySelector(".s-pwf input").focus(); return; }
           btn.hidden = true;
-          row.insertAdjacentHTML("beforeend", `<form class="s-pwf"><input type="password" maxlength="63" placeholder="Network password" aria-label="Password for ${NX.esc(n.ssid)}" autocomplete="off"><button class="btn primary" type="submit">Connect</button><button class="btn" type="button" data-cancel="1">Cancel</button><p class="s-msg"></p></form>`);
+          row.insertAdjacentHTML("beforeend", `<form class="s-pwf"><input type="password" maxlength="63" placeholder="Network password" aria-label="Password for ${NX.esc(n.ssid)}" autocomplete="off"><button class="btn" type="button" data-show aria-label="Show password">Show</button><button class="btn primary" type="submit">Connect</button><button class="btn" type="button" data-cancel="1">Cancel</button><p class="s-msg"></p></form>`);
           const f = row.querySelector(".s-pwf"), pi = f.querySelector("input"), sub = f.querySelector("[type=submit]"), cancel = f.querySelector("[data-cancel]"), msg = f.querySelector(".s-msg"); pi.focus();
           cancel.onclick = () => { f.remove(); btn.hidden = false; };
+          const sh = f.querySelector("[data-show]"); if (sh) sh.onclick = () => { const v = pi.type === "password"; pi.type = v ? "text" : "password"; sh.textContent = v ? "Hide" : "Show"; pi.focus(); };
           f.onsubmit = (e) => {
             e.preventDefault(); if (pi.value.length < 8) { msg.textContent = "Wi-Fi passwords are at least 8 characters."; return; }
             sub.disabled = true; sub.textContent = "Connecting..."; cancel.hidden = true; pi.disabled = true; msg.textContent = "";
@@ -269,7 +292,7 @@
           } catch (e) { m.textContent = e && e.name === "NotFoundError" ? "No device was picked." : e && e.name === "SecurityError" ? "The browser blocked Bluetooth here. Open Nebulux OS from a web address (https) to use it." : "Couldn't reach Bluetooth: " + (e && e.message || "unknown error"); }
         };
         body.querySelectorAll("[data-btrm]").forEach((b) => (b.onclick = () => { const L = NX.data("bt-devices", []); L.splice(+b.dataset.btrm, 1); NX.setData("bt-devices", L); draw(); }));
-        if (NX.native && page === "network") { fillWifi(); wireTrouble(); }
+        if (NX.native && page === "network") { fillWifi(); wireTrouble(); fillKnown(); wireHidden(); }
         if (NX.native && page === "devices") fillBt();
         if (page === "update" && NX.update) NX.update.fillSettings(q$);
         const cc = q$("#s-clipclear"); if (cc) cc.onclick = () => { NX.setData("clip-history", NX.data("clip-history", []).filter((x) => x.pin)); NX.toast("Clipboard history cleared. Pinned items stay."); draw(); };

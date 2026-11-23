@@ -211,6 +211,23 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => /19.5 GB free/.test((document.querySelector("#s-store") || {}).innerText || "") && document.querySelectorAll("#s-store .s-str").length >= 5)), "Storage shows how full the USB is and what uses it");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  // ---------- 3.2: Known networks, a hidden network, Show password ----------
+  await p.evaluate(() => NX.open("settings", { page: "network" }));
+  ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");
+  await p.evaluate(() => [...document.querySelectorAll("#s-known .s-net")].find((r) => /School Wi-Fi/.test(r.textContent)).querySelector("[data-forget]").click());
+  ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 1 && !/School Wi-Fi/.test(document.querySelector("#s-known").textContent))), "Forget removes a saved network");
+  await p.evaluate(() => document.querySelector("#s-hidgo").click()); await wait(150);
+  await p.type("#s-hidf [name=ssid]", "Hidden Lb"); await p.type("#s-hidf [name=pw]", "secretpass"); await p.evaluate(() => document.querySelector("#s-hidf [type=submit]").click());
+  ok(await until(() => p.evaluate(() => /No network called Hidden Lb answered/.test(document.querySelector("#s-hidmsg").textContent))), "a hidden network with the wrong name says so");
+  await p.evaluate(() => { const i = document.querySelector("#s-hidf [name=ssid]"); i.value = "Hidden Lab"; document.querySelector("#s-hidf [type=submit]").click(); });
+  ok(await until(() => p.evaluate(() => document.querySelector("#s-hidf").hidden)), "joining a hidden network connects");
+  await until(() => p.evaluate(() => document.querySelectorAll("#s-wlist .s-net").length > 0));
+  await p.evaluate(() => { const r = [...document.querySelectorAll("#s-wlist .s-net")].find((x) => /Neighbor 5G/.test(x.textContent)); r.querySelector("[data-wc]").click(); }); await wait(200);
+  await p.evaluate(() => document.querySelector("#s-wlist .s-pwf [data-show]").click());
+  ok(await p.evaluate(() => document.querySelector("#s-wlist .s-pwf input").type === "text" && document.querySelector("#s-wlist .s-pwf [data-show]").textContent === "Hide"), "Show password shows the Wi-Fi password while typing it");
+  await p.evaluate(() => { NX.close("settings"); }); await wait(300);
+  await p.evaluate(async () => fetch("/api/fake/reset", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token } }));
+
   // ---------- 3.2: the network troubleshooter ----------
   await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(500);
   await p.evaluate(() => document.querySelector("#s-diag").click());

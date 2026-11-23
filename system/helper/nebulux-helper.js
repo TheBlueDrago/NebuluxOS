@@ -99,6 +99,26 @@ const api = {
     if (!r.ok) { const e = cleanErr(r.err + " " + r.out); throw new Error(/secrets were required|password/i.test(e) ? "The password is wrong, or the network needs one." : e); }
     return { ok: true };
   },
+  // Wi-Fi networks this computer remembers, forgetting one, and joining a hidden network
+  async "GET /wifi/known"() {
+    if (FAKE) return { known: (fake.known || ["Home Wi-Fi", "School Wi-Fi"]).slice() };
+    const r = await run("nmcli", ["-t", "-f", "NAME,TYPE", "connection", "show"]);
+    return { known: r.out.split("\n").map(nmSplit).filter((x) => x[1] === "802-11-wireless" && x[0]).map((x) => x[0]).slice(0, 60) };
+  },
+  async "POST /wifi/forget"(b) {
+    if (!okSSID(b.name)) throw new Error("That network name doesn't look right.");
+    if (FAKE) { fake.known = (fake.known || ["Home Wi-Fi", "School Wi-Fi"]).filter((n) => n !== b.name); return { ok: true }; }
+    const r = await run("nmcli", ["connection", "delete", "id", b.name], 15000); if (!r.ok) throw new Error(cleanErr(r.err)); return { ok: true };
+  },
+  async "POST /wifi/hidden"(b) {
+    if (!okSSID(b.ssid)) throw new Error("Type the network's name.");
+    if (!okPass(b.password)) throw new Error("Wi-Fi passwords are 8 to 63 characters.");
+    if (FAKE) { if (b.ssid !== "Hidden Lab") throw new Error("No network called " + b.ssid + " answered. Check the name (capital letters count)."); fake.conn = b.ssid; return { ok: true }; }
+    const args = ["device", "wifi", "connect", b.ssid, "hidden", "yes"]; if (b.password) args.push("password", b.password);
+    const r = await run("nmcli", args, 45000);
+    if (!r.ok) { const e = cleanErr(r.err + " " + r.out); throw new Error(/no network with ssid|not found/i.test(e) ? "No network called " + b.ssid + " answered. Check the name (capital letters count)." : /secrets were required|password/i.test(e) ? "The password is wrong." : e); }
+    return { ok: true };
+  },
   async "POST /wifi/disconnect"() {
     if (FAKE) { fake.conn = null; return { ok: true }; }
     const dev = await run("nmcli", ["-t", "-f", "DEVICE,TYPE,STATE", "device"]);

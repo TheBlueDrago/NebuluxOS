@@ -765,3 +765,9 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .gs-new b{font-size:14px}.gs-new p{margin:4px 0 0;color:var(--sub);font-size:13px;line-height:1.45}
 .gs-foot{display:flex;justify-content:space-between;margin-top:auto;padding-top:20px}
 @media (max-width:640px){.gs{grid-template-columns:1fr;grid-template-rows:auto 1fr}.gs-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}.gs-nav button{white-space:nowrap}}
+
+.s-hidf{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.s-hidf[hidden]{display:none}
+.s-hidf input{flex:1;min-width:160px;padding:8px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:13px;outline:none}
+.s-hidf input:focus{border-color:var(--accent)}
+.s-hidf .s-msg{flex-basis:100%;margin:0}
