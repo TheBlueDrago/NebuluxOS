@@ -908,3 +908,18 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 @keyframes nlpulse{50%{transform:scale(1.06)}}
 @keyframes nlbar{from{left:-40%}to{left:100%}}
 @media (prefers-reduced-motion:reduce){.nl-ico,.nl-bar i,.nl-card{animation:none}}
+
+/* the Personalization preview: a tiny desktop with a window and taskbar in your colors */
+.s-pv-task{display:flex;align-items:center;justify-content:center;gap:5px}
+.s-pv-task i{width:9px;height:9px;border-radius:3px;background:#ffffffb3}.s-pv-task i:first-child{background:var(--accent)}
+.s-pv-win{display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 30px #0008,0 0 0 1px #ffffff1f}
+.pv-bar{height:14px;display:flex;justify-content:flex-end;align-items:center;gap:6px;padding:0 7px;flex:none}
+.pv-bar span{width:7px;height:2px;border-radius:1px;background:currentColor;opacity:.55}
+.s-pv-win{color:#f4f1ff}.s-pv-win.light{color:#1b1530}
+.pv-body{flex:1;display:flex;gap:8px;padding:4px 8px 8px}
+.pv-side{width:26%;display:flex;flex-direction:column;gap:5px}
+.pv-side i{height:5px;border-radius:3px;background:currentColor;opacity:.16}.pv-side i:first-child{opacity:1;background:var(--accent)}
+.pv-main{flex:1;display:flex;flex-direction:column;gap:5px}
+.pv-main b{height:9px;width:55%;border-radius:3px;background:currentColor;opacity:.7}
+.pv-main i{height:5px;border-radius:3px;background:currentColor;opacity:.16}.pv-main i+i{width:75%}
+.pv-main em{margin-top:auto;align-self:flex-end;width:34%;height:10px;border-radius:4px;background:var(--accent)}
