@@ -4,6 +4,7 @@
 #   nebulux-netfix ideapad          remove Lenovo's laptop driver when its Wi-Fi switch wrongly says "off"
 #   nebulux-netfix reload DRIVER    start the Wi-Fi driver again (only Wi-Fi drivers)
 #   nebulux-netfix restart-nm       start NetworkManager again
+#   nebulux-netfix powerkey WHAT    what the power button does: suspend, poweroff or ignore
 set -u
 case "${1:-}" in
   unblock) exec /usr/sbin/rfkill unblock all ;;
@@ -13,5 +14,10 @@ case "${1:-}" in
     case "$d" in rtw88_*|rtw89_*|rtl8*|mt76*|mt79*|iwlwifi|ath9k|ath10k_pci|ath11k_pci|ath12k|brcmfmac|brcmsmac|wl) ;; *) echo "not a Wi-Fi driver" >&2; exit 2 ;; esac
     /usr/sbin/modprobe -r "$d"; sleep 1; exec /usr/sbin/modprobe "$d" ;;
   restart-nm) exec /usr/bin/systemctl restart NetworkManager ;;
-  *) echo "usage: nebulux-netfix unblock|ideapad|reload DRIVER|restart-nm" >&2; exit 2 ;;
+  powerkey)
+    case "${2:-}" in suspend|poweroff|ignore) ;; *) echo "suspend, poweroff or ignore" >&2; exit 2 ;; esac
+    mkdir -p /etc/systemd/logind.conf.d
+    printf '[Login]\nHandlePowerKey=%s\n' "$2" > /etc/systemd/logind.conf.d/90-nebulux-powerkey.conf
+    exec /usr/bin/systemctl kill -s HUP systemd-logind ;;
+  *) echo "usage: nebulux-netfix unblock|ideapad|reload DRIVER|restart-nm|powerkey WHAT" >&2; exit 2 ;;
 esac

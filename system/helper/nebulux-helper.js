@@ -198,6 +198,12 @@ const api = {
     if (FAKE) { fake.power = kind; return { ok: true }; }
     setTimeout(() => run("systemctl", [kind]), 300); return { ok: true };
   },
+  // what the computer's power button does: sleep (the usual), shut down, or nothing
+  async "POST /powerkey"(b) {
+    const what = { sleep: "suspend", off: "poweroff", nothing: "ignore" }[b.what]; if (!what) throw new Error("Pick Sleep, Shut down or Nothing.");
+    if (FAKE) { fake.powerkey = what; return { ok: true }; }
+    const r = await run("sudo", ["-n", "/usr/local/sbin/nebulux-netfix", "powerkey", what], 10000); if (!r.ok) throw new Error("That couldn't be changed on this computer."); return { ok: true };
+  },
   async "GET /battery"() {
     if (FAKE) return { present: true, percent: 76, charging: false, minutes: 205 };
     let list = []; try { list = fs.readdirSync("/sys/class/power_supply"); } catch (e) { return { present: false }; }
@@ -325,3 +331,8 @@ server.on("error", (e) => { console.error("Nebulux helper:", e.message); process
 process.on("uncaughtException", (e) => console.error("Nebulux helper kept going after:", e && e.stack || e));
 process.on("unhandledRejection", (e) => console.error("Nebulux helper kept going after:", e && e.stack || e));
 server.listen(PORT, HOST, () => console.log("Nebulux helper on http://" + HOST + ":" + PORT + " serving " + WWW + (FAKE ? " (made-up devices)" : "")));
+
+// waking up from sleep: the clock jumps ahead while the computer sleeps, so the OS is told and shows the lock screen
+let lastTick = Date.now();
+setInterval(() => { const now = Date.now(); if (now - lastTick > 30000) pushEvent({ resumed: Math.round((now - lastTick) / 1000) }); lastTick = now; }, 5000);
+if (FAKE) api["POST /fake/resume"] = async () => { pushEvent({ resumed: 600 }); return { ok: true }; };

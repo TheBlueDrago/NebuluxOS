@@ -235,6 +235,17 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok((await fake()).touchpad && (await fake()).touchpad.tap === false, "Touchpad settings turn tap to click off on the computer");
   await p.evaluate(() => { document.querySelector(".win[data-app=settings] [data-pref=tpTap]").click(); NX.close("settings"); }); await wait(1200);
 
+  // ---------- 3.2: the power button, and signing in again after sleep ----------
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pkey=off]").click());
+  ok(await until(async () => (await fake()).powerkey === "poweroff"), "Settings > System > Power sets what the power button does");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pkey=sleep]").click()); await until(async () => (await fake()).powerkey === "suspend");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+  await p.evaluate(async () => fetch("/api/fake/resume", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token } }));
+  ok(await until(() => p.evaluate(() => !document.querySelector("#lock").hidden)), "after sleep, the lock screen comes up");
+  await p.mouse.click(W / 2, H / 2); await wait(500); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter");
+  ok(await until(() => p.evaluate(() => document.querySelector("#lock").hidden && !!NX.me)), "and signing in again goes back to the desktop");
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

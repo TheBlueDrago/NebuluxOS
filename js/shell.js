@@ -121,6 +121,8 @@
   function signOut() { lockedBy = null; closeFlyouts(); NX.closeAll(); setTimeout(lock, 160); }
   // Lock: the lock screen comes up, and your apps stay open behind it
   let lockedBy = null;
+  // after the computer sleeps, sign in again (Guest has no password, so it just carries on)
+  document.addEventListener("nx:resumed", () => { if (NX.me && !NX.me.guest && $("#lock").hidden) lockKeep(); });
   function lockKeep() { if (!NX.me) return; lockedBy = NX.me.id; closeFlyouts(); lock(true); }
   // Sleep: the computer sleeps (on the real OS); press a key or click to wake it, then sign in again
   function sleep() {
