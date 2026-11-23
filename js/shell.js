@@ -392,6 +392,8 @@
         list.querySelectorAll("[data-row]").forEach((r) => (r.onclick = (e) => {
           e.stopPropagation(); const n = w.networks[+r.dataset.row], item = r.parentNode;
           if (item.querySelector(".qs-act")) return;
+          // school and work networks need a username too: that's in Settings, with room to type
+          if (n.enterprise && !n.active) { closeFlyouts(); NX.open("settings", { page: "network" }); NX.toast(n.ssid + " needs your username and password. Press Connect next to it."); return; }
           item.insertAdjacentHTML("beforeend", n.active ? `<div class="qs-act"><button class="btn sm" data-dis="1">Disconnect</button></div>` : `<form class="qs-act">${n.secure ? `<input type="password" placeholder="Network password" aria-label="Password for ${NX.esc(n.ssid)}" maxlength="63">` : ""}<button class="btn sm primary" type="submit">Connect</button><p class="qs-err"></p></form>`);
           const d = item.querySelector("[data-dis]"); if (d) d.onclick = () => NX.api("POST", "/wifi/disconnect").then(() => qsMore("wifi"));
           const f = item.querySelector("form"); if (!f) return; const pi = f.querySelector("input"); if (pi) pi.focus();

@@ -129,11 +129,12 @@
       host.innerHTML = (w.networks || []).slice(0, 8).map((n, k) => `<div class="ob-net" data-n="${k}"><span>${NX.icon("wifi", 20)}<b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"}</small></span><button type="button" class="btn" data-c="${k}">${n.active ? "Connected" : "Connect"}</button></div>`).join("") || `<p class="ob-sub">No networks found yet.</p>`;
       host.querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => {
         const n = w.networks[+b.dataset.c], row = b.closest(".ob-net"); if (n.active) return;
-        const go = async (pw) => { b.disabled = true; b.textContent = "Connecting..."; try { await NX.api("POST", "/wifi/connect", { ssid: n.ssid, password: pw }); b.textContent = "Connected"; err(""); } catch (e) { b.disabled = false; b.textContent = "Connect"; err(e.message); } };
+        const go = async (pw) => { const u = row.querySelector(".ob-user"); b.disabled = true; b.textContent = "Connecting..."; try { await NX.api("POST", "/wifi/connect", u ? { ssid: n.ssid, username: u.value.trim(), password: pw } : { ssid: n.ssid, password: pw }); b.textContent = "Connected"; err(""); } catch (e) { b.disabled = false; b.textContent = "Connect"; err(e.message); } };
         if (!n.secure) return go("");
         if (row.querySelector("input")) return;
-        row.insertAdjacentHTML("beforeend", `<input type="password" class="ob-in" placeholder="Network password" aria-label="Password for ${NX.esc(n.ssid)}">`);
-        const pi = row.querySelector("input"); pi.focus(); pi.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); go(pi.value); } };
+        // school and work networks: a username as well as the password
+        row.insertAdjacentHTML("beforeend", (n.enterprise ? `<input class="ob-in ob-user" placeholder="Username" aria-label="Username for ${NX.esc(n.ssid)}" autocomplete="username">` : "") + `<input type="password" class="ob-in" placeholder="${n.enterprise ? "Password" : "Network password"}" aria-label="Password for ${NX.esc(n.ssid)}">`);
+        const pi = row.querySelector("input[type=password]"); (row.querySelector(".ob-user") || pi).focus(); pi.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); go(pi.value); } };
         b.onclick = () => go(pi.value);
       }));
     }
