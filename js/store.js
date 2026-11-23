@@ -63,6 +63,10 @@ window.NX = window.NX || {};
     const salt = rand(16), u = { id: NX.uid(), name, guest: !!opts.guest, salt, hash: await NX.hash(opts.guest ? rand(16) : pw, salt), color: ["#7c5cff", "#ff4fa3", "#22c3ee", "#f5a524", "#34d399"][L.length % 5], at: Date.now(), fails: 0, lock: 0 };
     L.push(u); saveUsers(L); return u;
   };
+  // a person's picture (or their initial on their color), for sign-in, Start and Settings
+  NX.avatar = (u, cls, tag) => { tag = tag || "span"; const pic = u && u.pic && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u.pic) ? u.pic : "";
+    return pic ? `<${tag} class="${cls}" style="background:${u.color}"><img class="av-pic" src="${pic}" alt=""></${tag}>` : `<${tag} class="${cls}" style="background:${u ? u.color : "#7c5cff"}">${NX.esc(u && u.name ? u.name[0].toUpperCase() : "?")}</${tag}>`; };
+  NX.setUserPic = (id, pic) => { const L = NX.users(), u = L.find((x) => x.id === id); if (!u) return; if (pic) u.pic = pic; else delete u.pic; saveUsers(L); if (NX.me && NX.me.id === id) NX.me = u; };
   NX.checkPassword = async (id, pw) => {
     const L = NX.users(), u = L.find((x) => x.id === id); if (!u) throw new Error("That account is gone.");
     if (u.guest) return u; // the guest account has no password

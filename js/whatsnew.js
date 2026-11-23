@@ -16,7 +16,7 @@
     ["Storage", "Settings > System > Storage shows how much space is left on your USB, what uses it, and empties the Recycle Bin."],
     ["Get Started", "A quick tour of Nebulux OS with every shortcut. Open it from Start."],
     ["Battery time left", "The battery says how long it will last, or how long until it is full, in quick settings, Settings and Widgets."],
-    ["Your own background", "Settings > Personalization > Browse photos makes any picture your background."],
+    ["Your own background and picture", "Settings > Personalization > Browse photos makes any picture your background, and Settings > Accounts gives your account a picture for sign-in, Start and Settings."],
     ["Photos, Calculator and more", "Photos plays a slideshow, Calculator keeps a history of answers (and Ctrl + C copies one), color filters (grayscale or inverted) are in Accessibility, and the far right corner of the taskbar shows the desktop."],
     ["A smarter lock screen and Widgets", "The lock screen shows Wi-Fi and the battery. Widgets show your Sticky Notes and the battery."],
     ["Updates by themselves", "Nebulux OS now finds its own updates. Install them tonight (Later), get a reminder in 30 minutes, or skip one (Never) and install it any time from Settings > Nebulux Update."],

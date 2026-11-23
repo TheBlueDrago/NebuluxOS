@@ -83,11 +83,11 @@
     } else {
       const u = chosen;
       if (u.guest) {
-        box.innerHTML = `<div class="lk-av" style="background:${u.color}">${NX.esc(u.name[0].toUpperCase())}</div><h2>${NX.esc(u.name)}</h2><button class="btn primary wide lk-guest">Sign in</button>`;
+        box.innerHTML = `${NX.avatar(u, "lk-av", "div")}<h2>${NX.esc(u.name)}</h2><button class="btn primary wide lk-guest">Sign in</button>`;
         $(".lk-guest", box).onclick = async () => enter(await NX.checkPassword(u.id, ""));
         setTimeout(() => { const g = $(".lk-guest", box); if (g) g.focus(); }, 60);
       } else
-      box.innerHTML = `<div class="lk-av" style="background:${u.color}">${NX.esc(u.name[0].toUpperCase())}</div><h2>${NX.esc(u.name)}</h2>
+      box.innerHTML = `${NX.avatar(u, "lk-av", "div")}<h2>${NX.esc(u.name)}</h2>
         <form class="lk-form pw"><input name="p" type="password" maxlength="64" placeholder="Password" aria-label="Password" autocomplete="current-password"><button class="lk-go" type="submit" aria-label="Sign in">${NX.icon("arrow", 18)}</button></form><p class="lk-err" role="alert"></p>
         <button class="lk-link" data-a="forgot">I forgot my password</button>`;
       const f = $(".lk-form", box), er = $(".lk-err", box);
@@ -97,7 +97,7 @@
         try { const me = await NX.checkPassword(u.id, p); enter(me); } catch (err) { er.textContent = err.message; f.p.value = ""; btn.disabled = false; box.classList.remove("busy"); f.p.focus(); box.classList.add("shake"); setTimeout(() => box.classList.remove("shake"), 400); }
       };
     }
-    $("#lk-users").innerHTML = users.length ? users.map((x) => `<button class="lk-user ${chosen && x.id === chosen.id && mode !== "setup" ? "on" : ""}" data-u="${x.id}"><span class="av" style="background:${x.color}">${NX.esc(x.name[0].toUpperCase())}</span><span>${NX.esc(x.name)}</span></button>`).join("") + (users.length < 8 ? `<button class="lk-user ${mode === "setup" ? "on" : ""}" data-a="add"><span class="av plus">+</span><span>Add account</span></button>` : "") : "";
+    $("#lk-users").innerHTML = users.length ? users.map((x) => `<button class="lk-user ${chosen && x.id === chosen.id && mode !== "setup" ? "on" : ""}" data-u="${x.id}">${NX.avatar(x, "av")}<span>${NX.esc(x.name)}</span></button>`).join("") + (users.length < 8 ? `<button class="lk-user ${mode === "setup" ? "on" : ""}" data-a="add"><span class="av plus">+</span><span>Add account</span></button>` : "") : "";
     document.querySelectorAll("#lock [data-u]").forEach((b) => (b.onclick = () => { chosen = NX.users().find((x) => x.id === b.dataset.u); mode = "signin"; signinDraw(); reveal(); setTimeout(() => { const i = $("#lock input"); i && i.focus(); }, 30); }));
     document.querySelectorAll("#lock [data-a]").forEach((b) => (b.onclick = () => {
       const a = b.dataset.a;
@@ -236,7 +236,7 @@
       <div class="sm-body ${q ? "sm-searching" : ""}">${q ? `<div class="sm-split"><div class="sm-left"><h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div></div><aside class="sm-detail" aria-label="Details"></aside></div>` :
       `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-allapps="1">All apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
       <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
-      <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="sleep">${NX.icon("moon", 16)}Sleep</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div>`;
+      <div class="sm-foot"><button class="sm-me" data-me="1">${NX.avatar(me, "av")}<span>${NX.esc(me.name)}</span></button><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="sleep">${NX.icon("moon", 16)}Sleep</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div>`;
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
     si.onkeydown = (e) => { if (e.key === "Enter") { const f = $(".sm-res", S); if (f) f.click(); } };
@@ -266,7 +266,7 @@
     for (const id of list) { const L = NX.apps[id].name[0].toUpperCase(); if (L !== letter) { letter = L; rows += `<h5 class="sm-letter">${NX.esc(L)}</h5>`; } rows += `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 28)}<span><b>${NX.esc(NX.apps[id].name)}</b></span></button>`; }
     S.innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search"></label>
       <div class="sm-body"><div class="sm-h"><h4>All apps</h4><button class="sm-all" data-back="1">${NX.icon("back", 12)} Back</button></div><div class="sm-allist">${rows}<button class="sm-res" data-store="1">${NX.icon("store", 28)}<span><b>Get more apps</b><small>Nebulux Store</small></span></button></div></div>
-      <div class="sm-foot"><button class="sm-me" data-me="1"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span>${NX.esc(me.name)}</span></button></div>`;
+      <div class="sm-foot"><button class="sm-me" data-me="1">${NX.avatar(me, "av")}<span>${NX.esc(me.name)}</span></button></div>`;
     S.querySelectorAll("[data-app]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }));
     $("[data-back]", S).onclick = (e) => { e.stopPropagation(); startDraw(""); };
     $("[data-store]", S).onclick = () => { closeFlyouts(); NX.open("store"); };

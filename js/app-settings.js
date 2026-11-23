@@ -18,6 +18,18 @@
     { id: "about", name: "About", icon: "info", under: "system" },
   ];
   NX.settingsPages = PAGES;
+  // your account picture: a square from the middle of the picture, 192 pixels
+  NX.setPicFile = (file) => new Promise((done, fail) => {
+    if (!String(file.type || "").startsWith("image/")) { fail(new Error("Pick a picture (JPG, PNG, WebP or GIF).")); return; }
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const s = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement("canvas"); c.width = c.height = 192;
+      c.getContext("2d").drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, 192, 192); URL.revokeObjectURL(url);
+      NX.setUserPic(NX.me.id, c.toDataURL("image/jpeg", 0.85)); if (NX.shell && NX.shell.refresh) NX.shell.refresh(); NX.toast("Your picture is set."); done();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fail(new Error("That picture couldn't be opened.")); };
+    img.src = url;
+  });
   NX.setWallpaperFile = (file) => new Promise((done, fail) => {
     if (!String(file.type || "").startsWith("image/")) { fail(new Error("Pick a picture (JPG, PNG, WebP or GIF).")); return; }
     if (file.size > 40 * 1048576) { fail(new Error("That picture is too big. Pick one under 40 MB.")); return; }
@@ -46,7 +58,7 @@
       const draw = () => {
         const p = NX.prefs(), me = NX.me;
         const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}">${NX.icon(x.icon, 18)}<span>${x.name}</span></button>`).join("");
-        body.innerHTML = `<aside class="s-side"><div class="s-me" data-p="accounts"><span class="av" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span><b>${NX.esc(me.name)}</b><small>Local account</small></span></div>
+        body.innerHTML = `<aside class="s-side"><div class="s-me" data-p="accounts">${NX.avatar(me, "av")}<span><b>${NX.esc(me.name)}</b><small>Local account</small></span></div>
           <label class="s-search">${NX.icon("search", 16)}<input placeholder="Find a setting" value="${NX.esc(q)}" aria-label="Find a setting"></label><nav>${nav || `<p class="s-none">No settings match.</p>`}</nav></aside>
           <section class="s-main"><h1>${(() => { const pg = PAGES.find((x) => x.id === page); return pg.under ? `<button class="s-crumb" data-p="${pg.under}">${PAGES.find((x) => x.id === pg.under).name}</button><span class="s-crumbsep">${NX.icon("chevron", 14)}</span>${pg.name}` : pg.name; })()}</h1>${pageHTML(page, p, me)}</section>`;
         wire();
@@ -55,7 +67,7 @@
         if (pg === "home") {
           const net = NX.online(), bt = p.bt && !p.airplane;
           return `<div class="s-homegrid">
-            <button class="s-hcard s-hme" data-p="accounts"><span class="av big" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><span><b>${NX.esc(me.name)}</b><small>Local account</small><em>Manage your account ${NX.icon("chevron", 11)}</em></span></button>
+            <button class="s-hcard s-hme" data-p="accounts">${NX.avatar(me, "av big")}<span><b>${NX.esc(me.name)}</b><small>Local account</small><em>Manage your account ${NX.icon("chevron", 11)}</em></span></button>
             <button class="s-hcard s-hpc" data-p="about"><img src="${NX.wallpaperURL(p.wallpaper)}" alt=""><span><b>Nebulux PC</b><small>Nebulux OS ${NX.version}</small><em>About this PC ${NX.icon("chevron", 11)}</em></span></button>
             <button class="s-hcard" data-p="network"><span class="s-hic">${NX.icon(net ? "wifi" : "wifioff", 24)}</span><span><b>${net ? "Connected" : "Not connected"}</b><small>Network & internet</small></span></button>
             <button class="s-hcard" data-p="devices"><span class="s-hic">${NX.icon("bt", 24)}</span><span><b>Bluetooth ${bt ? "on" : "off"}</b><small>Bluetooth & devices</small></span></button>
@@ -104,10 +116,10 @@
         }
         if (pg === "accounts") {
           const others = NX.users().filter((u) => u.id !== me.id);
-          return `<div class="s-acct"><span class="av big" style="background:${me.color}">${NX.esc(me.name[0].toUpperCase())}</span><div><b>${NX.esc(me.name)}</b><small>Local account on this PC</small></div></div>
+          return `<div class="s-acct">${NX.avatar(me, "av big")}<div><b>${NX.esc(me.name)}</b><small>Local account on this PC</small></div><span class="s-picbtns"><label class="btn"><input type="file" accept="image/*" id="s-picfile" hidden>${me.pic ? "Change picture" : "Add a picture"}</label>${me.pic ? `<button class="btn" id="s-picrm">Remove</button>` : ""}</span></div>
             <h3>Your info</h3><div class="s-card"><label class="fld"><span>Your name</span><input id="s-name" maxlength="24" value="${NX.esc(me.name)}"></label><button class="btn primary" id="s-rename">Save name</button><p class="s-msg" id="s-namemsg"></p></div>
             <h3>Sign-in options</h3><div class="s-card"><label class="fld"><span>Current password</span><input id="s-old" type="password" maxlength="64" autocomplete="current-password"></label><label class="fld"><span>New password</span><input id="s-new" type="password" maxlength="64" autocomplete="new-password"></label><label class="fld"><span>New password again</span><input id="s-new2" type="password" maxlength="64" autocomplete="new-password"></label><button class="btn primary" id="s-pw">Change password</button><p class="s-msg" id="s-pwmsg"></p></div>
-            <h3>Other users</h3><div class="s-card">${others.length ? others.map((u) => `<div class="s-user"><span class="av" style="background:${u.color}">${NX.esc(u.name[0].toUpperCase())}</span><b>${NX.esc(u.name)}</b><button class="btn" data-rmuser="${u.id}">Remove</button></div>`).join("") : `<p class="s-note">No other accounts on this PC.</p>`}
+            <h3>Other users</h3><div class="s-card">${others.length ? others.map((u) => `<div class="s-user">${NX.avatar(u, "av")}<b>${NX.esc(u.name)}</b><button class="btn" data-rmuser="${u.id}">Remove</button></div>`).join("") : `<p class="s-note">No other accounts on this PC.</p>`}
             <p class="s-note">To add someone, sign out and choose Add account on the sign-in screen.</p></div>`;
         }
         if (pg === "time") { const d = new Date(); return `<div class="s-big-time">${NX.fmtTime(d)}<small>${d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</small></div>
@@ -299,6 +311,8 @@
         });
         body.querySelectorAll("[data-time]").forEach((inp) => (inp.onchange = () => { if (/^dd:dd$/.test(inp.value)) { NX.setPref(inp.dataset.time, inp.value); if (NX.shell && NX.shell.nightTick) NX.shell.nightTick(true); } }));
         body.querySelectorAll("[data-wall]").forEach((b) => (b.onclick = () => { NX.setPref("wallpaper", +b.dataset.wall); draw(); }));
+        const pf = body.querySelector("#s-picfile"); if (pf) pf.onchange = () => { const f = pf.files && pf.files[0]; if (f) NX.setPicFile(f).then(() => draw()).catch((e) => NX.toast(e.message)); };
+        const pr = body.querySelector("#s-picrm"); if (pr) pr.onclick = () => { NX.setUserPic(NX.me.id, null); NX.shell && NX.shell.refresh && NX.shell.refresh(); draw(); };
         body.querySelectorAll("[data-wallc]").forEach((b) => (b.onclick = () => { NX.setPref("wallpaper", "custom"); draw(); }));
         const wf = body.querySelector("#s-wallfile"); if (wf) wf.onchange = () => { const f = wf.files && wf.files[0]; if (f) NX.setWallpaperFile(f).then(() => draw()).catch((e) => NX.toast(e.message)); };
         body.querySelectorAll("[data-theme]").forEach((b) => (b.onclick = () => { NX.setPref("theme", b.dataset.theme); draw(); }));

@@ -434,6 +434,18 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { let rang = 0; const h = () => rang++; document.addEventListener("nx:alarm", h); const mon = new Date(); mon.setDate(mon.getDate() + ((1 - mon.getDay() + 7) % 7)); mon.setHours(6, 30, 0, 0); NX.alarms.check(mon); NX.alarms.check(mon); const tue = new Date(+mon + 864e5); NX.alarms.check(tue); document.removeEventListener("nx:alarm", h); return rang === 1; }), "it rings once at its time, only on its days, also with Clock closed");
   ok(await p.evaluate(() => { NX.alarms.add("08:00", [], "Once"); const d = new Date(); d.setHours(8, 0, 0, 0); NX.alarms.check(d); const a = NX.alarms.list().find((x) => x.name === "Once"); NX.setData("alarms", []); return a && a.on === false; }), "a one-time alarm turns itself off after ringing");
 
+  // 3.2: an account picture
+  await p.evaluate(async () => { const c = document.createElement("canvas"); c.width = 640; c.height = 480; const g = c.getContext("2d"); g.fillStyle = "#f59e0b"; g.fillRect(0, 0, 640, 480); const b = await new Promise((r) => c.toBlob(r, "image/png")); await NX.setPicFile(new File([b], "me.png", { type: "image/png" })); }); await wait(300);
+  ok(await p.evaluate(() => (NX.users().find((u) => u.id === NX.me.id).pic || "").startsWith("data:image/jpeg")), "an account picture is saved, cropped to a square");
+  await p.click("#tb-start"); await wait(300);
+  ok(await p.evaluate(() => !!document.querySelector("#start .sm-me .av-pic")), "Start shows your picture");
+  await p.keyboard.press("Escape"); await wait(200);
+  await p.evaluate(() => NX.open("settings", { page: "accounts" })); await wait(400);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=settings] .s-acct .av-pic") && !!document.querySelector(".win[data-app=settings] #s-picrm")), "Accounts shows it, with Change and Remove");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] #s-picrm").click()); await wait(300);
+  ok(await p.evaluate(() => !NX.users().find((u) => u.id === NX.me.id).pic && !document.querySelector(".win[data-app=settings] .s-acct .av-pic")), "Remove goes back to your initial");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");
