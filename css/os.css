@@ -1096,3 +1096,12 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .sc-disp{padding:2px 10px}.sc-out{font-size:28px;min-height:34px}
 .sc-keys .c-k{height:auto}.sc-keys{min-height:0}
 .s-appq{width:100%;max-width:360px;margin:0 0 8px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:14px}.s-row[hidden]{display:none}
+
+/* Sticky Notes pinned to the desktop */
+.stn-pin{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;opacity:.55}.stn-pin:hover{opacity:1}.stn-pin.on{opacity:1;background:#0002}
+#nx-dnotes{position:absolute;inset:0;pointer-events:none;z-index:1}
+.dn-note{position:absolute;width:220px;height:200px;display:flex;flex-direction:column;border-radius:10px;pointer-events:auto;box-shadow:0 12px 30px #0007;overflow:hidden;color:#1b1530}
+.dn-top{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 4px 10px;font-size:11px;font-weight:600;opacity:.75;cursor:grab;background:#0000000f;touch-action:none}
+.dn-un{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:inherit}.dn-un:hover{background:#0002}
+.dn-note textarea{flex:1;border:0;background:none;resize:none;padding:8px 10px;font:14px/1.45 var(--font);color:inherit;outline:0}
+.dn-note.c-sun{background:#fde68a}.dn-note.c-rose{background:#fbcfe8}.dn-note.c-mint{background:#bbf7d0}.dn-note.c-sky{background:#bae6fd}.dn-note.c-violet{background:#ddd6fe}.dn-note.c-slate{background:#e2e8f0}

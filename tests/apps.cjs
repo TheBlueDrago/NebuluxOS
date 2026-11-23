@@ -143,6 +143,17 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.focus("clock")); await wait(200);
   ok(await p.evaluate(() => +getComputedStyle(document.querySelector(".win[data-app=notepad]")).zIndex > +getComputedStyle(document.querySelector(".win[data-app=clock]")).zIndex), "Keep on top keeps a window above the others");
   await p.evaluate(() => NX.closeAll());
+  // Sticky Notes on the desktop
+  await p.evaluate(() => { NX.closeAll(); NX.open("notes"); }); await wait(500);
+  await p.click(".win[data-app=notes] [data-a=new]"); await wait(200); await p.keyboard.type("Call grandma"); await wait(500);
+  await p.evaluate(() => document.querySelector(".win[data-app=notes] .stn-pin").click()); await wait(900);
+  ok(await p.evaluate(() => { const d = document.querySelector("#nx-dnotes .dn-note textarea"); return !!d && d.value === "Call grandma"; }), "a sticky note can be pinned to the desktop");
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+  await p.evaluate(() => { const d = document.querySelector("#nx-dnotes .dn-note textarea"); d.focus(); d.value += " at 6"; d.dispatchEvent(new Event("input")); }); await wait(600);
+  ok(await p.evaluate(() => NX.data("sticky-notes", []).some((n) => n.t === "Call grandma at 6" && n.pin)), "it stays there with the app closed, and saves what you type in it");
+  await shot("desk-note");
+  await p.evaluate(() => document.querySelector("#nx-dnotes .dn-un").click()); await wait(500);
+  ok(await p.evaluate(() => !document.querySelector("#nx-dnotes") && !NX.data("sticky-notes", []).some((n) => n.pin)), "and comes off the desktop with its x");
   // Settings > Apps: search your apps
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
   await p.type(".win[data-app=settings] .s-appq", "camer"); await wait(200);
