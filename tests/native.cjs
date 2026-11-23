@@ -264,6 +264,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { const f = document.querySelector("#s-hotf"); f.n.value = "Ada Phone Share"; f.p.value = "share12345"; f.querySelector("[type=submit]").click(); });
   ok(await until(async () => (await fake()).hotspot && (await fake()).hotspot.name === "Ada Phone Share"), "Mobile hotspot turns on with its name and password");
   ok(await until(() => p.evaluate(() => /Sharing as Ada Phone Share/.test(document.querySelector("#s-hot").innerText) && /share12345/.test(document.querySelector("#s-hot").innerText))), "and shows what to pick on the phone");
+  ok(await p.evaluate(() => !!document.querySelector("#s-hot .s-qr svg") && document.querySelectorAll("#s-hot .s-qr svg rect, #s-hot .s-qr svg path").length > 0), "with a QR code the phone can scan to join");
+  await p.evaluate(() => document.querySelector("#s-hot").scrollIntoView()); await shot("hotspot-qr");
   await p.evaluate(() => document.querySelector("#s-hotoff").click());
   ok(await until(async () => !(await fake()).hotspot), "and turns off");
   await p.evaluate(() => NX.close("settings")); await wait(300);

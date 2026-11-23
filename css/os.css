@@ -1041,3 +1041,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 /* Snipping Tool: drawing on a screenshot */
 .sn-view{position:relative}.sn-ink{position:absolute;cursor:crosshair;touch-action:none;z-index:3}
 .sn-pens{display:flex;gap:6px;align-items:center;margin-right:4px}.sn-pens button{width:24px;height:24px;border-radius:50%;border:2px solid #0006;box-shadow:0 0 0 1px #fff4}.sn-pens button.on{box-shadow:0 0 0 3px var(--accent)}
+
+/* Mobile hotspot: the QR code to join */
+.s-hotqr{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:12px}
+.s-qr{display:block;width:150px;height:150px;padding:6px;border-radius:12px;background:#fff;flex:none}.s-qr svg{width:100%;height:100%;display:block}
+.s-hotqr .s-note{flex:1;min-width:200px;margin:0}

@@ -158,6 +158,12 @@
           fillScreens(); fillAudio();
         }));
       }
+      // a QR code phones scan to join a Wi-Fi network (the standard WIFI: format; qrcode-generator, MIT, in js/vendor)
+      const hotQR = (name, pw) => {
+        if (typeof qrcode !== "function") return "";
+        const e = (s) => String(s).replace(/([\\;,:"])/g, "\\$1"), q = qrcode(0, "M"); q.addData("WIFI:T:WPA;S:" + e(name) + ";P:" + e(pw) + ";;"); q.make();
+        return '<span class="s-qr" role="img" aria-label="QR code to join ' + NX.esc(name) + '">' + q.createSvgTag({ cellSize: 5, margin: 2, scalable: true }) + "</span>";
+      };
       // Mobile hotspot: share this computer's internet over Wi-Fi (its name and password are kept for next time)
       async function fillHot() {
         const box = q$("#s-hot"); if (!box) return; let h;
@@ -165,7 +171,7 @@
         if (!q$("#s-hot")) return;
         let saved = NX.data("hotspot", null); if (!saved) { const abc = "abcdefghjkmnpqrstuvwxyz23456789", pick = (n) => Array.from({ length: n }, () => abc[Math.floor(Math.random() * abc.length)]).join(""); saved = { name: "Nebulux-" + pick(4).toUpperCase(), pw: pick(10) }; NX.setData("hotspot", saved); }
         box.innerHTML = h.on
-          ? "<div class=\"s-bth\"><span class=\"s-hwt\"><b>Sharing as " + NX.esc(h.name) + "</b></span><span class=\"s-hwc\"><button class=\"btn\" id=\"s-hotoff\">Turn off</button></span></div><p class=\"s-note\">On your phone or other computer, pick <b>" + NX.esc(h.name) + "</b> and type the password <b>" + NX.esc(saved.pw) + "</b>.</p>"
+          ? "<div class=\"s-bth\"><span class=\"s-hwt\"><b>Sharing as " + NX.esc(h.name) + "</b></span><span class=\"s-hwc\"><button class=\"btn\" id=\"s-hotoff\">Turn off</button></span></div><div class=\"s-hotqr\">" + hotQR(h.name, saved.pw) + "<p class=\"s-note\">Point your phone's camera at this code to join, no typing needed. Or pick <b>" + NX.esc(h.name) + "</b> and type the password <b>" + NX.esc(saved.pw) + "</b>.</p></div>"
           : "<p class=\"s-note\">Share this computer's internet with your phone or another computer over Wi-Fi. Works best when this computer is on a network cable: most Wi-Fi chips can't use Wi-Fi and share it at the same time.</p><form class=\"s-hidf\" id=\"s-hotf\"><input name=\"n\" maxlength=\"32\" aria-label=\"Hotspot name\" value=\"" + NX.esc(saved.name) + "\"><input name=\"p\" maxlength=\"63\" aria-label=\"Hotspot password\" value=\"" + NX.esc(saved.pw) + "\"><button class=\"btn primary\" type=\"submit\">Turn on</button><p class=\"s-msg\" id=\"s-hotmsg\"></p></form>";
         const off = q$("#s-hotoff"); if (off) off.onclick = async () => { off.disabled = true; try { await NX.api("POST", "/hotspot", { on: false }); NX.toast("Mobile hotspot is off."); } catch (e) { NX.toast(e.message); } fillHot(); fillWifi(); };
         const f = q$("#s-hotf"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const name = f.n.value.trim(), pw = f.p.value, m = q$("#s-hotmsg"), b = f.querySelector("[type=submit]");
