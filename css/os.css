@@ -1077,3 +1077,11 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .np-tx{width:22px;height:22px;margin-right:4px;border-radius:5px;display:grid;place-items:center;opacity:.6}.np-tx:hover{opacity:1;background:var(--hover)}
 .np-tadd{width:28px;height:28px;margin:0 0 3px 2px;border-radius:6px;display:grid;place-items:center;flex:none}.np-tadd:hover{background:var(--hover)}
 .np-status{gap:18px}
+
+/* a ringing alarm */
+#nx-alarm{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:5000;display:flex;flex-direction:column;gap:10px;width:min(420px,calc(100vw - 24px))}
+.al-card{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;border-radius:16px;background:var(--bg2);box-shadow:0 20px 50px #000b,0 0 0 1px color-mix(in srgb,var(--accent) 40%,#ffffff1a);animation:nlin .2s ease-out}
+.al-ring{animation:alshake 1s ease-in-out infinite}@keyframes alshake{10%,30%{transform:rotate(-12deg)}20%,40%{transform:rotate(12deg)}50%{transform:none}}
+.al-txt{flex:1;display:flex;flex-direction:column}.al-txt b{font-size:16px}.al-txt span{color:var(--sub);font-size:13px}
+.al-btns{display:flex;gap:8px}
+@media (prefers-reduced-motion:reduce){.al-ring{animation:none}}

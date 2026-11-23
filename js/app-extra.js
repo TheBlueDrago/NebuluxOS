@@ -238,6 +238,20 @@
   // Alarms: a time, the days it rings (none = once), and a name; checked every 15 seconds, also with Clock closed
   const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   NX.alarms = {
+    // a ringing alarm: a card with its name and the time, Snooze (5 minutes) and Dismiss; it beeps every 2 seconds for up to a minute
+    ring(a, d) {
+      let box = document.getElementById("nx-alarm"); if (!box) { box = document.createElement("div"); box.id = "nx-alarm"; box.setAttribute("role", "alertdialog"); document.body.appendChild(box); }
+      const card = document.createElement("div"); card.className = "al-card";
+      card.innerHTML = `<div class="al-ring">${NX.icon("clock", 44)}</div><div class="al-txt"><b>${NX.esc(a.name || "Alarm")}</b><span>${NX.esc(NX.fmtTime(d || new Date()))}</span></div><div class="al-btns"><button class="btn" data-al="snooze">Snooze 5 min</button><button class="btn primary" data-al="off">Dismiss</button></div>`;
+      box.appendChild(card);
+      let n = 0; const beep = () => { if (NX.beep) NX.beep(); }; beep(); const t = setInterval(() => { if (++n >= 30) stop(); else beep(); }, 2000);
+      const stop = () => { clearInterval(t); card.remove(); if (!box.children.length) box.remove(); };
+      card.onclick = (e) => { const b = e.target.closest("[data-al]"); if (!b) return; stop();
+        if (b.dataset.al === "snooze") { const s = new Date(Date.now() + 5 * 60000), hm = String(s.getHours()).padStart(2, "0") + ":" + String(s.getMinutes()).padStart(2, "0");
+          const L = NX.alarms.list(); L.push({ id: NX.uid(), time: hm, days: [], name: (a.name || "Alarm").replace(/ \(snoozed\)$/, "") + " (snoozed)", on: true, last: "", snooze: true }); NX.alarms.save(L.sort((x, y) => x.time.localeCompare(y.time))); NX.toast("Snoozed until " + NX.fmtTime(s) + "."); } };
+      card.querySelector("[data-al=off]").focus();
+      if (a.snooze) NX.alarms.save(NX.alarms.list().filter((x) => x.id !== a.id));
+    },
     list: () => NX.data("alarms", []),
     save: (L) => { NX.setData("alarms", L); document.dispatchEvent(new CustomEvent("nx:alarms")); },
     add(time, days, name) { const L = NX.alarms.list(); if (L.length >= 20) throw new Error("You can have up to 20 alarms."); L.push({ id: NX.uid(), time, days: days || [], name: String(name || "").slice(0, 40), on: true, last: "" }); NX.alarms.save(L.sort((a, b) => a.time.localeCompare(b.time))); },
@@ -247,7 +261,7 @@
       for (const a of L) {
         if (!a.on || a.time !== hm || a.last === stamp || (a.days.length && !a.days.includes(d.getDay()))) continue;
         a.last = stamp; changed = true; if (!a.days.length) a.on = false;
-        NX.toast((a.name || "Alarm") + ": it's " + NX.fmtTime(d) + "."); if (NX.beep) { NX.beep(); setTimeout(() => NX.beep(), 700); setTimeout(() => NX.beep(), 1400); }
+        NX.alarms.ring(a, d);
         document.dispatchEvent(new CustomEvent("nx:alarm", { detail: a.id }));
       }
       if (changed) NX.alarms.save(L);

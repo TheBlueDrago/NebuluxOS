@@ -436,6 +436,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.close("clock")); await wait(300);
   ok(await p.evaluate(() => { let rang = 0; const h = () => rang++; document.addEventListener("nx:alarm", h); const mon = new Date(); mon.setDate(mon.getDate() + ((1 - mon.getDay() + 7) % 7)); mon.setHours(6, 30, 0, 0); NX.alarms.check(mon); NX.alarms.check(mon); const tue = new Date(+mon + 864e5); NX.alarms.check(tue); document.removeEventListener("nx:alarm", h); return rang === 1; }), "it rings once at its time, only on its days, also with Clock closed");
   ok(await p.evaluate(() => { NX.alarms.add("08:00", [], "Once"); const d = new Date(); d.setHours(8, 0, 0, 0); NX.alarms.check(d); const a = NX.alarms.list().find((x) => x.name === "Once"); NX.setData("alarms", []); return a && a.on === false; }), "a one-time alarm turns itself off after ringing");
+  // 3.7: a ringing alarm has Snooze and Dismiss
+  ok(await p.evaluate(() => document.querySelectorAll("#nx-alarm .al-card").length >= 2), "a ringing alarm shows a card");
+  await p.evaluate(() => document.querySelector("#nx-alarm .al-card [data-al=snooze]").click());
+  ok(await p.evaluate(() => { const s = NX.alarms.list().find((x) => x.snooze); return !!s && /\(snoozed\)$/.test(s.name) && s.on; }), "Snooze sets it again for 5 minutes from now");
+  await p.evaluate(() => document.querySelectorAll("#nx-alarm [data-al=off]").forEach((b) => b.click()));
+  ok(await p.evaluate(() => !document.querySelector("#nx-alarm")), "and Dismiss stops it");
+  await p.evaluate(() => NX.setData("alarms", []));
 
   // 3.2: an account picture
   await p.evaluate(async () => { const c = document.createElement("canvas"); c.width = 640; c.height = 480; const g = c.getContext("2d"); g.fillStyle = "#f59e0b"; g.fillRect(0, 0, 640, 480); const b = await new Promise((r) => c.toBlob(r, "image/png")); await NX.setPicFile(new File([b], "me.png", { type: "image/png" })); }); await wait(300);
