@@ -239,6 +239,14 @@ const api = {
     for (const id of ids) await run("xinput", ["set-prop", id, "libinput Accel Speed", accel], 3000); // devices without it just say no
     return { ok: true };
   },
+  // the touchpad: tap to click, and which way two-finger scrolling moves the page
+  async "POST /touchpad"(b) {
+    const tap = b.tap !== false, natural = b.natural !== false;
+    if (FAKE) { fake.touchpad = { tap, natural }; return { ok: true }; }
+    const ids = (await run("xinput", ["list", "--id-only"])).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
+    for (const id of ids) { await run("xinput", ["set-prop", id, "libinput Tapping Enabled", tap ? "1" : "0"], 3000); await run("xinput", ["set-prop", id, "libinput Natural Scrolling Enabled", natural ? "1" : "0"], 3000); }
+    return { ok: true };
+  },
   async "POST /keyboard"(b) {
     const k = String(b.layout || ""); if (!/^[a-z]{2,5}(-intl)?$/.test(k)) throw new Error("Unknown keyboard layout.");
     if (FAKE) { fake.kb = k; return { ok: true }; }

@@ -230,6 +230,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => /Wireless Mouse[\s\S]*battery 64%/.test((document.querySelector("#s-blist") || {}).innerText || ""))), "Bluetooth devices show their battery");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  await p.evaluate(() => NX.open("settings", { page: "devices" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pref=tpTap]").click()); await wait(1200);
+  ok((await fake()).touchpad && (await fake()).touchpad.tap === false, "Touchpad settings turn tap to click off on the computer");
+  await p.evaluate(() => { document.querySelector(".win[data-app=settings] [data-pref=tpTap]").click(); NX.close("settings"); }); await wait(1200);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

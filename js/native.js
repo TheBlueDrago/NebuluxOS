@@ -119,6 +119,7 @@
   document.addEventListener("nx:prefs", (e) => {
     if (!NX.me || syncing) return; const k = e.detail, p = NX.prefs();
     if (k === "mouse") soon(k, () => NX.api("POST", "/mouse", { speed: p.mouse }).catch(() => {}));
+    if (k === "tpTap" || k === "tpNatural") soon("touchpad", () => NX.api("POST", "/touchpad", { tap: p.tpTap !== false, natural: p.tpNatural !== false }).catch(() => {}));
     if (k === "volume") soon(k, () => NX.api("POST", "/volume", { volume: p.volume }).catch(() => {}));
     if (k === "brightness" && NX.hw.brightness) soon(k, () => NX.api("POST", "/brightness", { brightness: p.brightness }).catch(() => {}));
     if (k === "wifi") soon(k, () => NX.api("POST", "/wifi/radio", { on: p.wifi }).catch((er) => NX.toast(er.message)));
@@ -140,6 +141,7 @@
     NX.api("POST", "/volume", { volume: NX.prefs().volume }).catch(() => {});
     if (NX.prefs().keyboard) NX.api("POST", "/keyboard", { layout: NX.prefs().keyboard }).catch(() => {});
     NX.api("POST", "/mouse", { speed: NX.prefs().mouse }).catch(() => {});
+    NX.api("POST", "/touchpad", { tap: NX.prefs().tpTap !== false, natural: NX.prefs().tpNatural !== false }).catch(() => {});
     try {
       const [w, b] = await Promise.all([NX.api("GET", "/wifi").catch(() => null), NX.api("GET", "/bt").catch(() => null)]);
       syncing = true;

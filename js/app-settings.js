@@ -129,7 +129,8 @@
           <h3>Safe by design</h3><div class="s-card"><p class="s-note">${NX.native ? "Nebulux OS runs from its USB. It never changes this computer's own drive or the system already on it: take the USB out and restart, and the computer starts the way it always did." : "Nebulux OS runs inside a browser tab. It can't change or harm your computer, and closing the tab closes it. Your accounts and settings are saved in this browser only."}</p></div>`;
         return "";
       }
-      const devicesMouse = (p) => `<h3>Mouse</h3>${row("mouse", "Mouse pointer speed", NX.native ? "How fast the pointer moves when you move the mouse or touchpad" : "On the real Nebulux OS this sets how fast the pointer moves", `<span class="s-slab">Slower</span>${slider("mouse", p.mouse, 0, 10)}<span class="s-slab">Faster</span>`)}`;
+      const devicesMouse = (p) => `<h3>Mouse</h3>${row("mouse", "Mouse pointer speed", NX.native ? "How fast the pointer moves when you move the mouse or touchpad" : "On the real Nebulux OS this sets how fast the pointer moves", `<span class="s-slab">Slower</span>${slider("mouse", p.mouse, 0, 10)}<span class="s-slab">Faster</span>`)}
+        <h3>Touchpad</h3>${row("mouse", "Tap to click", "Tap the touchpad once to click, with two fingers to right-click", toggle("tpTap", p.tpTap !== false))}${row("mouse", "Natural scrolling", "Two fingers down moves the page up, like a phone", toggle("tpNatural", p.tpNatural !== false))}`;
       // ---------- screens: a TV or monitor on HDMI, and wireless displays ----------
       function screensHTML() {
         if (!NX.native) return `<h3>Screens and TV</h3><div class="s-card"><p class="s-note">On the real Nebulux OS (started from the USB), plug a TV or monitor into the computer's HDMI port to show Nebulux OS on it, or cast to a wireless TV.</p></div>`;
