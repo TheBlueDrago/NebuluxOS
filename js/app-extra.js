@@ -143,24 +143,47 @@
     open(body, win) {
       body.classList.add("paint");
       const COLS = ["#111827", "#ffffff", "#ef4444", "#f97316", "#facc15", "#22c55e", "#22d3ee", "#3b82f6", "#7c5cff", "#ec4899", "#8b5a2b", "#94a3b8"];
-      body.innerHTML = `<div class="p-bar"><div class="p-cols">${COLS.map((c, i) => `<button data-col="${c}" class="${i === 8 ? "on" : ""}" style="background:${c}" aria-label="Color ${c}"></button>`).join("")}</div><label class="p-size">Size <input type="range" min="2" max="48" value="8"></label><button class="btn sm" data-t="brush">Brush</button><button class="btn sm" data-t="eraser">Eraser</button><button class="btn sm" data-t="undo">Undo</button><button class="btn sm" data-t="clear">Clear</button><button class="btn sm primary" data-t="save">Save picture</button></div><div class="p-wrap"><canvas></canvas></div>`;
+      body.innerHTML = `<div class="p-bar"><div class="p-cols">${COLS.map((c, i) => `<button data-col="${c}" class="${i === 8 ? "on" : ""}" style="background:${c}" aria-label="Color ${c}"></button>`).join("")}</div><label class="p-size">Size <input type="range" min="2" max="48" value="8"></label><button class="btn sm" data-t="brush">Brush</button><button class="btn sm" data-t="line">Line</button><button class="btn sm" data-t="rect">Box</button><button class="btn sm" data-t="ellipse">Circle</button><button class="btn sm" data-t="fill">Fill</button><button class="btn sm" data-t="eraser">Eraser</button><button class="btn sm" data-t="undo">Undo</button><button class="btn sm" data-t="clear">Clear</button><button class="btn sm primary" data-t="save">Save picture</button></div><div class="p-wrap"><canvas></canvas></div>`;
       const cv = body.querySelector("canvas"), g = cv.getContext("2d"), wrap = body.querySelector(".p-wrap");
       let col = COLS[8], size = 8, tool = "brush", down = false, last = null; const hist = [];
       const resize = () => {
-        const r = wrap.getBoundingClientRect(); if (r.width < 10 || r.height < 10) return;
+        const r = { width: wrap.clientWidth, height: wrap.clientHeight }; if (r.width < 10 || r.height < 10) return; // (clientWidth: the real size, even while the window is still opening)
         const old = document.createElement("canvas"); old.width = cv.width; old.height = cv.height; old.getContext("2d").drawImage(cv, 0, 0);
-        cv.width = Math.round(r.width); cv.height = Math.round(r.height); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(old, 0, 0);
+        if (cv.width === Math.round(r.width) && cv.height === Math.round(r.height)) return; cv.width = Math.round(r.width); cv.height = Math.round(r.height); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(old, 0, 0);
       };
       const snap = () => { try { hist.push(g.getImageData(0, 0, cv.width, cv.height)); if (hist.length > 20) hist.shift(); } catch (e) { /* too big */ } };
       const pos = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-      cv.onpointerdown = (e) => { cv.setPointerCapture(e.pointerId); snap(); down = true; last = pos(e); g.beginPath(); g.fillStyle = tool === "eraser" ? "#fff" : col; g.arc(last[0], last[1], size / 2, 0, 7); g.fill(); };
-      cv.onpointermove = (e) => { if (!down) return; const p = pos(e); g.strokeStyle = tool === "eraser" ? "#fff" : col; g.lineWidth = size; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke(); last = p; };
-      cv.onpointerup = cv.onpointercancel = () => { down = false; };
-      body.querySelector(".p-cols").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; col = b.dataset.col; tool = "brush"; body.querySelectorAll(".p-cols button").forEach((x) => x.classList.toggle("on", x === b)); };
+      // shapes (line, box, circle) are drawn from where you press to where you let go; Fill pours color into an area
+      let start = null, base = null; const SHAPES = ["line", "rect", "ellipse"];
+      const shape = (a, b) => { g.putImageData(base, 0, 0); g.strokeStyle = col; g.lineWidth = size; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath();
+        if (tool === "line") { g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }
+        if (tool === "rect") g.rect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+        if (tool === "ellipse") g.ellipse((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.abs(b[0] - a[0]) / 2 || .1, Math.abs(b[1] - a[1]) / 2 || .1, 0, 0, Math.PI * 2);
+        g.stroke(); };
+      const fillAt = (x, y) => {
+        const W = cv.width, H = cv.height, d = g.getImageData(0, 0, W, H), px = d.data; x = Math.floor(x); y = Math.floor(y); if (x < 0 || y < 0 || x >= W || y >= H) return;
+        const at = (y * W + x) * 4, t = [px[at], px[at + 1], px[at + 2]], c = [parseInt(col.slice(1, 3), 16), parseInt(col.slice(3, 5), 16), parseInt(col.slice(5, 7), 16)];
+        if (Math.abs(t[0] - c[0]) + Math.abs(t[1] - c[1]) + Math.abs(t[2] - c[2]) < 6) return;
+        const same = (i) => Math.abs(px[i] - t[0]) + Math.abs(px[i + 1] - t[1]) + Math.abs(px[i + 2] - t[2]) < 60, seen = new Uint8Array(W * H), stack = [[x, y]];
+        while (stack.length) { let [sx, sy] = stack.pop(); while (sx >= 0 && same((sy * W + sx) * 4) && !seen[sy * W + sx]) sx--; sx++; let up = false, dn = false;
+          while (sx < W && !seen[sy * W + sx] && same((sy * W + sx) * 4)) { const i = (sy * W + sx) * 4; seen[sy * W + sx] = 1; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; px[i + 3] = 255;
+            if (sy > 0) { const u = !seen[(sy - 1) * W + sx] && same(((sy - 1) * W + sx) * 4); if (u && !up) stack.push([sx, sy - 1]); up = u; }
+            if (sy < H - 1) { const dd = !seen[(sy + 1) * W + sx] && same(((sy + 1) * W + sx) * 4); if (dd && !dn) stack.push([sx, sy + 1]); dn = dd; }
+            sx++; } }
+        g.putImageData(d, 0, 0);
+      };
+      win.paintTest = { fillAt: (x, y) => { snap(); fillAt(x, y); }, pixel: (x, y) => Array.from(g.getImageData(x, y, 1, 1).data.slice(0, 3)), setTool: (t) => (tool = t), setCol: (c) => (col = c) };
+      cv.onpointerdown = (e) => { cv.setPointerCapture(e.pointerId); snap(); last = pos(e);
+        if (tool === "fill") { fillAt(last[0], last[1]); return; }
+        if (SHAPES.includes(tool)) { start = last; base = g.getImageData(0, 0, cv.width, cv.height); down = true; return; }
+        down = true; g.beginPath(); g.fillStyle = tool === "eraser" ? "#fff" : col; g.arc(last[0], last[1], size / 2, 0, 7); g.fill(); };
+      cv.onpointermove = (e) => { if (!down) return; const p = pos(e); if (start) { shape(start, p); return; } g.strokeStyle = tool === "eraser" ? "#fff" : col; g.lineWidth = size; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke(); last = p; };
+      cv.onpointerup = cv.onpointercancel = (e) => { if (start && e && e.clientX != null) shape(start, pos(e)); down = false; start = null; base = null; };
+      body.querySelector(".p-cols").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; col = b.dataset.col; if (tool === "eraser") { tool = "brush"; body.querySelectorAll("[data-t]").forEach((x) => x.classList.toggle("on", x.dataset.t === "brush")); } body.querySelectorAll(".p-cols button").forEach((x) => x.classList.toggle("on", x === b)); };
       body.querySelector(".p-size input").oninput = (e) => (size = +e.target.value);
       body.querySelector(".p-bar").addEventListener("click", (e) => {
         const b = e.target.closest("[data-t]"); if (!b) return; const t = b.dataset.t;
-        if (t === "brush" || t === "eraser") { tool = t; body.querySelectorAll("[data-t=brush],[data-t=eraser]").forEach((x) => x.classList.toggle("on", x === b)); }
+        if (["brush", "eraser", "line", "rect", "ellipse", "fill"].includes(t)) { tool = t; body.querySelectorAll("[data-t=brush],[data-t=eraser],[data-t=line],[data-t=rect],[data-t=ellipse],[data-t=fill]").forEach((x) => x.classList.toggle("on", x === b)); }
         if (t === "undo" && hist.length) g.putImageData(hist.pop(), 0, 0);
         if (t === "clear") { snap(); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); }
         if (t === "save") { // into Pictures, where Photos and File Explorer find it
@@ -168,7 +191,7 @@
         }
       });
       body.querySelector("[data-t=brush]").classList.add("on");
-      win.onresize = () => setTimeout(resize, 0); setTimeout(resize, 30);
+      win.onresize = () => setTimeout(resize, 0); setTimeout(resize, 30); setTimeout(resize, 400);
     } };
 
   // ---------- Clock: time, stopwatch and timer ----------

@@ -103,6 +103,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const sizes = await p.evaluate(async () => { const names = [...document.querySelectorAll(".win[data-app=files] .fx-item")].map((b) => b.title), all = (await NX.fs.list(await NX.folder("Pictures"))).entries; return names.map((n) => (all.find((e) => e.name === n) || {}).size || 0); });
   ok(sizes.length >= 2 && sizes.every((s, i) => !i || sizes[i - 1] >= s) && /Size/.test(await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=sort]").textContent)), "File Explorer sorts by size, largest first");
   await p.evaluate(() => NX.setData("fx-sort", { k: "name", d: 1 }));
+  // Paint: a box and a fill
+  await p.evaluate(() => { NX.closeAll(); NX.open("paint"); }); await wait(700);
+  const cvb = await p.evaluate(() => { const r = document.querySelector(".win[data-app=paint] canvas").getBoundingClientRect(); return [r.x, r.y]; });
+  await p.evaluate(() => document.querySelector(".win[data-app=paint] [data-t=rect]").click());
+  await p.mouse.move(cvb[0] + 40, cvb[1] + 40); await p.mouse.down(); await p.mouse.move(cvb[0] + 160, cvb[1] + 120, { steps: 6 }); await p.mouse.up(); await wait(200);
+  ok(await p.evaluate(() => { const px = NX.wins.get("paint").paintTest.pixel(40, 80); return px[0] < 200 || px[2] < 200; }), "Paint draws a box");
+  await p.evaluate(() => { const t = NX.wins.get("paint").paintTest; t.setCol("#22c55e"); t.fillAt(100, 80); });
+  ok(await p.evaluate(() => { const t = NX.wins.get("paint").paintTest, inside = t.pixel(100, 80), outside = t.pixel(300, 200); return inside[1] > 150 && inside[0] < 80 && outside.join() === "255,255,255"; }), "and Fill pours color inside it, not outside");
+  await shot("paint");
   // Notepad: line and column, word wrap
   await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(500);
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.focus(); }); await p.keyboard.type("ab"); await p.keyboard.press("Enter"); await p.keyboard.type("cd");
