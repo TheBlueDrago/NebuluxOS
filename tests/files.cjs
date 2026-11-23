@@ -487,6 +487,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await (async () => { for (let i = 0; i < 30; i++) { if (await p.evaluate(() => !!NX.wins.get("notes"))) return true; await wait(200); } return false; })(), "the startup app opens by itself after signing in");
   await p.evaluate(() => { NX.setPref("startup", []); NX.closeAll(); }); await wait(300);
 
+  // 3.2: Quick access in File Explorer
+  await p.evaluate(() => { NX.setData("fx-pins", []); NX.closeAll(); NX.open("files"); }); await wait(700);
+  await p.evaluate(() => { const w = NX.wins.get("files"); const d = [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((x) => /Documents/.test(x.textContent)); w.fxPin({ path: d.dataset.k, name: "Documents" }, true); }); await wait(400);
+  ok(await p.evaluate(() => /Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").innerText) && NX.data("fx-pins", []).length === 1), "a folder pins to Quick access in the sidebar");
+  await p.evaluate(() => { const w = NX.wins.get("files"); w.fxPin(NX.data("fx-pins", [])[0], false); }); await wait(300);
+  ok(await p.evaluate(() => !/Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").innerText)), "and unpins");
+  await p.evaluate(() => NX.close("files")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

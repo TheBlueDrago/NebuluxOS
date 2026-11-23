@@ -152,9 +152,12 @@
         places = places || await NX.fs.places().catch(() => null);
         try { drives = await NX.fs.drives(); } catch (e) { drives = []; }
         const row = (key, icon, label, extra) => `<button class="fx-place ${cur === key ? "on" : ""}" data-go="${NX.esc(key)}">${NX.icon(icon, 18)}<span>${NX.esc(label)}</span>${extra || ""}</button>`;
+        const pins = NX.data("fx-pins", []).filter((x) => x && x.path);
         $(".fx-side").innerHTML = row(HOME, "home", "Home") + (places ? places.folders.map((f) => row(f.path, "folder", f.name)).join("") : "") + row(TRASH, "recycle", "Recycle Bin") +
+          (pins.length ? `<h4>Quick access</h4>` + pins.map((x) => row(x.path, "pin", x.name)).join("") : "") +
           (NX.native ? `<h4>USB drives</h4>` + (drives.length ? drives.map((d) => d.mount ? row(d.mount, "usb", d.label, `<i class="fx-eject" role="button" tabindex="0" data-eject="${NX.esc(d.dev)}" title="Eject ${NX.esc(d.label)}" aria-label="Eject ${NX.esc(d.label)}">${NX.icon("eject", 14)}</i>`) : `<button class="fx-place" data-mount="${NX.esc(d.dev)}">${NX.icon("usb", 18)}<span>${NX.esc(d.label)}</span></button>`).join("") : `<p class="fx-none">Plug in a USB drive and it shows up here.</p>`) : "");
         $(".fx-side").querySelectorAll("[data-go]").forEach((b) => (b.onclick = (e) => { if (e.target.closest("[data-eject]")) return; go(b.dataset.go); }));
+        $(".fx-side").querySelectorAll("[data-go]").forEach((b) => { const pin = pins.find((x) => x.path === b.dataset.go); if (pin && b.querySelector("svg") && b.previousElementSibling && b.closest(".fx-side")) b.oncontextmenu = (e) => { if (!NX.data("fx-pins", []).some((x) => x.path === b.dataset.go)) return; e.preventDefault(); e.stopPropagation(); NX.menu(e.clientX, e.clientY, [["Open", () => go(pin.path)], ["Open in new tab", () => tabNew(pin.path)], ["Unpin from Quick access", () => pinFolder(pin, false)]]); }; });
         $(".fx-side").querySelectorAll("[data-mount]").forEach((b) => (b.onclick = async () => { try { const r = await NX.fs.mount(b.dataset.mount); await side(); go(r.mount); } catch (e) { err(e); } }));
         $(".fx-side").querySelectorAll("[data-eject]").forEach((b) => (b.onclick = async (e) => { e.stopPropagation(); const d = drives.find((x) => x.dev === b.dataset.eject); try { await NX.fs.eject(b.dataset.eject); NX.toast("It's safe to take out " + (d ? d.label : "the drive") + " now."); if (d && cur && cur.startsWith(d.mount)) go(HOME, true); else side(); } catch (er) { err(er); } }));
       }
@@ -229,6 +232,13 @@
         if (NX.native) { await NX.api("POST", "/files/purge", { ids: gone.map((e) => e.id) }); return; }
         NX.setData("vfs-trash", NX.data("vfs-trash", []).filter((t) => !gone.some((g) => g.id === t.id)));
       }
+      // Quick access: up to 12 folders in the sidebar
+      function pinFolder(e, on) {
+        const L = NX.data("fx-pins", []).filter((x) => x.path !== e.path);
+        if (on) { if (L.length >= 12) { NX.toast("Quick access has room for 12 folders."); return; } L.push({ path: e.path, name: e.name }); }
+        NX.setData("fx-pins", L); NX.toast(on ? e.name + " is pinned to Quick access." : e.name + " is unpinned."); side();
+      }
+      win.fxPin = pinFolder;
       function openItem(e) { if (isTrash()) { NX.toast("Restore it first to open it."); return; } if (e.dir) go(e.path); else NX.openFile(e, items); }
       let lastClick = null;
       listEl.addEventListener("click", (ev) => {
@@ -246,7 +256,7 @@
         if (b && !sel.has(b.dataset.k)) { sel = new Set([b.dataset.k]); marks(); }
         const s = selected(), M = [];
         if (isTrash()) { if (s.length) M.push(["Restore", () => act("restore")], ["Delete for good", () => act("purge")]); M.push(["Empty Recycle Bin", () => act("empty")]); }
-        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) M.push(["Open in new tab", () => tabNew(s[0].path)]); if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); }
+        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); }
         else if (!isHome()) { M.push(["New folder", () => act("newfolder")], ["New text file", () => act("newtext")]); if (NX.fsClip) M.push(["Paste", () => act("paste")]); M.push(["Refresh", () => load()]); }
         if (M.length) NX.menu(ev.clientX, ev.clientY, M);
       });

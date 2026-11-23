@@ -9,7 +9,7 @@
     ["Known and hidden networks", "Forget a saved network that keeps failing, join a hidden network by its name, press Show to see the password while you type it, and Properties shows the connected network's signal, band, speed and IP address."],
     ["Virtual desktops", "Task View (Nebulux + Tab) has your desktops at the bottom: add one, rename it, drag windows between them. Ctrl + Nebulux + Left or Right switches, Ctrl + Nebulux + D adds one, Ctrl + Nebulux + F4 closes it."],
     ["Clipboard history", "Nebulux + V shows the last 25 things you copied, in Nebulux OS and in real apps. Click one to paste it, pin the ones you need often. Turn it off in Settings > System."],
-    ["File Explorer tabs", "Ctrl + T opens a tab, Ctrl + W closes it, and a middle-click or Open in new tab opens a folder in its own tab."],
+    ["File Explorer tabs and Quick access", "Ctrl + T opens a tab, Ctrl + W closes it, and a middle-click or Open in new tab opens a folder in its own tab. Right-click a folder and Pin to Quick access to keep it in the sidebar."],
     ["Sticky Notes", "Quick colored notes that save as you type, with search and Undo. Your notes show in Widgets too."],
     ["Focus sessions and alarms", "Clock > Focus: 15 to 60 minutes with Do not disturb on until it is done. Clock > Alarms: wake-up and reminder alarms, once or on the days you pick. Both keep going with Clock closed."],
     ["Calendar events", "Click the clock on the taskbar, pick a day and add an event, with a time if you like. Days with events get a dot, and you get a reminder when one starts."],
