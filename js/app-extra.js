@@ -50,7 +50,7 @@
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
-      body.innerHTML = `<div class="c-disp"><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
+      body.innerHTML = `<div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("clock", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
       let cur = "0", prev = null, op = null, fresh = true, expr = "";
       const val = body.querySelector(".c-val"), ex = body.querySelector(".c-expr");
       const fmt = (n) => { if (!isFinite(n)) return "Can't divide by zero"; const s = Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0) ? n.toExponential(8) : String(+n.toPrecision(15)); return s; };
@@ -61,7 +61,7 @@
         if (/^[0-9]$/.test(k)) { cur = fresh || cur === "0" ? k : (cur.length < 16 ? cur + k : cur); fresh = false; }
         else if (k === ".") { if (fresh) { cur = "0."; fresh = false; } else if (!cur.includes(".")) cur += "."; }
         else if (["+", "-", "*", "/"].includes(k)) { const n = parseFloat(cur); if (op && !fresh) { prev = calc(prev, n, op); cur = fmt(prev); } else if (prev == null || !op) prev = n; op = k; fresh = true; expr = fmt(prev) + " " + { "+": "+", "-": "−", "*": "×", "/": "÷" }[k]; }
-        else if (k === "=") { if (op) { const n = parseFloat(cur), r = calc(prev, n, op); expr = fmt(prev) + " " + { "+": "+", "-": "−", "*": "×", "/": "÷" }[op] + " " + fmt(n) + " ="; cur = fmt(r); prev = null; op = null; fresh = true; } }
+        else if (k === "=") { if (op) { const n = parseFloat(cur), r = calc(prev, n, op); expr = fmt(prev) + " " + { "+": "+", "-": "−", "*": "×", "/": "÷" }[op] + " " + fmt(n) + " ="; cur = fmt(r); prev = null; op = null; fresh = true; if (isFinite(r)) NX.setData("calc-history", [{ e: expr, r: cur }, ...NX.data("calc-history", [])].slice(0, 20)); } }
         else if (k === "c") { cur = "0"; prev = null; op = null; fresh = true; expr = ""; }
         else if (k === "ce") { cur = "0"; fresh = true; }
         else if (k === "bs") { if (!fresh) { cur = cur.length > 1 ? cur.slice(0, -1) : "0"; if (cur === "-") cur = "0"; } }
@@ -73,8 +73,16 @@
         show();
       };
       body.querySelector(".c-keys").onclick = (e) => { const b = e.target.closest("button"); if (b) press(b.dataset.k); };
+      // History: the last 20 answers; click one to use it again
+      const hist = body.querySelector(".c-hist");
+      const histDraw = () => { const H = NX.data("calc-history", []);
+        hist.innerHTML = (H.length ? H.map((h, i) => `<button class="c-hi" data-h="${i}"><small>${NX.esc(h.e)}</small><b>${NX.esc(h.r)}</b></button>`).join("") + `<button class="btn sm c-hclear">Clear history</button>` : `<p class="c-hnone">There's no history yet.</p>`);
+        hist.querySelectorAll("[data-h]").forEach((b) => (b.onclick = () => { const h = NX.data("calc-history", [])[+b.dataset.h]; if (h) { cur = h.r; fresh = true; expr = h.e; show(); } hist.hidden = true; }));
+        const cl = hist.querySelector(".c-hclear"); if (cl) cl.onclick = () => { NX.setData("calc-history", []); histDraw(); }; };
+      body.querySelector(".c-hbtn").onclick = () => { hist.hidden = !hist.hidden; if (!hist.hidden) histDraw(); };
       const key = (e) => {
         if (!win.el.classList.contains("active") || /input|textarea/i.test((document.activeElement || {}).tagName)) return;
+        if ((e.ctrlKey || e.metaKey) && /^c$/i.test(e.key)) { e.preventDefault(); navigator.clipboard && navigator.clipboard.writeText(cur).catch(() => {}); if (NX.clip) NX.clip.add(cur); NX.toast("Copied " + cur + "."); return; }
         const m = { Enter: "=", "=": "=", Backspace: "bs", Escape: "c", Delete: "ce", "%": "pct" }[e.key] || (/^[0-9.+\-*/]$/.test(e.key) ? e.key : null);
         if (m) { e.preventDefault(); press(m); }
       };

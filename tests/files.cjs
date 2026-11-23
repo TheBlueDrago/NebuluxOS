@@ -404,6 +404,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !NX.wins.get("photos").slideshow.on() && !document.querySelector(".win[data-app=photos] .ph").classList.contains("ph-show")), "Esc stops the slideshow");
   await p.evaluate(() => NX.close("photos")); await wait(300);
 
+  // 3.2: Calculator history
+  await p.evaluate(() => { NX.setData("calc-history", []); NX.open("calculator"); }); await wait(400);
+  await p.evaluate(() => { const k = (x) => document.querySelector(".win[data-app=calculator] [data-k=\"" + x + "\"]").click(); ["1", "2", "+", "3", "0", "="].forEach(k); ["c", "7", "*", "6", "="].forEach(k); }); await wait(200);
+  await p.evaluate(() => document.querySelector(".win[data-app=calculator] .c-hbtn").click()); await wait(200);
+  ok(await p.evaluate(() => { const H = [...document.querySelectorAll(".win[data-app=calculator] .c-hi b")].map((b) => b.textContent); return H.join(",") === "42,42"; }), "Calculator keeps a history of answers");
+  await p.evaluate(() => document.querySelector(".win[data-app=calculator] .c-hi[data-h=\"1\"]").click()); await wait(200);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=calculator] .c-val").textContent === "42" && document.querySelector(".win[data-app=calculator] .c-expr").textContent.includes("12 + 30")), "clicking an answer in History uses it again");
+  await p.evaluate(() => NX.close("calculator")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

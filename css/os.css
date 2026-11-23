@@ -789,3 +789,13 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .ph.ph-show .ph-view{background:#000;cursor:none}
 .ph.ph-show .ph-view img{animation:phfade .6s ease}
 @keyframes phfade{from{opacity:0}to{opacity:1}}
+
+/* Calculator: history */
+.calc{position:relative}
+.c-disp{position:relative}
+.c-hbtn{position:absolute;top:6px;left:6px;width:32px;height:32px;border-radius:6px;display:grid;place-items:center;color:var(--sub)}.c-hbtn:hover{background:var(--hover);color:var(--txt)}
+.c-hist{position:absolute;left:0;right:0;top:44px;bottom:0;z-index:2;background:var(--bg2);backdrop-filter:blur(20px);overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:4px}
+.c-hist[hidden]{display:none}
+.c-hi{display:flex;flex-direction:column;align-items:flex-end;padding:8px 12px;border-radius:6px;text-align:right}.c-hi:hover{background:var(--hover)}
+.c-hi small{color:var(--sub);font-size:12px}.c-hi b{font-size:20px;font-weight:600}
+.c-hclear{align-self:center;margin-top:8px}.c-hnone{color:var(--sub);text-align:center;margin-top:30px;font-size:14px}
