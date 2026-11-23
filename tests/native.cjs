@@ -270,6 +270,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await fake()).kb === "de"), "Settings > Time & language changes the keyboard layout on the computer");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  // ---------- 3.2: the time zone ----------
+  ok(await until(async () => (await fake()).tz === "America/Chicago", 8000), "the time zone is looked up by itself after signing in");
+  await p.evaluate(() => NX.open("settings", { page: "time" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-pref=tzAuto]").click()); await wait(400);
+  await p.evaluate(() => { const s = document.querySelector(".win[data-app=settings] #s-tz"); s.disabled = false; s.value = "Europe/Paris"; s.dispatchEvent(new Event("change")); });
+  ok(await until(async () => (await fake()).tz === "Europe/Paris"), "with automatic off, a time zone can be picked");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

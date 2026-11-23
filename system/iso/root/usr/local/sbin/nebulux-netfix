@@ -5,6 +5,7 @@
 #   nebulux-netfix reload DRIVER    start the Wi-Fi driver again (only Wi-Fi drivers)
 #   nebulux-netfix restart-nm       start NetworkManager again
 #   nebulux-netfix powerkey WHAT    what the power button does: suspend, poweroff or ignore
+#   nebulux-netfix timezone ZONE    the time zone, like America/Chicago
 set -u
 case "${1:-}" in
   unblock) exec /usr/sbin/rfkill unblock all ;;
@@ -19,5 +20,10 @@ case "${1:-}" in
     mkdir -p /etc/systemd/logind.conf.d
     printf '[Login]\nHandlePowerKey=%s\n' "$2" > /etc/systemd/logind.conf.d/90-nebulux-powerkey.conf
     exec /usr/bin/systemctl kill -s HUP systemd-logind ;;
-  *) echo "usage: nebulux-netfix unblock|ideapad|reload DRIVER|restart-nm|powerkey WHAT" >&2; exit 2 ;;
+  timezone)
+    z="${2:-}"
+    case "$z" in *..*|/*) echo "not a time zone" >&2; exit 2 ;; esac
+    echo "$z" | grep -Eq "^[A-Za-z_]+(/[A-Za-z0-9_+-]+){0,2}$" && [ -f "/usr/share/zoneinfo/$z" ] || { echo "not a time zone" >&2; exit 2; }
+    exec /usr/bin/timedatectl set-timezone "$z" ;;
+  *) echo "usage: nebulux-netfix unblock|ideapad|reload DRIVER|restart-nm|powerkey WHAT|timezone ZONE" >&2; exit 2 ;;
 esac

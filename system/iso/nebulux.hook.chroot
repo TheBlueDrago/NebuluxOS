@@ -22,6 +22,9 @@ OSR
 echo "Nebulux OS $V" > /etc/issue; echo "Nebulux OS $V" > /etc/issue.net; : > /etc/motd
 
 chmod 755 /usr/local/bin/nebulux-session
+# The computer's hardware clock keeps local time, like Windows does: setting the time from the internet then never
+# changes the clock Windows sees when you go back to it.
+printf '0.0 0 0.0\n0\nLOCAL\n' > /etc/adjtime
 # the network troubleshooter's fixes: run by root, allowed without a password, and nothing else
 chown root:root /usr/local/sbin/nebulux-netfix /etc/sudoers.d/nebulux-netfix
 chmod 755 /usr/local/sbin/nebulux-netfix

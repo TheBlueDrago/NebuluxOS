@@ -40,6 +40,7 @@
   document.documentElement.classList.add("native");
   document.addEventListener("nx:winopen", (e) => NX.api("POST", "/diag", { open: e.detail }).catch(() => {}));
   // ---------- real apps (Flathub) ----------
+  let tzDone = false;
   NX.nativeInstalled = new Set(); NX.nativeRunning = new Set(); NX.nativeActive = new Set(); NX.nativeOK = false;
   const nativeMap = () => { const m = {}; for (const [id, a] of Object.entries(NX.apps)) if (a.native && NX.nativeInstalled.has(a.native.flatpak)) m[id] = a.native.wm; return m; };
   NX.isNative = (id) => { const a = NX.apps[id]; return !!(a && a.native && NX.nativeInstalled.has(a.native.flatpak)); };
@@ -119,6 +120,7 @@
   document.addEventListener("nx:prefs", (e) => {
     if (!NX.me || syncing) return; const k = e.detail, p = NX.prefs();
     if (k === "mouse") soon(k, () => NX.api("POST", "/mouse", { speed: p.mouse }).catch(() => {}));
+    if (k === "tzAuto" && p.tzAuto !== false) NX.api("POST", "/timezone", { detect: true }).then((r) => NX.toast("Time zone: " + String(r.zone).replace(/_/g, " ") + ".")).catch((e) => NX.toast(e.message));
     if (k === "tpTap" || k === "tpNatural") soon("touchpad", () => NX.api("POST", "/touchpad", { tap: p.tpTap !== false, natural: p.tpNatural !== false }).catch(() => {}));
     if (k === "volume") soon(k, () => NX.api("POST", "/volume", { volume: p.volume }).catch(() => {}));
     if (k === "brightness" && NX.hw.brightness) soon(k, () => NX.api("POST", "/brightness", { brightness: p.brightness }).catch(() => {}));
@@ -140,6 +142,8 @@
     try { const b = await NX.api("GET", "/brightness"); NX.hw.brightness = b.brightness != null; if (NX.hw.brightness) NX.api("POST", "/brightness", { brightness: NX.prefs().brightness }).catch(() => {}); } catch (e) { NX.hw.brightness = false; }
     NX.api("POST", "/volume", { volume: NX.prefs().volume }).catch(() => {});
     if (NX.prefs().keyboard) NX.api("POST", "/keyboard", { layout: NX.prefs().keyboard }).catch(() => {});
+    // the time zone, looked up once each start when Set time zone automatically is on
+    if (NX.prefs().tzAuto !== false && !tzDone) { tzDone = true; setTimeout(() => NX.api("POST", "/timezone", { detect: true }).catch(() => { tzDone = false; }), 3000); }
     NX.api("POST", "/mouse", { speed: NX.prefs().mouse }).catch(() => {});
     NX.api("POST", "/touchpad", { tap: NX.prefs().tpTap !== false, natural: NX.prefs().tpNatural !== false }).catch(() => {});
     try {

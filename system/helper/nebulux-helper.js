@@ -230,6 +230,28 @@ const api = {
     if (FAKE) { fake.power = kind; return { ok: true }; }
     setTimeout(() => run("systemctl", [kind]), 300); return { ok: true };
   },
+  // the time zone: read it, set it, or look it up once from this computer's internet address (when asked)
+  async "GET /timezone"() {
+    if (FAKE) return { zone: fake.tz || "UTC" };
+    const r = await run("timedatectl", ["show", "-p", "Timezone", "--value"], 4000);
+    return { zone: r.out.trim() || "UTC" };
+  },
+  async "POST /timezone"(b) {
+    let zone = String(b.zone || "");
+    if (b.detect) {
+      if (FAKE) zone = "America/Chicago";
+      else {
+        const get = async (u, k) => { const c = new AbortController(), t = setTimeout(() => c.abort(), 6000); try { const r = await fetch(u, { signal: c.signal }); return r.ok ? (await r.json())[k] : ""; } catch (e) { return ""; } finally { clearTimeout(t); } };
+        zone = (await get("https://ipapi.co/json/", "timezone")) || (await get("https://worldtimeapi.org/api/ip", "timezone"));
+        if (!zone) throw new Error("The time zone couldn't be looked up. Check the internet connection, or pick it yourself.");
+      }
+    }
+    if (!/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+){0,2}$/.test(zone) || zone.includes("..")) throw new Error("That time zone doesn't look right.");
+    if (FAKE) { fake.tz = zone; return { ok: true, zone }; }
+    const r = await run("sudo", ["-n", "/usr/local/sbin/nebulux-netfix", "timezone", zone], 10000);
+    if (!r.ok) throw new Error("The time zone couldn't be changed on this computer.");
+    return { ok: true, zone };
+  },
   // what the computer's power button does: sleep (the usual), shut down, or nothing
   async "POST /powerkey"(b) {
     const what = { sleep: "suspend", off: "poweroff", nothing: "ignore" }[b.what]; if (!what) throw new Error("Pick Sleep, Shut down or Nothing.");

@@ -16,6 +16,7 @@
     ["Focus sessions and alarms", "Clock > Focus: 15 to 60 minutes with Do not disturb on until it is done. Clock > Alarms: wake-up and reminder alarms, once or on the days you pick. Both keep going with Clock closed."],
     ["Calendar events", "Click the clock on the taskbar, pick a day and add an event, with a time if you like. Days with events get a dot, and you get a reminder when one starts."],
     ["Your laptop's keys", "The volume, mute and brightness keys work, with a small indicator above the taskbar. Nebulux + 1 to 9 opens the apps on the taskbar, and Settings > Bluetooth & devices > Touchpad turns tap to click and natural scrolling on or off."],
+    ["The right time", "Nebulux OS sets its time zone by itself (or pick it in Settings > Time & language), and keeps the computer's clock the way Windows does, so going back to Windows never shows the wrong time."],
     ["Sleep like a laptop", "The power button and closing the lid put the computer to sleep, and it asks for your password when it wakes up. Settings > System > Power can make the power button shut down instead."],
     ["Night light on a schedule", "Settings > System: night light comes on and goes off by itself at the hours you pick."],
     ["Storage", "Settings > System > Storage shows how much space is left on your USB, what uses it, and empties the Recycle Bin."],
