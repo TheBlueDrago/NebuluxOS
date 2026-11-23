@@ -50,7 +50,7 @@ async function chip(kind) {
 }
 
 // ---------- made-up devices for tests ----------
-const fakeStart = () => ({ wifiOn: true, conn: "Home Wi-Fi", nets: [{ ssid: "Home Wi-Fi", signal: 82, secure: true }, { ssid: "Cafe Guest", signal: 55, secure: false }, { ssid: "Neighbor 5G", signal: 31, secure: true }],
+const fakeStart = () => ({ wifiOn: true, conn: "Home Wi-Fi", nets: [{ ssid: "Home Wi-Fi", signal: 82, secure: true }, { ssid: "Cafe Guest", signal: 55, secure: false }, { ssid: "Neighbor 5G", signal: 31, secure: true }, { ssid: "School Net", signal: 64, secure: true, enterprise: true }],
   btOn: true, bt: [{ mac: "11:22:33:44:55:66", name: "Nebulux Earbuds", paired: false, connected: false }, { mac: "AA:BB:CC:DD:EE:01", name: "Wireless Mouse", paired: true, connected: true, battery: 64 }], vol: 60, bright: 80, power: null });
 let fake = fakeStart();
 
@@ -78,7 +78,7 @@ const api = {
     const seen = new Map();
     for (const line of list.out.split("\n")) {
       if (!line.trim()) continue; const [use, ssid, signal, sec] = nmSplit(line);
-      if (!ssid) continue; const n = { ssid, signal: +signal || 0, secure: !!(sec && sec !== "--"), active: use === "*" };
+      if (!ssid) continue; const n = { ssid, signal: +signal || 0, secure: !!(sec && sec !== "--"), enterprise: /802.1X/i.test(sec || ""), active: use === "*" };
       const old = seen.get(ssid); if (!old || n.active || (!old.active && n.signal > old.signal)) seen.set(ssid, n);
     }
     const networks = [...seen.values()].sort((a, b) => (b.active - a.active) || (b.signal - a.signal)).slice(0, 30);
@@ -92,6 +92,19 @@ const api = {
   },
   async "POST /wifi/connect"(b) {
     if (!okSSID(b.ssid)) throw new Error("That network name doesn't look right.");
+    // school and work networks (WPA2/WPA3-Enterprise): a username and a password, the usual PEAP with MSCHAPv2
+    if (b.username != null) {
+      const user = String(b.username), pw = String(b.password || "");
+      if (!user || user.length > 128 || /[\x00-\x1f]/.test(user)) throw new Error("Type your username.");
+      if (!pw || pw.length > 128 || /[\x00-\x1f]/.test(pw)) throw new Error("Type your password.");
+      if (FAKE) { if (b.ssid === "School Net" && !(user === "student" && pw === "schoolpass")) throw new Error("The username or password is wrong."); fake.conn = b.ssid; return { ok: true }; }
+      await run("nmcli", ["connection", "delete", "id", b.ssid], 10000);
+      const add = await run("nmcli", ["connection", "add", "type", "wifi", "con-name", b.ssid, "ssid", b.ssid, "wifi-sec.key-mgmt", "wpa-eap", "802-1x.eap", "peap", "802-1x.phase2-auth", "mschapv2", "802-1x.identity", user, "802-1x.password", pw], 20000);
+      if (!add.ok) throw new Error(cleanErr(add.err));
+      const up = await run("nmcli", ["connection", "up", "id", b.ssid], 60000);
+      if (!up.ok) { await run("nmcli", ["connection", "delete", "id", b.ssid], 10000); const e = cleanErr(up.err + " " + up.out); throw new Error(/secrets|auth|password|802-1x/i.test(e) ? "The username or password is wrong." : e); }
+      return { ok: true };
+    }
     if (!okPass(b.password)) throw new Error("Wi-Fi passwords are 8 to 63 characters.");
     if (FAKE) { if (b.ssid === "Neighbor 5G" && b.password !== "rightpass1") throw new Error("The password is wrong."); fake.conn = b.ssid; return { ok: true }; }
     const args = ["device", "wifi", "connect", b.ssid]; if (b.password) args.push("password", b.password);

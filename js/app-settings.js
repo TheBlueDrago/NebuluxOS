@@ -243,7 +243,7 @@
         if (!w.device) { b.innerHTML = `<p class="s-note">${NX.esc(w.error || "This computer has no Wi-Fi that Nebulux OS can use. A network cable works too.")}</p>`; return; }
         if (!w.on) { b.innerHTML = `<p class="s-note">${NX.esc(w.error || "Wi-Fi is off. Turn it on to see networks near you.")}</p>`; return; }
         nets = w.networks;
-        b.innerHTML = nets.length ? nets.map((n, i) => `<div class="s-net ${n.active ? "on" : ""}"><span class="s-sig">${NX.icon("wifi", 20)}</span><span class="s-nn"><b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"} · signal ${n.signal}%</small></span>${n.active ? `<button class="btn" data-wprop="1">Properties</button>` : ""}<button class="btn ${n.active ? "" : "primary"}" data-wc="${i}">${n.active ? "Disconnect" : "Connect"}</button></div>`).join("") : `<p class="s-note">No networks found yet. Press Refresh in a moment.</p>`;
+        b.innerHTML = nets.length ? nets.map((n, i) => `<div class="s-net ${n.active ? "on" : ""}"><span class="s-sig">${NX.icon("wifi", 20)}</span><span class="s-nn"><b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.enterprise ? "School or work network" : n.secure ? "Secured" : "Open"} · signal ${n.signal}%</small></span>${n.active ? `<button class="btn" data-wprop="1">Properties</button>` : ""}<button class="btn ${n.active ? "" : "primary"}" data-wc="${i}">${n.active ? "Disconnect" : "Connect"}</button></div>`).join("") : `<p class="s-note">No networks found yet. Press Refresh in a moment.</p>`;
         const wp = b.querySelector("[data-wprop]"); if (wp) wp.onclick = async () => {
           const row = wp.closest(".s-net"), old = row.nextElementSibling; if (old && old.classList.contains("s-wprops")) { old.remove(); return; }
           let d; try { d = await NX.api("GET", "/wifi/details"); } catch (e) { NX.toast(e.message); return; } if (!d.ssid) return;
@@ -260,12 +260,21 @@
           if (!n.secure) { btn.disabled = true; btn.textContent = "Connecting..."; connect("", (m) => { btn.disabled = false; btn.textContent = "Connect"; NX.toast(m); }); return; }
           if (row.querySelector(".s-pwf")) { row.querySelector(".s-pwf input").focus(); return; }
           btn.hidden = true;
-          row.insertAdjacentHTML("beforeend", `<form class="s-pwf"><input type="password" maxlength="63" placeholder="Network password" aria-label="Password for ${NX.esc(n.ssid)}" autocomplete="off"><button class="btn" type="button" data-show aria-label="Show password">Show</button><button class="btn primary" type="submit">Connect</button><button class="btn" type="button" data-cancel="1">Cancel</button><p class="s-msg"></p></form>`);
-          const f = row.querySelector(".s-pwf"), pi = f.querySelector("input"), sub = f.querySelector("[type=submit]"), cancel = f.querySelector("[data-cancel]"), msg = f.querySelector(".s-msg"); pi.focus();
+          const userBox = n.enterprise ? `<input class="s-pwu" maxlength="128" placeholder="Username" aria-label="Username for ${NX.esc(n.ssid)}" autocomplete="username">` : "";
+          row.insertAdjacentHTML("beforeend", `<form class="s-pwf">${userBox}<input type="password" maxlength="${n.enterprise ? 128 : 63}" placeholder="${n.enterprise ? "Password" : "Network password"}" aria-label="Password for ${NX.esc(n.ssid)}" autocomplete="off"><button class="btn" type="button" data-show aria-label="Show password">Show</button><button class="btn primary" type="submit">Connect</button><button class="btn" type="button" data-cancel="1">Cancel</button><p class="s-msg"></p></form>`);
+          const f = row.querySelector(".s-pwf"), pu = f.querySelector(".s-pwu"), pi = f.querySelector("input[type=password]"), sub = f.querySelector("[type=submit]"), cancel = f.querySelector("[data-cancel]"), msg = f.querySelector(".s-msg"); (pu || pi).focus();
           cancel.onclick = () => { f.remove(); btn.hidden = false; };
           const sh = f.querySelector("[data-show]"); if (sh) sh.onclick = () => { const v = pi.type === "password"; pi.type = v ? "text" : "password"; sh.textContent = v ? "Hide" : "Show"; pi.focus(); };
           f.onsubmit = (e) => {
-            e.preventDefault(); if (pi.value.length < 8) { msg.textContent = "Wi-Fi passwords are at least 8 characters."; return; }
+            e.preventDefault();
+            if (pu) { // a school or work network: a username and a password
+              if (!pu.value.trim() || !pi.value) { msg.textContent = "Type your username and password."; return; }
+              sub.disabled = true; sub.textContent = "Connecting..."; cancel.hidden = true; msg.textContent = ""; wifiBusy = true;
+              NX.api("POST", "/wifi/connect", { ssid: n.ssid, username: pu.value.trim(), password: pi.value }).then(() => { wifiBusy = false; NX.toast("Connected to " + n.ssid + "."); fillWifi(); })
+                .catch((er) => { wifiBusy = false; sub.disabled = false; sub.textContent = "Connect"; cancel.hidden = false; pi.value = ""; pi.focus(); msg.textContent = er.message; });
+              return;
+            }
+            if (pi.value.length < 8) { msg.textContent = "Wi-Fi passwords are at least 8 characters."; return; }
             sub.disabled = true; sub.textContent = "Connecting..."; cancel.hidden = true; pi.disabled = true; msg.textContent = "";
             connect(pi.value, (m) => { sub.disabled = false; sub.textContent = "Connect"; cancel.hidden = false; pi.disabled = false; pi.value = ""; pi.focus(); msg.textContent = m; });
           };

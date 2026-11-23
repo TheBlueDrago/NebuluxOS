@@ -35,7 +35,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await require("./setup.cjs")(p, "Ada", "nebula1", ok, { network: async () => {
     ok(await until(() => p.evaluate(() => /Turn on Wi-Fi/.test((document.querySelector("#oobe .ob-fix") || {}).textContent || ""))), "with Wi-Fi off, setup offers Turn on Wi-Fi");
     await p.evaluate(() => document.querySelector("#oobe .ob-fix").click());
-    ok(await until(() => p.evaluate(() => document.querySelectorAll("#oobe .ob-net").length === 3)), "and then lists the networks nearby");
+    ok(await until(() => p.evaluate(() => document.querySelectorAll("#oobe .ob-net").length === 4)), "and then lists the networks nearby");
     await p.evaluate(() => { NX.online = NX.realOnline; });
   } });
   ok(await p.evaluate(() => !document.querySelector("#desktop").hidden), "signed in");
@@ -43,7 +43,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // Wi-Fi
   await p.evaluate(() => NX.open("settings", { page: "network" })); await wait(400);
-  ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-wlist .s-net").length === 3)), "Settings lists the Wi-Fi networks nearby");
+  ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-wlist .s-net").length === 4)), "Settings lists the Wi-Fi networks nearby");
   ok(/Connected to Home Wi-Fi/.test(await txt()), "and says which one this computer is on");
   const connectTo = (name) => p.evaluate((name) => { const r = [...document.querySelectorAll("#s-wlist .s-net")].find((x) => x.querySelector("b").textContent === name); r.querySelector("[data-wc]").click(); }, name);
   await connectTo("Neighbor 5G"); await wait(200);
@@ -265,7 +265,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => /No network called Hidden Lb answered/.test(document.querySelector("#s-hidmsg").textContent))), "a hidden network with the wrong name says so");
   await p.evaluate(() => { const i = document.querySelector("#s-hidf [name=ssid]"); i.value = "Hidden Lab"; document.querySelector("#s-hidf [type=submit]").click(); });
   ok(await until(() => p.evaluate(() => document.querySelector("#s-hidf").hidden)), "joining a hidden network connects");
-  await until(() => p.evaluate(() => document.querySelectorAll("#s-wlist .s-net").length > 0));
+  await until(() => p.evaluate(() => [...document.querySelectorAll("#s-wlist .s-net")].some((x) => /School Net/.test(x.textContent))));
+  ok(await p.evaluate(() => /School or work network/.test([...document.querySelectorAll("#s-wlist .s-net")].find((x) => /School Net/.test(x.textContent)).textContent)), "school and work networks are marked as such");
+  await p.evaluate(() => [...document.querySelectorAll("#s-wlist .s-net")].find((x) => /School Net/.test(x.textContent)).querySelector("[data-wc]").click()); await wait(200);
+  ok(await p.evaluate(() => !!document.querySelector("#s-wlist .s-pwf .s-pwu")), "and ask for a username as well as a password");
+  await p.type("#s-wlist .s-pwf .s-pwu", "student"); await p.type("#s-wlist .s-pwf input[type=password]", "wrongpass"); await p.evaluate(() => document.querySelector("#s-wlist .s-pwf [type=submit]").click());
+  ok(await until(() => p.evaluate(() => /username or password is wrong/.test((document.querySelector("#s-wlist .s-pwf .s-msg") || {}).textContent || ""))), "a wrong school password says so");
+  await p.type("#s-wlist .s-pwf input[type=password]", "schoolpass"); await p.evaluate(() => document.querySelector("#s-wlist .s-pwf [type=submit]").click());
+  ok(await until(async () => (await fake()).conn === "School Net"), "the right username and password connect to the school network");
+  await until(() => p.evaluate(() => [...document.querySelectorAll("#s-wlist .s-net")].some((x) => x.textContent.includes("School Net") && x.textContent.includes("Connected")))); await wait(400);
   await p.evaluate(() => { const r = [...document.querySelectorAll("#s-wlist .s-net")].find((x) => /Neighbor 5G/.test(x.textContent)); r.querySelector("[data-wc]").click(); }); await wait(200);
   await p.evaluate(() => document.querySelector("#s-wlist .s-pwf [data-show]").click());
   ok(await p.evaluate(() => document.querySelector("#s-wlist .s-pwf input").type === "text" && document.querySelector("#s-wlist .s-pwf [data-show]").textContent === "Hide"), "Show password shows the Wi-Fi password while typing it");
