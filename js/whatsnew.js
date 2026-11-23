@@ -1,8 +1,12 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.4";
+  NX.version = "3.5";
   NX.whatsNew = [
+    ["Join the hotspot with a QR code", "When Mobile hotspot is on, Settings shows a QR code. Point your phone's camera at it to join without typing the password."],
+    ["Clean up your USB", "Settings > System > Storage can clean up temporary files (website and app caches, and app parts nothing uses) and says how much space it freed. Your files, sign-ins and settings stay."],
+    ["Draw on screenshots", "Snipping Tool has Draw: mark up a screenshot with four pen colors and Undo, then save it as a copy."],
+    ["A large mouse pointer", "Settings > Accessibility > Large mouse pointer gives you a bigger arrow, hand and text cursor that are easier to see."],
     ["Auto mode", "Settings > Personalization > Choose your mode has Auto: light windows and menus from 7 AM, dark from 7 PM."],
     ["Weather on the lock screen", "The lock screen shows the weather under the date."],
     ["World clocks", "The Clock app shows the time in other cities, like London or Tokyo, and how far ahead or behind they are."],
@@ -70,6 +74,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Camera");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Auto mode");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
