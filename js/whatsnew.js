@@ -1,8 +1,12 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.7";
+  NX.version = "3.8";
   NX.whatsNew = [
+    ["Sticky notes on your desktop", "Press the pin on a sticky note to put it on your desktop. Type in it, drag it by the top, and take it off with its x."],
+    ["Star Tiles", "A new sliding puzzle game in the Nebulux Store: put the tiles in order from 1 to 15. Works without the internet, and keeps your best."],
+    ["Countdowns", "Clock > Countdown counts the days to a birthday, a trip or the last day of school."],
+    ["Find your apps", "Settings > Apps has a search box."],
     ["Tabs in Notepad", "Keep several notes and text files open in one Notepad. Each tab is named from its first line, and your tabs come back next time."],
     ["Edit your photos", "Photos > Edit changes brightness, contrast and color, adds a look like Black and white, Warm or Vintage, rotates, and saves a copy."],
     ["Shapes and Fill in Paint", "Draw lines, boxes and circles, and pour color into any shape with Fill. The canvas now fills the whole window."],
@@ -84,6 +88,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Keep a window on top");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Tabs in Notepad");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

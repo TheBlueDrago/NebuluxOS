@@ -66,7 +66,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=clock] .wc-row"); return !!r && /Tokyo/.test(r.textContent) && /\d/.test(r.querySelector("strong").textContent) && /Today|Tomorrow|Yesterday/.test(r.textContent); }), "Clock shows the time in another city");
   await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-wcdel]").click()); await wait(1200);
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=clock] .wc-row") && NX.data("world-clocks", []).length === 0), "and removes it");
-  await p.evaluate(() => NX.closeAll());
+  // Clock: a countdown to a day 10 days from now
+  await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-v=cd]").click()); await wait(300);
+  await p.evaluate(() => { const f = document.querySelector(".win[data-app=clock] .cd-new"), d = new Date(); d.setDate(d.getDate() + 10); f.n.value = "Trip"; f.d.value = d.toLocaleDateString("en-CA"); f.requestSubmit(); }); await wait(300);
+  ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=clock] .cd-row"); return !!r && r.querySelector(".cd-n").textContent === "10" && /Trip/.test(r.textContent) && /days to go/.test(r.textContent); }), "Clock counts down the days to something: 10 days to go");
+  await shot("countdown");
+  await p.evaluate(() => { NX.setData("countdowns", []); NX.closeAll(); });
   // Calculator: the unit converter
   await p.evaluate(() => { NX.open("calculator"); }); await wait(600);
   await p.evaluate(() => document.querySelector(".win[data-app=calculator] [data-m=conv]").click()); await wait(300);

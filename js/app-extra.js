@@ -307,7 +307,7 @@
   A.clock = { name: "Clock", icon: "clock", category: "Utilities", rating: "4.6", size: "1 MB", w: 520, h: 480, minW: 340, minH: 380, desc: "The time, a stopwatch with laps, and a timer that rings when it's done.",
     open(body, win) {
       body.classList.add("clk");
-      body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button><button data-v="fo">Focus</button><button data-v="al">Alarms</button></div><div class="clk-face"></div>`;
+      body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button><button data-v="fo">Focus</button><button data-v="al">Alarms</button><button data-v="cd">Countdown</button></div><div class="clk-face"></div>`;
       let v = "clock", swOn = false, swT = 0, swAt = 0, laps = [], tmLeft = 300000, tmOn = false, tmAt = 0, tmSet = 300000;
       const face = body.querySelector(".clk-face"), f2 = (n) => String(n).padStart(2, "0");
       const fmtMs = (ms) => { ms = Math.max(0, ms); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60, cs = Math.floor(ms / 10) % 100; return (h ? h + ":" : "") + f2(m) + ":" + f2(s) + "." + f2(cs); };
@@ -340,6 +340,15 @@
             r.querySelector("[data-alon]").onchange = (e) => { NX.alarms.save(NX.alarms.list().map((a) => (a.id === id ? Object.assign({}, a, { on: e.target.checked }) : a))); draw(); };
             r.querySelector("[data-aldel]").onclick = () => { NX.alarms.save(NX.alarms.list().filter((a) => a.id !== id)); draw(); }; });
         }
+        if (v === "cd") { // countdowns to days you're waiting for (up to 8), kept for each person
+          const L = NX.data("countdowns", []), today = new Date(); today.setHours(0, 0, 0, 0);
+          const k = L.map((c) => c.id + c.date).join(";") + today.toDateString();
+          if (face.dataset.cdk !== k) { face.dataset.cdk = k;
+            face.innerHTML = `<form class="cd-new"><input name="n" maxlength="40" placeholder="Like My birthday" aria-label="Name" required><input type="date" name="d" aria-label="Date" required><button class="btn primary" type="submit">Add</button></form><div class="cd-list">${L.length ? L.map((c) => { const d = new Date(c.date + "T00:00"), n = Math.round((d - today) / 864e5); return `<div class="cd-row"><b class="cd-n">${n > 0 ? n : n === 0 ? "Today" : Math.abs(n)}</b><span><b>${NX.esc(c.name)}</b><small>${n > 1 ? "days to go" : n === 1 ? "day to go" : n === 0 ? "It's today!" : "days ago"} · ${d.toLocaleDateString(undefined, { weekday: "short", month: "long", day: "numeric", year: "numeric" })}</small></span><button class="btn sm" data-cddel="${c.id}" aria-label="Remove ${NX.esc(c.name)}">${NX.icon("close", 12)}</button></div>`; }).join("") : `<p class="clk-sub">Count the days to a birthday, a trip or the last day of school.</p>`}</div>`;
+            const f = face.querySelector(".cd-new"); f.onsubmit = (e) => { e.preventDefault(); const L2 = NX.data("countdowns", []); if (L2.length >= 8) { NX.toast("You can have up to 8 countdowns."); return; } L2.push({ id: NX.uid(), name: f.n.value.trim(), date: f.d.value }); NX.setData("countdowns", L2.sort((a, b) => a.date.localeCompare(b.date))); face.dataset.cdk = ""; draw(); };
+            face.querySelectorAll("[data-cddel]").forEach((b) => (b.onclick = () => { NX.setData("countdowns", NX.data("countdowns", []).filter((c) => c.id !== b.dataset.cddel)); face.dataset.cdk = ""; draw(); }));
+          }
+        } else face.dataset.cdk = "";
         if (v === "fo") { const on = NX.focusSession.on(), n = NX.focusSession.today();
           face.innerHTML = on ? `<div class="clk-ring" style="--p:${(1 - NX.focusSession.left() / NX.focusSession.len()) * 100}"><div class="clk-big mono">${fmtMs(NX.focusSession.left()).slice(0, -3)}</div></div><div class="clk-sub">Do not disturb is on until it's done.</div><div class="clk-btns"><button class="btn" data-a="fostop">Stop</button></div>`
             : `<div class="clk-sub" style="margin-top:6px">Focus for a while. Do not disturb stays on until it's done.</div><div class="clk-btns">${[15, 25, 45, 60].map((m) => `<button class="btn ${m === 25 ? "primary" : ""}" data-a="fo${m}">${m} min</button>`).join("")}</div><div class="clk-sub">${n ? n + (n === 1 ? " session" : " sessions") + " today" : "No focus sessions yet today"}</div>`; }
