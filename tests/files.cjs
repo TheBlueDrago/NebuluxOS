@@ -454,6 +454,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !NX.wins.get("calculator") && document.querySelector("#tb-peek").hidden), "the preview's x closes the app");
   await p.mouse.move(W / 2, H / 3); await wait(200);
 
+  // 3.2: calendar events
+  await p.evaluate(() => NX.setData("events", [])); await p.click("#tb-clock"); await wait(300);
+  await p.evaluate(() => { const f = document.querySelector("#cal .cal-add"); f.t.value = "15:30"; f.n.value = "Soccer practice"; f.querySelector("[type=submit]").click(); }); await wait(300);
+  ok(await p.evaluate(() => { const L = NX.data("events", []); return L.length === 1 && L[0].time === "15:30" && /Soccer practice/.test(document.querySelector("#cal .cal-ev").innerText) && !!document.querySelector("#cal .cal-g button.today.has"); }), "an event is added to today in the calendar, and the day gets a dot");
+  await p.evaluate(() => { const b = [...document.querySelectorAll("#cal [data-day]")].find((x) => !x.classList.contains("today")); b.click(); }); await wait(200);
+  ok(await p.evaluate(() => /No events/.test(document.querySelector("#cal .cal-ev").innerText)), "another day shows its own events");
+  await p.keyboard.press("Escape"); await wait(200);
+  ok(await p.evaluate(() => { const e = NX.data("events", [])[0]; const d = new Date(e.date + "T15:30"); NX.eventsTick(d); NX.eventsTick(d); return NX.data("events", [])[0].told === "1" && NX.notes.some((n) => /Now: Soccer practice/.test(n.text)); }), "you get a reminder when it starts, once");
+  await p.evaluate(() => NX.setData("events", []));
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

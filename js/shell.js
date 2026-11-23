@@ -191,12 +191,12 @@
   function peek(b) {
     const id = b.dataset.app, w = NX.wins.get(id); if (!w || !document.body.contains(b)) { peekHide(); return; }
     let P = $("#tb-peek"); if (!P) { P = document.createElement("div"); P.id = "tb-peek"; P.hidden = true; document.body.appendChild(P); P.onpointerenter = () => clearTimeout(peekOut); P.onpointerleave = peekLeave; }
-    const title = w.el.querySelector(".wt-name").textContent, W = 220, r = w.el.getBoundingClientRect(), k = W / Math.max(1, r.width), H = Math.round(Math.min(140, r.height * k));
+    const title = w.el.querySelector(".wt-name").textContent, W = 220, r = w.el.getBoundingClientRect(), k = Math.min(W / Math.max(1, r.width), 140 / Math.max(1, r.height)), H = Math.round(Math.max(60, Math.min(140, r.height * k)));
     P.innerHTML = `<div class="pk-top">${NX.icon(w.app.icon || id, 16)}<span>${NX.esc(title)}</span><button class="pk-x" aria-label="Close ${NX.esc(w.app.name)}">${NX.icon("close", 12)}</button></div><div class="pk-shot" style="height:${H}px"></div>`;
     // a still picture of the window (a copy, so nothing in it runs); web pages show the app's icon instead
     const shot = P.querySelector(".pk-shot");
     if (w.el.querySelector("iframe") || w.min || !r.width) shot.innerHTML = `<div class="pk-ico">${NX.icon(w.app.icon || id, 44)}</div>`;
-    else { const c = w.el.cloneNode(true); c.removeAttribute("id"); c.removeAttribute("data-app"); c.removeAttribute("role"); c.classList.add("pk-clone"); c.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id")); c.classList.remove("opening", "closing", "minimized", "offdesk"); Object.assign(c.style, { position: "absolute", left: "0", top: "0", width: r.width + "px", height: r.height + "px", transform: "scale(" + k + ")", transformOrigin: "0 0", pointerEvents: "none", zIndex: 0, margin: 0 }); c.setAttribute("aria-hidden", "true"); c.inert = true; shot.appendChild(c); }
+    else { const c = w.el.cloneNode(true); c.removeAttribute("id"); c.removeAttribute("data-app"); c.removeAttribute("role"); c.classList.add("pk-clone"); c.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id")); c.classList.remove("opening", "closing", "minimized", "offdesk"); Object.assign(c.style, { position: "absolute", left: "0", top: "0", width: r.width + "px", height: r.height + "px", transform: "translateX(" + Math.round((W - r.width * k) / 2) + "px) scale(" + k + ")", transformOrigin: "0 0", pointerEvents: "none", zIndex: 0, margin: 0 }); c.setAttribute("aria-hidden", "true"); c.inert = true; shot.appendChild(c); }
     P.querySelector(".pk-x").onclick = (e) => { e.stopPropagation(); peekHide(); NX.close(id); };
     P.onclick = () => { peekHide(); if (NX.browserHide) NX.browserHide(); NX.focus(id); };
     const br = b.getBoundingClientRect(); P.hidden = false; const pw = P.offsetWidth;
@@ -412,16 +412,38 @@
     }
   }
   let calM = null;
+  // events: a reminder when one starts (checked every 15 seconds)
+  let calSel = null;
+  function eventsTick(now) {
+    if (!NX.me) return; const d = now || new Date(), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    const L = NX.data("events", []); let ch = false;
+    for (const e of L) if (e.date === k && e.time === hm && !e.told) { e.told = "1"; ch = true; NX.toast("Now: " + e.title); if (NX.beep) NX.beep(); }
+    if (ch) NX.setData("events", L);
+  }
+  setInterval(() => eventsTick(), 15000);
+  NX.eventsTick = eventsTick;
   function calDraw() {
     const now = new Date(), m = calM || new Date(now.getFullYear(), now.getMonth(), 1), first = new Date(m.getFullYear(), m.getMonth(), 1), days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
     let cells = ""; for (let i = 0; i < first.getDay(); i++) cells += "<span></span>";
-    for (let d = 1; d <= days; d++) { const today = d === now.getDate() && m.getMonth() === now.getMonth() && m.getFullYear() === now.getFullYear(); cells += `<span class="${today ? "today" : ""}">${d}</span>`; }
+    const ev = NX.data("events", []), key = (y, mo, d) => y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+    const todayKey = key(now.getFullYear(), now.getMonth(), now.getDate()); calSel = calSel || todayKey;
+    for (let d = 1; d <= days; d++) { const k = key(m.getFullYear(), m.getMonth(), d), today = k === todayKey; cells += `<button class="${today ? "today" : ""} ${k === calSel ? "sel" : ""} ${ev.some((e) => e.date === k) ? "has" : ""}" data-day="${k}" aria-label="${k}">${d}</button>`; }
+    const dayEv = ev.filter((e) => e.date === calSel).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+    const selD = new Date(calSel + "T12:00");
     const notes = NX.notes.slice(0, 8);
     NX.unread = 0; const bd = document.getElementById("tb-badge"); if (bd) bd.hidden = true;
     $("#cal").innerHTML = `<div class="nc"><div class="nc-h"><b>Notifications</b>${notes.length ? `<button class="nc-clear">Clear all</button>` : ""}</div>${notes.length ? notes.map((n) => `<div class="nc-item">${NX.icon("logo", 18)}<span>${NX.esc(n.text)}<small>${new Date(n.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</small></span></div>`).join("") : `<p class="nc-none">No new notifications</p>`}${NX.prefs().dnd ? `<p class="nc-dnd">Do not disturb is on. Notifications wait here.</p>` : ""}</div><div class="cal-top"><b>${now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</b></div><div class="cal-h"><span>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</span><button data-m="-1" aria-label="Previous month">${NX.icon("up", 14)}</button><button data-m="1" aria-label="Next month" class="dn">${NX.icon("up", 14)}</button></div>
-      <div class="cal-g">${["S", "M", "T", "W", "T", "F", "S"].map((x) => `<i>${x}</i>`).join("")}${cells}</div>`;
+      <div class="cal-g">${["S", "M", "T", "W", "T", "F", "S"].map((x) => `<i>${x}</i>`).join("")}${cells}</div>
+      <div class="cal-ev"><b>${calSel === todayKey ? "Today" : selD.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</b>
+        ${dayEv.length ? dayEv.map((e) => `<div class="cal-e"><span class="cal-et">${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : "All day"}</span><span class="cal-en">${NX.esc(e.title)}</span><button data-evdel="${e.id}" aria-label="Delete event">${NX.icon("close", 12)}</button></div>`).join("") : `<p class="cal-none">No events</p>`}
+        <form class="cal-add"><input name="t" type="time" aria-label="Time (optional)"><input name="n" maxlength="60" placeholder="Add an event" aria-label="Event name"><button class="btn sm primary" type="submit">Add</button></form></div>`;
     const ncc = $("#cal .nc-clear"); if (ncc) ncc.onclick = (e) => { e.stopPropagation(); NX.notes.length = 0; calDraw(); };
     $("#cal").querySelectorAll("[data-m]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); calM = new Date(m.getFullYear(), m.getMonth() + +b.dataset.m, 1); calDraw(); }));
+    $("#cal").querySelectorAll("[data-day]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); calSel = b.dataset.day; calDraw(); }));
+    $("#cal").querySelectorAll("[data-evdel]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); NX.setData("events", NX.data("events", []).filter((x) => x.id !== b.dataset.evdel)); calDraw(); }));
+    const af = $("#cal .cal-add"); af.onclick = (e) => e.stopPropagation();
+    af.onsubmit = (e) => { e.preventDefault(); const t = af.n.value.trim(); if (!t) { af.n.focus(); return; } const L = NX.data("events", []); if (L.length >= 300) { NX.toast("That's a lot of events. Delete some old ones first."); return; }
+      L.push({ id: NX.uid(), date: calSel, time: /^\d\d:\d\d$/.test(af.t.value) ? af.t.value : "", title: t.slice(0, 60), told: "" }); NX.setData("events", L); calDraw(); const n2 = $("#cal .cal-add [name=n]"); if (n2) n2.focus(); };
   }
 
   // ---------- wiring ----------
