@@ -7,6 +7,9 @@
   NX.native = !!N;
   NX.webFrames = !!N; // websites show inside OS windows (the USB's browser lets them)
   NX.hw = { brightness: false, volume: false };
+  // Lite glass: when the screen is drawn without the graphics chip (the USB's safe default), blurring what's behind every
+  // window, menu and the taskbar is done by the processor and makes everything feel slow. Then the glass is solid instead.
+  if (N) { const soft = (() => { try { const g = document.createElement("canvas").getContext("webgl"); if (!g) return true; const d = g.getExtension("WEBGL_debug_renderer_info"); return /swiftshader|llvmpipe|softpipe|software/i.test(d ? String(g.getParameter(d.UNMASKED_RENDERER_WEBGL)) : ""); } catch (e) { return true; } })(); NX.liteGlass = soft; if (soft) document.documentElement.classList.add("nx-lite"); }
   NX.api = async (method, path, body) => {
     if (!N) throw new Error("Only on the real Nebulux OS.");
     const r = await fetch("/api" + path, { method, headers: { "x-nx": N.token, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });

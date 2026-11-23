@@ -70,7 +70,7 @@
   function signinDraw() {
     const users = NX.users(), box = $("#lk-panel");
     if (mode === "setup") {
-      box.innerHTML = `<div class="lk-av new">${NX.icon("logo", 64)}</div><h2>${users.length ? "Add an account" : "Welcome to Nebulux OS"}</h2><p class="lk-sub">${users.length ? "Make a new account on this PC." : (NX.native ? "Make your account to get started. It stays on this computer." : "Make your account to get started. It stays on this PC, in this browser.")}</p>
+      box.innerHTML = `<div class="lk-av new">${NX.icon("logo", 120)}</div><h2>${users.length ? "Add an account" : "Welcome to Nebulux OS"}</h2><p class="lk-sub">${users.length ? "Make a new account on this PC." : (NX.native ? "Make your account to get started. It stays on this computer." : "Make your account to get started. It stays on this PC, in this browser.")}</p>
         <form class="lk-form" autocomplete="off"><input name="n" maxlength="24" placeholder="Your name" aria-label="Your name" autocomplete="username"><input name="p" type="password" maxlength="64" placeholder="Password" aria-label="Password" autocomplete="new-password"><input name="p2" type="password" maxlength="64" placeholder="Password again" aria-label="Password again" autocomplete="new-password"><button class="btn primary wide" type="submit">Make my account</button></form><p class="lk-err" role="alert"></p>
         ${users.length ? `<button class="lk-link" data-a="back">Back to sign in</button>` : ""}`;
       const f = $(".lk-form", box), er = $(".lk-err", box);

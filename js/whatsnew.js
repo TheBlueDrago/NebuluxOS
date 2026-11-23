@@ -1,8 +1,12 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.2.2";
+  NX.version = "3.2.3";
   NX.whatsNew = [
+    ["A faster screen", "On computers where Nebulux OS draws the screen without the graphics chip, windows, menus and the taskbar use solid glass instead of blurring what's behind them, so everything moves faster."],
+    ["You see apps opening", "When you open YouTube, Netflix, Steam or any other app, its logo and Opening show in the middle of the screen until its window is up, so a click never looks like it did nothing."],
+    ["Google's shortcuts with their logos", "Gmail, YouTube, Maps, Drive, News and Translate under Google's search box show their own logos."],
+    ["Small touches", "Settings > Personalization shows a tiny window and taskbar in your colors, notifications step aside instead of covering quick settings and the calendar, and setup's text boxes have one clean glow."],
     ["Apps open fast", "YouTube, Poki, Xbox Cloud Gaming and every other app now use the same safe graphics as Nebulux OS, so they load right away instead of hanging on a blank page, and they keep their cache in memory instead of writing it to the USB stick."],
     ["Xbox Cloud Gaming and GeForce NOW open right away", "They no longer wait for the movie player to install first."],
     ["Movie apps don't make you wait", "Netflix, Disney+ and the other movie apps open at once while their movie player sets itself up in the background."],
@@ -52,6 +56,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Apps open as their own apps");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Apps open fast");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

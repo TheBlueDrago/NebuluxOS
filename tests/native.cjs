@@ -111,7 +111,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const r0 = await p.evaluate(() => { const r = document.querySelector(".win[data-app=google]").getBoundingClientRect(); return { x: r.x, y: r.y }; });
   await p.mouse.move(r0.x + 300, r0.y + 18); await p.mouse.down(); await p.mouse.move(r0.x + 250, r0.y + 220, { steps: 8 }); await p.mouse.up(); await wait(200);
   const r1 = await p.evaluate(() => { const r = document.querySelector(".win[data-app=google]").getBoundingClientRect(); return { x: r.x, y: r.y }; });
-  ok(Math.abs(r1.y - r0.y - 202) < 4, "a website window drags smoothly, even over the page");
+  if (W >= 700) ok(Math.abs(r1.y - r0.y - 202) < 4, "a website window drags smoothly, even over the page"); // (phones open windows full screen)
   await p.evaluate(() => NX.close("google")); await wait(300);
 
   // web apps in their own window
