@@ -495,6 +495,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !/Quick access/.test(document.querySelector(".win[data-app=files] .fx-side").innerText)), "and unpins");
   await p.evaluate(() => NX.close("files")); await wait(300);
 
+  // 3.2: Notepad Find and Replace
+  await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(500);
+  await p.evaluate(() => { const n = NX.wins.get("notepad").np; n.ta.value = "red apple, Red car, blue sky"; n.ta.dispatchEvent(new Event("input")); n.ta.setSelectionRange(0, 0); n.ta.focus(); });
+  await p.keyboard.down("Control"); await p.keyboard.press("f"); await p.keyboard.up("Control"); await wait(200);
+  await p.keyboard.type("red"); await p.keyboard.press("Enter"); await wait(100); await p.keyboard.press("Enter"); await wait(100);
+  ok(await p.evaluate(() => { const ta = NX.wins.get("notepad").np.ta; return ta.value.slice(ta.selectionStart, ta.selectionEnd) === "Red" && ta.selectionStart === 11; }), "Ctrl + F finds words in Notepad, the next one each time");
+  await p.evaluate(() => { const w = NX.wins.get("notepad"); w.np.findOpen(true); const f = document.querySelector(".win[data-app=notepad] .np-find"); f.f.value = "red"; f.r.value = "green"; w.np.replaceAll(); }); await wait(200);
+  ok(await p.evaluate(() => NX.wins.get("notepad").np.ta.value === "green apple, green car, blue sky" && /Replaced 2/.test(document.querySelector(".win[data-app=notepad] .np-fmsg").textContent)), "Replace all replaces every one");
+  await p.evaluate(() => { const n = NX.wins.get("notepad").np; n.ta.value = ""; n.ta.dispatchEvent(new Event("input")); NX.close("notepad"); }); await wait(500);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

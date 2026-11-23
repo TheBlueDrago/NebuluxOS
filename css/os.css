@@ -853,3 +853,10 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .osd-bar{flex:1;height:4px;border-radius:2px;background:var(--card2);overflow:hidden}.osd-bar i{display:block;height:100%;background:var(--accent);border-radius:2px}
 #osd b{font-weight:600;font-size:13px;min-width:26px;text-align:right}
 .s-startup{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:4px}.s-su{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13.5px}.s-su:hover{background:var(--hover)}.s-su input{accent-color:var(--accent)}
+
+/* Notepad: Find and Replace */
+.np-find{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
+.np-find[hidden]{display:none}
+.np-find input{flex:1;min-width:120px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:13px;outline:none}
+.np-find input:focus{border-color:var(--accent)}.np-find input[hidden]{display:none}
+.np-fmsg{color:var(--sub);font-size:12px;min-width:60px}

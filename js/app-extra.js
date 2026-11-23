@@ -7,7 +7,7 @@
   A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
     open(body, win, opts) {
       body.classList.add("np");
-      body.innerHTML = `<div class="np-bar"><button class="btn sm" data-a="new">New</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
+      body.innerHTML = `<div class="np-bar"><button class="btn sm" data-a="new">New</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
       const ta = body.querySelector("textarea"), cnt = body.querySelector(".np-count"), sv = body.querySelector(".np-saved"), saveBtn = body.querySelector("[data-a=save]");
       let size = NX.data("np-size", 15), t = 0, file = null; ta.style.fontSize = size + "px";
       const title = () => { win.el.querySelector(".wt-name").textContent = (file ? NX.fs.base(file) : "Notepad"); saveBtn.hidden = !!file; };
@@ -42,6 +42,17 @@
       win.onopts = (o) => { if (o.file) openFile(o.file); };
       win.onclose = () => { flush(); };
       if (opts && opts.file) { scratch(); openFile(opts.file); } else scratch();
+      // Find (Ctrl + F) and Replace (Ctrl + H), not case-sensitive
+      const fb = body.querySelector(".np-find"), fi = fb.f, ri = fb.r, fmsg = body.querySelector(".np-fmsg");
+      const findOpen = (rep) => { fb.hidden = false; ri.hidden = !rep; fb.querySelector("[data-f=rep]").hidden = !rep; fb.querySelector("[data-f=all]").hidden = !rep; const sel = ta.value.slice(ta.selectionStart, ta.selectionEnd); if (sel && !sel.includes("\n")) fi.value = sel; fi.focus(); fi.select(); };
+      const findNext = () => { const q = fi.value; if (!q) return false; const hay = ta.value.toLowerCase(), n = q.toLowerCase(); let i = hay.indexOf(n, ta.selectionEnd); if (i < 0) i = hay.indexOf(n); if (i < 0) { fmsg.textContent = "Not found"; return false; } fmsg.textContent = ""; ta.focus(); ta.setSelectionRange(i, i + q.length); fi.focus(); return true; };
+      const replaceOne = () => { const q = fi.value; if (!q) return; if (ta.value.slice(ta.selectionStart, ta.selectionEnd).toLowerCase() !== q.toLowerCase() && !findNext()) return; ta.setRangeText(ri.value, ta.selectionStart, ta.selectionEnd, "end"); ta.dispatchEvent(new Event("input")); findNext(); };
+      const replaceAll = () => { const q = fi.value; if (!q) return; let n = 0; const low = q.toLowerCase(); let out = "", i = 0, v = ta.value, lv = v.toLowerCase(); for (;;) { const j = lv.indexOf(low, i); if (j < 0) break; out += v.slice(i, j) + ri.value; i = j + q.length; n++; } if (!n) { fmsg.textContent = "Not found"; return; } ta.value = out + v.slice(i); ta.dispatchEvent(new Event("input")); fmsg.textContent = n === 1 ? "Replaced 1" : "Replaced " + n; };
+      fb.onsubmit = (e) => { e.preventDefault(); findNext(); };
+      fb.onclick = (e) => { const b = e.target.closest("[data-f]"); if (!b) return; const k = b.dataset.f; if (k === "next") findNext(); if (k === "rep") replaceOne(); if (k === "all") replaceAll(); if (k === "close") { fb.hidden = true; fmsg.textContent = ""; ta.focus(); } };
+      fb.onkeydown = (e) => { if (e.key === "Escape") { e.stopPropagation(); fb.hidden = true; ta.focus(); } if (e.key === "Enter") { e.preventDefault(); if (e.target === ri) replaceOne(); else findNext(); } };
+      body.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^[fh]$/i.test(e.key)) { e.preventDefault(); findOpen(e.key.toLowerCase() === "h"); } if (e.key === "F3") { e.preventDefault(); findNext(); } });
+      win.np = { findOpen, findNext, replaceAll, ta };
       count(); setTimeout(() => ta.focus(), 60);
     } };
 
