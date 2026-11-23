@@ -52,6 +52,13 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   await p.keyboard.press("Escape"); ok(await p.evaluate(() => !document.querySelector("#nx-keys")), "and Escape closes it");
   await p.evaluate(() => { NX.setPref("wallpaper", 0); NX.setPref("dailyWall", true); }); await wait(300);
   ok(await p.evaluate(() => { const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000), pool = NX.wallpapers.map((w, i) => [w, i]).filter(([w]) => !w.light).map(([, i]) => i); return NX.prefs().wallpaper === pool[day % pool.length]; }), "A new background every day picks today's background");
+  // Clock: world clocks
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(700);
+  await p.type(".win[data-app=clock] .wc-add input", "Tokyo"); await p.keyboard.press("Enter"); await wait(1300); await shot("worldclock");
+  ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=clock] .wc-row"); return !!r && /Tokyo/.test(r.textContent) && /\d/.test(r.querySelector("strong").textContent) && /Today|Tomorrow|Yesterday/.test(r.textContent); }), "Clock shows the time in another city");
+  await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-wcdel]").click()); await wait(1200);
+  ok(await p.evaluate(() => !document.querySelector(".win[data-app=clock] .wc-row") && NX.data("world-clocks", []).length === 0), "and removes it");
+  await p.evaluate(() => NX.closeAll());
   // Auto mode: light by day, dark at night
   await p.evaluate(() => { NX.open("settings", { page: "personal" }); }); await wait(700);
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] [data-theme=auto]")][0].click()); await wait(300);

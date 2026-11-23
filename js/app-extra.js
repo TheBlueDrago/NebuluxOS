@@ -183,7 +183,24 @@
       const fmtMs = (ms) => { ms = Math.max(0, ms); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60, cs = Math.floor(ms / 10) % 100; return (h ? h + ":" : "") + f2(m) + ":" + f2(s) + "." + f2(cs); };
       const draw = () => {
         const now = performance.now();
-        if (v === "clock") { const d = new Date(); face.innerHTML = `<div class="clk-big">${NX.fmtTime(d, true)}</div><div class="clk-sub">${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>`; }
+        if (v === "clock") { // the time here, and world clocks for other cities (saved for each person)
+          const d = new Date();
+          if (!face.querySelector(".wc")) {
+            const zones = (Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : []).filter((z) => z.includes("/"));
+            face.innerHTML = `<div class="clk-big"></div><div class="clk-sub"></div><div class="wc"><form class="wc-add"><input list="wc-zones" placeholder="Add a city, like London or Tokyo" aria-label="Add a city"><datalist id="wc-zones">${zones.map((z) => `<option value="${NX.esc(z.split("/").pop().replace(/_/g, " "))}">${NX.esc(z.replace(/_/g, " "))}</option>`).join("")}</datalist><button class="btn" type="submit">Add</button></form><div class="wc-list"></div></div>`;
+            const f = face.querySelector(".wc-add");
+            f.onsubmit = (e) => { e.preventDefault(); const q = f.querySelector("input").value.trim().toLowerCase().replace(/ /g, "_"); if (!q) return;
+              const z = zones.find((x) => x.toLowerCase() === q) || zones.find((x) => x.split("/").pop().toLowerCase() === q) || zones.find((x) => x.toLowerCase().includes(q));
+              if (!z) { NX.toast("That city wasn't found. Try a big city near it."); return; }
+              const list = NX.data("world-clocks", []); if (!list.includes(z)) NX.setData("world-clocks", [...list, z].slice(-8)); f.querySelector("input").value = ""; face.querySelector(".wc-list").dataset.k = "redraw"; draw(); };
+            face.querySelector(".wc-list").onclick = (e) => { const b = e.target.closest("[data-wcdel]"); if (!b) return; NX.setData("world-clocks", NX.data("world-clocks", []).filter((x) => x !== b.dataset.wcdel)); face.querySelector(".wc-list").dataset.k = "redraw"; draw(); };
+          }
+          face.querySelector(".clk-big").textContent = NX.fmtTime(d, true); face.querySelector(".clk-sub").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+          const list = NX.data("world-clocks", []), box = face.querySelector(".wc-list"), here = d.toLocaleDateString("en-CA");
+          const rows = list.map((z) => { let t = "", day = "", off = ""; try { t = d.toLocaleTimeString([], { timeZone: z, hour: "numeric", minute: "2-digit" }); const ds = d.toLocaleDateString("en-CA", { timeZone: z }); day = ds === here ? "Today" : ds > here ? "Tomorrow" : "Yesterday"; const loc = new Date(d.toLocaleString("en-US", { timeZone: z })), mine = new Date(d.toLocaleString("en-US")); const h = Math.round((loc - mine) / 1800000) / 2; off = h === 0 ? "Same time" : (h > 0 ? "+" : "") + h + (Math.abs(h) === 1 ? " hour" : " hours"); } catch (e) { t = "?"; } return [z, t, day, off]; });
+          const k = rows.map((r) => r.join("|")).join(";");
+          if (box.dataset.k !== k) { box.dataset.k = k; box.innerHTML = rows.length ? rows.map(([z, t, day, off]) => `<div class="wc-row"><span><b>${NX.esc(z.split("/").pop().replace(/_/g, " "))}</b><small>${day} · ${off}</small></span><strong>${NX.esc(t)}</strong><button class="btn sm" data-wcdel="${NX.esc(z)}" aria-label="Remove ${NX.esc(z.split("/").pop().replace(/_/g, " "))}">${NX.icon("close", 12)}</button></div>`).join("") : `<p class="clk-sub">Add cities to see their time.</p>`; }
+        }
         if (v === "sw") { const t = swT + (swOn ? now - swAt : 0); face.innerHTML = `<div class="clk-big mono">${fmtMs(t)}</div><div class="clk-btns"><button class="btn primary" data-a="sws">${swOn ? "Pause" : "Start"}</button><button class="btn" data-a="swl" ${swOn ? "" : "disabled"}>Lap</button><button class="btn" data-a="swr">Reset</button></div><ol class="clk-laps">${laps.map((l, i) => `<li><span>Lap ${laps.length - i}</span><b>${fmtMs(l)}</b></li>`).join("")}</ol>`; }
         if (v === "al") { const L = NX.alarms.list();
           face.innerHTML = `<form class="al-new"><input type="time" name="t" value="07:00" aria-label="Time" required><input name="n" maxlength="40" placeholder="Name (optional)" aria-label="Name"><span class="al-days">${NX.alarms.days.map((x, i) => `<label><input type="checkbox" value="${i}"><span>${x}</span></label>`).join("")}</span><button class="btn primary" type="submit">Add alarm</button></form>

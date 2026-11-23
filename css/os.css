@@ -1012,3 +1012,9 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 /* the lock screen's weather, under the date */
 #lk-wx{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;font-size:18px;color:#fff;text-shadow:0 2px 12px #0008}
 #lk-wx[hidden]{display:none}
+/* Clock: world clocks */
+.wc{width:100%;max-width:440px;margin:18px auto 0;display:flex;flex-direction:column;gap:10px}
+.wc-add{display:flex;gap:8px}.wc-add input{flex:1;min-width:0;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:14px}
+.wc-list{display:flex;flex-direction:column;gap:6px}
+.wc-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.wc-row span{flex:1;display:flex;flex-direction:column;min-width:0}.wc-row small{color:var(--sub);font-size:12px}.wc-row strong{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
