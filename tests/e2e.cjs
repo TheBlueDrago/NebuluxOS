@@ -39,9 +39,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // windows
   const box = () => p.evaluate(() => { const r = document.querySelector(".win[data-app=settings]").getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
-  const b0 = await box();
+  await wait(450); const b0 = await box(); // (after the window has finished opening)
   await p.mouse.move(b0.x + 200, b0.y + 18); await p.mouse.down(); await p.mouse.move(b0.x + 120, b0.y + 60, { steps: 6 }); await p.mouse.up(); await wait(200);
-  const b1 = await box(); ok(Math.abs(b1.x - (b0.x - 80)) < 3 && Math.abs(b1.y - (b0.y + 42)) < 3, "a window drags by its title bar");
+  const b1 = await box(); if (process.env.DBG) console.log("drag", JSON.stringify(b0), JSON.stringify(b1)); ok(Math.abs(b1.x - (b0.x - 80)) < 3 && Math.abs(b1.y - (b0.y + 42)) < 3, "a window drags by its title bar");
   await p.mouse.move(b1.x + b1.w - 6, b1.y + b1.h - 6); await p.mouse.down(); await p.mouse.move(b1.x + b1.w + 60, b1.y + b1.h + 40, { steps: 5 }); await p.mouse.up(); await wait(200);
   const b2 = await box(); ok(b2.w > b1.w + 40 && b2.h > b1.h + 20, "a window resizes from its corner (" + [b1.w, b1.h, b2.w, b2.h].map(Math.round) + ")");
   if (!(b2.w > b1.w + 40)) console.log("  corner hits:", await p.evaluate((x, y) => document.elementsFromPoint(x, y).slice(0, 3).map((e) => e.className && e.className.baseVal == null ? e.className : e.tagName).join(" | "), b1.x + b1.w - 1, b1.y + b1.h - 1));
