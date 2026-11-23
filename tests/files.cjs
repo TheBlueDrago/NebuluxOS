@@ -413,6 +413,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.querySelector(".win[data-app=calculator] .c-val").textContent === "42" && document.querySelector(".win[data-app=calculator] .c-expr").textContent.includes("12 + 30")), "clicking an answer in History uses it again");
   await p.evaluate(() => NX.close("calculator")); await wait(300);
 
+  // 3.2: your own picture as the background
+  await p.evaluate(async () => { const c = document.createElement("canvas"); c.width = 2400; c.height = 1600; const g = c.getContext("2d"); g.fillStyle = "#1e90ff"; g.fillRect(0, 0, 2400, 1600); const b = await new Promise((r) => c.toBlob(r, "image/png")); await NX.setWallpaperFile(new File([b], "sky.png", { type: "image/png" })); }); await wait(400);
+  ok(await p.evaluate(() => NX.prefs().wallpaper === "custom" && getComputedStyle(document.documentElement).getPropertyValue("--wall").includes("data:image/jpeg")), "Browse photos makes your own picture the background (resized)");
+  await p.evaluate(() => NX.open("settings", { page: "personal" })); await wait(400);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=settings] [data-wallc].on") && !!document.querySelector(".win[data-app=settings] #s-wallfile")), "Personalization shows your picture and Browse photos");
+  await p.evaluate(() => { document.querySelector(".win[data-app=settings] [data-wall=\"0\"]").click(); }); await wait(300);
+  ok(await p.evaluate(() => NX.prefs().wallpaper === 0), "and a built-in background can be picked again");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

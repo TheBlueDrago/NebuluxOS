@@ -15,6 +15,8 @@
     ["Night light on a schedule", "Settings > System: night light comes on and goes off by itself at the hours you pick."],
     ["Storage", "Settings > System > Storage shows how much space is left on your USB, what uses it, and empties the Recycle Bin."],
     ["Get Started", "A quick tour of Nebulux OS with every shortcut. Open it from Start."],
+    ["Your own background", "Settings > Personalization > Browse photos makes any picture your background."],
+    ["Photos, Calculator and more", "Photos plays a slideshow, Calculator keeps a history of answers (and Ctrl + C copies one), color filters (grayscale or inverted) are in Accessibility, and the far right corner of the taskbar shows the desktop."],
     ["A smarter lock screen and Widgets", "The lock screen shows Wi-Fi and the battery. Widgets show your Sticky Notes and the battery."],
     ["Updates by themselves", "Nebulux OS now finds its own updates. Install them tonight (Later), get a reminder in 30 minutes, or skip one (Never) and install it any time from Settings > Nebulux Update."],
     ["Real apps in the Nebulux Store", "Steam, Minecraft, Spotify, Discord, Zoom, Slack, Telegram, VLC, OBS Studio, GIMP, Krita, Blender, LibreOffice, Firefox, Google Chrome, Visual Studio Code, Signal and Audacity install as real apps. Netflix, WhatsApp, Office and about 60 more open as web apps in their own windows."],

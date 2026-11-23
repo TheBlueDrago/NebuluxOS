@@ -11,5 +11,8 @@
     { name: "Daybreak", sky: ["#bfdcff", "#f5e1ff"], clouds: ["#93c5fd", "#f9a8d4", "#c4b5fd"], ring: "#ffffff", light: true },
   ];
   // ready-made pictures (painting them at start-up was slow without graphics acceleration); one picture for every size
-  NX.wallpaperURL = (i) => { i = ((i | 0) % NX.wallpapers.length + NX.wallpapers.length) % NX.wallpapers.length; return new URL("img/wall-" + i + ".jpg", location.href).href; }; // a full address: CSS would read a short one from the css folder
+  // your own picture (Settings > Personalization > Browse photos) is wallpaper "custom", kept for each person
+  const own = () => (NX.me && NX.data ? NX.data("wall-custom", null) : null);
+  NX.wallpaperURL = (i, ...r) => (i === "custom" ? own() || builtIn(0) : builtIn(i, ...r));
+  const builtIn = (i) => { i = ((i | 0) % NX.wallpapers.length + NX.wallpapers.length) % NX.wallpapers.length; return new URL("img/wall-" + i + ".jpg", location.href).href; }; // a full address: CSS would read a short one from the css folder
 })();

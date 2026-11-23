@@ -800,3 +800,4 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .c-hi small{color:var(--sub);font-size:12px}.c-hi b{font-size:20px;font-weight:600}
 .c-hclear{align-self:center;margin-top:8px}.c-hnone{color:var(--sub);text-align:center;margin-top:30px;font-size:14px}
 .qs-fixw{display:flex;justify-content:center;padding:4px 0 8px}
+.s-browse{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}.s-browse .s-rt{display:flex;flex-direction:column;gap:2px}.s-browse small{color:var(--sub)}.s-browse .btn{cursor:pointer}

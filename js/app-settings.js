@@ -18,6 +18,20 @@
     { id: "about", name: "About", icon: "info", under: "system" },
   ];
   NX.settingsPages = PAGES;
+  NX.setWallpaperFile = (file) => new Promise((done, fail) => {
+    if (!String(file.type || "").startsWith("image/")) { fail(new Error("Pick a picture (JPG, PNG, WebP or GIF).")); return; }
+    if (file.size > 40 * 1048576) { fail(new Error("That picture is too big. Pick one under 40 MB.")); return; }
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1920 / img.naturalWidth, 1200 / img.naturalHeight), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      let data = c.toDataURL("image/jpeg", 0.86); if (data.length > 1.6e6) data = c.toDataURL("image/jpeg", 0.7);
+      try { NX.setData("wall-custom", data); NX.setPref("wallpaper", "custom"); NX.toast("Your picture is your background now."); done(); } catch (e) { fail(new Error("There isn't room to keep that picture. Try a smaller one.")); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fail(new Error("That picture couldn't be opened.")); };
+    img.src = url;
+  });
   NX.settingsWords = { system: "display brightness night light schedule screen tv hdmi sound volume speakers storage space disk usb full clipboard history power battery saver", devices: "bluetooth mouse pointer speed headphones keyboard", network: "wifi wi-fi internet airplane network troubleshoot fix driver hidden known forget password", personal: "background wallpaper dark light mode color accent taskbar transparency", apps: "uninstall installed apps", accounts: "password name account user", time: "clock 24-hour time zone language", access: "accessibility animations scrollbars color filters grayscale invert", privacy: "privacy weather location recent files", update: "update version", about: "about pc kernel memory processor specifications" };
   // a row that goes to another page, with an arrow (like Windows 11)
   const link = (icon, title, sub, to) => `<button class="s-row s-link" data-p="${to}">${icon ? `<span class="s-ri">${NX.icon(icon, 20)}</span>` : ""}<span class="s-rt"><b>${title}</b>${sub ? `<small>${sub}</small>` : ""}</span><span class="s-rc">${NX.icon("chevron", 14)}</span></button>`;
@@ -76,7 +90,8 @@
         if (pg === "devices") return devicesMouse(p) + `<h3>Bluetooth</h3>${NX.native ? nativeBt(p) : `${row("bt", "Bluetooth", p.airplane ? "Airplane mode is on" : p.bt ? (navigator.bluetooth ? "On. Add a device to connect it." : "This browser can't reach Bluetooth devices. Try Edge or Chrome on a computer.") : "Off", toggle("bt", p.bt && !p.airplane))}
           ${p.bt && !p.airplane ? `<div class="s-card"><div class="s-bth"><b>Bluetooth devices</b><button class="btn primary" id="s-btadd" ${navigator.bluetooth ? "" : "disabled"}>Add device</button></div>${(NX.data("bt-devices", []).length ? NX.data("bt-devices", []).map((d, i) => `<div class="s-user">${NX.icon("bt", 20)}<b>${NX.esc(d.name)}</b><span class="s-tag">${d.at}</span><button class="btn" data-btrm="${i}">Remove</button></div>`).join("") : `<p class="s-note">No devices yet. Add device opens your browser's Bluetooth list, where you pick a device near you.</p>`)}<p class="s-msg" id="s-btmsg"></p></div>` : ""}`}`;
         if (pg === "personal") return `<div class="s-preview" style="background-image:url(${NX.wallpaperURL(p.wallpaper, 560, 315)})"><div class="s-pv-task"></div><div class="s-pv-win ${p.theme}"></div></div>
-          <h3>Background</h3><div class="s-walls">${NX.wallpapers.map((w, i) => `<button class="s-wall ${i === p.wallpaper ? "on" : ""}" data-wall="${i}" title="${w.name}" aria-label="${w.name}"><img src="${NX.wallpaperURL(i, 192, 108)}" alt=""><span>${w.name}</span></button>`).join("")}</div>
+          <h3>Background</h3><div class="s-walls">${NX.wallpapers.map((w, i) => `<button class="s-wall ${i === p.wallpaper ? "on" : ""}" data-wall="${i}" title="${w.name}" aria-label="${w.name}"><img src="${NX.wallpaperURL(i, 192, 108)}" alt=""><span>${w.name}</span></button>`).join("")}${NX.data("wall-custom", null) ? `<button class="s-wall ${p.wallpaper === "custom" ? "on" : ""}" data-wallc="1" title="Your picture" aria-label="Your picture"><img src="${NX.data("wall-custom", null)}" alt=""><span>Your picture</span></button>` : ""}</div>
+          <div class="s-card s-browse"><div class="s-rt"><b>Your own picture</b><small>Any picture from your computer as your background</small></div><label class="btn"><input type="file" accept="image/*" id="s-wallfile" hidden>Browse photos</label></div>
           <h3>Colors</h3>${row("contrast", "Choose your mode", "Dark or light windows and menus", `<div class="seg"><button data-theme="dark" class="${p.theme === "dark" ? "on" : ""}">Dark</button><button data-theme="light" class="${p.theme === "light" ? "on" : ""}">Light</button></div>`)}
           ${row("brush", "Accent color", "Used for buttons, switches and highlights", `<div class="s-acc">${ACCENTS.map((c) => `<button data-acc="${c}" class="${c === p.accent ? "on" : ""}" style="background:${c}" aria-label="Accent ${c}"></button>`).join("")}</div>`)}
           ${row("contrast", "Transparency effects", NX.native ? "See-through, frosted windows and taskbar. Off makes Nebulux OS faster on this computer." : "See-through, frosted windows and taskbar", toggle("transparency", NX.fx()))}
@@ -278,6 +293,8 @@
         });
         body.querySelectorAll("[data-time]").forEach((inp) => (inp.onchange = () => { if (/^dd:dd$/.test(inp.value)) { NX.setPref(inp.dataset.time, inp.value); if (NX.shell && NX.shell.nightTick) NX.shell.nightTick(true); } }));
         body.querySelectorAll("[data-wall]").forEach((b) => (b.onclick = () => { NX.setPref("wallpaper", +b.dataset.wall); draw(); }));
+        body.querySelectorAll("[data-wallc]").forEach((b) => (b.onclick = () => { NX.setPref("wallpaper", "custom"); draw(); }));
+        const wf = body.querySelector("#s-wallfile"); if (wf) wf.onchange = () => { const f = wf.files && wf.files[0]; if (f) NX.setWallpaperFile(f).then(() => draw()).catch((e) => NX.toast(e.message)); };
         body.querySelectorAll("[data-theme]").forEach((b) => (b.onclick = () => { NX.setPref("theme", b.dataset.theme); draw(); }));
         body.querySelectorAll("[data-cf]").forEach((b) => (b.onclick = () => { NX.setPref("colorFilter", b.dataset.cf); draw(); }));
         body.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = () => { NX.setPref("accent", b.dataset.acc); draw(); }));
