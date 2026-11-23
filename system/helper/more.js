@@ -612,11 +612,20 @@ module.exports = function more({ api, run, FAKE }) {
   };
 
   // ---------- screenshots ----------
+  // a made-up screenshot for tests: a purple picture of the given size
+  function fakePng(w, h) {
+    const zlib = require("zlib"), crc = (b) => { let c = ~0; for (const x of b) { c ^= x; for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1)); } return (~c) >>> 0; };
+    const chunk = (t, d) => { const len = Buffer.alloc(4); len.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]); const cr = Buffer.alloc(4); cr.writeUInt32BE(crc(td)); return Buffer.concat([len, td, cr]); };
+    const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+    const row = Buffer.alloc(1 + w * 3); for (let x = 0; x < w; x++) { row[1 + x * 3] = 124; row[2 + x * 3] = 92; row[3 + x * 3] = 255; }
+    const raw = Buffer.concat(Array.from({ length: h }, () => row));
+    return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ihdr), chunk("IDAT", zlib.deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+  }
   api["POST /screenshot"] = async () => {
     const d = new Date(), pad = (n) => String(n).padStart(2, "0");
     const name = `Screenshot ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.png`;
     const p = unique(path.join(real(HOME), "Pictures", "Screenshots"), name);
-    if (FAKE) fs.writeFileSync(p, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64"));
+    if (FAKE) fs.writeFileSync(p, fakePng(320, 200));
     else { const r = await run("scrot", ["--overwrite", p], 10000); if (!r.ok) throw new Error("The screenshot couldn't be taken."); }
     return { path: p, name: path.basename(p) };
   };

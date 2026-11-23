@@ -246,6 +246,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.mouse.click(W / 2, H / 2); await wait(500); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter");
   ok(await until(() => p.evaluate(() => document.querySelector("#lock").hidden && !!NX.me)), "and signing in again goes back to the desktop");
 
+  // ---------- 3.2: Snipping Tool crops a screenshot ----------
+  await p.evaluate(() => { NX.closeAll(); NX.open("snip"); }); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=snip] [data-s]").click());
+  await until(() => p.evaluate(() => { const i = document.querySelector(".win[data-app=snip] .sn-view img"); return !!i && i.naturalWidth === 320; }), 8000);
+  await p.evaluate(() => document.querySelector(".win[data-app=snip] [data-o=crop]").click()); await wait(200);
+  await p.evaluate(() => { const w = NX.wins.get("snip"), b = document.querySelector(".win[data-app=snip] .sn-view img").getBoundingClientRect(); w.snipSelect(b.width * 0.25, b.height * 0.25, b.width / 2, b.height / 2); document.querySelector(".win[data-app=snip] [data-c=save]").click(); });
+  ok(await until(() => p.evaluate(() => { const w = NX.wins.get("snip"), i = document.querySelector(".win[data-app=snip] .sn-view img"); return !!w.snipLast && w.snipLast.name.endsWith("(cropped).png") && i.naturalWidth === 160 && i.naturalHeight === 100; }), 8000), "Snipping Tool crops a screenshot and saves just that part");
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

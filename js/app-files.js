@@ -385,6 +385,30 @@
   A.snip = { name: "Snipping Tool", icon: "snip", builtIn: true, w: 560, h: 460, minW: 320, minH: 300, desc: "Take a picture of your screen.",
     open(body, win) {
       body.classList.add("sn");
+      // Crop: drag a box over the screenshot, then save just that part next to it
+      const crop = (r) => {
+        const v = body.querySelector(".sn-view"), img = v.querySelector("img"); if (!img || !img.naturalWidth) return;
+        v.classList.add("sn-cropping"); const box = document.createElement("div"); box.className = "sn-box"; box.hidden = true; v.appendChild(box);
+        const acts = v.querySelector(".sn-acts"); acts.innerHTML = `<span class="sn-hint">Drag over the part you want</span><button class="btn primary" data-c="save" disabled>Save crop</button><button class="btn" data-c="cancel">Cancel</button>`;
+        let a = null, sel = null;
+        const rel = (e) => { const b = img.getBoundingClientRect(); return { x: Math.max(0, Math.min(b.width, e.clientX - b.left)), y: Math.max(0, Math.min(b.height, e.clientY - b.top)), b }; };
+        const show = (p, q) => { const ib = img.getBoundingClientRect(), vb = v.getBoundingClientRect(); sel = { x: Math.min(p.x, q.x), y: Math.min(p.y, q.y), w: Math.abs(q.x - p.x), h: Math.abs(q.y - p.y), bw: p.b.width, bh: p.b.height }; Object.assign(box.style, { left: ib.left - vb.left + v.scrollLeft + sel.x + "px", top: ib.top - vb.top + v.scrollTop + sel.y + "px", width: sel.w + "px", height: sel.h + "px" }); box.hidden = false; acts.querySelector("[data-c=save]").disabled = sel.w < 4 || sel.h < 4; };
+        img.onpointerdown = (e) => { e.preventDefault(); a = rel(e); img.setPointerCapture(e.pointerId); };
+        img.onpointermove = (e) => { if (a) show(a, rel(e)); };
+        img.onpointerup = (e) => { if (a) show(a, rel(e)); a = null; };
+        win.snipSelect = (x, y, w, h) => { const b = img.getBoundingClientRect(); show({ x, y, b }, { x: x + w, y: y + h, b }); };
+        const done = () => { v.classList.remove("sn-cropping"); box.remove(); img.onpointerdown = img.onpointermove = img.onpointerup = null; };
+        acts.querySelector("[data-c=cancel]").onclick = () => { done(); acts.innerHTML = `<button class="btn" data-o="open">Open in Photos</button>`; acts.querySelector("[data-o=open]").onclick = () => NX.open("photos", { path: r.path }); };
+        acts.querySelector("[data-c=save]").onclick = async () => {
+          if (!sel) return; const k = img.naturalWidth / sel.bw, c = document.createElement("canvas"); c.width = Math.round(sel.w * k); c.height = Math.round(sel.h * (img.naturalHeight / sel.bh));
+          c.getContext("2d").drawImage(img, sel.x * k, sel.y * (img.naturalHeight / sel.bh), c.width, c.height, 0, 0, c.width, c.height);
+          const blob = await new Promise((ok) => c.toBlob(ok, "image/png"));
+          try { const name = NX.fs.base(r.path).replace(/\.png$/i, "") + " (cropped).png", out = await NX.fs.upload(NX.fs.parent(r.path), name, blob); done(); img.src = await NX.fs.url(out.path); win.snipLast = out; NX.toast("Saved as " + out.name + "."); NX.filesChanged && NX.filesChanged();
+            acts.innerHTML = `<button class="btn" data-o="open">Open in Photos</button>`; acts.querySelector("[data-o=open]").onclick = () => NX.open("photos", { path: out.path }); }
+          catch (er) { NX.toast(er.message); }
+        };
+      };
+      win.snipCrop = crop;
       body.innerHTML = `<div class="sn-bar"><button class="btn primary" data-s="0">${NX.icon("camera", 16)}New screenshot</button><label class="sn-delay">Wait <select aria-label="Wait before taking it"><option value="0">no time</option><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label></div><div class="sn-view"><p class="sn-tip">Tip: press <b>Nebulux + Shift + S</b> or <b>Print Screen</b> any time. Screenshots go in Pictures${NX.native ? " > Screenshots" : ""}.</p></div>`;
       const v = body.querySelector(".sn-view"), btn = body.querySelector("[data-s]");
       btn.onclick = async () => {
@@ -394,6 +418,7 @@
         try { const r = await NX.screenshot(true); NX.focus("snip"); v.innerHTML = `<img alt="Your screenshot"><div class="sn-acts"><button class="btn" data-o="open">Open in Photos</button><button class="btn" data-o="folder">Show in File Explorer</button></div>`;
           v.querySelector("img").src = await NX.fs.url(r.path); v.querySelector("[data-o=open]").onclick = () => NX.open("photos", { path: r.path });
           v.querySelector("[data-o=folder]").onclick = () => NX.open("files", { path: NX.fs.parent(r.path) }); NX.toast("Screenshot saved.");
+          v.querySelector(".sn-acts").insertAdjacentHTML("afterbegin", `<button class="btn primary" data-o="crop">Crop</button>`); v.querySelector("[data-o=crop]").onclick = () => crop(r);
         } catch (e) { NX.focus("snip"); NX.toast(e.message); }
         btn.disabled = false; btn.innerHTML = `${NX.icon("camera", 16)}New screenshot`;
       };
