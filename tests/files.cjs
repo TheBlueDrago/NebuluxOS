@@ -368,6 +368,19 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !!document.querySelector(".win[data-app=settings]") && /Personalization|Background/.test(document.querySelector(".win[data-app=settings]").innerText)), "its buttons open the right place");
   await p.evaluate(() => { NX.close("settings"); NX.close("tips"); }); await wait(300);
 
+  // 3.2: Focus sessions in Clock
+  await p.evaluate(() => { NX.setPref("dnd", false); NX.open("clock"); }); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-v=fo]").click()); await wait(200);
+  await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-a=fo25]").click()); await wait(300);
+  ok(await p.evaluate(() => NX.focusSession.on() && NX.prefs().dnd === true && !!document.querySelector(".win[data-app=clock] .clk-ring")), "a focus session starts and turns on Do not disturb");
+  await p.evaluate(() => NX.close("clock")); await wait(300);
+  ok(await p.evaluate(() => NX.focusSession.on()), "it keeps going with Clock closed");
+  await p.evaluate(() => NX.focusSession.finish(true)); await wait(200);
+  ok(await p.evaluate(() => !NX.focusSession.on() && NX.prefs().dnd === false && NX.focusSession.today() === 1), "when it's done, Do not disturb goes back and the session counts");
+  await p.evaluate(() => { NX.open("clock"); }); await wait(300); await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-v=fo]").click()); await wait(200);
+  ok(await p.evaluate(() => /1 session today/.test(document.querySelector(".win[data-app=clock]").innerText)), "Clock shows today's focus sessions");
+  await p.evaluate(() => NX.close("clock")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

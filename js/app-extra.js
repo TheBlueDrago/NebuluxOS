@@ -115,10 +115,30 @@
     } };
 
   // ---------- Clock: time, stopwatch and timer ----------
+  // Focus sessions: Do not disturb for a set time, and a heads-up when it's done (keeps going with Clock closed)
+  const FS = { end: 0, len: 0, prevDnd: false, t: 0 };
+  NX.focusSession = {
+    on: () => FS.end > Date.now(),
+    left: () => Math.max(0, FS.end - Date.now()),
+    len: () => FS.len,
+    today: () => { const d = new Date().toDateString(); return NX.data("focus-log", []).filter((x) => new Date(x.at).toDateString() === d).length; },
+    start(min) {
+      if (!NX.me) return; FS.len = min * 60000; FS.end = Date.now() + FS.len; FS.prevDnd = !!NX.prefs().dnd; NX.setPref("dnd", true);
+      clearInterval(FS.t); FS.t = setInterval(() => { if (FS.end && Date.now() >= FS.end) NX.focusSession.finish(true); }, 1000);
+      NX.toast("Focus session started: " + min + " minutes. Do not disturb is on.");
+    },
+    finish(done) {
+      clearInterval(FS.t); const was = FS.end; FS.end = 0; if (!was) return;
+      if (NX.me) { NX.setPref("dnd", FS.prevDnd); if (done) { NX.setData("focus-log", [...NX.data("focus-log", []).slice(-199), { at: Date.now(), min: Math.round(FS.len / 60000) }]); } }
+      NX.toast(done ? "Focus session done. Nice work. Take a short break." : "Focus session stopped."); if (done && NX.beep) NX.beep();
+      document.dispatchEvent(new CustomEvent("nx:focus"));
+    },
+  };
+  document.addEventListener("nx:signin", () => { if (FS.end) NX.focusSession.finish(false); });
   A.clock = { name: "Clock", icon: "clock", category: "Utilities", rating: "4.6", size: "1 MB", w: 520, h: 480, minW: 340, minH: 380, desc: "The time, a stopwatch with laps, and a timer that rings when it's done.",
     open(body, win) {
       body.classList.add("clk");
-      body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button></div><div class="clk-face"></div>`;
+      body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button><button data-v="fo">Focus</button></div><div class="clk-face"></div>`;
       let v = "clock", swOn = false, swT = 0, swAt = 0, laps = [], tmLeft = 300000, tmOn = false, tmAt = 0, tmSet = 300000;
       const face = body.querySelector(".clk-face"), f2 = (n) => String(n).padStart(2, "0");
       const fmtMs = (ms) => { ms = Math.max(0, ms); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60, cs = Math.floor(ms / 10) % 100; return (h ? h + ":" : "") + f2(m) + ":" + f2(s) + "." + f2(cs); };
@@ -126,6 +146,9 @@
         const now = performance.now();
         if (v === "clock") { const d = new Date(); face.innerHTML = `<div class="clk-big">${NX.fmtTime(d, true)}</div><div class="clk-sub">${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>`; }
         if (v === "sw") { const t = swT + (swOn ? now - swAt : 0); face.innerHTML = `<div class="clk-big mono">${fmtMs(t)}</div><div class="clk-btns"><button class="btn primary" data-a="sws">${swOn ? "Pause" : "Start"}</button><button class="btn" data-a="swl" ${swOn ? "" : "disabled"}>Lap</button><button class="btn" data-a="swr">Reset</button></div><ol class="clk-laps">${laps.map((l, i) => `<li><span>Lap ${laps.length - i}</span><b>${fmtMs(l)}</b></li>`).join("")}</ol>`; }
+        if (v === "fo") { const on = NX.focusSession.on(), n = NX.focusSession.today();
+          face.innerHTML = on ? `<div class="clk-ring" style="--p:${(1 - NX.focusSession.left() / NX.focusSession.len()) * 100}"><div class="clk-big mono">${fmtMs(NX.focusSession.left()).slice(0, -3)}</div></div><div class="clk-sub">Do not disturb is on until it's done.</div><div class="clk-btns"><button class="btn" data-a="fostop">Stop</button></div>`
+            : `<div class="clk-sub" style="margin-top:6px">Focus for a while. Do not disturb stays on until it's done.</div><div class="clk-btns">${[15, 25, 45, 60].map((m) => `<button class="btn ${m === 25 ? "primary" : ""}" data-a="fo${m}">${m} min</button>`).join("")}</div><div class="clk-sub">${n ? n + (n === 1 ? " session" : " sessions") + " today" : "No focus sessions yet today"}</div>`; }
         if (v === "tm") { const left = tmOn ? tmLeft - (now - tmAt) : tmLeft; face.innerHTML = `<div class="clk-big mono">${fmtMs(left).slice(0, -3)}</div><div class="clk-btns">${tmOn ? "" : `<button class="btn" data-a="t1">1 min</button><button class="btn" data-a="t5">5 min</button><button class="btn" data-a="t10">10 min</button>`}</div><div class="clk-btns"><button class="btn primary" data-a="tms">${tmOn ? "Pause" : "Start"}</button><button class="btn" data-a="tmr">Reset</button></div>`;
  }
       };
@@ -138,6 +161,8 @@
         if (a === "t1" || a === "t5" || a === "t10") { tmSet = tmLeft = { t1: 60000, t5: 300000, t10: 600000 }[a]; }
         if (a === "tms") { if (tmOn) { tmLeft -= now - tmAt; tmOn = false; } else if (tmLeft > 0) { tmAt = now; tmOn = true; } }
         if (a === "tmr") { tmOn = false; tmLeft = tmSet; }
+        if (/^fo\d+$/.test(a)) NX.focusSession.start(+a.slice(2));
+        if (a === "fostop") NX.focusSession.finish(false);
         draw();
       };
       // the tick only updates the time text, so buttons are never rebuilt under the pointer
@@ -146,9 +171,11 @@
         if (v === "clock") { const d = new Date(); big.textContent = NX.fmtTime(d, true); }
         else if (v === "sw" && swOn) big.textContent = fmtMs(swT + now - swAt);
         else if (v === "tm" && tmOn) big.textContent = fmtMs(tmLeft - (now - tmAt)).slice(0, -3);
+        else if (v === "fo" && NX.focusSession.on()) { big.textContent = fmtMs(NX.focusSession.left()).slice(0, -3); const r = face.querySelector(".clk-ring"); if (r) r.style.setProperty("--p", (1 - NX.focusSession.left() / NX.focusSession.len()) * 100); }
         if (tmOn && tmLeft - (now - tmAt) <= 0) { tmOn = false; tmLeft = tmSet; NX.toast("Time's up!"); NX.beep && NX.beep(); draw(); }
       }, 50);
-      win.onclose = () => clearInterval(tick); draw();
+      const onFocus = () => { if (v === "fo") draw(); }; document.addEventListener("nx:focus", onFocus);
+      win.onclose = () => { clearInterval(tick); document.removeEventListener("nx:focus", onFocus); }; draw();
     } };
 
   // ---------- Comet Snake: an original arcade game ----------

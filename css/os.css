@@ -771,3 +771,7 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 .s-hidf input{flex:1;min-width:160px;padding:8px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:13px;outline:none}
 .s-hidf input:focus{border-color:var(--accent)}
 .s-hidf .s-msg{flex-basis:100%;margin:0}
+
+/* Clock: focus sessions */
+.clk-ring{--p:0;width:200px;height:200px;border-radius:50%;display:grid;place-items:center;margin:6px auto 4px;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--card2) 0)}
+.clk-ring .clk-big{width:172px;height:172px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);font-size:34px}
