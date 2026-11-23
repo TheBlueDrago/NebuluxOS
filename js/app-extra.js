@@ -331,7 +331,7 @@
         else if (v === "sw" && swOn) big.textContent = fmtMs(swT + now - swAt);
         else if (v === "tm" && tmOn) big.textContent = fmtMs(tmLeft - (now - tmAt)).slice(0, -3);
         else if (v === "fo" && NX.focusSession.on()) { big.textContent = fmtMs(NX.focusSession.left()).slice(0, -3); const r = face.querySelector(".clk-ring"); if (r) r.style.setProperty("--p", (1 - NX.focusSession.left() / NX.focusSession.len()) * 100); }
-        if (tmOn && tmLeft - (now - tmAt) <= 0) { tmOn = false; tmLeft = tmSet; NX.toast("Time's up!"); NX.beep && NX.beep(); draw(); }
+        if (tmOn && tmLeft - (now - tmAt) <= 0) { tmOn = false; tmLeft = tmSet; NX.alarms.ring({ name: "Timer: time's up", snooze: false }); draw(); }
       }, 50);
       const onFocus = () => { if (v === "fo") draw(); }; document.addEventListener("nx:focus", onFocus);
       const onAl = () => { if (v === "al" && !face.contains(document.activeElement)) draw(); }; document.addEventListener("nx:alarms", onAl);
