@@ -15,8 +15,9 @@ const cv = document.getElementById("c"), main = cv.getContext("2d");
 let x = main; // the canvas being drawn on (scenes are drawn off screen for transitions)
 const IMG = {};
 const load = (k, src) => fetch(src).then((r) => r.blob()).then(createImageBitmap).then((b) => (IMG[k] = b));
+const stopsP = fetch("shots/web-stops.json").then((r) => r.json()).then((s) => (window.STOPS = s)).catch(() => {});
 const SHOTS = ["lock", "desktop", "start", "search", "desks", "clip", "notes", "tabs", "settings", "store", "quick", "whatsnew", "web-full", "web-download", "logo-big", "wall"];
-window.__ready = Promise.all(SHOTS.map((k) => load(k, "shots/" + k + (k === "logo-big" ? ".png" : ".jpg")))).then(() => document.fonts.ready);
+window.__ready = Promise.all([stopsP].concat(SHOTS.map((k) => load(k, "shots/" + k + (k === "logo-big" ? ".png" : ".jpg"))))).then(() => document.fonts.ready);
 
 // ---------- helpers ----------
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -96,15 +97,36 @@ function captionStrip(a) { if (a <= 0) return; x.save(); x.globalAlpha = a; cons
 
 // ---------- the scenes (l = seconds into the scene, d = its length, t = seconds into the ad) ----------
 // 1. The opening splash: a line of light, then the words land on the beat
+// The opening splash, like every Nebulux ad: the product's own homepage hero, with the last words changing on the beat,
+// then a question on its own before the drop
+const OPEN_WORDS = ["runs from a USB", "costs nothing", "updates itself", "just works"];
+function pill(s, X, Y, size, fill, col, a = 1, stroke) {
+  if (a <= 0) return 0; x.save(); x.globalAlpha *= a; x.font = F(800, size); const w = x.measureText(s).width + size * 1.6, h = size * 2.1;
+  rr(X - w / 2, Y - h / 2, w, h, h / 2); x.fillStyle = fill; x.fill(); if (stroke) { x.strokeStyle = stroke; x.lineWidth = 2; x.stroke(); }
+  x.fillStyle = col; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(s, X, Y + 1); x.restore(); return w;
+}
 function sOpen(l, d, t) {
-  bg(t, .55 + .45 * ease(l / 1.5));
-  const line = ease(l / .7), lw = W * .8 * line; x.save(); const lg = x.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0); lg.addColorStop(0, "rgba(240,171,252,0)"); lg.addColorStop(.5, `rgba(255,255,255,${.9 * (1 - ease((l - 1.2) / .6))})`); lg.addColorStop(1, "rgba(240,171,252,0)"); x.fillStyle = lg; x.fillRect(W / 2 - lw / 2, H / 2 - 2, lw, 4); x.restore();
-  const b = l / BEAT;
-  // beat 2: "A whole computer." beat 4: "On a USB stick." beat 6: "This is Nebulux OS."
-  const out1 = ease((b - 5.6) / .5);
-  if (b > 1.8 && out1 < 1) { x.save(); x.globalAlpha = 1 - out1; x.translate(0, -out1 * 60); headline([{ s: "A whole computer." }], (b - 2) * BEAT, H / 2 - 70, 100); headline([{ s: "On a USB stick.", g: true }], (b - 4) * BEAT, H / 2 + 70, 100); x.restore(); }
-  if (b > 5.9) { const z = 1 + .05 * ease((b - 6) / 4); x.save(); x.translate(W / 2, H / 2); x.scale(z, z); x.translate(-W / 2, -H / 2); headline([{ s: "This is" }, { s: "Nebulux OS.", g: true }], (b - 6) * BEAT, H / 2, 140); x.restore(); }
-  if (l > d - .35) { const v = (l - (d - .35)) / .35; x.fillStyle = `rgba(255,255,255,${v * v * .95})`; x.fillRect(0, 0, W, H); }
+  const b = l / BEAT, Q = 7.4; // the question comes in on beat 7.4
+  if (b < Q) {
+    bg(t, 1);
+    // "new" pill at the top, like the website
+    const pa = ease(l / .4); if (pa > 0) { x.save(); x.globalAlpha = pa; x.font = F(700, 24); const s1 = "New: Nebulux OS 3.2.2", w1 = x.measureText(s1).width, w = w1 + 150; rr(W / 2 - w / 2, 156, w, 52, 26); x.fillStyle = "rgba(255,255,255,.07)"; x.fill(); x.strokeStyle = "rgba(255,255,255,.14)"; x.lineWidth = 1.5; x.stroke(); rr(W / 2 + w / 2 - 104, 164, 88, 36, 18); x.fillStyle = "#22c55e"; x.fill(); text("FREE", W / 2 + w / 2 - 60, 183, F(900, 20), "#04210f"); text(s1, W / 2 - w / 2 + 28, 183, F(700, 24), "#e9e4ff", "left"); x.restore(); }
+    // "Meet Nebulux OS." brightens from gray to white, the way the other ads' heroes do
+    const m = ease(l / .5), wh = Math.round(150 + 105 * ease((l - .2) / .6));
+    text("Meet Nebulux OS.", W / 2, 350 + (1 - m) * 30, F(900, 150), `rgb(${wh},${wh},${wh})`, "center", m);
+    text("A whole computer that", W / 2, 505, F(800, 92), "#c4b5fd", "center", ease((l - .35) / .4));
+    // the changing words: one every two beats, sliding up
+    const k = Math.floor(b / 2), wi = Math.min(OPEN_WORDS.length - 1, k), lw = (b - wi * 2) * BEAT;
+    if (b > .9) { const u = ease(lw / .3); x.save(); x.font = F(900, 104); const s = OPEN_WORDS[wi], ww = x.measureText(s).width; const g = x.createLinearGradient(W / 2 - ww / 2, 0, W / 2 + ww / 2, 0); g.addColorStop(0, "#fb7185"); g.addColorStop(.5, "#f0abfc"); g.addColorStop(1, "#a78bfa"); x.globalAlpha = u; x.fillStyle = g; x.textAlign = "center"; x.textBaseline = "middle"; x.shadowColor = "rgba(240,171,252,.45)"; x.shadowBlur = 40; x.fillText(s, W / 2, 630 + (1 - u) * 50); x.restore(); }
+    text("Plug in the USB, start up, and it's yours. Free, private, and fast on any PC.", W / 2, 750, F(600, 34), "#b9b0dc", "center", ease((l - .9) / .4));
+    const ba = ease((l - 1.2) / .4); pill("Download free  →", W / 2 - 200, 860, 30, "#fff", "#1d1040", ba); pill("Try it in your browser", W / 2 + 230, 860, 30, "rgba(255,255,255,.1)", "#fff", ba, "rgba(255,255,255,.18)");
+  } else {
+    // the question, alone on the dark
+    bg(t, .5); const lq = (b - Q) * BEAT;
+    const z = 1 + .04 * ease(lq / 1.2); x.save(); x.translate(W / 2, H / 2); x.scale(z, z); x.translate(-W / 2, -H / 2);
+    text("Computer too slow?", W / 2, H / 2 - 20, F(900, 140), "#fff", "center", ease(lq / .18)); x.restore();
+  }
+  if (l > d - .3) { const v = (l - (d - .3)) / .3; x.fillStyle = `rgba(255,255,255,${v * v * .95})`; x.fillRect(0, 0, W, H); }
 }
 // 2. Signing in: the lock screen lifts away to show the desktop
 function sDesktop(l, d, t) {
@@ -129,12 +151,42 @@ function sSearch(l, d, t) {
   x.save(); x.font = F(800, 76); ["Find", "anything."].forEach((s, i) => { const v = ease((l - .35 - i * .1) / .4); x.globalAlpha = v; x.fillStyle = i ? grad(1550, 1860) : "#fff"; x.textAlign = "left"; x.textBaseline = "middle"; x.fillText(s, 1550, 450 + i * 88 + (1 - v) * 30); }); x.restore();
   ["Apps, settings and files", "in one search.", "Then Pin to taskbar."].forEach((s, i) => text(s, 1550, 650 + i * 46, F(600, 32), i === 2 ? "#f0abfc" : "#d9d0ff", "left", ease((l - (i === 2 ? 2.8 : .9 + i * .15)) / .4)));
 }
+// 3b. The key highlights: six cards, one landing on each beat
+const KEYS = [
+  ["Free, forever", "No license. No subscription.", '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>', "#22c55e"],
+  ["Runs from a USB", "Your own drive is never touched.", '<path d="M9 2h6v6H9z"/><path d="M7 8h10v9a5 5 0 0 1-10 0z"/><path d="M12 17v5"/>', "#38bdf8"],
+  ["Old PCs welcome", "Fast on computers from 2010 on.", '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>', "#a78bfa"],
+  ["Your real apps", "Netflix, Spotify, Discord, Steam.", '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>', "#f472b6"],
+  ["Updates itself", "Tonight, in 30 minutes, or never.", '<path d="M20 11a8 8 0 0 0-14.6-4.5L3 9"/><path d="M3 3v6h6"/><path d="M4 13a8 8 0 0 0 14.6 4.5L21 15"/><path d="M21 21v-6h-6"/>', "#fbbf24"],
+  ["No ads, ever", "No suggested apps. No clutter.", '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', "#fb7185"],
+];
+const KEY_PATHS = KEYS.map((k) => (k[2].match(/ d="[^"]+"/g) || []).map((s) => new Path2D(s.slice(4, -1))).concat((k[2].match(/<rect[^>]+>/g) || []).map((r) => { const g = (n) => +(r.match(new RegExp(" " + n + '="([\\d.]+)"')) || [0, 0])[1]; const p = new Path2D(); const X = g("x"), Y = g("y"), w = g("width"), h = g("height"), q = g("rx"); p.roundRect(X, Y, w, h, q); return p; })).concat((k[2].match(/<circle[^>]+>/g) || []).map((c) => { const g = (n) => +(c.match(new RegExp(" " + n + '="([\\d.]+)"')) || [0, 0])[1]; const p = new Path2D(); p.arc(g("cx"), g("cy"), g("r"), 0, 7); return p; })));
+function sKeys(l, d, t) {
+  bg(t, .85);
+  kicker("The highlights", W / 2, 120, ease(l / .3), "center");
+  headline([{ s: "Why people" }, { s: "switch.", g: true }], l - .05, 205, 84);
+  const cw = 520, ch = 300, gap = 36, X0 = (W - (cw * 3 + gap * 2)) / 2, Y0 = 310;
+  KEYS.forEach(([title, line, , col], i) => {
+    const v = (l - .5 - i * BEAT) / .35; if (v <= 0) return; const u = back(v), a = ease(v);
+    const X = X0 + (i % 3) * (cw + gap), Y = Y0 + Math.floor(i / 3) * (ch + gap);
+    x.save(); x.globalAlpha = a; x.translate(X + cw / 2, Y + ch / 2); x.scale(.85 + .15 * u, .85 + .15 * u); x.translate(-cw / 2, -ch / 2);
+    const glow = Math.exp(-Math.max(0, l - .5 - i * BEAT) * 3);
+    x.shadowColor = col; x.shadowBlur = 20 + 60 * glow; rr(0, 0, cw, ch, 28); x.fillStyle = "rgba(24,18,44,.92)"; x.fill(); x.shadowColor = "transparent";
+    const g = x.createLinearGradient(0, 0, cw, ch); g.addColorStop(0, "rgba(255,255,255,.08)"); g.addColorStop(1, "rgba(255,255,255,.01)"); x.fillStyle = g; x.fill();
+    x.strokeStyle = `rgba(255,255,255,${.14 + .4 * glow})`; x.lineWidth = 2; rr(0, 0, cw, ch, 28); x.stroke();
+    // the icon on a colored disc
+    const ig = x.createLinearGradient(44, 44, 140, 140); ig.addColorStop(0, col); ig.addColorStop(1, "rgba(124,92,255,.9)"); x.fillStyle = ig; rr(44, 44, 96, 96, 26); x.fill();
+    x.save(); x.translate(56, 56); x.scale(3, 3); x.strokeStyle = "#fff"; x.lineWidth = 1.9; x.lineCap = "round"; x.lineJoin = "round"; for (const p of KEY_PATHS[i]) x.stroke(p); x.restore();
+    text(title, 44, 196, F(800, 46), "#fff", "left"); text(line, 44, 252, F(600, 27), "#c9c0ea", "left");
+    x.restore();
+  });
+}
 // 4. The highlights: three beats each, zoomed in, with a spotlight on the feature and its name
 // [picture, kicker, title, line, spotlight (x0, y0, x1, y1 as fractions of the picture), zoom center, zoom]
 const HIGHLIGHTS = [
   ["desks", "New in 3.2", "Virtual desktops", "One for school, one for games. Drag windows between them.", [.27, .77, .73, .93], .5, .8, 1.5],
   ["clip", "New in 3.2", "Clipboard history", "Nebulux + V: everything you copied, one click to paste.", [.726, .5, .992, .92], .82, .68, 1.45],
-  ["store", "The Nebulux Store", "Your apps, ready to go", "Netflix and 70 web apps, plus real apps like Steam, Spotify and Discord.", [.165, .145, .79, .665], .48, .42, 1.25],
+  ["store", "The Nebulux Store", "Your apps, ready to go", "Netflix, Hulu, Spotify, Discord, Steam and 80 more, each in its own window.", [.165, .145, .79, .665], .48, .42, 1.25],
   ["tabs", "New in 3.2", "Tabs in File Explorer", "Ctrl + T for a new tab. Pin folders to Quick access.", [.115, .1, .37, .15], .3, .2, 1.9],
 ];
 function sHighlights(l, d, t) {
@@ -188,11 +240,28 @@ function sCompare(l, d, t) {
   text("Windows and Windows 11 are trademarks of Microsoft Corporation. Nebulux OS is made by Nebulux LLC and isn't affiliated with Microsoft.", W / 2, 1040, F(500, 19), "#6f6894", "center", ta);
 }
 // 8. The website: it scrolls down to the features
+// The website, big and sharp: it fills the screen, stops on each part of the page (the hero, the OS on a laptop,
+// what's new, the comparison), then glides back up while the cursor heads for Download.
+// STOPS (from webshots.cjs) are where each part starts on the page, in the picture's pixels.
 function sWebsite(l, d, t) {
-  bg(t, .7);
-  const fw = 1500, fh = 820, X = (W - fw) / 2, Y = 150, img = IMG["web-full"], k = fw / img.width;
-  browser(img, X, Y, fw, fh, inout((l - .2) / (d - .2)) * (img.height * k * .26), 1);
-  headline([{ s: "Get it from the" }, { s: "Nebulux OS website.", g: true }], 9, 82, 58);
+  bg(t, .6);
+  const img = IMG["web-full"], S = window.STOPS || { device: 900, new: 2600, compare: 4400, dl: [1800, 50] };
+  const fw = 1800, fh = 930, X = (W - fw) / 2, Y = 36, k = fw / img.width;
+  // [start, end, from, to] in seconds and picture pixels
+  const keys = [[.0, .5, 0, 0], [.5, 1.05, 0, S.device], [1.4, 1.95, S.device, S.new], [2.3, 2.85, S.new, S.compare], [3.3, 3.95, S.compare, 0]];
+  let y = 0; for (const [a, b, f, to] of keys) if (l >= a) y = f + (to - f) * inout((l - a) / (b - a));
+  const z = 1.035 - .035 * ease(l / .6); x.save(); x.translate(W / 2, H / 2); x.scale(z, z); x.translate(-W / 2, -H / 2);
+  browser(img, X, Y, fw, fh, y * k, 1);
+  // the cursor comes in at the end and goes to Download in the page's menu
+  const ca = ease((l - 3.4) / .3); if (ca > 0) { const tx = X + S.dl[0] * k, ty = Y + 64 + S.dl[1] * k, m = inout((l - 3.4) / .9); x.save(); x.globalAlpha = ca; cursor(tx + 420 * (1 - m), ty + 520 * (1 - m), l > d - .15); x.restore(); }
+  x.restore();
+  // the caption for each stop
+  const caps = [[0, 1.2, "Free to download.", "From the Nebulux OS website."], [1.05, 2.3, "See it before you try it.", "The whole OS, right on the page."], [1.95, 3.3, "Always getting better.", "Every update, in plain words."], [2.85, 4.6, "Better than what you have.", "Side by side, row by row."]];
+  // the caption sits on its own glass card so the page behind never shows through the words
+  const cA = ease(l / .3); x.save(); x.globalAlpha = cA; x.shadowColor = "rgba(0,0,0,.6)"; x.shadowBlur = 50; rr(W / 2 - 560, 880, 1120, 168, 34); x.fillStyle = "rgba(12,8,26,.93)"; x.fill(); x.shadowColor = "transparent"; x.strokeStyle = "rgba(196,181,253,.3)"; x.lineWidth = 2; x.stroke(); x.restore();
+  x.save(); rr(W / 2 - 560, 880, 1120, 168, 34); x.clip();
+  for (const [a, b, h1, h2] of caps) { const v = Math.min(ease((l - a) / .22), 1 - ease((l - b + .18) / .18)); if (v <= 0) continue; const up = l > b - .18; x.save(); x.globalAlpha = v; x.translate(0, (1 - v) * (up ? -40 : 40)); text(h1, W / 2, 940, F(900, 62), "#fff"); text(h2, W / 2, 1006, F(700, 34), grad(W / 2 - 300, W / 2 + 300)); x.restore(); }
+  x.restore();
 }
 // 9. Download: the cursor presses Download right on the boom, then the logo splash and the end card
 const BOOM = BEAT * 1.5;
@@ -220,18 +289,28 @@ function splash(l, d, t) {
   // the sparks
   if (l < 1.8) for (const [ang, sp, sz, ph] of SPARKS) { const r = ease(l / 1.6) * sp, v = 1 - l / 1.8; x.globalAlpha = v; x.fillStyle = ph > .5 ? "#f0abfc" : "#c4b5fd"; x.beginPath(); x.arc(W / 2 + Math.cos(ang) * r, cy + Math.sin(ang) * r * .7, sz, 0, 7); x.fill(); }
   x.globalAlpha = 1;
-  logo(W / 2, cy, 300 * back(l / .6) * (1 + .025 * punch(t)), ease(l / .15), 1 + .5 * punch(t));
-  text("Nebulux OS", W / 2, 655, F(900, 116), grad(W / 2 - 350, W / 2 + 350), "center", ease((l - .3) / .45));
-  text("Free. Download it today.", W / 2, 760, F(700, 48), "#fff", "center", ease((l - .6) / .45));
-  const pa = ease((l - .95) / .45); if (pa > 0) { x.save(); x.globalAlpha = pa; x.translate(0, (1 - pa) * 20); x.font = F(800, 40); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 96; rr(W / 2 - w / 2, 822, w, 84, 42); x.fillStyle = "#fff"; x.shadowColor = "rgba(192,132,252,.7)"; x.shadowBlur = 40; x.fill(); x.shadowColor = "transparent"; text(s0, W / 2, 865, F(800, 40), "#1d1040"); x.restore(); }
-  text("Nebulux OS 3.2  ·  Runs from a USB stick  ·  Or try it in your browser first", W / 2, 960, F(600, 28), "#b9b0dc", "center", ease((l - 1.3) / .45));
-  text("© 2026 Nebulux LLC", W / 2, 1030, F(500, 22), "#7d76a3", "center", ease((l - 1.5) / .45));
+  // first the big logo and the name, then (like every Nebulux ad) they settle to the top for the end card
+  const SET = 2.2, s = inout((l - SET) / .7);
+  const lY = cy + (150 - cy) * s, lS = 300 * back(l / .6) * (1 - .58 * s) * (1 + .025 * punch(t));
+  logo(W / 2, lY, lS, ease(l / .15), (1 + .5 * punch(t)) * (1 - .3 * s));
+  const nY = 655 + (285 - 655) * s, nS = 116 - 52 * s;
+  text("Nebulux OS", W / 2, nY, F(900, nS), s > .5 ? "#ece6ff" : grad(W / 2 - 350, W / 2 + 350), "center", ease((l - .3) / .45));
+  text("Free. Download it today.", W / 2, 760, F(700, 48), "#fff", "center", ease((l - .6) / .45) * (1 - ease((l - SET) / .3)));
+  const e = (k) => ease((l - SET - .35 - k * .12) / .4);
+  text("A whole computer.", W / 2, 410 + (1 - e(0)) * 26, F(900, 96), "#fff", "center", e(0));
+  text("On a USB stick.", W / 2, 515 + (1 - e(1)) * 26, F(900, 96), grad(W / 2 - 380, W / 2 + 380), "center", e(1));
+  const ga = e(2); if (ga > 0) { x.save(); x.globalAlpha = ga; x.translate(0, (1 - ga) * 18); x.font = F(800, 34); const s1 = "Free download, no account needed", w = x.measureText(s1).width + 90; rr(W / 2 - w / 2, 600, w, 70, 35); x.fillStyle = "#22c55e"; x.shadowColor = "rgba(34,197,94,.75)"; x.shadowBlur = 36; x.fill(); x.shadowColor = "transparent"; text(s1, W / 2, 636, F(800, 34), "#fff"); x.restore(); }
+  const pa = e(3); if (pa > 0) { x.save(); x.globalAlpha = pa; x.translate(0, (1 - pa) * 20); x.font = F(800, 38); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 90; rr(W / 2 - w / 2, 712, w, 80, 40); x.fillStyle = "#fff"; x.shadowColor = "rgba(192,132,252,.7)"; x.shadowBlur = 40; x.fill(); x.shadowColor = "transparent"; text(s0, W / 2, 753, F(800, 38), "#1d1040"); x.restore(); }
+  text("Nebulux OS 3.2.2  ·  Runs from a USB stick  ·  Or try it in your browser first", W / 2, 850, F(600, 28), "#b9b0dc", "center", e(4));
+  text("© 2026 Nebulux LLC", W / 2, 1030, F(500, 22), "#7d76a3", "center", e(5));
+  // the light sweep across the end card
+  const sw = (l - (d - 2.6)) / 1.6; if (sw > 0 && sw < 1) { x.save(); x.globalCompositeOperation = "lighter"; const sx = -400 + sw * (W + 800), g = x.createLinearGradient(-260, 0, 260, 0); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, "rgba(220,200,255,.16)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.translate(sx, H / 2); x.rotate(-.35); x.fillRect(-260, -H, 520, H * 2); x.restore(); }
   // the flash right on the boom
   if (l < .5) { x.fillStyle = `rgba(255,255,255,${(1 - l / .5) * .85})`; x.fillRect(0, 0, W, H); }
 }
 
 // ---------- the timeline (the same cut points as the Nebulux ad's music) ----------
-const SCENES = [[sOpen, 10], [sDesktop, 12], [sSearch, 10], [sHighlights, 12], [sLaptop, 8], [sUpdates, 8], [sCompare, 12], [sWebsite, 6], [sFinale, 22]].map(([f, b]) => [f, b * BEAT]);
+const SCENES = [[sOpen, 10], [sDesktop, 12], [sKeys, 10], [sHighlights, 12], [sLaptop, 8], [sUpdates, 8], [sCompare, 8], [sWebsite, 10], [sFinale, 22]].map(([f, b]) => [f, b * BEAT]);
 // how each scene comes in: only clean ones (a flash on the drop, pushes and quick fades; the website to Download is a cut)
 const TRANS = [null, "flash", "push", "push", "fade", "push", "fade", "push", null];
 window.__LEN = 46.6; SCENES[SCENES.length - 1][1] += window.__LEN - SCENES.reduce((a, s) => a + s[1], 0);
