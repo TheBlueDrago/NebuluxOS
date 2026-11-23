@@ -1,8 +1,14 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.6";
+  NX.version = "3.7";
   NX.whatsNew = [
+    ["Tabs in Notepad", "Keep several notes and text files open in one Notepad. Each tab is named from its first line, and your tabs come back next time."],
+    ["Edit your photos", "Photos > Edit changes brightness, contrast and color, adds a look like Black and white, Warm or Vintage, rotates, and saves a copy."],
+    ["Shapes and Fill in Paint", "Draw lines, boxes and circles, and pour color into any shape with Fill. The canvas now fills the whole window."],
+    ["A scientific calculator", "Calculator > Scientific does sin, cos, tan, log, ln, powers, roots, factorials, pi and brackets. Type a whole sum or tap it in."],
+    ["Snooze", "Alarms and timers ring with a card: Snooze for 5 minutes or Dismiss. They keep beeping until you answer, for up to a minute."],
+    ["Quicker backgrounds", "Right-click the desktop and pick Next background."],
     ["Keep a window on top", "Right-click a window's title bar for Minimize, Maximize, Keep on top and Close. A window kept on top stays above the others."],
     ["Sort your files", "File Explorer sorts by name, date, type or size: click a column in Details view, or use Sort."],
     ["Notepad, a little better", "Turn Word wrap on or off, and see the line and column you're on."],
@@ -78,6 +84,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Join the hotspot with a QR code");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Keep a window on top");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
