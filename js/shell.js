@@ -31,7 +31,7 @@
     const sv = !!(NX.me && NX.saverOn()); root.classList.toggle("saver", sv);
     root.classList.toggle("nofx", !NX.fx() || sv);
     root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv)));
-    const cf = NX.me ? p.colorFilter || "none" : "none"; root.classList.toggle("cf-gray", cf === "gray"); root.classList.toggle("cf-invert", cf === "invert"); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
+    const cf = NX.me ? p.colorFilter || "none" : "none"; root.classList.toggle("cf-gray", cf === "gray"); root.classList.toggle("cf-invert", cf === "invert"); root.classList.toggle("bigcursor", !!(NX.me && p.bigcursor)); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
     const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));

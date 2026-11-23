@@ -89,6 +89,11 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   await p.mouse.move(f0.x, f0.y); await p.mouse.down(); await p.mouse.move(f0.x + 20, f0.y, { steps: 3 }); await p.mouse.move(y0.x + y0.w * .4, f0.y, { steps: 8 }); await p.mouse.up(); await wait(400);
   const order = await p.evaluate(() => NX.prefs().pinned.slice(0, 5).join(","));
   ok(order === "settings,google,youtube,files,store" && await p.evaluate(() => [...document.querySelectorAll("#tb-apps .tb-app")].map((b) => b.dataset.app).slice(0, 5).join(",")) === order && !(await p.evaluate(() => !!document.querySelector(".win[data-app=files]"))), "Dragging a taskbar app moves it (and doesn't open it): " + order);
+  // Accessibility: the large mouse pointer
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "access" }); }); await wait(700);
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=settings] [data-pref=bigcursor]"); t.checked = true; t.dispatchEvent(new Event("change", { bubbles: true })); }); await wait(300);
+  ok(await p.evaluate(async () => { if (!document.documentElement.classList.contains("bigcursor")) return false; const c = getComputedStyle(document.body).cursor, m = c.match(/url\("([^"]+)"\)/); if (!m) return false; const i = new Image(); i.src = m[1]; await i.decode(); return i.naturalWidth === 48; }), "Large mouse pointer gives a bigger pointer");
+  await p.evaluate(() => { NX.setPref("bigcursor", false); NX.closeAll(); });
   // Auto mode: light by day, dark at night
   await p.evaluate(() => { NX.open("settings", { page: "personal" }); }); await wait(700);
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] [data-theme=auto]")][0].click()); await wait(300);
