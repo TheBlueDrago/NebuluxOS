@@ -4,7 +4,8 @@
 "use strict";
 (function () {
   const HOME = "https://www.google.com/webhp?igu=1";
-  const LINKS = [["Gmail", "https://mail.google.com"], ["YouTube", "https://www.youtube.com"], ["Maps", "https://maps.google.com"], ["Drive", "https://drive.google.com"], ["News", "https://news.google.com"], ["Translate", "https://translate.google.com"]];
+  // the shortcuts under the search box, each with its own logo (img/logos)
+  const LINKS = [["Gmail", "https://mail.google.com", "gmail"], ["YouTube", "https://www.youtube.com", "youtube"], ["Maps", "https://maps.google.com", "gmaps"], ["Drive", "https://drive.google.com", "gdrive"], ["News", "https://news.google.com", "gnews"], ["Translate", "https://translate.google.com", "translate"]];
   // a typed web address, or else a Google search
   const resolve = (q, frame) => {
     q = String(q || "").trim(); if (!q) return "";
@@ -64,7 +65,7 @@
         <form class="g-addr">${NX.icon("lock", 14)}<input name="u" placeholder="Search Google or type a web address" aria-label="Search Google or type a web address" autocomplete="off"></form></div>
         <div class="g-page"><div class="g-logo"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></div>
         <form class="g-search"><span class="g-si">${NX.icon("search", 18)}</span><input name="q" placeholder="Search Google" aria-label="Search Google" autocomplete="off"><button type="submit" class="btn primary">Search</button></form><div class="g-btns"><button type="button" data-g="s">Google Search</button><button type="button" data-g="l">I'm Feeling Lucky</button></div>
-        <div class="g-links">${LINKS.map(([n, u]) => `<a class="g-tile" href="${u}" target="_blank" rel="noopener"><span>${n[0]}</span><b>${n}</b></a>`).join("")}</div>
+        <div class="g-links">${LINKS.map(([n, u, l]) => `<a class="g-tile" href="${u}" target="_blank" rel="noopener"><span><img src="img/logos/${l}.png" alt="" width="26" height="26" onerror="this.replaceWith('${n[0]}')"></span><b>${n}</b></a>`).join("")}</div>
         <p class="g-note">Results open in a new tab, because Google doesn't let other pages show it inside them. On the real Nebulux OS (from the USB), Google opens right here.</p></div>`;
       const s = body.querySelector(".g-search"), a = body.querySelector(".g-addr"), qi = s.querySelector("input");
       s.onsubmit = (e) => { e.preventDefault(); if (go(qi.value)) { qi.value = ""; NX.toast("Opened Google in a new tab."); } else qi.focus(); };

@@ -61,7 +61,24 @@
     }, 1500);
   });
   NX.uninstallNative = (id) => NX.api("POST", "/native/uninstall", { app: NX.apps[id].native.flatpak }).then(nativeState);
-  NX.openNative = (id) => { const a = NX.apps[id]; if (NX.browserHide) NX.browserHide(); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar(); return NX.api("POST", "/native/open", { app: a.native.flatpak, wm: a.native.wm }).catch((e) => NX.toast(e.message)); };
+  // The launch card: while an app is starting (real apps and web apps can take a few seconds from a USB stick), its logo
+  // and "Opening ..." show in the middle of the screen, so a click never looks like it did nothing. It goes away as soon
+  // as the app's window is on screen (checked every second), or after 45 seconds.
+  const launching = new Map();
+  NX.launchCard = (id, wm) => {
+    const a = NX.apps[id]; if (!a || launching.has(id)) return;
+    let box = document.getElementById("nx-launch"); if (!box) { box = document.createElement("div"); box.id = "nx-launch"; box.setAttribute("role", "status"); box.setAttribute("aria-live", "polite"); document.body.appendChild(box); }
+    const card = document.createElement("div"); card.className = "nl-card";
+    card.innerHTML = `<div class="nl-ico">${NX.icon(a.icon || id, 64)}</div><b>Opening ${NX.esc(a.name)}</b><span class="nl-bar"><i></i></span>`;
+    box.appendChild(card);
+    const t0 = Date.now(), close = () => { if (!launching.has(id)) return; clearInterval(launching.get(id)); launching.delete(id); card.classList.add("out"); setTimeout(() => card.remove(), 260); };
+    launching.set(id, setInterval(async () => {
+      if (Date.now() - t0 > 45000) return close();
+      try { const r = await NX.api("POST", "/native/running", { apps: { [id]: wm } }); if ((r.running || []).includes(id)) { close(); nativeRunning(); } } catch (e) { /* try again next second */ }
+    }, 1000));
+    return close;
+  };
+  NX.openNative = (id) => { const a = NX.apps[id]; if (NX.browserHide) NX.browserHide(); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar(); const close = NX.launchCard(id, a.native.wm); return NX.api("POST", "/native/open", { app: a.native.flatpak, wm: a.native.wm }).then((r) => { if (r && r.shown && close) close(); return r; }).catch((e) => { if (close) close(); NX.toast(e.message); }); };
   NX.nativeToggle = (id) => { const a = NX.apps[id]; return NX.api("POST", "/native/toggle", { wm: NX.isNative(id) ? a.native.wm : webWm(id) }).then(() => setTimeout(nativeRunning, 300)).catch(() => {}); };
   NX.nativeHideActive = () => { if (NX.nativeActive.size) NX.api("POST", "/native/hide", { apps: nativeMap() }).catch(() => {}); };
   async function nativeRunning() {
@@ -88,7 +105,8 @@
       drmJob = NX.installNative("chrome").then(() => { NX.drmReady = true; NX.toast("The movie player is ready. Close and open " + a.name + " again to watch."); }).catch((e) => { NX.toast("The movie player couldn't be set up: " + e.message); }).finally(() => { drmJob = null; });
     }
     NX.webOpened.add(id); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar();
-    try { await NX.api("POST", "/webapp/open", { id, url, drm }); } catch (e) { NX.toast(e.message); }
+    const close = NX.launchCard(id, webWm(id));
+    try { const r = await NX.api("POST", "/webapp/open", { id, url, drm }); if (r && r.shown && close) close(); } catch (e) { if (close) close(); NX.toast(e.message); }
     setTimeout(nativeRunning, 1500);
   };
   // shortcuts caught by the window manager (so they work over the web browser too) come in here

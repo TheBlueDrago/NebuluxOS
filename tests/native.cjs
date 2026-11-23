@@ -293,10 +293,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const HDR = () => ({ "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" });
   await p.evaluate(async (h) => fetch("/api/fake/webapps-on", { method: "POST", headers: h, body: JSON.stringify({ on: true }) }), await p.evaluate(HDR));
   await p.evaluate(() => fetch("/api/webapp", { headers: { "x-nx": window.NX_NATIVE.token } }).then((r) => r.json()).then((r) => { NX.webAppOK = r.available; NX.drmReady = r.drm; }));
-  await p.evaluate(() => NX.open("poki")); await wait(600);
+  await p.evaluate(() => { window.__launchSeen = ""; new MutationObserver(() => { const c = document.querySelector("#nx-launch .nl-card"); if (c) window.__launchSeen = c.innerText; }).observe(document.body, { childList: true, subtree: true }); NX.open("poki"); }); await wait(600);
   const opened = async () => (await p.evaluate(async () => (await (await fetch("/api/fake/webapps", { headers: { "x-nx": window.NX_NATIVE.token } })).json()).opened));
   ok(await until(async () => (await opened()).some((a) => a.id === "poki" && a.url === "https://poki.com/" && !a.drm)) && await p.evaluate(() => !document.querySelector(".win[data-app=poki]")), "Poki opens as its own app, not in a browser or a Nebulux OS window");
   ok(await until(() => p.evaluate(() => !!document.querySelector("#tb-apps [data-app=poki].run"))), "and it has its own place on the taskbar");
+  ok(await p.evaluate(() => /Opening Poki/.test(window.__launchSeen)) && await until(() => p.evaluate(() => !document.querySelector("#nx-launch .nl-card"))), "a launch card says Opening Poki, and goes away once its window is up");
   await p.evaluate(() => NX.open("netflix"));
   ok(await until(async () => (await opened()).some((a) => a.id === "netflix"), 4000) && await until(() => p.evaluate(() => NX.drmReady === true && NX.isNative("chrome")), 15000), "Netflix opens at once while its movie player is set up in the background");
   await p.evaluate(() => NX.open("google", { q: "nebulux os" }));

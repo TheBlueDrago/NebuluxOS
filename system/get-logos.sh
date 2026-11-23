@@ -13,6 +13,7 @@ declare -A SRC=(
   [gslides]="https://www.gstatic.com/images/branding/product/2x/slides_2020q4_96dp.png"
   [classroom]="https://www.gstatic.com/images/branding/product/2x/classroom_96dp.png"
   [gmaps]="${FAV}maps.google.com" [mcclassic]="${FAV}www.minecraft.net"
+  [youtube]="${FAV}www.youtube.com" [gnews]="https://www.gstatic.com/images/branding/product/2x/news_96dp.png"
   [ebay]="https://www.ebay.com/apple-touch-icon.png" [twitch]="https://www.twitch.tv/apple-touch-icon.png" [tiktok]="https://www.tiktok.com/apple-touch-icon.png"
 )
 node -e '
@@ -28,3 +29,5 @@ node -e '
   code=$(curl -sL -A "Mozilla/5.0" -o "img/logos/$id.png" -w "%{http_code}" "$url")
   [ "$code" = 200 ] && echo "ok   $id" || echo "FAIL $id ($code) $url"
 done
+# logos used outside the Store (Google's shortcuts)
+for id in youtube gnews; do curl -sL -o "img/logos/$id.png" "${SRC[$id]}" && echo "ok   $id"; done

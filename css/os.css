@@ -895,3 +895,16 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .dicon .ico{transition:transform .15s}
 .dicon:hover .ico{transform:translateY(-2px) scale(1.04)}
 .titlebar{letter-spacing:.1px}
+
+/* the launch card: an app's logo while it starts */
+#nx-launch{position:fixed;left:50%;bottom:calc(var(--tb) + 22vh);transform:translateX(-50%);z-index:4500;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.nl-card{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:220px;padding:22px 28px 20px;border-radius:18px;background:var(--bg2);backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff17,inset 0 1px 0 #ffffff1a;animation:nlin .22s ease-out}
+.nl-card.out{opacity:0;transform:scale(.96);transition:opacity .24s,transform .24s}
+.nl-card b{font-size:15px;font-weight:600}
+.nl-ico{animation:nlpulse 1.6s ease-in-out infinite}
+.nl-bar{position:relative;width:150px;height:4px;border-radius:2px;background:var(--hover);overflow:hidden}
+.nl-bar i{position:absolute;inset:0 auto 0 0;width:40%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#38bdf8);animation:nlbar 1.2s ease-in-out infinite}
+@keyframes nlin{from{opacity:0;transform:translateY(14px) scale(.96)}}
+@keyframes nlpulse{50%{transform:scale(1.06)}}
+@keyframes nlbar{from{left:-40%}to{left:100%}}
+@media (prefers-reduced-motion:reduce){.nl-ico,.nl-bar i,.nl-card{animation:none}}
