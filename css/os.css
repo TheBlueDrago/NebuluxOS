@@ -799,3 +799,4 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 .c-hi{display:flex;flex-direction:column;align-items:flex-end;padding:8px 12px;border-radius:6px;text-align:right}.c-hi:hover{background:var(--hover)}
 .c-hi small{color:var(--sub);font-size:12px}.c-hi b{font-size:20px;font-weight:600}
 .c-hclear{align-self:center;margin-top:8px}.c-hnone{color:var(--sub);text-align:center;margin-top:30px;font-size:14px}
+.qs-fixw{display:flex;justify-content:center;padding:4px 0 8px}

@@ -348,6 +348,8 @@
     $(".qs-link", Q).onclick = () => { closeFlyouts(); NX.open("settings", { page: go }); };
     const tq = Q.querySelector("[data-qt]"); if (tq) tq.onchange = () => { NX.setPref(kind, tq.checked); if (tq.checked) NX.setPref("airplane", false); setTimeout(() => qsMore(kind), 1500); };
     const list = Q.querySelector(".qs-list"), note = (t) => (list.innerHTML = `<p class="qs-note">${t}</p>`);
+    // when Wi-Fi isn't working: a Troubleshoot button that opens the troubleshooter and runs it
+    const noteFix = (t) => { list.innerHTML = `<p class="qs-note">${t}</p><div class="qs-fixw"><button class="btn sm primary qs-fix">Troubleshoot</button></div>`; $(".qs-fix", list).onclick = (e) => { e.stopPropagation(); NX.shell.troubleshoot(); }; };
     if (!NX.native) {
       note(kind === "wifi" ? (NX.netOK() ? "Connected to the internet through this computer's connection." : NX.netWhy()) : kind === "bt" ? "Bluetooth devices connect on the real Nebulux OS (from the USB), or through Settings in Edge and Chrome." : "On the real Nebulux OS (from the USB), cast to a TV that supports screen mirroring, or plug one into the HDMI port.");
       return;
@@ -355,8 +357,9 @@
     if (kind === "wifi") {
       if (!on) return note("Wi-Fi is off.");
       NX.api("GET", "/wifi").then((w) => {
-        if (!w.device) return note(w.error || "This computer has no Wi-Fi that Nebulux OS can use. A network cable works too.");
-        if (!w.networks.length) return note("No networks found yet.");
+        if (!w.device) return noteFix(NX.esc(w.error || "This computer has no Wi-Fi that Nebulux OS can use. A network cable works too."));
+        if (w.error) return noteFix(NX.esc(w.error));
+        if (!w.networks.length) return noteFix("No networks found yet. Wait a moment, or troubleshoot.");
         list.innerHTML = w.networks.slice(0, 12).map((n, i) => `<div class="qs-item ${n.active ? "on" : ""}" data-i="${i}"><button class="qs-row" data-row="${i}">${NX.icon("wifi", 18)}<span><b>${NX.esc(n.ssid)}</b><small>${n.active ? "Connected" : n.secure ? "Secured" : "Open"}</small></span></button></div>`).join("");
         list.querySelectorAll("[data-row]").forEach((r) => (r.onclick = (e) => {
           e.stopPropagation(); const n = w.networks[+r.dataset.row], item = r.parentNode;
@@ -458,6 +461,11 @@
   }
   NX.menu = menu;
   const openWifi = () => { closeFlyouts("qs"); qsDraw(); $("#qs").hidden = false; qsMore("wifi"); };
-  NX.shell = { nightTick, nightHours: inHours, openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
+  // Settings > Network & internet with the troubleshooter running
+  function troubleshoot() {
+    closeFlyouts(); NX.open("settings", { page: "network" });
+    let n = 0; const t = setInterval(() => { const b = document.querySelector(".win[data-app=settings] #s-diag"); if (b) { clearInterval(t); b.scrollIntoView({ block: "center" }); b.click(); } else if (++n > 40) clearInterval(t); }, 100);
+  }
+  NX.shell = { troubleshoot, nightTick, nightHours: inHours, openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

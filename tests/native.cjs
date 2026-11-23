@@ -236,6 +236,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(/Realtek RTL8852BE/.test(dtx) && /Driver: rtw89_8852be/.test(dtx) && /Everything works/.test(dtx), "it names the Wi-Fi chip and its driver, and says everything works" + (/Everything works/.test(dtx) ? "" : " [" + dtx.replace(/s+/g, " ").slice(0, 300) + "]"));
   await p.evaluate(() => document.querySelector("#s-drep").click());
   ok(await until(() => p.evaluate(async () => { const d = (await NX.fs.places()).folders.find((f) => f.name === "Documents"); return (await NX.fs.list(d.path)).entries.some((e) => /^Nebulux network report/.test(e.name)); })), "Save a report puts it in Documents");
+  await p.evaluate(() => NX.close("settings")); await wait(400);
+  await p.evaluate(() => NX.shell.troubleshoot());
+  ok(await until(() => p.evaluate(() => document.querySelectorAll(".win[data-app=settings] #s-diagout .s-dc").length >= 5)), "Troubleshoot (from quick settings) opens the troubleshooter and runs it");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
   // ---------- 3.1: a USB that doesn't save changes offers a guest start ----------
