@@ -130,9 +130,9 @@
   const told = () => document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "battery" }));
   if (N) { battery(); setInterval(battery, 30000); }
   else if (navigator.getBattery) navigator.getBattery().then((b) => {
-    const read = () => { NX.battery = { present: true, percent: Math.round(b.level * 100), charging: b.charging }; told(); };
+    const read = () => { const t = b.charging ? b.chargingTime : b.dischargingTime; NX.battery = { present: true, percent: Math.round(b.level * 100), charging: b.charging, minutes: isFinite(t) && t > 0 ? Math.round(t / 60) : 0 }; told(); };
     read();
-    ["levelchange", "chargingchange"].forEach((ev) => b.addEventListener(ev, read));
+    ["levelchange", "chargingchange", "dischargingtimechange", "chargingtimechange"].forEach((ev) => b.addEventListener(ev, read));
   }).catch(() => {});
   // at sign-in: your volume goes to the speakers, and the Wi-Fi and Bluetooth switches show the real state
   document.addEventListener("nx:signin", async () => {

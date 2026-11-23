@@ -422,6 +422,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => NX.prefs().wallpaper === 0), "and a built-in background can be picked again");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  // 3.2: battery time left
+  ok(await p.evaluate(() => { NX.battery = { present: true, percent: 55, charging: false, minutes: 200 }; const a = NX.battLeft(); NX.battery = { present: true, percent: 40, charging: true, minutes: 65 }; const b = NX.battLeft(); NX.battery = { present: true, percent: 100, charging: false }; return a === "About 3 h 20 min left" && b === "1 h 5 min until full" && NX.battLeft() === ""; }), "the battery says how much time is left, or until full");
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

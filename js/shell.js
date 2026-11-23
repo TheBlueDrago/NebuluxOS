@@ -197,7 +197,9 @@
     const c = NX.saverOn() ? "saver" : b.charging ? "charging" : pc <= 10 ? "critical" : pc <= 20 ? "low" : "ok";
     return `<svg class="nx-batt b-${c}" width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="15" width="34" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="40" y="20.5" width="3.5" height="7" rx="1.2" fill="currentColor"/><rect class="nx-bfill" x="9" y="19" width="${w.toFixed(1)}" height="10" rx="1.6"/>${b.charging ? `<path d="M23.5 16.5l-5 8.5h4.5l-2 6.5 6-9h-4.6z" fill="#fff" stroke="#0006" stroke-width=".8"/>` : ""}</svg>`;
   };
-  const battText = () => { const b = batt(); return b ? "Battery " + b.percent + "%" + (b.charging ? ", charging" : NX.saverOn() ? ", Battery saver on" : "") : ""; };
+  // "About 3 h 20 min left" or "1 h 5 min until full", when the battery says
+  NX.battLeft = () => { const b = batt(); if (!b || !b.minutes || (b.charging && b.percent >= 100)) return ""; const h = Math.floor(b.minutes / 60), m = b.minutes % 60, t = (h ? h + " h " : "") + (h && !m ? "" : m + " min"); return b.charging ? t.trim() + " until full" : "About " + t.trim() + " left"; };
+  const battText = () => { const b = batt(); return b ? "Battery " + b.percent + "%" + (b.charging ? ", charging" : NX.saverOn() ? ", Battery saver on" : "") + (NX.battLeft() ? ". " + NX.battLeft() : "") : ""; };
   // low battery: a warning at 20% and 10% (once each time it gets there)
   let lowTold = 101;
   document.addEventListener("nx:prefs", (e) => {
@@ -320,7 +322,7 @@
     const p = NX.prefs(), t = (k, icon, label, on, more) => more ? `<div class="qs-t qs-split ${on ? "on" : ""}"><button class="qs-main" data-k="${k}" aria-label="${label}">${NX.icon(icon, 18)}</button><button class="qs-more" data-more="${k}" aria-label="${label} list">${NX.icon("chevron", 12)}</button><span>${label}</span></div>` : `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
     $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("dnd", "bell", "Do not disturb", !!p.dnd)}${batt() ? t("saver", "leaf", "Battery saver", NX.saverOn()) : ""}${t("cast", "cast", "Cast", false)}</div>
       <label class="qs-sl">${NX.icon("sun", 18)}<input type="range" min="30" max="100" value="${p.brightness}" data-s="brightness" aria-label="Brightness"></label><label class="qs-sl">${NX.icon("volume", 18)}<input type="range" min="0" max="100" value="${p.volume}" data-s="volume" aria-label="Volume"></label>
-      <div class="qs-foot"><button class="qs-batt" aria-label="Power and battery settings" ${batt() ? "" : "hidden"}>${batt() ? `${NX.battIcon(20)} ${batt().percent}%${batt().charging ? " (charging)" : ""}` : ""}</button><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
+      <div class="qs-foot"><button class="qs-batt" aria-label="Power and battery settings" ${batt() ? "" : "hidden"}>${batt() ? `${NX.battIcon(20)} ${batt().percent}%${batt().charging ? " (charging)" : ""}${NX.battLeft() ? `<small class="qs-left">${NX.battLeft()}</small>` : ""}` : ""}</button><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
     const Q = $("#qs");
     Q.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => {
       const k = b.dataset.k, P = NX.prefs();

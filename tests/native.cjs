@@ -211,6 +211,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => /19.5 GB free/.test((document.querySelector("#s-store") || {}).innerText || "") && document.querySelectorAll("#s-store .s-str").length >= 5)), "Storage shows how full the USB is and what uses it");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  // ---------- 3.2: the connected network's Properties, and the battery time left ----------
+  await p.evaluate(() => NX.open("settings", { page: "network" }));
+  await until(() => p.evaluate(() => !!document.querySelector("#s-wlist [data-wprop]")));
+  await p.evaluate(() => document.querySelector("#s-wlist [data-wprop]").click());
+  ok(await until(() => p.evaluate(() => { const t = (document.querySelector("#s-wlist .s-wprops") || {}).innerText || ""; return /5 GHz/.test(t) && t.includes("192.168.1.42") && t.includes("866 Mbit"); })), "Properties shows the band, speed and IP address of the Wi-Fi network");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+  ok(await until(() => p.evaluate(() => NX.battLeft() === "About 3 h 25 min left"), 35000), "the real battery says how long it lasts");
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

@@ -99,6 +99,17 @@ const api = {
     if (!r.ok) { const e = cleanErr(r.err + " " + r.out); throw new Error(/secrets were required|password/i.test(e) ? "The password is wrong, or the network needs one." : e); }
     return { ok: true };
   },
+  // the connected Wi-Fi network's details: signal, band and channel, speed, security, addresses
+  async "GET /wifi/details"() {
+    if (FAKE) return fake.conn ? { ssid: fake.conn, signal: 82, freq: 5180, band: "5 GHz", channel: 36, rate: "866 Mbit/s", security: "WPA2", ip: "192.168.1.42/24", gateway: "192.168.1.1", dns: ["192.168.1.1"], device: "wlp2s0", mac: "3C:21:9C:00:11:22" } : { ssid: null };
+    const dev = (await run("nmcli", ["-t", "-f", "DEVICE,TYPE,STATE", "device"])).out.split("\n").map(nmSplit).find((x) => x[1] === "wifi" && /^connected/.test(x[2] || ""));
+    if (!dev) return { ssid: null };
+    const show = (await run("nmcli", ["-t", "-f", "GENERAL.CONNECTION,GENERAL.HWADDR,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS", "device", "show", dev[0]])).out;
+    const get = (k) => show.split("\n").filter((l) => l.startsWith(k)).map((l) => l.slice(l.indexOf(":") + 1).replace(/\\:/g, ":"));
+    const list = (await run("nmcli", ["-t", "-f", "IN-USE,SSID,SIGNAL,FREQ,RATE,SECURITY,CHAN", "device", "wifi", "list", "--rescan", "no"], 8000)).out.split("\n").map(nmSplit).find((x) => x[0] === "*") || [];
+    const freq = parseInt(list[3], 10) || 0;
+    return { ssid: list[1] || get("GENERAL.CONNECTION")[0] || null, signal: +list[2] || 0, freq, band: freq >= 5925 ? "6 GHz" : freq >= 4900 ? "5 GHz" : freq ? "2.4 GHz" : "", channel: +list[6] || 0, rate: list[4] || "", security: list[5] || "", ip: get("IP4.ADDRESS")[0] || "", gateway: get("IP4.GATEWAY")[0] || "", dns: get("IP4.DNS"), device: dev[0], mac: get("GENERAL.HWADDR")[0] || "" };
+  },
   // Wi-Fi networks this computer remembers, forgetting one, and joining a hidden network
   async "GET /wifi/known"() {
     if (FAKE) return { known: (fake.known || ["Home Wi-Fi", "School Wi-Fi"]).slice() };
@@ -188,13 +199,18 @@ const api = {
     setTimeout(() => run("systemctl", [kind]), 300); return { ok: true };
   },
   async "GET /battery"() {
-    if (FAKE) return { present: true, percent: 76, charging: false };
+    if (FAKE) return { present: true, percent: 76, charging: false, minutes: 205 };
     let list = []; try { list = fs.readdirSync("/sys/class/power_supply"); } catch (e) { return { present: false }; }
     for (const d of list) {
       const base = "/sys/class/power_supply/" + d, rd = (f) => { try { return fs.readFileSync(base + "/" + f, "utf8").trim(); } catch (e) { return ""; } };
       if (rd("type") !== "Battery" || rd("scope") === "Device") continue;
       const cap = +rd("capacity"); if (!(cap >= 0)) continue;
-      return { present: true, percent: Math.min(100, cap), charging: /^(Charging|Full)$/.test(rd("status")) };
+      const status = rd("status"), charging = /^(Charging|Full)$/.test(status);
+      // time left (or until full): energy and power, or charge and current, whichever the battery reports
+      const now = +rd("energy_now") || +rd("charge_now"), full = +rd("energy_full") || +rd("charge_full"), rate = Math.abs(+rd("power_now") || +rd("current_now"));
+      let minutes = 0;
+      if (rate > 0 && now > 0) minutes = Math.round(((status === "Charging" ? Math.max(0, full - now) : status === "Discharging" ? now : 0) / rate) * 60);
+      return { present: true, percent: Math.min(100, cap), charging, minutes: minutes > 0 && minutes < 48 * 60 ? minutes : 0 };
     }
     return { present: false };
   },
