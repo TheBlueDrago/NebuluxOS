@@ -89,6 +89,12 @@
     el.addEventListener("pointerdown", () => { if (wins.get(id) === w) NX.focus(id); }, true);
     const tb = el.querySelector(".titlebar");
     tb.addEventListener("dblclick", (e) => { if (!e.target.closest(".wb")) NX.toggleMax(id); });
+    // right-click the title bar: minimize, maximize, keep this window above the others, close
+    tb.addEventListener("contextmenu", (e) => {
+      if (!NX.menu) return; e.preventDefault(); e.stopPropagation();
+      NX.menu(e.clientX, e.clientY, [[w.max ? "Restore" : "Maximize", () => NX.toggleMax(id)], ["Minimize", () => NX.minimize(id)],
+        [w.onTop ? "Stop keeping on top" : "Keep on top", () => { w.onTop = !w.onTop; el.classList.toggle("ontop", w.onTop); NX.toast(w.onTop ? app.name + " stays above other windows." : app.name + " is a normal window again."); }], ["Close", () => NX.close(id)]]);
+    });
     // drag
     tb.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || e.target.closest(".wb")) return;
