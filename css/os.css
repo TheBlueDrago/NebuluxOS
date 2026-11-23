@@ -1053,3 +1053,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .bigcursor input:not([type=checkbox]):not([type=radio]):not([type=range]),.bigcursor textarea,.bigcursor [contenteditable=true]{cursor:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'48'%20height%3D'48'%20viewBox%3D'0%200%2048%2048'%3E%3Cpath%20d%3D'M17%206h14M17%2042h14M24%206v36'%20stroke%3D'black'%20stroke-width%3D'6'%20stroke-linecap%3D'round'%2F%3E%3Cpath%20d%3D'M17%206h14M17%2042h14M24%206v36'%20stroke%3D'white'%20stroke-width%3D'3'%20stroke-linecap%3D'round'%2F%3E%3C%2Fsvg%3E") 24 24,text!important}
 /* a window kept on top (right-click its title bar) stays above the others, below the taskbar and menus */
 .win.ontop{z-index:1900!important}.win.ontop .titlebar .wt-name::after{content:"  \00b7  On top";color:var(--sub);font-weight:400}
+
+/* Notepad: word wrap off scrolls sideways; the line and column */
+.np textarea.np-nowrap{white-space:pre;overflow-x:auto}.np [data-a=wrap].on{background:color-mix(in srgb,var(--accent) 22%,var(--card2))}
+.np-pos{margin-right:auto;font-variant-numeric:tabular-nums}

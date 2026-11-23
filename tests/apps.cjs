@@ -89,6 +89,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.mouse.move(f0.x, f0.y); await p.mouse.down(); await p.mouse.move(f0.x + 20, f0.y, { steps: 3 }); await p.mouse.move(y0.x + y0.w * .4, f0.y, { steps: 8 }); await p.mouse.up(); await wait(400);
   const order = await p.evaluate(() => NX.prefs().pinned.slice(0, 5).join(","));
   ok(order === "settings,google,youtube,files,store" && await p.evaluate(() => [...document.querySelectorAll("#tb-apps .tb-app")].map((b) => b.dataset.app).slice(0, 5).join(",")) === order && !(await p.evaluate(() => !!document.querySelector(".win[data-app=files]"))), "Dragging a taskbar app moves it (and doesn't open it): " + order);
+  // Notepad: line and column, word wrap
+  await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(500);
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.focus(); }); await p.keyboard.type("ab"); await p.keyboard.press("Enter"); await p.keyboard.type("cd");
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] .np-pos").textContent === "Ln 2, Col 3"), "Notepad shows the line and column");
+  await p.click(".win[data-app=notepad] [data-a=wrap]");
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").wrap === "off" && NX.data("np-wrap", true) === false), "and Word wrap turns off (and stays off)");
+  await p.click(".win[data-app=notepad] [data-a=wrap]");
   // Keep on top (right-click a title bar)
   await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("clock"); }); await wait(600);
   const tbN = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wt-name").getBoundingClientRect(); return [r.x + 10, r.y + r.height / 2]; });
