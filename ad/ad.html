@@ -264,7 +264,7 @@ window.__render = async (musicURL, upTo) => {
   const music = await (async () => { const buf = await (await fetch(musicURL)).arrayBuffer(); const ac = new OfflineAudioContext(2, 48000, 48000); return ac.decodeAudioData(buf); })();
   const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: W, height: H, frameRate: FPS }, audio: { codec: "aac", numberOfChannels: 2, sampleRate: 48000 }, fastStart: "in-memory", firstTimestampBehavior: "offset" });
   const venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: (e) => { throw e; } });
-  venc.configure({ codec: "avc1.640028", width: W, height: H, bitrate: 10e6, framerate: FPS, latencyMode: "quality", avc: { format: "avc" } });
+  venc.configure({ codec: "avc1.640028", width: W, height: H, bitrate: (window.BR || 10e6), framerate: FPS, latencyMode: "quality", avc: { format: "avc" } });
   const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: (e) => { throw e; } });
   aenc.configure({ codec: "mp4a.40.2", numberOfChannels: 2, sampleRate: 48000, bitrate: 192000 });
   for (let f = 0; f < frames; f++) {

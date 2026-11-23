@@ -20,7 +20,7 @@ const TYPES = { ".html": "text/html", ".js": "text/javascript", ".jpg": "image/j
       for (let i = 0; i < shots.length; i++) { const im = new Image(); im.src = shots[i][1]; await im.decode(); const X = (i % cols) * w, Y = Math.floor(i / cols) * (h + 26); g.drawImage(im, X, Y + 24, w - 4, h); g.fillStyle = "#000"; g.font = "16px sans-serif"; g.fillText(shots[i][0] + "s", X + 4, Y + 17); } return cc.toDataURL("image/jpeg", .85); }, shots, cols, w, h);
     fs.writeFileSync(out, Buffer.from(url.split(",")[1], "base64")); console.log("sheet", out);
   } else {
-    const t0 = Date.now(); const r = await p.evaluate((u, s) => window.__render(u, s), base + "/music.mp4", +rest[0] || 0);
+    const t0 = Date.now(); const r = await p.evaluate((u, s, br) => { if (br) window.BR = br; return window.__render(u, s); }, base + "/music.mp4", +rest[0] || 0, +process.env.BR || 0);
     console.log("rendered", JSON.stringify(r), "in", ((Date.now() - t0) / 1000).toFixed(0) + "s");
     const fd = fs.openSync(out, "w"), N = 4 * 1024 * 1024; for (let at = 0; at < r.bytes; at += N) fs.writeSync(fd, Buffer.from(await p.evaluate((a, n) => window.__chunk(a, n), at, N), "base64")); fs.closeSync(fd);
     console.log("saved", out, (fs.statSync(out).size / 1048576).toFixed(1) + " MB");
