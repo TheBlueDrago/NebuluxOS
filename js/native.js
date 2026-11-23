@@ -41,6 +41,7 @@
   document.addEventListener("nx:winopen", (e) => NX.api("POST", "/diag", { open: e.detail }).catch(() => {}));
   // ---------- real apps (Flathub) ----------
   let tzDone = false;
+  NX.scale = "1"; if (N) NX.api("GET", "/scale").then((r) => { NX.scale = r.scale || "1"; }).catch(() => {});
   NX.nativeInstalled = new Set(); NX.nativeRunning = new Set(); NX.nativeActive = new Set(); NX.nativeOK = false;
   const nativeMap = () => { const m = {}; for (const [id, a] of Object.entries(NX.apps)) if (a.native && NX.nativeInstalled.has(a.native.flatpak)) m[id] = a.native.wm; return m; };
   NX.isNative = (id) => { const a = NX.apps[id]; return !!(a && a.native && NX.nativeInstalled.has(a.native.flatpak)); };

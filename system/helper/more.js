@@ -327,6 +327,7 @@ module.exports = function more({ api, run, FAKE }) {
     const url = String(b.url || ""); if (!/^https?:\/\/[^\s]{1,2000}$/i.test(url)) throw new Error("That web address doesn't look right.");
     if (!browserOK()) throw new Error("The web browser isn't available here.");
     const flags = (process.env.NX_BROWSER_FLAGS || "").split(" ").filter(Boolean);
+    const sc = readScale(); if (sc !== "1") flags.push("--force-device-scale-factor=" + sc); // the same display scale as Nebulux OS
     const p = spawn("chromium", ["--user-data-dir=" + WEBDIR, "--class=NebuluxWeb", "--no-first-run", "--no-default-browser-check", "--disable-session-crashed-bubble", "--password-store=basic", ...flags, b.app ? "--app=" + url : url], { detached: true, stdio: "ignore" });
     p.unref(); if (!(web && web.exitCode == null)) { web = p; p.on("exit", () => { if (web === p) web = null; }); }
     for (let k = 0; k < 15; k++) { await new Promise((ok) => setTimeout(ok, 300)); const w = await webWins(); if (w.length) { await run("xdotool", ["windowactivate", w[w.length - 1]], 4000); break; } }
@@ -449,6 +450,17 @@ module.exports = function more({ api, run, FAKE }) {
     const du = async (p) => { const r = await run("du", ["-sb", p], 8000); return +(r.out.split(/\s/)[0]) || 0; };
     const folders = []; for (const f of FOLDERS) folders.push([f, await du(path.join(HOME, f))]);
     return { persistent: persist, total: n[0] || 0, used: n[1] || 0, free: n[2] || 0, folders, apps: await du(path.join(HOME, ".local", "share", "flatpak")), trash: await du(TRASH) };
+  };
+
+  // ---------- display scale: how big everything is (100% to 200%); the screen starts again to change it ----------
+  const SCALEF = path.join(HOME, ".config", "nebulux-scale"), SCALES = ["1", "1.25", "1.5", "1.75", "2"];
+  function readScale() { try { const v = fs.readFileSync(SCALEF, "utf8").trim(); return SCALES.includes(v) ? v : "1"; } catch (e) { return "1"; } }
+  api["GET /scale"] = async () => ({ scale: readScale() });
+  api["POST /scale"] = async (b) => {
+    const v = String(b.scale); if (!SCALES.includes(v)) throw new Error("Pick a size.");
+    fs.mkdirSync(path.dirname(SCALEF), { recursive: true }); fs.writeFileSync(SCALEF, v);
+    if (!FAKE) setTimeout(() => run("pkill", ["-f", "class=NebuluxShell"]), 900); // the session starts the screen again, at the new size
+    return { ok: true, scale: v, restart: !FAKE };
   };
 
   // ---------- the network troubleshooter ----------

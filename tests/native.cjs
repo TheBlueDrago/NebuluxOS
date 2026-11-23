@@ -282,6 +282,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await fake()).micMuted === true) && await p.evaluate(() => /Microphone off/.test(document.querySelector("#osd").textContent)), "the microphone key mutes the microphone, and says so");
   await p.evaluate(() => NX.hwKey("mic-mute")); await until(async () => (await fake()).micMuted === false);
 
+  // ---------- 3.2: display scale ----------
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-scale=\"1.25\"]").click()); await wait(300);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] .nx-ask [type=submit], .win[data-app=settings] .nx-ask .primary").click());
+  ok(await until(() => p.evaluate(async () => (await (await fetch("/api/scale", { headers: { "x-nx": window.NX_NATIVE.token } })).json()).scale === "1.25")), "Settings > System > Display > Scale saves the new size");
+  await p.evaluate(async () => { await fetch("/api/scale", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: JSON.stringify({ scale: "1" }) }); NX.close("settings"); }); await wait(300);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");
