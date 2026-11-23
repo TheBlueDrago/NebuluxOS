@@ -75,7 +75,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await cv("Length", "1", "Miles", "Kilometers") === "1.609344", "Calculator converts 1 mile to 1.609344 km");
   ok(await cv("Temperature", "100", "Celsius", "Fahrenheit") === "212", "and 100 C to 212 F");
   ok(await cv("Weight", "1", "Kilograms", "Pounds") === "2.204622622", "and 1 kg to 2.204622622 lb");
-  await shot("converter"); await p.evaluate(() => NX.closeAll());
+  await shot("converter");
+  // Scientific
+  await p.evaluate(() => document.querySelector(".win[data-app=calculator] [data-m=sci]").click()); await wait(200);
+  const sciR = await p.evaluate(() => { const E = (x) => { try { return NX.calcEval(x, true); } catch (e) { return "err"; } }; return [E("2^10"), +E("sin(30)").toFixed(9), +E("log(100)+ln(e)").toFixed(9), E("3!"), E("2(3+4)"), +E("sqrt(16)*π").toFixed(6), E("1/0"), E("2+*3"), E("-2^2"), E("10%"), +E("cos(60)").toFixed(9), E("(1+2")]; });
+  ok(JSON.stringify(sciR) === JSON.stringify([1024, 0.5, 3, 6, 14, 12.566371, null, "err", -4, 0.1, 0.5, "err"]), "Scientific works out 2^10, sin(30), log, ln, 3!, brackets and pi: " + JSON.stringify(sciR));
+  for (const k of ["2", "x^y", "8", "="]) await p.evaluate((k) => [...document.querySelectorAll(".win[data-app=calculator] .sc-keys button")].find((b) => b.textContent === k).click(), k);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=calculator] .sc-out").textContent === "256"), "and its buttons work: 2 ^ 8 = 256");
+  await shot("scientific"); await p.evaluate(() => NX.closeAll());
   // Snipping Tool: draw on a screenshot
   await p.evaluate(() => { NX.closeAll(); NX.open("snip"); }); await wait(500);
   await p.click(".win[data-app=snip] [data-s]"); await p.waitForFunction(() => { const i = document.querySelector(".win[data-app=snip] .sn-view img"); return i && i.naturalWidth > 0; }, { timeout: 10000 }).catch(() => {});

@@ -87,7 +87,7 @@
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
-      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="conv">Converter</button></div><div class="c-conv" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
+      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button></div><div class="c-conv" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
       let cur = "0", prev = null, op = null, fresh = true, expr = "";
       const val = body.querySelector(".c-val"), ex = body.querySelector(".c-expr");
       const fmt = (n) => { if (!isFinite(n)) return "Can't divide by zero"; const s = Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0) ? n.toExponential(8) : String(+n.toPrecision(15)); return s; };
@@ -154,8 +154,43 @@
         q(".cv-swap").onclick = () => { const x = q(".cv-ua").value; q(".cv-ua").value = q(".cv-ub").value; q(".cv-ub").value = x; go(); };
         go();
       };
-      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const c = b.dataset.m === "conv";
-        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; body.querySelector(".c-disp").hidden = c; body.querySelector(".c-keys").hidden = c; hist.hidden = true; if (c && !conv.innerHTML) convDraw(); };
+      // Scientific: type or tap a whole expression, like 2^10 or sin(30) + log(100); worked out by a small parser (no eval)
+      const sci = body.querySelector(".c-sci"); let deg = true;
+      NX.calcEval = (src, degrees) => {
+        const s = String(src).replace(/\s+/g, "").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/π/g, "pi"); let i = 0;
+        const fail = () => { throw new Error("That doesn't look right."); };
+        const toRad = (x) => (degrees ? x * Math.PI / 180 : x), fromRad = (x) => (degrees ? x * 180 / Math.PI : x);
+        const FN = { sin: (x) => Math.sin(toRad(x)), cos: (x) => Math.cos(toRad(x)), tan: (x) => Math.tan(toRad(x)), asin: (x) => fromRad(Math.asin(x)), acos: (x) => fromRad(Math.acos(x)), atan: (x) => fromRad(Math.atan(x)), log: Math.log10, ln: Math.log, sqrt: Math.sqrt, abs: Math.abs };
+        const fact = (n) => { if (n < 0 || n !== Math.floor(n) || n > 170) fail(); let r = 1; for (let k = 2; k <= n; k++) r *= k; return r; };
+        const peek = () => s[i];
+        const num = () => { const m = /^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i)); if (!m) fail(); i += m[0].length; return parseFloat(m[0]); };
+        const atom = () => {
+          if (peek() === "(") { i++; const v = expr(); if (peek() !== ")") fail(); i++; return v; }
+          if (peek() === "-") { i++; return -power(); } if (peek() === "+") { i++; return power(); }
+          const w = /^[a-z]+/i.exec(s.slice(i));
+          if (w) { const name = w[0].toLowerCase(); i += w[0].length; if (name === "pi") return Math.PI; if (name === "e") return Math.E; const f = FN[name]; if (!f || peek() !== "(") fail(); i++; const v = expr(); if (peek() !== ")") fail(); i++; return f(v); }
+          return num();
+        };
+        const post = () => { let v = atom(); while (peek() === "!" || peek() === "%") { v = peek() === "!" ? fact(v) : v / 100; i++; } return v; };
+        const power = () => { const b = post(); if (peek() === "^") { i++; return Math.pow(b, power()); } return b; };
+        const term = () => { let v = power(); for (;;) { const c = peek(); if (c === "*") { i++; v *= power(); } else if (c === "/") { i++; const d = power(); v = d === 0 ? Infinity : v / d; } else if (c === "(" || (c && /[a-z\d.]/i.test(c) && /[\d)!%a-z.]/i.test(s[i - 1] || ""))) { v *= power(); } else return v; } };
+        const expr = () => { let v = term(); for (;;) { if (peek() === "+") { i++; v += term(); } else if (peek() === "-") { i++; v -= term(); } else return v; } };
+        if (!s) return 0; const v = expr(); if (i < s.length) fail(); return v;
+      };
+      const SK = [["sin", "sin("], ["cos", "cos("], ["tan", "tan("], ["(", "("], [")", ")"], ["log", "log("], ["ln", "ln("], ["√", "sqrt("], ["x^y", "^"], ["x!", "!"], ["π", "π"], ["7"], ["8"], ["9"], ["÷", "÷"], ["e", "e"], ["4"], ["5"], ["6"], ["×", "×"], ["Deg", "DEG"], ["1"], ["2"], ["3"], ["−", "−"], ["C", "C"], ["⌫", "BS"], ["0"], ["."], ["+"], ["=", "="]];
+      const sciDraw = () => {
+        sci.innerHTML = `<div class="sc-disp"><input class="sc-in" aria-label="Expression" spellcheck="false" autocomplete="off"><b class="sc-out">0</b></div><div class="sc-keys">${SK.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-sk="${NX.esc(k || l)}">${l}</button>`).join("")}</div>`;
+        const inp = sci.querySelector(".sc-in"), out = sci.querySelector(".sc-out");
+        const live = () => { try { const v = NX.calcEval(inp.value, deg); out.textContent = inp.value ? fmt(v) : "0"; out.classList.remove("bad"); } catch (e) { out.classList.add("bad"); } };
+        const done = () => { try { const v = NX.calcEval(inp.value, deg), r = fmt(v); if (inp.value && isFinite(v)) NX.setData("calc-history", [{ e: inp.value + " =", r }, ...NX.data("calc-history", [])].slice(0, 20)); inp.value = isFinite(v) ? r : ""; out.textContent = r; } catch (e) { out.textContent = e.message; out.classList.add("bad"); } };
+        sci.querySelector(".sc-keys").onclick = (e) => { const b = e.target.closest("[data-sk]"); if (!b) return; const k = b.dataset.sk;
+          if (k === "=") done(); else if (k === "C") { inp.value = ""; live(); } else if (k === "BS") { inp.value = inp.value.slice(0, -1); live(); } else if (k === "DEG") { deg = !deg; b.textContent = deg ? "Deg" : "Rad"; live(); } else { inp.value += k; live(); } inp.focus(); };
+        inp.oninput = live; inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); done(); } };
+        live();
+      };
+      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const m = b.dataset.m, c = m === "conv", sc = m === "sci";
+        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; body.querySelector(".c-disp").hidden = c || sc; body.querySelector(".c-keys").hidden = c || sc; hist.hidden = true;
+        if (c && !conv.innerHTML) convDraw(); if (sc && !sci.innerHTML) sciDraw(); if (sc) sci.querySelector(".sc-in").focus(); };
     } };
 
   // ---------- Paint: brush, colors, sizes, eraser, save as a picture ----------
