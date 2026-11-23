@@ -278,6 +278,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await fake()).tz === "Europe/Paris"), "with automatic off, a time zone can be picked");
   await p.evaluate(() => NX.close("settings")); await wait(300);
 
+  await p.evaluate(() => NX.hwKey("mic-mute"));
+  ok(await until(async () => (await fake()).micMuted === true) && await p.evaluate(() => /Microphone off/.test(document.querySelector("#osd").textContent)), "the microphone key mutes the microphone, and says so");
+  await p.evaluate(() => NX.hwKey("mic-mute")); await until(async () => (await fake()).micMuted === false);
+
   // ---------- 3.2: Known networks, a hidden network, Show password ----------
   await p.evaluate(() => NX.open("settings", { page: "network" }));
   ok(await until(() => p.evaluate(() => document.querySelectorAll("#s-known [data-forget]").length === 2)), "Known networks lists the saved Wi-Fi networks");

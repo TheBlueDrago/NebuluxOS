@@ -217,6 +217,13 @@ const api = {
     if (p.ok) { await run("pactl", ["set-sink-mute", "@DEFAULT_SINK@", v ? "0" : "1"], 4000); return { ok: true }; }
     await run("amixer", ["-q", "-M", "sset", "Master", v + "%", v ? "unmute" : "mute"]); return { ok: true };
   },
+  // the microphone: mute or unmute it (the laptop's microphone key)
+  async "POST /mic"(b) {
+    const mute = !!b.mute; if (FAKE) { fake.micMuted = mute; return { ok: true, muted: mute }; }
+    const p = await run("pactl", ["set-source-mute", "@DEFAULT_SOURCE@", mute ? "1" : "0"], 4000);
+    if (!p.ok) await run("amixer", ["-q", "sset", "Capture", mute ? "nocap" : "cap"], 4000);
+    return { ok: true, muted: mute };
+  },
   async "GET /brightness"() {
     if (FAKE) return { brightness: fake.bright };
     const r = await run("brightnessctl", ["-m"]); const m = /,(\d+)%,/.exec(r.out); return { brightness: r.ok && m ? +m[1] : null };
