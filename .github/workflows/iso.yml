@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
-      NX_VERSION: "3.5"
+      NX_VERSION: "3.6"
       # 3.2 has Wi-Fi settings for the system too (NetworkManager, the IdeaPad fix): the new .iso gets all of it
       NX_NEEDS_ISO: "0"
     steps:

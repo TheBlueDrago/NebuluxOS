@@ -1,8 +1,12 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.5";
+  NX.version = "3.6";
   NX.whatsNew = [
+    ["Keep a window on top", "Right-click a window's title bar for Minimize, Maximize, Keep on top and Close. A window kept on top stays above the others."],
+    ["Sort your files", "File Explorer sorts by name, date, type or size: click a column in Details view, or use Sort."],
+    ["Notepad, a little better", "Turn Word wrap on or off, and see the line and column you're on."],
+    ["Close apps from the taskbar", "Right-click Netflix, Spotify or any other app on the taskbar and pick Close window."],
     ["Join the hotspot with a QR code", "When Mobile hotspot is on, Settings shows a QR code. Point your phone's camera at it to join without typing the password."],
     ["Clean up your USB", "Settings > System > Storage can clean up temporary files (website and app caches, and app parts nothing uses) and says how much space it freed. Your files, sign-ins and settings stay."],
     ["Draw on screenshots", "Snipping Tool has Draw: mark up a screenshot with four pen colors and Undo, then save it as a copy."],
@@ -74,6 +78,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Auto mode");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Join the hotspot with a QR code");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
