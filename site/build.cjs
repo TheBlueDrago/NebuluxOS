@@ -10,7 +10,7 @@ const SITE = __dirname, REPO = path.join(SITE, ".."), PUB = path.join(SITE, "pub
 
 global.NX = {}; require(path.join(REPO, "js", "whatsnew.js"));
 const VERSION = NX.version, NEWS = NX.whatsNew, BEFORE = NX.whatsNewBefore || [];
-const REL = { version: VERSION, file: "Nebulux-OS-" + VERSION + ".iso", size: 1249689600, sha256: "586d7b8d701428771df9df687585a91285537277236aeb09e0b09c5336221da6" };
+const REL = { version: VERSION, file: "Nebulux-OS-" + VERSION + ".iso", size: 1249689600, sha256: "430e5f4ce1137ec126c0aa0663f9b89e015d8c0adc4210b845b30598cb80d935" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // line icons (no emojis)
