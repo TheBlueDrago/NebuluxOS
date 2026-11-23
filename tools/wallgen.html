@@ -1,0 +1,105 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Nebulux OS wallpaper painter</title>
+<body style="margin:0;background:#000">
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// Paints the newer Nebulux OS wallpapers (img/wall-6.jpg and on). Every picture is drawn by code with a fixed seed,
+// so it comes out the same each time. tools/wallgen.cjs opens this page and saves window.paint(i) as a JPEG.
+"use strict";
+const W = 1920, H = 1080, cv = document.getElementById("c"), x = cv.getContext("2d");
+const rng = (seed) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+function sky(stops) { const g = x.createLinearGradient(0, 0, 0, H); stops.forEach(([o, c]) => g.addColorStop(o, c)); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+function glow(X, Y, R, col, a) { const g = x.createRadialGradient(X, Y, 0, X, Y, R); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); x.fillStyle = g; x.fillRect(X - R, Y - R, R * 2, R * 2); }
+function stars(n, r, maxY = H, bright = 1) { for (let i = 0; i < n; i++) { const sx = r() * W, sy = r() * maxY, s = r() * 1.6 + .3, a = (.25 + r() * .75) * bright; x.fillStyle = `rgba(255,255,255,${a})`; x.beginPath(); x.arc(sx, sy, s, 0, 7); x.fill(); if (s > 1.5 && r() > .6) { glow(sx, sy, 10, "200,190,255", .35 * a); } } }
+function grain(r, amt) { const d = x.getImageData(0, 0, W, H), p = d.data; for (let i = 0; i < p.length; i += 4) { const n = (r() - .5) * amt; p[i] += n; p[i + 1] += n; p[i + 2] += n; } x.putImageData(d, 0, 0); }
+
+const PAINT = [
+  // 6. Silk Waves: ribbons of light flowing across a deep violet night
+  () => {
+    const r = rng(61);
+    sky([[0, "#07051a"], [.55, "#140b33"], [1, "#0a0620"]]);
+    glow(W * .28, H * .35, 900, "124,92,255", .28); glow(W * .78, H * .65, 800, "236,72,153", .2); glow(W * .55, H * 1.05, 700, "34,211,238", .14);
+    stars(260, r, H, .7);
+    x.globalCompositeOperation = "lighter";
+    for (let k = 0; k < 140; k++) {
+      const t = k / 140, base = H * (.32 + .36 * t), amp = 120 + 90 * Math.sin(t * 5.3), ph = t * 2.4, fr = .0021 + .0006 * Math.sin(t * 3);
+      const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(34,211,238,0)"); g.addColorStop(.25, `rgba(34,211,238,${.09 + .05 * (1 - t)})`); g.addColorStop(.55, `rgba(167,139,250,${.17})`); g.addColorStop(.85, `rgba(244,114,182,${.1 + .05 * t})`); g.addColorStop(1, "rgba(244,114,182,0)");
+      x.strokeStyle = g; x.lineWidth = 1.4 + (k % 9 === 0 ? 1.6 : 0); x.beginPath();
+      for (let X = -20; X <= W + 20; X += 12) { const Y = base + Math.sin(X * fr + ph) * amp + Math.sin(X * fr * 2.7 + ph * 1.7) * amp * .22; X === -20 ? x.moveTo(X, Y) : x.lineTo(X, Y); }
+      x.stroke();
+    }
+    x.globalCompositeOperation = "source-over"; x.filter = "blur(18px)"; x.globalAlpha = .55; x.drawImage(cv, 0, 0); x.filter = "none"; x.globalAlpha = 1;
+    x.globalCompositeOperation = "lighter";
+    for (let k = 0; k < 60; k++) { const t = k / 60, base = H * (.36 + .3 * t), amp = 130 + 80 * Math.sin(t * 5.3), ph = t * 2.4, fr = .0021 + .0006 * Math.sin(t * 3); x.strokeStyle = `rgba(255,240,255,${.05 + .04 * Math.sin(t * 9) ** 2})`; x.lineWidth = 1; x.beginPath(); for (let X = -20; X <= W + 20; X += 12) { const Y = base + Math.sin(X * fr + ph) * amp + Math.sin(X * fr * 2.7 + ph * 1.7) * amp * .22; X === -20 ? x.moveTo(X, Y) : x.lineTo(X, Y); } x.stroke(); }
+    x.globalCompositeOperation = "source-over"; grain(r, 6);
+  },
+  // 7. Star Dunes: a ringed planet rising over glowing dunes
+  () => {
+    const r = rng(72);
+    sky([[0, "#030414"], [.5, "#120a35"], [.78, "#3b1458"], [1, "#5b1d5e"]]);
+    stars(420, r, H * .7, 1);
+    glow(W * .66, H * .5, 700, "244,114,182", .22); glow(W * .2, H * .3, 600, "99,102,241", .2);
+    // the planet, with its ring's back half behind it and front half in front
+    const px = W * .66, py = H * .5, pr = 210;
+    glow(px, py, pr * 2.4, "251,191,236", .25);
+    const ring = (front) => { x.save(); x.translate(px, py); x.rotate(-.3); x.scale(1, .24); for (let i = 0; i < 4; i++) { const R = pr * (1.5 + i * .17); x.strokeStyle = `rgba(255,226,250,${(.5 - i * .1) * (front ? 1 : .55)})`; x.lineWidth = 16 - i * 3; x.beginPath(); front ? x.arc(0, 0, R, 0, Math.PI) : x.arc(0, 0, R, Math.PI, Math.PI * 2); x.stroke(); } x.restore(); };
+    ring(false);
+    const pg = x.createLinearGradient(px - pr, py - pr, px + pr, py + pr); pg.addColorStop(0, "#ffe4f3"); pg.addColorStop(.45, "#f0abfc"); pg.addColorStop(1, "#5b21b6");
+    x.fillStyle = pg; x.beginPath(); x.arc(px, py, pr, 0, 7); x.fill();
+    x.save(); x.beginPath(); x.arc(px, py, pr, 0, 7); x.clip(); x.filter = "blur(7px)";
+    for (let i = 0; i < 11; i++) { x.fillStyle = `rgba(${i % 2 ? "255,240,252" : "109,40,217"},${.12 + .06 * Math.sin(i * 1.7) ** 2})`; const yy = py - pr + i * 40 + 6; x.beginPath(); x.ellipse(px, yy, pr * 1.2, 9 + (i % 3) * 5, 0, 0, 7); x.fill(); }
+    x.filter = "none"; const sh = x.createRadialGradient(px - pr * .45, py - pr * .45, pr * .15, px, py, pr * 1.05); sh.addColorStop(0, "rgba(255,255,255,.18)"); sh.addColorStop(.6, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(25,6,50,.6)"); x.fillStyle = sh; x.fillRect(px - pr, py - pr, pr * 2, pr * 2); x.restore();
+    ring(true);
+    // the dunes, back to front
+    const dunes = [[.62, "#2a1150", "#4c1d6e", 1], [.7, "#1d0c3d", "#3a1660", 2], [.8, "#140830", "#2b0f4d", 3], [.9, "#0b0520", "#1a0a36", 4]];
+    for (const [h0, c0, c1, s] of dunes) {
+      const rr = rng(100 + s), pts = []; for (let X = 0; X <= W + 80; X += 80) pts.push([X, H * h0 + Math.sin(X * .0016 * s + s) * 60 + Math.sin(X * .004 + s * 2) * 24 + (rr() - .5) * 12]);
+      const g = x.createLinearGradient(0, H * h0 - 80, 0, H); g.addColorStop(0, c1); g.addColorStop(1, c0);
+      x.fillStyle = g; x.beginPath(); x.moveTo(0, H); x.lineTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i]; x.quadraticCurveTo(ax, ay, (ax + bx) / 2, (ay + by) / 2); }
+      x.lineTo(W, H); x.closePath(); x.fill();
+      x.strokeStyle = `rgba(244,171,252,${.32 - s * .05})`; x.lineWidth = 2; x.beginPath(); x.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i]; x.quadraticCurveTo(ax, ay, (ax + bx) / 2, (ay + by) / 2); } x.stroke();
+    }
+    grain(r, 7);
+  },
+  // 8. Polar Lights: green and violet curtains of light over dark mountains
+  () => {
+    const r = rng(83);
+    sky([[0, "#010812"], [.55, "#031a24"], [1, "#05121a"]]);
+    glow(W * .5, H * .55, 1000, "16,185,129", .12);
+    const L = document.createElement("canvas"); L.width = W; L.height = H; const lx = L.getContext("2d");
+    lx.globalCompositeOperation = "lighter";
+    const curtain = (y0, amp, fr, ph, col1, col2, hgt, n, a) => {
+      for (let i = 0; i < n; i++) { const X = (i / n) * (W + 200) - 100, Y = y0 + Math.sin(X * fr + ph) * amp + Math.sin(X * fr * 3.1 + ph) * amp * .25, k = .55 + .45 * Math.sin(X * .011 + ph * 2) ** 2, hh = hgt * k, ray = .6 + .4 * Math.sin(X * .23 + ph) ** 2;
+        const g = lx.createLinearGradient(0, Y - hh, 0, Y + 24); g.addColorStop(0, `rgba(${col2},0)`); g.addColorStop(.5, `rgba(${col2},${.05 * a * ray})`); g.addColorStop(.9, `rgba(${col1},${.2 * a * ray})`); g.addColorStop(1, `rgba(${col1},0)`);
+        lx.fillStyle = g; lx.fillRect(X, Y - hh, 2.6, hh + 24); }
+    };
+    curtain(H * .5, 120, .0019, 1.2, "52,211,153", "56,189,248", 440, 1100, 1.2);
+    curtain(H * .4, 90, .0026, 3.1, "45,212,191", "167,139,250", 380, 900, 1);
+    curtain(H * .6, 70, .0031, 5.0, "163,230,53", "52,211,153", 260, 700, .9);
+    x.filter = "blur(3px)"; x.globalCompositeOperation = "lighter"; x.drawImage(L, 0, 0); x.filter = "blur(26px)"; x.globalAlpha = .8; x.drawImage(L, 0, 0); x.filter = "none"; x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
+    stars(360, r, H * .8, .9);
+    const ridge = (y0, rough, col, seed) => { const rr = rng(seed); let Y = y0; x.fillStyle = col; x.beginPath(); x.moveTo(0, H); for (let X = 0; X <= W; X += 24) { Y += (rr() - .5) * rough; Y = Math.max(y0 - 140, Math.min(y0 + 60, Y)); x.lineTo(X, Y); } x.lineTo(W, H); x.closePath(); x.fill(); };
+    ridge(H * .8, 46, "#04141c", 5); ridge(H * .87, 34, "#020b11", 9);
+    const lake = x.createLinearGradient(0, H * .93, 0, H); lake.addColorStop(0, "rgba(52,211,153,.1)"); lake.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = lake; x.fillRect(0, H * .93, W, H * .07);
+    grain(r, 6);
+  },
+  // 9. Morning Haze (light): soft glass circles in pastel light
+  () => {
+    const r = rng(94);
+    sky([[0, "#eef2ff"], [.6, "#fdf2ff"], [1, "#e0f2fe"]]);
+    glow(W * .2, H * .2, 900, "196,181,253", .55); glow(W * .85, H * .3, 800, "249,168,212", .45); glow(W * .55, H * .95, 900, "125,211,252", .45);
+    for (let i = 0; i < 9; i++) {
+      const X = W * (.1 + r() * .8), Y = H * (.15 + r() * .7), R = 140 + r() * 260, cols = ["167,139,250", "244,114,182", "56,189,248", "253,186,116"], c = cols[i % 4];
+      const g = x.createRadialGradient(X - R * .3, Y - R * .35, R * .1, X, Y, R); g.addColorStop(0, `rgba(255,255,255,.55)`); g.addColorStop(.6, `rgba(${c},.22)`); g.addColorStop(1, `rgba(${c},.05)`);
+      x.fillStyle = g; x.beginPath(); x.arc(X, Y, R, 0, 7); x.fill();
+      x.strokeStyle = "rgba(255,255,255,.7)"; x.lineWidth = 2; x.beginPath(); x.arc(X, Y, R - 1, Math.PI * 1.05, Math.PI * 1.65); x.stroke();
+    }
+    x.filter = "blur(2px)"; x.drawImage(cv, 0, 0); x.filter = "none";
+    grain(r, 4);
+  },
+];
+window.paint = (i) => { x.save(); x.clearRect(0, 0, W, H); PAINT[i](); x.restore(); return cv.toDataURL("image/jpeg", .9); };
+window.count = PAINT.length;
+</script>
