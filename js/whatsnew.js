@@ -1,10 +1,21 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.1.1";
+  NX.version = "3.2";
   NX.whatsNew = [
     ["Wi-Fi on newer laptops", "Nebulux OS now runs on the newer Linux kernel 6.12, with drivers for Wi-Fi 6 and 6E chips that had none before: Realtek RTL8852BE, RTL8852AE, RTL8852CE and RTL8922AE (in many Lenovo, HP and ASUS laptops), MediaTek MT7921 and MT7922, and the newest Intel chips. Their Bluetooth works too."],
-    ["Network troubleshooter", "Settings > Network & internet > Troubleshoot checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, says what is wrong in plain words, tries to fix it, and can save a report to Documents."],
+    ["Wi-Fi that stays connected", "Wi-Fi power saving and changing addresses are off, which kept Realtek and MediaTek chips dropping the connection. Lenovo IdeaPads whose Wi-Fi said it was switched off are fixed by themselves."],
+    ["Network troubleshooter", "Settings > Network & internet > Troubleshoot checks the Wi-Fi chip, its driver, the Wi-Fi switch, the connection and the internet, says what is wrong in plain words, and Try to fix restarts the Wi-Fi driver and the network for you. It can also save a report to Documents."],
+    ["Known and hidden networks", "Forget a saved network that keeps failing, join a hidden network by its name, and press Show to see the password while you type it."],
+    ["Virtual desktops", "Task View (Nebulux + Tab) has your desktops at the bottom: add one, rename it, drag windows between them. Ctrl + Nebulux + Left or Right switches, Ctrl + Nebulux + D adds one, Ctrl + Nebulux + F4 closes it."],
+    ["Clipboard history", "Nebulux + V shows the last 25 things you copied, in Nebulux OS and in real apps. Click one to paste it, pin the ones you need often. Turn it off in Settings > System."],
+    ["File Explorer tabs", "Ctrl + T opens a tab, Ctrl + W closes it, and a middle-click or Open in new tab opens a folder in its own tab."],
+    ["Sticky Notes", "Quick colored notes that save as you type, with search and Undo. Your notes show in Widgets too."],
+    ["Focus sessions", "Clock > Focus: 15 to 60 minutes with Do not disturb on until it is done, even with Clock closed."],
+    ["Night light on a schedule", "Settings > System: night light comes on and goes off by itself at the hours you pick."],
+    ["Storage", "Settings > System > Storage shows how much space is left on your USB, what uses it, and empties the Recycle Bin."],
+    ["Get Started", "A quick tour of Nebulux OS with every shortcut. Open it from Start."],
+    ["A smarter lock screen and Widgets", "The lock screen shows Wi-Fi and the battery. Widgets show your Sticky Notes and the battery."],
     ["Updates by themselves", "Nebulux OS now finds its own updates. Install them tonight (Later), get a reminder in 30 minutes, or skip one (Never) and install it any time from Settings > Nebulux Update."],
     ["Real apps in the Nebulux Store", "Steam, Minecraft, Spotify, Discord, Zoom, Slack, Telegram, VLC, OBS Studio, GIMP, Krita, Blender, LibreOffice, Firefox, Google Chrome, Visual Studio Code, Signal and Audacity install as real apps. Netflix, WhatsApp, Office and about 60 more open as web apps in their own windows."],
     ["Window buttons for every app", "Real apps and app windows have minimize, maximize and close. Minimized apps come back from the taskbar."],

@@ -271,7 +271,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => /up to date/.test((document.querySelector("#s-updnow") || {}).textContent || "") && !NX.get("upd-later")), 8000), "Update now installs it");
   await p.evaluate(() => NX.close("settings")); await wait(300);
   await p.evaluate(() => { NX.set("seen-whatsnew-" + NX.me.id, "3.0"); NX.update.whatsNew(); });
-  ok(await p.evaluate(() => document.querySelectorAll(".wn-pop .wn-item").length === NX.whatsNew.length && /What's new in Nebulux OS 3.1/.test(document.querySelector(".wn-pop").innerText)), "after an update, What's new lists everything added");
+  ok(await p.evaluate(() => document.querySelectorAll(".wn-pop .wn-item").length === NX.whatsNew.length && document.querySelector(".wn-pop").innerText.includes("What's new in Nebulux OS " + NX.version)), "after an update, What's new lists everything added");
   await p.evaluate(() => document.querySelector(".wn-pop [data-w=ok]").click()); await wait(200);
   await p.evaluate(() => NX.update.whatsNew());
   ok(await p.evaluate(() => !document.querySelector(".wn-pop")), "and shows only once");
