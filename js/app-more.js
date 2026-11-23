@@ -168,5 +168,8 @@
     if (pick != null && pick !== p.wallpaper) NX.setPref("wallpaper", pick);
   };
   NX.dailyWall = daily;
+  // Auto mode: light from 7 AM, dark from 7 PM (Settings > Personalization > Choose your mode)
+  NX.autoTheme = () => { if (!NX.me) return; const p = NX.prefs(); if (!p.themeAuto) return; const h = new Date().getHours(), want = h >= 7 && h < 19 ? "light" : "dark"; if (p.theme !== want) NX.setPref("theme", want); };
+  setInterval(NX.autoTheme, 60000); setTimeout(NX.autoTheme, 1200);
   setInterval(daily, 60000); setTimeout(daily, 1500); document.addEventListener("nx:prefs", (e) => { if (e.detail === "dailyWall" || e.detail === "theme") daily(); });
 })();

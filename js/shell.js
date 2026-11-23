@@ -354,7 +354,7 @@
       const k = b.dataset.k, P = NX.prefs();
       if (k === "store") { closeFlyouts(); NX.open("store"); return; }
       if (k === "cast") { qsMore("cast"); return; }
-      if (k === "theme") NX.setPref("theme", P.theme === "dark" ? "light" : "dark");
+      if (k === "theme") { NX.setPref("themeAuto", false); NX.setPref("theme", P.theme === "dark" ? "light" : "dark"); }
       else if (k === "airplane") { NX.setPref("airplane", !P.airplane); if (!P.airplane) { NX.setPref("wifi", false); NX.setPref("bt", false); } }
       else if (k === "dnd") NX.setPref("dnd", !P.dnd);
       else if (k === "saver") { const on = NX.saverOn(); NX.setPref("saver", !on); if (on) NX.setPref("saverAuto", false); NX.toast(on ? "Battery saver is off." : "Battery saver is on: effects and animations are off to save power."); }

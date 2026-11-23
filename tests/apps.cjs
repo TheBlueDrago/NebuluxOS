@@ -38,6 +38,12 @@ const OUT = path.join(__dirname, "shots"); let failed = 0; const ok = (c, m) => 
   await p.keyboard.press("Escape"); ok(await p.evaluate(() => !document.querySelector("#nx-keys")), "and Escape closes it");
   await p.evaluate(() => { NX.setPref("wallpaper", 0); NX.setPref("dailyWall", true); }); await wait(300);
   ok(await p.evaluate(() => { const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000), pool = NX.wallpapers.map((w, i) => [w, i]).filter(([w]) => !w.light).map(([, i]) => i); return NX.prefs().wallpaper === pool[day % pool.length]; }), "A new background every day picks today's background");
+  // Auto mode: light by day, dark at night
+  await p.evaluate(() => { NX.open("settings", { page: "personal" }); }); await wait(700);
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] [data-theme=auto]")][0].click()); await wait(300);
+  ok(await p.evaluate(() => { const h = new Date().getHours(), want = h >= 7 && h < 19 ? "light" : "dark"; return NX.prefs().themeAuto === true && NX.prefs().theme === want && document.documentElement.dataset.theme === want; }), "Auto mode picks light by day and dark at night");
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] [data-theme=dark]")][0].click()); await wait(300);
+  ok(await p.evaluate(() => NX.prefs().themeAuto === false && NX.prefs().theme === "dark"), "and choosing Dark turns Auto off");
   ok(!errs.length, "no page errors " + errs.join(" | "));
   console.log(failed ? failed + " failed" : "all passed"); process.exitCode = failed ? 1 : 0;
   await c.close(); b.disconnect();
