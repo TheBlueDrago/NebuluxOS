@@ -775,3 +775,10 @@ button.s-row.s-link{width:100%;text-align:left;cursor:pointer}button.s-row.s-lin
 /* Clock: focus sessions */
 .clk-ring{--p:0;width:200px;height:200px;border-radius:50%;display:grid;place-items:center;margin:6px auto 4px;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--card2) 0)}
 .clk-ring .clk-big{width:172px;height:172px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);font-size:34px}
+
+/* Accessibility: color filters */
+html.cf-gray body{filter:grayscale(1)}
+html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
+/* Show desktop: the thin strip at the far right of the taskbar */
+#tb-showdesk{width:8px;align-self:stretch;margin-left:6px;border-left:1px solid var(--line);border-radius:0;background:transparent;padding:0}
+#tb-showdesk:hover{background:var(--hover)}

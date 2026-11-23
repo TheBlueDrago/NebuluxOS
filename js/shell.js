@@ -30,7 +30,8 @@
     root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent);
     const sv = !!(NX.me && NX.saverOn()); root.classList.toggle("saver", sv);
     root.classList.toggle("nofx", !NX.fx() || sv);
-    root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv))); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
+    root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv)));
+    const cf = NX.me ? p.colorFilter || "none" : "none"; root.classList.toggle("cf-gray", cf === "gray"); root.classList.toggle("cf-invert", cf === "invert"); root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
     const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
@@ -438,6 +439,7 @@
       if (d.key === "start") toggleStart(true); else if (typeof d.key === "string") winKeys(d.key); });
     let ty = null; $("#lock").addEventListener("touchstart", (e) => (ty = e.touches[0].clientY), { passive: true });
     $("#lock").addEventListener("touchend", (e) => { if (ty != null && ty - e.changedTouches[0].clientY > 40) reveal(); ty = null; }, { passive: true });
+    $("#tb-showdesk").onclick = () => { closeFlyouts(); if (NX.browserHide) NX.browserHide(); NX.showDesktop(); };
     $("#lk-power").onclick = (e) => { e.stopPropagation(); const m = $("#lk-pmenu"); m.hidden = !m.hidden; };
     $("#lk-pmenu").addEventListener("click", (e) => { const b = e.target.closest("[data-pw]"); if (!b) return; $("#lk-pmenu").hidden = true; power(b.dataset.pw === "restart" ? "restart" : "off"); });
     $("#tb-start").onclick = (e) => { e.stopPropagation(); toggleStart(false); };

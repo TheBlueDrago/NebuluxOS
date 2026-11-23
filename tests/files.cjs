@@ -381,6 +381,21 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => /1 session today/.test(document.querySelector(".win[data-app=clock]").innerText)), "Clock shows today's focus sessions");
   await p.evaluate(() => NX.close("clock")); await wait(300);
 
+  // 3.2: color filters, Show desktop, Settings search
+  await p.evaluate(() => NX.open("settings", { page: "access" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-cf=gray]").click()); await wait(200);
+  ok(await p.evaluate(() => document.documentElement.classList.contains("cf-gray") && getComputedStyle(document.body).filter.includes("grayscale")), "Color filters turn the screen grayscale");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-cf=none]").click()); await wait(200);
+  ok(await p.evaluate(() => !document.documentElement.classList.contains("cf-gray")), "and back");
+  await p.click("#tb-showdesk"); await wait(300);
+  ok(await p.evaluate(() => NX.wins.get("settings").min), "the corner of the taskbar shows the desktop");
+  await p.click("#tb-showdesk"); await wait(300);
+  ok(await p.evaluate(() => !NX.wins.get("settings").min), "and a second click brings the windows back");
+  await p.evaluate(() => NX.close("settings")); await wait(300);
+  await p.click("#tb-start"); await wait(300); await p.type("#start .sm-search input", "clipboard"); await wait(400);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#start [data-spage]")].some((b) => b.dataset.spage === "system")), "Start search finds new settings (clipboard: System)");
+  await p.keyboard.press("Escape"); await wait(200);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");
