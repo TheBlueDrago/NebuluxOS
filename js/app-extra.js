@@ -143,10 +143,30 @@
     },
   };
   document.addEventListener("nx:signin", () => { if (FS.end) NX.focusSession.finish(false); });
+  // Alarms: a time, the days it rings (none = once), and a name; checked every 15 seconds, also with Clock closed
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  NX.alarms = {
+    list: () => NX.data("alarms", []),
+    save: (L) => { NX.setData("alarms", L); document.dispatchEvent(new CustomEvent("nx:alarms")); },
+    add(time, days, name) { const L = NX.alarms.list(); if (L.length >= 20) throw new Error("You can have up to 20 alarms."); L.push({ id: NX.uid(), time, days: days || [], name: String(name || "").slice(0, 40), on: true, last: "" }); NX.alarms.save(L.sort((a, b) => a.time.localeCompare(b.time))); },
+    check(now) {
+      if (!NX.me) return; const d = now || new Date(), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"), stamp = d.toDateString() + " " + hm;
+      let changed = false; const L = NX.alarms.list();
+      for (const a of L) {
+        if (!a.on || a.time !== hm || a.last === stamp || (a.days.length && !a.days.includes(d.getDay()))) continue;
+        a.last = stamp; changed = true; if (!a.days.length) a.on = false;
+        NX.toast((a.name || "Alarm") + ": it's " + NX.fmtTime(d) + "."); if (NX.beep) { NX.beep(); setTimeout(() => NX.beep(), 700); setTimeout(() => NX.beep(), 1400); }
+        document.dispatchEvent(new CustomEvent("nx:alarm", { detail: a.id }));
+      }
+      if (changed) NX.alarms.save(L);
+    },
+    days: DAYS,
+  };
+  setInterval(() => NX.alarms.check(), 15000);
   A.clock = { name: "Clock", icon: "clock", category: "Utilities", rating: "4.6", size: "1 MB", w: 520, h: 480, minW: 340, minH: 380, desc: "The time, a stopwatch with laps, and a timer that rings when it's done.",
     open(body, win) {
       body.classList.add("clk");
-      body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button><button data-v="fo">Focus</button></div><div class="clk-face"></div>`;
+      body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button><button data-v="fo">Focus</button><button data-v="al">Alarms</button></div><div class="clk-face"></div>`;
       let v = "clock", swOn = false, swT = 0, swAt = 0, laps = [], tmLeft = 300000, tmOn = false, tmAt = 0, tmSet = 300000;
       const face = body.querySelector(".clk-face"), f2 = (n) => String(n).padStart(2, "0");
       const fmtMs = (ms) => { ms = Math.max(0, ms); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60, cs = Math.floor(ms / 10) % 100; return (h ? h + ":" : "") + f2(m) + ":" + f2(s) + "." + f2(cs); };
@@ -154,6 +174,14 @@
         const now = performance.now();
         if (v === "clock") { const d = new Date(); face.innerHTML = `<div class="clk-big">${NX.fmtTime(d, true)}</div><div class="clk-sub">${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>`; }
         if (v === "sw") { const t = swT + (swOn ? now - swAt : 0); face.innerHTML = `<div class="clk-big mono">${fmtMs(t)}</div><div class="clk-btns"><button class="btn primary" data-a="sws">${swOn ? "Pause" : "Start"}</button><button class="btn" data-a="swl" ${swOn ? "" : "disabled"}>Lap</button><button class="btn" data-a="swr">Reset</button></div><ol class="clk-laps">${laps.map((l, i) => `<li><span>Lap ${laps.length - i}</span><b>${fmtMs(l)}</b></li>`).join("")}</ol>`; }
+        if (v === "al") { const L = NX.alarms.list();
+          face.innerHTML = `<form class="al-new"><input type="time" name="t" value="07:00" aria-label="Time" required><input name="n" maxlength="40" placeholder="Name (optional)" aria-label="Name"><span class="al-days">${NX.alarms.days.map((x, i) => `<label><input type="checkbox" value="${i}"><span>${x}</span></label>`).join("")}</span><button class="btn primary" type="submit">Add alarm</button></form>
+            <div class="al-list">${L.length ? L.map((a) => `<div class="al-row ${a.on ? "" : "off"}" data-al="${a.id}"><b>${NX.esc(a.time)}</b><span><small>${NX.esc(a.name || "Alarm")}</small><small>${a.days.length === 7 ? "Every day" : a.days.length ? a.days.map((i) => NX.alarms.days[i]).join(", ") : "Once"}</small></span><label class="tg"><input type="checkbox" data-alon ${a.on ? "checked" : ""} aria-label="On"><i></i></label><button class="btn sm" data-aldel aria-label="Delete alarm">${NX.icon("trash", 14)}</button></div>`).join("") : `<p class="clk-sub">No alarms yet. Alarms ring while Nebulux OS is on.</p>`}</div>`;
+          const f = face.querySelector(".al-new"); f.onsubmit = (e) => { e.preventDefault(); try { NX.alarms.add(f.t.value, [...f.querySelectorAll(".al-days input:checked")].map((x) => +x.value), f.n.value.trim()); NX.toast("Alarm set for " + f.t.value + "."); } catch (er) { NX.toast(er.message); } draw(); };
+          face.querySelectorAll("[data-al]").forEach((r) => { const id = r.dataset.al;
+            r.querySelector("[data-alon]").onchange = (e) => { NX.alarms.save(NX.alarms.list().map((a) => (a.id === id ? Object.assign({}, a, { on: e.target.checked }) : a))); draw(); };
+            r.querySelector("[data-aldel]").onclick = () => { NX.alarms.save(NX.alarms.list().filter((a) => a.id !== id)); draw(); }; });
+        }
         if (v === "fo") { const on = NX.focusSession.on(), n = NX.focusSession.today();
           face.innerHTML = on ? `<div class="clk-ring" style="--p:${(1 - NX.focusSession.left() / NX.focusSession.len()) * 100}"><div class="clk-big mono">${fmtMs(NX.focusSession.left()).slice(0, -3)}</div></div><div class="clk-sub">Do not disturb is on until it's done.</div><div class="clk-btns"><button class="btn" data-a="fostop">Stop</button></div>`
             : `<div class="clk-sub" style="margin-top:6px">Focus for a while. Do not disturb stays on until it's done.</div><div class="clk-btns">${[15, 25, 45, 60].map((m) => `<button class="btn ${m === 25 ? "primary" : ""}" data-a="fo${m}">${m} min</button>`).join("")}</div><div class="clk-sub">${n ? n + (n === 1 ? " session" : " sessions") + " today" : "No focus sessions yet today"}</div>`; }
@@ -175,7 +203,7 @@
       };
       // the tick only updates the time text, so buttons are never rebuilt under the pointer
       const tick = setInterval(() => {
-        const big = face.querySelector(".clk-big"); if (!big) return; const now = performance.now();
+        const big = face.querySelector(".clk-big") || { set textContent(x) { /* this face shows no time (Alarms) */ } }, now = performance.now();
         if (v === "clock") { const d = new Date(); big.textContent = NX.fmtTime(d, true); }
         else if (v === "sw" && swOn) big.textContent = fmtMs(swT + now - swAt);
         else if (v === "tm" && tmOn) big.textContent = fmtMs(tmLeft - (now - tmAt)).slice(0, -3);
@@ -183,7 +211,8 @@
         if (tmOn && tmLeft - (now - tmAt) <= 0) { tmOn = false; tmLeft = tmSet; NX.toast("Time's up!"); NX.beep && NX.beep(); draw(); }
       }, 50);
       const onFocus = () => { if (v === "fo") draw(); }; document.addEventListener("nx:focus", onFocus);
-      win.onclose = () => { clearInterval(tick); document.removeEventListener("nx:focus", onFocus); }; draw();
+      const onAl = () => { if (v === "al" && !face.contains(document.activeElement)) draw(); }; document.addEventListener("nx:alarms", onAl);
+      win.onclose = () => { clearInterval(tick); document.removeEventListener("nx:focus", onFocus); document.removeEventListener("nx:alarms", onAl); }; draw();
     } };
 
   // ---------- Comet Snake: an original arcade game ----------

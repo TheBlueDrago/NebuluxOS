@@ -11,7 +11,7 @@
     ["Clipboard history", "Nebulux + V shows the last 25 things you copied, in Nebulux OS and in real apps. Click one to paste it, pin the ones you need often. Turn it off in Settings > System."],
     ["File Explorer tabs", "Ctrl + T opens a tab, Ctrl + W closes it, and a middle-click or Open in new tab opens a folder in its own tab."],
     ["Sticky Notes", "Quick colored notes that save as you type, with search and Undo. Your notes show in Widgets too."],
-    ["Focus sessions", "Clock > Focus: 15 to 60 minutes with Do not disturb on until it is done, even with Clock closed."],
+    ["Focus sessions and alarms", "Clock > Focus: 15 to 60 minutes with Do not disturb on until it is done. Clock > Alarms: wake-up and reminder alarms, once or on the days you pick. Both keep going with Clock closed."],
     ["Night light on a schedule", "Settings > System: night light comes on and goes off by itself at the hours you pick."],
     ["Storage", "Settings > System > Storage shows how much space is left on your USB, what uses it, and empties the Recycle Bin."],
     ["Get Started", "A quick tour of Nebulux OS with every shortcut. Open it from Start."],

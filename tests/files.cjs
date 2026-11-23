@@ -425,6 +425,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   // 3.2: battery time left
   ok(await p.evaluate(() => { NX.battery = { present: true, percent: 55, charging: false, minutes: 200 }; const a = NX.battLeft(); NX.battery = { present: true, percent: 40, charging: true, minutes: 65 }; const b = NX.battLeft(); NX.battery = { present: true, percent: 100, charging: false }; return a === "About 3 h 20 min left" && b === "1 h 5 min until full" && NX.battLeft() === ""; }), "the battery says how much time is left, or until full");
 
+  // 3.2: Alarms in Clock
+  await p.evaluate(() => { NX.setData("alarms", []); NX.open("clock"); }); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=clock] [data-v=al]").click()); await wait(200);
+  await p.evaluate(() => { const f = document.querySelector(".win[data-app=clock] .al-new"); f.t.value = "06:30"; f.n.value = "School"; f.querySelectorAll(".al-days input")[1].checked = true; f.querySelectorAll(".al-days input")[3].checked = true; f.querySelector("[type=submit]").click(); }); await wait(300);
+  ok(await p.evaluate(() => { const L = NX.alarms.list(); return L.length === 1 && L[0].time === "06:30" && L[0].days.join() === "1,3" && /Mon, Wed/.test(document.querySelector(".win[data-app=clock] .al-list").innerText); }), "Alarms: an alarm is added with its days");
+  await p.evaluate(() => NX.close("clock")); await wait(300);
+  ok(await p.evaluate(() => { let rang = 0; const h = () => rang++; document.addEventListener("nx:alarm", h); const mon = new Date(); mon.setDate(mon.getDate() + ((1 - mon.getDay() + 7) % 7)); mon.setHours(6, 30, 0, 0); NX.alarms.check(mon); NX.alarms.check(mon); const tue = new Date(+mon + 864e5); NX.alarms.check(tue); document.removeEventListener("nx:alarm", h); return rang === 1; }), "it rings once at its time, only on its days, also with Clock closed");
+  ok(await p.evaluate(() => { NX.alarms.add("08:00", [], "Once"); const d = new Date(); d.setHours(8, 0, 0, 0); NX.alarms.check(d); const a = NX.alarms.list().find((x) => x.name === "Once"); NX.setData("alarms", []); return a && a.on === false; }), "a one-time alarm turns itself off after ringing");
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");
