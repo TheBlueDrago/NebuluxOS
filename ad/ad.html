@@ -258,20 +258,42 @@ window.__frame = (t) => {
   } else scene(i, l, t, main);
   if (t < .3) { main.fillStyle = `rgba(0,0,0,${1 - t / .3})`; main.fillRect(0, 0, W, H); }
 };
-window.__still = (t) => { window.__frame(t); return cv.toDataURL("image/jpeg", .82); };
+window.__still = (t, v) => { if (v) { window.__vframe(t); return vcv.toDataURL("image/jpeg", .82); } window.__frame(t); return cv.toDataURL("image/jpeg", .82); };
 
 // ---------- making the MP4: every frame through the H.264 encoder, the music through AAC ----------
-window.__render = async (musicURL, upTo) => {
+// the phone version (9:16): the ad in the middle over a blurred copy of itself, the name above, the address below
+const VW = 1080, VH = 1920, vcv = document.createElement("canvas"); vcv.width = VW; vcv.height = VH; const vg = vcv.getContext("2d");
+const FIN = () => STARTS[SCENES.length - 1] + BOOM; // the end card starts here (it has the address itself)
+window.__vframe = (t) => {
+  window.__frame(t);
+  // on the end card the picture zooms in on its middle, so the name and the address are big
+  const e = inout((t - FIN()) / .5), sw = W - (W - 1100) * e, sx = (W - sw) / 2;
+  const mh = Math.round(VW * H / sw), my = Math.round((VH - mh) / 2) + 40 * (1 - e);
+  vg.save(); vg.fillStyle = "#05030c"; vg.fillRect(0, 0, VW, VH);
+  vg.filter = "blur(38px) saturate(1.3)"; const k = VH / H * 1.15; vg.drawImage(cv, (VW - W * k) / 2, (VH - H * k) / 2, W * k, H * k); vg.filter = "none";
+  vg.fillStyle = "rgba(5,3,12,.55)"; vg.fillRect(0, 0, VW, VH);
+  vg.shadowColor = "rgba(124,92,255,.6)"; vg.shadowBlur = 60; vg.fillStyle = "#000"; vg.fillRect(0, my, VW, mh); vg.shadowColor = "transparent";
+  vg.drawImage(cv, sx, 0, sw, H, 0, my, VW, mh);
+  // above: the logo and the name (from the first cut on)
+  const prev = x; x = vg;
+  const ta = clamp((t - STARTS[1]) / .5) * (1 - clamp((t - (FIN() - .2)) / .3));
+  if (ta > 0) { logo(VW / 2 - 250, my - 190, 46, ta, .6); text("Nebulux OS", VW / 2 - 180, my - 190, F(900, 84), grad(VW / 2 - 180, VW / 2 + 260), "left", ta); text("A whole computer on a USB stick", VW / 2, my - 100, F(600, 36), "#d9d0ff", "center", ta); }
+  // below: where to get it
+  if (ta > 0) { x.save(); x.globalAlpha = ta; text("Free download", VW / 2, my + mh + 110, F(800, 44), "#fff"); x.font = F(800, 32); const s0 = "nebuluxos.thebluedragonstriker.workers.dev", w = x.measureText(s0).width + 64; rr(VW / 2 - w / 2, my + mh + 160, w, 70, 35); x.fillStyle = "#fff"; x.fill(); text(s0, VW / 2, my + mh + 196, F(800, 32), "#1d1040"); x.restore(); }
+  x = prev; vg.restore();
+};
+window.__render = async (musicURL, upTo, vertical) => {
   const len = upTo || window.__LEN, frames = Math.round(len * FPS);
+  const OW = vertical ? VW : W, OH = vertical ? VH : H, src = vertical ? vcv : cv;
   const music = await (async () => { const buf = await (await fetch(musicURL)).arrayBuffer(); const ac = new OfflineAudioContext(2, 48000, 48000); return ac.decodeAudioData(buf); })();
-  const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: W, height: H, frameRate: FPS }, audio: { codec: "aac", numberOfChannels: 2, sampleRate: 48000 }, fastStart: "in-memory", firstTimestampBehavior: "offset" });
+  const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: OW, height: OH, frameRate: FPS }, audio: { codec: "aac", numberOfChannels: 2, sampleRate: 48000 }, fastStart: "in-memory", firstTimestampBehavior: "offset" });
   const venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: (e) => { throw e; } });
-  venc.configure({ codec: "avc1.640028", width: W, height: H, bitrate: (window.BR || 10e6), framerate: FPS, latencyMode: "quality", avc: { format: "avc" } });
+  venc.configure({ codec: vertical ? "avc1.640032" : "avc1.640028", width: OW, height: OH, bitrate: (window.BR || 10e6), framerate: FPS, latencyMode: "quality", avc: { format: "avc" } });
   const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: (e) => { throw e; } });
   aenc.configure({ codec: "mp4a.40.2", numberOfChannels: 2, sampleRate: 48000, bitrate: 192000 });
   for (let f = 0; f < frames; f++) {
-    window.__frame(f / FPS);
-    const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+    if (vertical) window.__vframe(f / FPS); else window.__frame(f / FPS);
+    const vf = new VideoFrame(src, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
     venc.encode(vf, { keyFrame: f % 60 === 0 }); vf.close();
     while (venc.encodeQueueSize > 6) await new Promise((r) => setTimeout(r, 2));
     if (f % 150 === 0) window.__progress = f / frames;
