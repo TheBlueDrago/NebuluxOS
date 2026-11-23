@@ -782,3 +782,10 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 /* Show desktop: the thin strip at the far right of the taskbar */
 #tb-showdesk{width:8px;align-self:stretch;margin-left:6px;border-left:1px solid var(--line);border-radius:0;background:transparent;padding:0}
 #tb-showdesk:hover{background:var(--hover)}
+
+/* Photos: slideshow */
+.ph-slide{margin-left:6px}.ph-slide svg{margin-right:4px}
+.ph.ph-show .ph-bar{display:none}
+.ph.ph-show .ph-view{background:#000;cursor:none}
+.ph.ph-show .ph-view img{animation:phfade .6s ease}
+@keyframes phfade{from{opacity:0}to{opacity:1}}

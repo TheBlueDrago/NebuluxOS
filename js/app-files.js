@@ -286,6 +286,18 @@
       let list = [], i = 0, zoom = 1, turn = 0;
       body.innerHTML = `<div class="ph-bar"><button class="wv-b" data-p="prev" aria-label="Previous" title="Previous">${NX.icon("back", 16)}</button><button class="wv-b" data-p="next" aria-label="Next" title="Next">${NX.icon("fwd", 16)}</button><span class="ph-name"></span><button class="wv-b" data-p="out" aria-label="Zoom out" title="Zoom out">${NX.icon("zoomout", 16)}</button><button class="wv-b" data-p="in" aria-label="Zoom in" title="Zoom in">${NX.icon("zoomin", 16)}</button><button class="wv-b" data-p="turn" aria-label="Rotate" title="Rotate">${NX.icon("rotate", 16)}</button><button class="wv-b" data-p="all" aria-label="All pictures" title="All pictures">${NX.icon("grid", 16)}</button></div><div class="ph-view"></div>`;
       const v = body.querySelector(".ph-view"), nm = body.querySelector(".ph-name");
+      // the slideshow: every picture, one after another, the whole window; Esc or a click stops it
+      body.querySelector(".ph-bar").insertAdjacentHTML("beforeend", `<button class="btn sm ph-slide" data-p="slide" title="Slideshow">${NX.icon("media", 14)}Slideshow</button>`);
+      let slideT = 0;
+      const slideStop = () => { if (!slideT) return; clearInterval(slideT); slideT = 0; body.classList.remove("ph-show"); };
+      const slideGo = async () => {
+        if (!list.length) await gallery();
+        if (!list.length) { NX.toast("There are no pictures to show yet."); return; }
+        if (!v.querySelector("img") || v.querySelector(".ph-grid")) { i = 0; await show(); }
+        body.classList.add("ph-show"); body.focus();
+        clearInterval(slideT); slideT = setInterval(() => { i = (i + 1) % list.length; show(); }, 4000);
+      };
+      v.addEventListener("click", () => slideStop());
       async function show() {
         const e = list[i]; if (!e) return gallery();
         nm.textContent = e.name + (list.length > 1 ? `  (${i + 1} of ${list.length})` : ""); win.el.querySelector(".wt-name").textContent = e.name + " - Photos";
@@ -306,11 +318,13 @@
       body.querySelector(".ph-bar").onclick = (e) => {
         const b = e.target.closest("[data-p]"); if (!b) return; const k = b.dataset.p;
         if (k === "prev" && list.length) { i = (i - 1 + list.length) % list.length; show(); } if (k === "next" && list.length) { i = (i + 1) % list.length; show(); }
-        if (k === "in") { zoom = Math.min(6, zoom * 1.25); tf(); } if (k === "out") { zoom = Math.max(0.2, zoom / 1.25); tf(); } if (k === "turn") { turn = (turn + 90) % 360; tf(); } if (k === "all") gallery();
+        if (k === "in") { zoom = Math.min(6, zoom * 1.25); tf(); } if (k === "out") { zoom = Math.max(0.2, zoom / 1.25); tf(); } if (k === "turn") { turn = (turn + 90) % 360; tf(); } if (k === "all") { slideStop(); gallery(); } if (k === "slide") { if (slideT) slideStop(); else slideGo(); }
       };
-      body.tabIndex = 0; body.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") body.querySelector("[data-p=prev]").click(); if (e.key === "ArrowRight") body.querySelector("[data-p=next]").click(); });
+      body.tabIndex = 0; body.addEventListener("keydown", (e) => { if (e.key === "Escape" && slideT) { e.stopPropagation(); slideStop(); return; } if (e.key === "ArrowLeft") body.querySelector("[data-p=prev]").click(); if (e.key === "ArrowRight") body.querySelector("[data-p=next]").click(); });
       const start = (o) => { if (o.path) { list = (o.list && o.list.length ? o.list : [{ name: NX.fs.base(o.path), path: o.path, kind: "image" }]); i = Math.max(0, list.findIndex((x) => x.path === o.path)); show(); } else gallery(); };
       win.onopts = start; start(opts);
+      const oldClose = win.onclose; win.onclose = () => { slideStop(); if (oldClose) oldClose(); };
+      win.slideshow = { on: () => !!slideT, start: slideGo, stop: slideStop, at: () => i };
     } };
 
   // ---------- Media Player ----------

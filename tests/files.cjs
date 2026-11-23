@@ -396,6 +396,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => [...document.querySelectorAll("#start [data-spage]")].some((b) => b.dataset.spage === "system")), "Start search finds new settings (clipboard: System)");
   await p.keyboard.press("Escape"); await wait(200);
 
+  // 3.2: Photos slideshow
+  await p.evaluate(() => NX.open("photos")); await wait(800);
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=slide]").click()); await wait(800);
+  ok(await p.evaluate(() => NX.wins.get("photos").slideshow.on() && document.querySelector(".win[data-app=photos] .ph").classList.contains("ph-show")), "Photos slideshow starts");
+  await p.keyboard.press("Escape"); await wait(300);
+  ok(await p.evaluate(() => !NX.wins.get("photos").slideshow.on() && !document.querySelector(".win[data-app=photos] .ph").classList.contains("ph-show")), "Esc stops the slideshow");
+  await p.evaluate(() => NX.close("photos")); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");
