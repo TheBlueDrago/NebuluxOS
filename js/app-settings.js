@@ -111,7 +111,9 @@
           <h3>Taskbar</h3>${row("taskbar", "Taskbar alignment", "Where the Start button and apps sit", `<div class="seg"><button data-align="center" class="${p.align === "center" ? "on" : ""}">Center</button><button data-align="left" class="${p.align === "left" ? "on" : ""}">Left</button></div>`)}`;
         if (pg === "apps") {
           const all = Object.entries(NX.apps).filter(([id, a]) => a.builtIn || p.installed.includes(id));
-          return `<h3>Installed apps</h3><p class="s-note">${all.length} apps. Get more in the Nebulux Store.</p>${all.map(([id, a]) => row(null, `<span class="s-appname">${NX.icon(a.icon || id, 28)}${NX.esc(a.name)}</span>`, a.builtIn ? "Part of Nebulux OS" : (a.size || "1 MB") + " · " + (a.url ? "Opens on the web" : "Runs on this PC"),
+          const startable = all.filter(([id, a]) => !a.url && !a.browser && !a.webapp && id !== "settings").slice(0, 30), su = p.startup || [];
+          return `<h3>Startup apps</h3><p class="s-note">These open by themselves when you sign in.</p><div class="s-card s-startup">${startable.map(([id, a]) => `<label class="s-su"><input type="checkbox" data-su="${id}" ${su.includes(id) ? "checked" : ""}>${NX.icon(a.icon || id, 22)}<span>${NX.esc(a.name)}</span></label>`).join("")}</div>
+          <h3>Installed apps</h3><p class="s-note">${all.length} apps. Get more in the Nebulux Store.</p>${all.map(([id, a]) => row(null, `<span class="s-appname">${NX.icon(a.icon || id, 28)}${NX.esc(a.name)}</span>`, a.builtIn ? "Part of Nebulux OS" : (a.size || "1 MB") + " · " + (a.url ? "Opens on the web" : "Runs on this PC"),
             a.builtIn ? `<span class="s-tag">System app</span>` : `<button class="btn" data-uninstall="${id}">Uninstall</button>`)).join("")}
             <div class="s-row s-link" data-openstore="1"><span class="s-ri">${NX.icon("store", 20)}</span><div class="s-rt"><b>Nebulux Store</b><small>Find new apps and games</small></div><div class="s-rc">${NX.icon("chevron", 16)}</div></div>`;
         }
@@ -319,6 +321,7 @@
         const wf = body.querySelector("#s-wallfile"); if (wf) wf.onchange = () => { const f = wf.files && wf.files[0]; if (f) NX.setWallpaperFile(f).then(() => draw()).catch((e) => NX.toast(e.message)); };
         body.querySelectorAll("[data-theme]").forEach((b) => (b.onclick = () => { NX.setPref("theme", b.dataset.theme); draw(); }));
         body.querySelectorAll("[data-pkey]").forEach((b) => (b.onclick = async () => { try { await NX.api("POST", "/powerkey", { what: b.dataset.pkey }); NX.setPref("powerKey", b.dataset.pkey); draw(); } catch (e) { NX.toast(e.message); } }));
+        body.querySelectorAll("[data-su]").forEach((c) => (c.onchange = () => { const L = (NX.prefs().startup || []).filter((x) => x !== c.dataset.su); if (c.checked) L.push(c.dataset.su); NX.setPref("startup", L); }));
         body.querySelectorAll("[data-cf]").forEach((b) => (b.onclick = () => { NX.setPref("colorFilter", b.dataset.cf); draw(); }));
         body.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = () => { NX.setPref("accent", b.dataset.acc); draw(); }));
         body.querySelectorAll("[data-align]").forEach((b) => (b.onclick = () => { NX.setPref("align", b.dataset.align); draw(); }));

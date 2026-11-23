@@ -477,6 +477,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const b = document.querySelectorAll("#tb-apps .tb-app")[1]; return !!b && !!NX.wins.get(b.dataset.app) || NX.browserRunning || !!document.querySelector(".win"); }), "Nebulux + 2 opens the second app on the taskbar");
   await p.evaluate(() => NX.closeAll()); await wait(300);
 
+  // 3.2: Startup apps
+  await p.evaluate(() => NX.open("settings", { page: "apps" })); await wait(400);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-su=notes]").click()); await wait(200);
+  ok(await p.evaluate(() => (NX.prefs().startup || []).includes("notes")), "Settings > Apps > Startup apps saves the choice");
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+  await p.evaluate(() => NX.shell.signOut()); await wait(700);
+  await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter");
+  ok(await (async () => { for (let i = 0; i < 30; i++) { if (await p.evaluate(() => !!NX.wins.get("notes"))) return true; await wait(200); } return false; })(), "the startup app opens by itself after signing in");
+  await p.evaluate(() => { NX.setPref("startup", []); NX.closeAll(); }); await wait(300);
+
   // Sleep, then wake with a key
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=sleep]"); await wait(700);
   ok(await p.evaluate(() => !document.querySelector("#off").hidden && document.querySelector("#off").classList.contains("sleeping")), "Sleep turns the screen dark");

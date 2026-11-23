@@ -17,6 +17,7 @@
     ["Sleep like a laptop", "The power button and closing the lid put the computer to sleep, and it asks for your password when it wakes up. Settings > System > Power can make the power button shut down instead."],
     ["Night light on a schedule", "Settings > System: night light comes on and goes off by itself at the hours you pick."],
     ["Storage", "Settings > System > Storage shows how much space is left on your USB, what uses it, and empties the Recycle Bin."],
+    ["Startup apps", "Settings > Apps > Startup apps: pick apps that open by themselves when you sign in."],
     ["Get Started", "A quick tour of Nebulux OS with every shortcut. Open it from Start."],
     ["Battery time left", "The battery says how long it will last, or how long until it is full, in quick settings, Settings and Widgets."],
     ["Your own background and picture", "Settings > Personalization > Browse photos makes any picture your background, and Settings > Accounts gives your account a picture for sign-in, Start and Settings."],
