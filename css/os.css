@@ -940,3 +940,71 @@ html.cf-invert body{filter:invert(1) hue-rotate(180deg)}
 /* a Store app page glows in the app's own color */
 .st-dh{position:relative;overflow:hidden;--tint:var(--accent);background:radial-gradient(120% 140% at 8% 20%,color-mix(in srgb,var(--tint) 34%,transparent),transparent 62%),linear-gradient(120deg,color-mix(in srgb,var(--tint) 10%,var(--card)),var(--card));padding:26px}
 .st-dh>.ico{filter:drop-shadow(0 12px 28px color-mix(in srgb,var(--tint) 45%,#0008))}
+
+/* ---------- 3.3: Camera ---------- */
+.win-body.cam{display:flex;flex-direction:column;background:#05040a;padding:0;overflow:hidden}
+.cam-view{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 40%,#1b1430,#05040a)}
+.cam-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scaleX(-1)}
+.cam-msg{position:relative;max-width:360px;text-align:center;color:#e9e4ff;font-size:15px;line-height:1.5;padding:18px 22px;border-radius:14px;background:#0009}
+.cam-count{position:relative;font-size:120px;font-weight:800;color:#fff;text-shadow:0 6px 30px #000a;animation:camcount 1s ease-out infinite}
+@keyframes camcount{from{transform:scale(1.3);opacity:.4}}
+.cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}.cam-flash.go{animation:camflash .45s ease-out}
+@keyframes camflash{from{opacity:.85}to{opacity:0}}
+.cam-rec{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:#000a;color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.cam-rec[hidden],.cam-count[hidden],.cam-msg[hidden]{display:none}
+.cam-rec i{width:10px;height:10px;border-radius:50%;background:#ef4444;animation:recblink 1s steps(2) infinite}
+@keyframes recblink{50%{opacity:.2}}
+.cam-bar{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:14px 20px;background:#0c0918;border-top:1px solid #ffffff12;color:#fff}
+.cam-modes{display:flex;gap:4px;padding:4px;border-radius:20px;background:#ffffff12;justify-self:start}
+.cam-modes button{padding:6px 14px;border-radius:16px;font-size:13px;font-weight:600;color:#cfc8ee}.cam-modes button.on{background:#fff;color:#111}
+.cam-shoot{width:64px;height:64px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center;transition:transform .12s}
+.cam-shoot:active{transform:scale(.92)}
+.cam-shoot i{width:48px;height:48px;border-radius:50%;background:#fff;transition:all .2s}
+.cam-shoot.video i{background:#ef4444}.cam-shoot.recording i{width:24px;height:24px;border-radius:6px;background:#ef4444}
+.cam-side{justify-self:end;display:flex;align-items:center;gap:12px}
+.cam-timer{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:16px;background:#ffffff12;font-size:13px;color:#cfc8ee}.cam-timer.on{background:var(--accent);color:#fff}
+.cam-last{width:46px;height:46px;border-radius:10px;overflow:hidden;border:2px solid #fff;padding:0}.cam-last[hidden]{display:none}.cam-last img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------- 3.3: Voice Recorder ---------- */
+.win-body.vr{display:flex;flex-direction:column;padding:20px;gap:6px;overflow:auto}
+.vr-top{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 16px;border-radius:16px;background:radial-gradient(120% 120% at 50% 0%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),var(--card);border:1px solid var(--line)}
+.vr-wave{width:100%;max-width:440px;height:120px}
+.vr-time{font-size:44px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.vr-msg{margin:0;color:var(--sub);font-size:13px;text-align:center}
+.vr-go{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:#e11d48;box-shadow:0 8px 24px #e11d4866;margin-top:6px;transition:transform .12s}
+.vr-go:active{transform:scale(.92)}.vr-go i{width:26px;height:26px;border-radius:50%;background:#fff;transition:all .2s}.vr-go.on i{border-radius:6px;width:22px;height:22px}
+.vr-go.on{animation:vrpulse 1.6s ease-in-out infinite}@keyframes vrpulse{50%{box-shadow:0 0 0 12px #e11d4822,0 8px 24px #e11d4866}}
+.vr h3{margin:14px 2px 4px;font-size:14px}
+.vr-list{display:flex;flex-direction:column;gap:8px}.vr-none{color:var(--sub);font-size:13px;margin:0}
+.vr-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.vr-item div{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}.vr-item b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vr-item audio{width:100%;height:32px}
+
+/* ---------- 3.3: Weather ---------- */
+.win-body.wa{padding:22px 26px;overflow:auto;background:linear-gradient(180deg,color-mix(in srgb,#38bdf8 14%,transparent),transparent 320px)}
+.wa-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:50px 10px}.wa-empty h2{margin:10px 0 0}.wa-empty p{color:var(--sub);margin:0 0 12px}
+.wa-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.wa-head h2{margin:0;font-size:26px}.wa-sub{margin:4px 0 0;color:var(--sub)}
+.wa-find{display:flex;gap:8px;flex-wrap:wrap}.wa-find input{min-width:180px;flex:1;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:14px}
+.wa-head .wa-find{max-width:460px}.wa-err{margin:6px 0 0;color:var(--sub);font-size:13px;min-height:1em}.wa-note{color:var(--sub)}
+.wa-now{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin:14px 0 8px;padding:20px 24px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.wa-now>div{display:flex;flex-direction:column;gap:2px}.wa-now>div b{font-size:64px;font-weight:300;line-height:1}.wa-now>div span{font-size:20px}.wa-now>div small{color:var(--sub);margin-top:6px}
+.wa-now dl{margin:0 0 0 auto;display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));gap:10px 22px}.wa-now dt{color:var(--sub);font-size:12px}.wa-now dd{margin:2px 0 0;font-weight:600}
+.wa h3{margin:20px 0 10px;font-size:15px}
+.wa-hours{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.wa-hours>div{flex:none;width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:12px}.wa-hours b{font-size:16px}.wa-hours small{color:#60a5fa;min-height:1em}
+.wa-days{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.wa-days>div{display:grid;grid-template-columns:minmax(90px,1.2fr) 34px 40px 40px minmax(80px,2fr) 40px;align-items:center;gap:12px;padding:10px 16px;background:var(--card)}
+.wa-days>div+div{border-top:1px solid var(--line)}.wa-days small{color:#60a5fa;font-size:12px}.wa-days em{font-style:normal;color:var(--sub);text-align:right}
+.wa-days i{position:relative;height:6px;border-radius:3px;background:var(--hover)}.wa-days u{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#38bdf8,#fbbf24)}
+.wa-credit{color:var(--sub);font-size:11px;margin-top:16px}
+@media (max-width:560px){.wa-now dl{margin:0}.wa-days>div{grid-template-columns:1fr 30px 34px 34px 34px}.wa-days i{display:none}}
+
+/* ---------- 3.3: Keyboard shortcuts (Nebulux + /) ---------- */
+#nx-keys{position:fixed;inset:0;z-index:6000;display:grid;place-items:center;background:#05030ccc;padding:16px}
+.nk-card{width:min(900px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:24px 28px;border-radius:18px;background:var(--bg2);box-shadow:0 30px 80px #000c,0 0 0 1px #ffffff17;animation:nlin .2s ease-out}
+.nk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.nk-head h2{margin:0}
+.nk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:8px 30px}
+.nk-grid h3{margin:12px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub)}
+.nk-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--line)}.nk-row p{margin:0;font-size:13.5px;text-align:right}
+.nk-row span{display:flex;align-items:center;gap:4px;flex:none}.nk-row i{font-style:normal;color:var(--sub);font-size:12px}
+kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;background:var(--card2);border:1px solid var(--line);border-bottom-width:2px;font:600 12px var(--font);text-align:center}
+@media (max-width:520px){.nk-grid{grid-template-columns:1fr}}

@@ -17,5 +17,11 @@
     "chrome://flags"
   ],
   "PasswordManagerEnabled": false,
-  "PasswordLeakDetectionEnabled": false
+  "PasswordLeakDetectionEnabled": false,
+  "VideoCaptureAllowedUrls": [
+    "http://127.0.0.1:7777"
+  ],
+  "AudioCaptureAllowedUrls": [
+    "http://127.0.0.1:7777"
+  ]
 }

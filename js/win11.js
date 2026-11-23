@@ -33,6 +33,8 @@
   };
   const wIcon = (k, s) => `<svg viewBox="0 0 48 48" width="${s}" height="${s}" aria-hidden="true">${WICON[k] || WICON.cloud}</svg>`;
   const fahrenheit = () => { const r = NX.me && NX.prefs().region; return r ? ["US", "LR", "MM"].includes(r) : /-(US|LR|MM)$/i.test(navigator.language || ""); };
+  // shared with the Weather app (js/app-more.js)
+  NX.wxInfo = { icon: (code, s) => wIcon(wx(code)[2], s), name: (code) => wx(code)[1], fahrenheit, refresh: () => weather(true).then((w) => { tbWidget(w); return w; }) };
   let wxBusy = false;
   async function weather(force) {
     const place = NX.data("wx-place", null); if (!place) return null;
