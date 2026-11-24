@@ -164,7 +164,8 @@
   let sel = null;
   function icons() {
     if (!NX.me) return; const box = $("#icons"), p = NX.prefs(), list = p.desktop.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id)));
-    const rows = Math.max(1, Math.floor((box.clientHeight || innerHeight - 60) / 96));
+    const isz = ["small", "large"].includes(p.iconSize) ? p.iconSize : "medium"; box.dataset.size = isz;
+    const rows = Math.max(1, Math.floor((box.clientHeight || innerHeight - 60) / ({ small: 80, medium: 96, large: 124 }[isz])));
     const bin = p.deskBin !== false, nb = list.length;
     box.dataset.apps = nb + (bin ? 1 : 0); box.dataset.rows = rows;
     box.innerHTML = list.map((id, i) => `<button class="dicon" data-app="${id}" style="grid-row:${(i % rows) + 1};grid-column:${Math.floor(i / rows) + 1}">${NX.icon(NX.apps[id].icon || id, 40)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")
@@ -576,7 +577,7 @@
     document.addEventListener("pointerdown", (e) => { if (!e.target.closest(".dicon")) { document.querySelectorAll(".dicon.sel").forEach((x) => x.classList.remove("sel")); sel = null; } });
     $("#desktop").addEventListener("contextmenu", (e) => {
       if (e.target.closest(".win") || e.target.closest("#taskbar") || e.target.closest(".dicon") || e.target.closest("#start,#qs,#cal")) return;
-      e.preventDefault(); menu(e.clientX, e.clientY, [["New folder", () => NX.desktopNew && NX.desktopNew(true)], ["New text document", () => NX.desktopNew && NX.desktopNew(false)], ["Refresh", () => { icons(); }], [NX.prefs().stacks ? "Stop using stacks" : "Use stacks", () => NX.setPref("stacks", !NX.prefs().stacks)], ["Desktop widgets", () => NX.open("settings", { page: "personal" })], ["Next background", () => { const p = NX.prefs(), n = NX.wallpapers.length, cur = typeof p.wallpaper === "number" ? p.wallpaper : -1; NX.setPref("wallpaper", (cur + 1) % n); NX.toast(NX.wallpapers[(cur + 1) % n].name + "."); }], ["Display settings", () => NX.open("settings", { page: "system" })], ["Personalize", () => NX.open("settings", { page: "personal" })], ["Open in File Explorer", () => NX.open("files", { place: "Desktop" })]]);
+      e.preventDefault(); menu(e.clientX, e.clientY, [["New folder", () => NX.desktopNew && NX.desktopNew(true)], ["New text document", () => NX.desktopNew && NX.desktopNew(false)], ["Refresh", () => { icons(); }], [NX.prefs().stacks ? "Stop using stacks" : "Use stacks", () => NX.setPref("stacks", !NX.prefs().stacks)], ["", null], ["View", null], ...[["large", "Large icons"], ["medium", "Medium icons"], ["small", "Small icons"]].map(([k, t]) => [t, () => { NX.setPref("iconSize", k); icons(); }, (NX.prefs().iconSize || "medium") === k ? "check" : "blank"]), ["", null], ["Desktop widgets", () => NX.open("settings", { page: "personal" })], ["Next background", () => { const p = NX.prefs(), n = NX.wallpapers.length, cur = typeof p.wallpaper === "number" ? p.wallpaper : -1; NX.setPref("wallpaper", (cur + 1) % n); NX.toast(NX.wallpapers[(cur + 1) % n].name + "."); }], ["Display settings", () => NX.open("settings", { page: "system" })], ["Personalize", () => NX.open("settings", { page: "personal" })], ["Open in File Explorer", () => NX.open("files", { place: "Desktop" })]]);
     });
     boot();
   }

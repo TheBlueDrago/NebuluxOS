@@ -442,6 +442,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => [...document.querySelectorAll("#icons .dstack")].find((x) => /Documents/.test(x.textContent)).click()); await wait(500);
   ok(await p.evaluate(() => [...document.querySelectorAll("#nx-stack .stk-grid button")].filter((b) => /Stack [ab].txt/.test(b.textContent)).length === 2), "and a stack opens to show its files");
   await p.evaluate(async () => { NX.setPref("stacks", false); const d = await NX.folder("Desktop"); await NX.fs.remove([d + "/Stack a.txt", d + "/Stack b.txt"], true).catch(() => {}); NX.filesChanged(); }); await wait(500);
+  // desktop icon sizes
+  await p.evaluate(() => { NX.closeAll(); document.querySelector("#desktop").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: Math.min(innerWidth - 60, 600), clientY: 200 })); }); await wait(300);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Small icons/.test(b.textContent)).click()); await wait(300);
+  const small = await p.evaluate(() => document.querySelector("#icons .dicon svg").getBoundingClientRect().width);
+  await p.evaluate(() => { NX.setPref("iconSize", "large"); NX.shell.icons(); }); await wait(300);
+  const large = await p.evaluate(() => document.querySelector("#icons .dicon svg").getBoundingClientRect().width);
+  ok(small <= 32 && large >= 56 && await p.evaluate(() => document.querySelector("#icons").dataset.size === "large"), "right-click the desktop > View changes the icon size");
+  await p.evaluate(() => { NX.setPref("iconSize", "medium"); NX.shell.icons(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
