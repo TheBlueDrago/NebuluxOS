@@ -381,3 +381,8 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .sv-clock span{font-size:20px;color:#cfc6f2;margin-top:8px}
 @media (max-width:560px){.sv-clock b{font-size:60px}.sv-clock span{font-size:15px}}
 .s-svc{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* ---------- Peek at the desktop ---------- */
+#desktop.nx-peek .win{opacity:.07!important;transition:opacity .25s;box-shadow:0 0 0 1px #ffffff99,inset 0 0 0 1px #ffffff55!important}
+#desktop.nx-peek #nx-dwidgets,#desktop.nx-peek #icons{filter:brightness(1.05)}
+#tb-showdesk{width:10px}

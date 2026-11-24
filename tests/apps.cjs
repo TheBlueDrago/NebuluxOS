@@ -414,6 +414,21 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.saver.preview("clock")); await wait(900); await shot("saver-clock");
   ok(await p.evaluate(() => /\d/.test(document.querySelector("#nx-saver .sv-clock b").textContent)), "the Floating clock screen saver shows the time");
   await p.keyboard.press("Shift"); await wait(600);
+  // Peek and Shake
+  if (W > 700) {
+    await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
+    const sd = await p.evaluate(() => { const r = document.querySelector("#tb-showdesk").getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    await p.mouse.move(sd.x, sd.y); await wait(800);
+    ok(await p.evaluate(() => document.querySelector("#desktop").classList.contains("nx-peek") && +getComputedStyle(document.querySelector(".win")).opacity < 0.5), "resting on the far right of the taskbar peeks at the desktop");
+    await p.mouse.move(600, 300); await wait(300);
+    ok(await p.evaluate(() => !document.querySelector("#desktop").classList.contains("nx-peek")), "and the windows come back when the pointer leaves");
+    const tb = await p.evaluate(() => { const r = document.querySelector(".win[data-app=clock] .wt-name").getBoundingClientRect(); return { x: r.x + 20, y: r.y + r.height / 2 }; });
+    await p.mouse.move(tb.x, tb.y); await p.mouse.down();
+    for (let k = 0; k < 6; k++) { await p.mouse.move(tb.x + (k % 2 ? -60 : 60), tb.y, { steps: 3 }); await wait(40); }
+    await p.mouse.up(); await wait(500);
+    ok(await p.evaluate(() => [...NX.wins.values()].filter((w) => !w.min).map((w) => w.id).join() === "clock"), "shaking a window minimizes the others");
+    await p.evaluate(() => NX.closeAll());
+  }
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");

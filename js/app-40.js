@@ -564,3 +564,39 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
     if (Date.now() - last >= (p.saverWait || 5) * 60000 && !playing()) start();
   }, 5000);
 })();
+
+// ---------- Peek: rest the pointer on the far right of the taskbar and the windows turn see-through ----------
+(function () {
+  let t = 0;
+  document.addEventListener("pointerover", (e) => {
+    const b = e.target.closest && e.target.closest("#tb-showdesk"); if (!b || e.pointerType === "touch") return;
+    clearTimeout(t); t = setTimeout(() => { const d = document.getElementById("desktop"); if (d && b.matches(":hover")) d.classList.add("nx-peek"); }, 450);
+  });
+  const off = () => { clearTimeout(t); const d = document.getElementById("desktop"); if (d) d.classList.remove("nx-peek"); };
+  document.addEventListener("pointerout", (e) => { if (e.target.closest && e.target.closest("#tb-showdesk")) off(); });
+  document.addEventListener("pointerdown", off, true);
+  NX.peekDesktop = (on) => { const d = document.getElementById("desktop"); if (d) d.classList.toggle("nx-peek", !!on); };
+})();
+
+// ---------- Shake: grab a window by its title bar and shake it to minimize all the other windows (shake again to bring them back) ----------
+(function () {
+  let g = null, shaken = [];
+  document.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || NX.prefs && NX.me && NX.prefs().shakeMin === false) return;
+    const tb = e.target.closest && e.target.closest(".win .titlebar"); if (!tb || e.target.closest("button")) return;
+    g = { id: tb.closest(".win").dataset.app, x: e.clientX, dir: 0, flips: [], far: e.clientX };
+  }, true);
+  document.addEventListener("pointermove", (e) => {
+    if (!g) return; const dx = e.clientX - g.far, d = Math.sign(dx);
+    if (Math.abs(dx) < 28) return;
+    if (d && d !== g.dir) { if (g.dir) g.flips.push(performance.now()); g.dir = d; }
+    g.far = e.clientX; const now = performance.now(); g.flips = g.flips.filter((t) => now - t < 900);
+    if (g.flips.length >= 4) { NX.shakeWin(g.id); g.flips = []; g.dir = 0; }
+  });
+  addEventListener("pointerup", () => { g = null; });
+  NX.shakeWin = (id) => {
+    const others = [...NX.wins.values()].filter((w) => w.id !== id && !w.min).map((w) => w.id);
+    if (others.length) { shaken = others; others.forEach((o) => NX.minimize(o)); }
+    else if (shaken.length) { shaken.forEach((o) => NX.open(o)); shaken = []; if (NX.focus) NX.focus(id); }
+  };
+})();
