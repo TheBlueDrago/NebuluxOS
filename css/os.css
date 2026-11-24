@@ -1185,3 +1185,6 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 /* Photos: favorites */
 .ph-fav.on{color:#f43f5e}.ph-favs{display:inline-flex;align-items:center;gap:6px}.ph-favs.on{background:color-mix(in srgb,#f43f5e 25%,var(--card2));color:#fff}
 .ph-tile{position:relative}.ph-heart{position:absolute;right:6px;bottom:6px;color:#f43f5e;filter:drop-shadow(0 1px 3px #000a)}
+
+/* File Explorer: color tags */
+.fx-tag{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;box-shadow:0 0 0 1.5px #0004;flex:none}.fx-tag.big{width:12px;height:12px;margin:0 4px 0 3px}

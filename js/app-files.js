@@ -127,7 +127,7 @@
       const $ = (s) => body.querySelector(s), listEl = $(".fx-list");
       // tabs: each one has its own folder and its own Back and Forward
       let tabs = [{ cur: null, back: [], fwd: [] }], ti = 0;
-      const tabName = (p) => (p === HOME || !p ? "Home" : p === TRASH ? "Recycle Bin" : NX.fs.base(p) || p);
+      const tabName = (p) => (p === HOME || !p ? "Home" : p === TRASH ? "Recycle Bin" : String(p).startsWith("::tag:") ? p.slice(6)[0].toUpperCase() + p.slice(7) + " tag" : NX.fs.base(p) || p);
       function tabsDraw() {
         const T = $(".fx-tabs");
         T.innerHTML = tabs.map((t, i) => `<div class="fx-tab ${i === ti ? "on" : ""}" role="tab" aria-selected="${i === ti}" data-tab="${i}" title="${NX.esc(tabName(t.cur))}">${NX.icon(t.cur === TRASH ? "recycle" : t.cur === HOME || !t.cur ? "home" : "folder", 14)}<span>${NX.esc(tabName(t.cur))}</span><button class="fx-tabx" data-tabx="${i}" aria-label="Close tab" title="Close tab">${NX.icon("close", 10)}</button></div>`).join("") + `<button class="fx-tabadd" aria-label="New tab" title="New tab (Ctrl + T)">${NX.icon("plus", 14)}</button>`;
@@ -144,7 +144,12 @@
         if (i < ti || ti >= tabs.length) ti = Math.max(0, ti - (i <= ti ? 1 : 0));
         ti = Math.min(ti, tabs.length - 1); ({ cur, back, fwd } = tabs[ti]); sel.clear(); q = ""; $(".fx-search input").value = ""; load();
       }
-      const isTrash = () => cur === TRASH, isHome = () => cur === HOME;
+      const isTrash = () => cur === TRASH, isHome = () => cur === HOME, isTag = () => String(cur).startsWith("::tag:");
+      // color tags: mark any file or folder Red, Orange, Yellow, Green, Blue or Purple; the sidebar lists everything with a tag
+      const TAGS = { red: ["Red", "#ef4444"], orange: ["Orange", "#f97316"], yellow: ["Yellow", "#eab308"], green: ["Green", "#22c55e"], blue: ["Blue", "#3b82f6"], purple: ["Purple", "#a855f7"] };
+      const tags = () => NX.data("file-tags", {});
+      const tagDot = (e) => { const t = e.path && tags()[e.path]; return t && TAGS[t.c] ? `<i class="fx-tag" style="background:${TAGS[t.c][1]}" title="${TAGS[t.c][0]}"></i>` : ""; };
+      const setTag = (list, c) => { const T = Object.assign({}, tags()); for (const e of list) { if (!e.path) continue; if (c) T[e.path] = { c, name: e.name, dir: !!e.dir, kind: e.kind }; else delete T[e.path]; } NX.setData("file-tags", T); side(); render(); };
       const selected = () => items.filter((e) => sel.has(e.path || e.id));
       const err = (e) => NX.toast(e && e.message || String(e));
 
@@ -154,6 +159,7 @@
         const row = (key, icon, label, extra) => `<button class="fx-place ${cur === key ? "on" : ""}" data-go="${NX.esc(key)}">${NX.icon(icon, 18)}<span>${NX.esc(label)}</span>${extra || ""}</button>`;
         const pins = NX.data("fx-pins", []).filter((x) => x && x.path);
         $(".fx-side").innerHTML = row(HOME, "home", "Home") + (places ? places.folders.map((f) => row(f.path, "folder", f.name)).join("") : "") + row(TRASH, "recycle", "Recycle Bin") +
+          (Object.keys(tags()).length ? `<h4>Tags</h4>` + Object.entries(TAGS).filter(([c]) => Object.values(tags()).some((t) => t.c === c)).map(([c, [n, col]]) => `<button class="fx-place ${cur === "::tag:" + c ? "on" : ""}" data-go="::tag:${c}"><i class="fx-tag big" style="background:${col}"></i><span>${n}</span></button>`).join("") : "") +
           (pins.length ? `<h4>Quick access</h4>` + pins.map((x) => row(x.path, "pin", x.name)).join("") : "") +
           (NX.native ? `<h4>USB drives</h4>` + (drives.length ? drives.map((d) => d.mount ? row(d.mount, "usb", d.label, `<i class="fx-eject" role="button" tabindex="0" data-eject="${NX.esc(d.dev)}" title="Eject ${NX.esc(d.label)}" aria-label="Eject ${NX.esc(d.label)}">${NX.icon("eject", 14)}</i>`) : `<button class="fx-place" data-mount="${NX.esc(d.dev)}">${NX.icon("usb", 18)}<span>${NX.esc(d.label)}</span></button>`).join("") : `<p class="fx-none">Plug in a USB drive and it shows up here.</p>`) : "");
         $(".fx-side").querySelectorAll("[data-go]").forEach((b) => (b.onclick = (e) => { if (e.target.closest("[data-eject]")) return; go(b.dataset.go); }));
@@ -165,6 +171,7 @@
         const c = $(".fx-crumbs");
         if (isHome()) { c.innerHTML = `<span class="fx-cr">${NX.icon("home", 14)}Home</span>`; return; }
         if (isTrash()) { c.innerHTML = `<span class="fx-cr">${NX.icon("recycle", 14)}Recycle Bin</span>`; return; }
+        if (isTag()) { c.innerHTML = `<span class="fx-cr">${tabName(cur)}</span>`; return; }
         const S = NX.fs.sep, parts = []; let root = null, label = "";
         const drive = drives.find((d) => d.mount && (cur === d.mount || cur.startsWith(d.mount + S)));
         if (drive) { root = drive.mount; label = drive.label; } else if (places) { root = places.home; label = "Home"; }
@@ -178,7 +185,7 @@
       function tools() {
         const one = sel.size === 1, any = sel.size > 0, t = (k, icon, label, on) => `<button class="fx-t" data-t="${k}" ${on === false ? "disabled" : ""} title="${label}">${NX.icon(icon, 16)}<span>${label}</span></button>`;
         $(".fx-tools").innerHTML = isTrash() ? t("restore", "restart", "Restore", any) + t("purge", "trash", "Delete for good", any) + `<span class="fx-sp"></span>` + t("empty", "recycle", "Empty Recycle Bin", items.length > 0)
-          : (isHome() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
+          : (isHome() || isTag() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
         $(".fx-tools").querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => act(b.dataset.t)));
         const sb = $(".fx-tools [data-t=sort]"); if (sb) sb.onclick = () => { const r = sb.getBoundingClientRect(); NX.menu(r.left, r.bottom + 4, [["Name", () => setSort("name")], ["Date changed", () => setSort("date")], ["Type", () => setSort("type")], ["Size", () => setSort("size")]].map(([t2, f]) => [t2 + ({ Name: "name", "Date changed": "date", Type: "type", Size: "size" }[t2] === sort.k ? (sort.d > 0 ? "  (up)" : "  (down)") : ""), f])); };
       }
@@ -194,7 +201,7 @@
         listEl.className = "fx-list " + view; tools(); status();
         if (!shown.length) { listEl.innerHTML = `<div class="fx-empty">${NX.icon(isTrash() ? "recycle" : "folder", 56)}<p>${q ? "Nothing here matches." : isTrash() ? "The Recycle Bin is empty." : "This folder is empty."}</p></div>`; return; }
         listEl.innerHTML = (view === "list" ? `<div class="fx-head"><button data-sort="name">Name${arrow("name")}</button><button data-sort="date">${isTrash() ? "Deleted" : "Date changed"}${arrow("date")}</button><button data-sort="type">Type${arrow("type")}</button><button data-sort="size">Size${arrow("size")}</button></div>` : "") + shown.map((e) => { const key = e.path || e.id;
-          return `<button class="fx-item ${sel.has(key) ? "sel" : ""} ${NX.fsClip && NX.fsClip.move && NX.fsClip.paths.includes(e.path) ? "cutting" : ""}" data-k="${NX.esc(key)}" title="${NX.esc(e.name)}">${e.kind === "image" && view === "grid" && !isTrash() ? `<span class="fx-thumb" data-thumb="${NX.esc(e.path)}">${NX.icon("fimage", 44)}</span>` : NX.icon(ICON[e.kind] || "file", view === "grid" ? 44 : 20)}<span class="fx-n">${NX.esc(e.name)}</span>${view === "list" ? `<span class="fx-d">${NX.esc(isTrash() ? (e.deleted || "").replace("T", " ") : when(e.mtime))}</span><span class="fx-d">${e.dir ? "Folder" : (e.kind === "file" ? (e.name.includes(".") ? e.name.split(".").pop().toUpperCase() + " file" : "File") : e.kind[0].toUpperCase() + e.kind.slice(1))}</span><span class="fx-d">${e.dir ? "" : size(e.size)}</span>` : ""}</button>`; }).join("");
+          return `<button class="fx-item ${sel.has(key) ? "sel" : ""} ${NX.fsClip && NX.fsClip.move && NX.fsClip.paths.includes(e.path) ? "cutting" : ""}" data-k="${NX.esc(key)}" title="${NX.esc(e.name)}">${e.kind === "image" && view === "grid" && !isTrash() ? `<span class="fx-thumb" data-thumb="${NX.esc(e.path)}">${NX.icon("fimage", 44)}</span>` : NX.icon(ICON[e.kind] || "file", view === "grid" ? 44 : 20)}<span class="fx-n">${tagDot(e)}${NX.esc(e.name)}</span>${view === "list" ? `<span class="fx-d">${NX.esc(isTrash() ? (e.deleted || "").replace("T", " ") : when(e.mtime))}</span><span class="fx-d">${e.dir ? "Folder" : (e.kind === "file" ? (e.name.includes(".") ? e.name.split(".").pop().toUpperCase() + " file" : "File") : e.kind[0].toUpperCase() + e.kind.slice(1))}</span><span class="fx-d">${e.dir ? "" : size(e.size)}</span>` : ""}</button>`; }).join("");
         listEl.querySelectorAll("[data-thumb]").forEach(async (t) => { try { const u = await NX.fs.url(t.dataset.thumb); t.innerHTML = `<img src="${NX.esc(u)}" alt="" loading="lazy">`; } catch (e) { /* keep the icon */ } });
       }
       // selecting only moves the highlight (redrawing the list would break double-clicks)
@@ -204,15 +211,16 @@
         try {
           if (isHome()) { places = places || await NX.fs.places(); items = places.folders.map((f) => ({ name: f.name, path: f.path, dir: true, kind: "folder" })); parentPath = null; }
           else if (isTrash()) { items = (await NX.fs.trash()).entries; parentPath = null; }
+          else if (isTag()) { const c = cur.slice(6); items = Object.entries(tags()).filter(([, t]) => t.c === c).map(([p, t]) => ({ name: t.name, path: p, dir: t.dir, kind: t.kind || (t.dir ? "folder" : "file") })); parentPath = null; }
           else { const r = await NX.fs.list(cur); cur = r.path; items = r.entries; parentPath = r.parent; }
           sel = new Set([...sel].filter((k) => items.some((e) => (e.path || e.id) === k)));
         } catch (e) { err(e); if (!isHome()) { cur = HOME; return load(); } } finally { loading--; }
-        win.el.querySelector(".wt-name").textContent = (isHome() ? "Home" : isTrash() ? "Recycle Bin" : NX.fs.base(cur) || cur) + " - File Explorer";
+        win.el.querySelector(".wt-name").textContent = (isHome() ? "Home" : isTrash() ? "Recycle Bin" : isTag() ? (TAGS[cur.slice(6)] || ["Tag"])[0] + " tag" : NX.fs.base(cur) || cur) + " - File Explorer";
         tabs[ti] = { cur, back, fwd }; tabsDraw();
         crumbs(); render(); side(); $(".fx-top [data-n=back]").disabled = !back.length; $(".fx-top [data-n=fwd]").disabled = !fwd.length; $(".fx-top [data-n=up]").disabled = !parentPath && isHome();
       }
       function go(p, noHist) { if (p === cur) return load(); if (cur && !noHist) { back.push(cur); fwd = []; } cur = p; sel.clear(); q = ""; $(".fx-search input").value = ""; load(); }
-      const here = () => isHome() || isTrash() ? null : cur;
+      const here = () => isHome() || isTrash() || isTag() ? null : cur;
       async function act(k) {
         const s = selected();
         try {
@@ -264,7 +272,7 @@
         if (b && !sel.has(b.dataset.k)) { sel = new Set([b.dataset.k]); marks(); }
         const s = selected(), M = [];
         if (isTrash()) { if (s.length) M.push(["Restore", () => act("restore")], ["Delete for good", () => act("purge")]); M.push(["Empty Recycle Bin", () => act("empty")]); }
-        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); }
+        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
         else if (!isHome()) { M.push(["New folder", () => act("newfolder")], ["New text file", () => act("newtext")]); if (NX.fsClip) M.push(["Paste", () => act("paste")]); M.push(["Refresh", () => load()]); }
         if (M.length) NX.menu(ev.clientX, ev.clientY, M);
       });

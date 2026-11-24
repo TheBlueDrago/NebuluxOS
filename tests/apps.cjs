@@ -117,6 +117,17 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.mouse.move(f0.x, f0.y); await p.mouse.down(); await p.mouse.move(f0.x + 20, f0.y, { steps: 3 }); await p.mouse.move(y0.x + y0.w * .4, f0.y, { steps: 8 }); await p.mouse.up(); await wait(400);
   const order = await p.evaluate(() => NX.prefs().pinned.slice(0, 5).join(","));
   ok(order === "settings,google,youtube,files,store" && await p.evaluate(() => [...document.querySelectorAll("#tb-apps .tb-app")].map((b) => b.dataset.app).slice(0, 5).join(",")) === order && !(await p.evaluate(() => !!document.querySelector(".win[data-app=files]"))), "Dragging a taskbar app moves it (and doesn't open it): " + order);
+  // File Explorer: color tags
+  await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Pictures" }); }); await wait(900);
+  const fx0 = await p.evaluate(() => { const b = document.querySelector(".win[data-app=files] .fx-item"), r = b.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2, b.title]; });
+  await p.mouse.click(fx0[0], fx0[1], { button: "right" }); await wait(200);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Tag with a color/.test(b.textContent)).click()); await wait(200);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => b.textContent === "Green").click()); await wait(400);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=files] .fx-item .fx-tag") && [...document.querySelectorAll(".win[data-app=files] .fx-side .fx-place")].some((b) => /Green/.test(b.textContent))), "File Explorer: a file gets a color tag, and Tags shows in the sidebar");
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-side .fx-place")].find((b) => /Green/.test(b.textContent)).click()); await wait(500);
+  ok(await p.evaluate((n) => { const it = [...document.querySelectorAll(".win[data-app=files] .fx-item")]; return it.length === 1 && it[0].title === n && /Green tag/.test(document.querySelector(".win[data-app=files] .wt-name").textContent); }, fx0[2]), "and the Green tag lists just that file");
+  await shot("tags");
+  await p.evaluate(() => NX.setData("file-tags", {}));
   // File Explorer: sorting
   await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Pictures" }); }); await wait(900);
   await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=sort]").click()); await wait(200);
