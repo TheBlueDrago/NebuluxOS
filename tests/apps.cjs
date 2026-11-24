@@ -538,6 +538,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => { const e = document.querySelector("#lk-next"); return !!e && /Lock test event/.test(e.textContent) && /1 reminder due/.test(e.textContent); }), "the lock screen shows your next event and reminders due");
   await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(400);
   await p.evaluate(() => { NX.setData("events", []); NX.setData("todos", []); });
+  // desktop: Sort by name
+  const deskBefore = await p.evaluate(() => NX.prefs().desktop.slice());
+  await p.evaluate(() => { NX.closeAll(); document.querySelector("#desktop").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: Math.min(innerWidth - 60, 600), clientY: 200 })); }); await wait(300);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Sort by name/.test(b.textContent)).click()); await wait(300);
+  ok(await p.evaluate(() => { const n = [...document.querySelectorAll("#icons .dicon:not(.dbin):not(.dfile)")].map((b) => b.textContent.trim()); return n.length > 1 && n.every((x, i) => !i || n[i - 1].localeCompare(x) <= 0); }), "right-click the desktop > Sort by name puts the icons A to Z");
+  await p.evaluate((d) => { NX.setPref("desktop", d); NX.shell.icons(); }, deskBefore);
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
