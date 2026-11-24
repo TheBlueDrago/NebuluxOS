@@ -579,3 +579,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .as-top{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:12.5px}.as-top b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .as-face{display:grid;place-items:center;height:110px;background:color-mix(in srgb,var(--accent) 10%,var(--card2))}
 .as-face{position:relative;overflow:hidden;height:130px}
+.s-hthemes{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));margin-bottom:12px}
