@@ -55,6 +55,8 @@
     ["Themes on Settings Home", "Settings Home shows the six themes under Personalize your device."],
     ["Quick Search suggestions", "Before you type, Quick Search shows your recent apps and files, one Enter away."],
     ["Sort the desktop", "Right-click the desktop and pick Sort by name."],
+    ["Update and restart", "When an update is ready, Start's power button offers Update and restart."],
+    ["Find any setting", "Settings search finds settings by name, like screen saver or snap assist, not just page names."],
     ["Recycle Bin on the desktop", "The Recycle Bin sits on your desktop and fills up when something is in it. Right-click it to empty it."],
     ["Select icons with a box", "Drag on an empty part of the desktop to draw a box around icons."],
     ["Toasts you can close", "Click a pop-up message to close it. A thin bar shows how long it stays."],

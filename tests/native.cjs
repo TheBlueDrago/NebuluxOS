@@ -372,6 +372,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(() => !!document.querySelector(".upd-pop")), 9000), "after sign-in, an update reminder pops up");
   ok(/Nebulux OS 3.2 is ready/.test(await txt()) && await p.evaluate(() => ["Later", "Remind me", "Never"].every((t) => [...document.querySelectorAll(".upd-pop button")].some((b) => b.textContent === t))), "it offers Later, Remind me and Never");
   await p.evaluate(() => document.querySelector(".upd-pop [data-u=remind]").click()); await wait(200);
+  await p.evaluate(() => { document.querySelector("#tb-start").click(); }); await wait(300); await p.evaluate(() => document.querySelector("#start .sm-pwb").click()); await wait(200);
+  ok(await p.evaluate(() => !!document.querySelector("#start [data-pw=update]") && /Update and restart/.test(document.querySelector("#start [data-pw=update]").textContent)), "Start's power menu offers Update and restart when an update is ready");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   ok(await p.evaluate(() => !document.querySelector(".upd-pop") && NX.get("upd-remind", 0) - Date.now() > 29 * 60000), "Remind me asks again in 30 minutes");
   await p.evaluate(() => { NX.set("upd-remind", 0); NX.update.consider(); });
   ok(await until(() => p.evaluate(() => !!document.querySelector(".upd-pop")), 6000), "and asks again when the time comes");
