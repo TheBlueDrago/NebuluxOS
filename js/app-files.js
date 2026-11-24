@@ -127,7 +127,7 @@
       const $ = (s) => body.querySelector(s), listEl = $(".fx-list");
       // tabs: each one has its own folder and its own Back and Forward
       let tabs = [{ cur: null, back: [], fwd: [] }], ti = 0;
-      const tabName = (p) => (p === HOME || !p ? "Home" : p === TRASH ? "Recycle Bin" : String(p).startsWith("::tag:") ? p.slice(6)[0].toUpperCase() + p.slice(7) + " tag" : NX.fs.base(p) || p);
+      const tabName = (p) => (p === HOME || !p ? "Home" : p === TRASH ? "Recycle Bin" : p === "::recent" ? "Recent" : String(p).startsWith("::tag:") ? p.slice(6)[0].toUpperCase() + p.slice(7) + " tag" : NX.fs.base(p) || p);
       function tabsDraw() {
         const T = $(".fx-tabs");
         T.innerHTML = tabs.map((t, i) => `<div class="fx-tab ${i === ti ? "on" : ""}" role="tab" aria-selected="${i === ti}" data-tab="${i}" title="${NX.esc(tabName(t.cur))}">${NX.icon(t.cur === TRASH ? "recycle" : t.cur === HOME || !t.cur ? "home" : "folder", 14)}<span>${NX.esc(tabName(t.cur))}</span><button class="fx-tabx" data-tabx="${i}" aria-label="Close tab" title="Close tab">${NX.icon("close", 10)}</button></div>`).join("") + `<button class="fx-tabadd" aria-label="New tab" title="New tab (Ctrl + T)">${NX.icon("plus", 14)}</button>`;
@@ -144,7 +144,7 @@
         if (i < ti || ti >= tabs.length) ti = Math.max(0, ti - (i <= ti ? 1 : 0));
         ti = Math.min(ti, tabs.length - 1); ({ cur, back, fwd } = tabs[ti]); sel.clear(); q = ""; $(".fx-search input").value = ""; load();
       }
-      const isTrash = () => cur === TRASH, isHome = () => cur === HOME, isTag = () => String(cur).startsWith("::tag:");
+      const isTrash = () => cur === TRASH, isHome = () => cur === HOME, isTag = () => String(cur).startsWith("::tag:"), isRecent = () => cur === "::recent";
       // color tags: mark any file or folder Red, Orange, Yellow, Green, Blue or Purple; the sidebar lists everything with a tag
       const TAGS = { red: ["Red", "#ef4444"], orange: ["Orange", "#f97316"], yellow: ["Yellow", "#eab308"], green: ["Green", "#22c55e"], blue: ["Blue", "#3b82f6"], purple: ["Purple", "#a855f7"] };
       const tags = () => NX.data("file-tags", {});
@@ -168,7 +168,7 @@
         try { drives = await NX.fs.drives(); } catch (e) { drives = []; }
         const row = (key, icon, label, extra) => `<button class="fx-place ${cur === key ? "on" : ""}" data-go="${NX.esc(key)}">${NX.icon(icon, 18)}<span>${NX.esc(label)}</span>${extra || ""}</button>`;
         const pins = NX.data("fx-pins", []).filter((x) => x && x.path);
-        $(".fx-side").innerHTML = row(HOME, "home", "Home") + (places ? places.folders.map((f) => row(f.path, "folder", f.name)).join("") : "") + row(TRASH, "recycle", "Recycle Bin") +
+        $(".fx-side").innerHTML = row(HOME, "home", "Home") + row("::recent", "time", "Recent") + (places ? places.folders.map((f) => row(f.path, "folder", f.name)).join("") : "") + row(TRASH, "recycle", "Recycle Bin") +
           (Object.keys(tags()).length ? `<h4>Tags</h4>` + Object.entries(TAGS).filter(([c]) => Object.values(tags()).some((t) => t.c === c)).map(([c, [n, col]]) => `<button class="fx-place ${cur === "::tag:" + c ? "on" : ""}" data-go="::tag:${c}"><i class="fx-tag big" style="background:${col}"></i><span>${n}</span></button>`).join("") : "") +
           (pins.length ? `<h4>Quick access</h4>` + pins.map((x) => row(x.path, "pin", x.name)).join("") : "") +
           (NX.native ? `<h4>USB drives</h4>` + (drives.length ? drives.map((d) => d.mount ? row(d.mount, "usb", d.label, `<i class="fx-eject" role="button" tabindex="0" data-eject="${NX.esc(d.dev)}" title="Eject ${NX.esc(d.label)}" aria-label="Eject ${NX.esc(d.label)}">${NX.icon("eject", 14)}</i>`) : `<button class="fx-place" data-mount="${NX.esc(d.dev)}">${NX.icon("usb", 18)}<span>${NX.esc(d.label)}</span></button>`).join("") : `<p class="fx-none">Plug in a USB drive and it shows up here.</p>`) : "");
@@ -181,7 +181,7 @@
         const c = $(".fx-crumbs");
         if (isHome()) { c.innerHTML = `<span class="fx-cr">${NX.icon("home", 14)}Home</span>`; return; }
         if (isTrash()) { c.innerHTML = `<span class="fx-cr">${NX.icon("recycle", 14)}Recycle Bin</span>`; return; }
-        if (isTag()) { c.innerHTML = `<span class="fx-cr">${tabName(cur)}</span>`; return; }
+        if (isTag() || isRecent()) { c.innerHTML = `<span class="fx-cr">${tabName(cur)}</span>`; return; }
         const S = NX.fs.sep, parts = []; let root = null, label = "";
         const drive = drives.find((d) => d.mount && (cur === d.mount || cur.startsWith(d.mount + S)));
         if (drive) { root = drive.mount; label = drive.label; } else if (places) { root = places.home; label = "Home"; }
@@ -195,7 +195,7 @@
       function tools() {
         const one = sel.size === 1, any = sel.size > 0, t = (k, icon, label, on) => `<button class="fx-t" data-t="${k}" ${on === false ? "disabled" : ""} title="${label}">${NX.icon(icon, 16)}<span>${label}</span></button>`;
         $(".fx-tools").innerHTML = isTrash() ? t("restore", "restart", "Restore", any) + t("purge", "trash", "Delete for good", any) + `<span class="fx-sp"></span>` + t("empty", "recycle", "Empty Recycle Bin", items.length > 0)
-          : (isHome() || isTag() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
+          : (isHome() || isTag() || isRecent() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
         $(".fx-tools").querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => act(b.dataset.t)));
         const sb = $(".fx-tools [data-t=sort]"); if (sb) sb.onclick = () => { const r = sb.getBoundingClientRect(); NX.menu(r.left, r.bottom + 4, [["Name", () => setSort("name")], ["Date changed", () => setSort("date")], ["Type", () => setSort("type")], ["Size", () => setSort("size")]].map(([t2, f]) => [t2 + ({ Name: "name", "Date changed": "date", Type: "type", Size: "size" }[t2] === sort.k ? (sort.d > 0 ? "  (up)" : "  (down)") : ""), f])); };
       }
@@ -203,7 +203,7 @@
       // sorting: by name, date, type or size (folders stay first); click a column in Details view, or Sort in Icons view
       let sort = NX.data("fx-sort", { k: "name", d: 1 });
       const ext = (e) => (e.dir ? "" : (e.name.includes(".") ? e.name.split(".").pop().toLowerCase() : ""));
-      const sorted = (list) => isHome() ? list : [...list].sort((a, b) => (b.dir - a.dir) || sort.d * (sort.k === "date" ? (a.mtime || a.deleted || 0) - (b.mtime || b.deleted || 0) : sort.k === "size" ? (a.size || 0) - (b.size || 0) : sort.k === "type" ? ext(a).localeCompare(ext(b)) || a.name.localeCompare(b.name, undefined, { numeric: true }) : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })));
+      const sorted = (list) => isHome() || isRecent() ? list : [...list].sort((a, b) => (b.dir - a.dir) || sort.d * (sort.k === "date" ? (a.mtime || a.deleted || 0) - (b.mtime || b.deleted || 0) : sort.k === "size" ? (a.size || 0) - (b.size || 0) : sort.k === "type" ? ext(a).localeCompare(ext(b)) || a.name.localeCompare(b.name, undefined, { numeric: true }) : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })));
       const setSort = (k) => { sort = { k, d: sort.k === k ? -sort.d : (k === "date" || k === "size" ? -1 : 1) }; NX.setData("fx-sort", sort); render(); };
       const arrow = (k) => (sort.k === k ? (sort.d > 0 ? " \u2191" : " \u2193") : "");
       function render() {
@@ -221,16 +221,17 @@
         try {
           if (isHome()) { places = places || await NX.fs.places(); items = places.folders.map((f) => ({ name: f.name, path: f.path, dir: true, kind: "folder" })); parentPath = null; }
           else if (isTrash()) { items = (await NX.fs.trash()).entries; parentPath = null; }
+          else if (isRecent()) { items = NX.prefs().showrecent === false ? [] : NX.data("recent-files", []).map((f) => ({ name: f.name, path: f.path, dir: false, kind: f.kind || "file", mtime: f.at })); parentPath = null; }
           else if (isTag()) { const c = cur.slice(6); items = Object.entries(tags()).filter(([, t]) => t.c === c).map(([p, t]) => ({ name: t.name, path: p, dir: t.dir, kind: t.kind || (t.dir ? "folder" : "file") })); parentPath = null; }
           else { const r = await NX.fs.list(cur); cur = r.path; items = r.entries; parentPath = r.parent; }
           sel = new Set([...sel].filter((k) => items.some((e) => (e.path || e.id) === k)));
         } catch (e) { err(e); if (!isHome()) { cur = HOME; return load(); } } finally { loading--; }
-        win.el.querySelector(".wt-name").textContent = (isHome() ? "Home" : isTrash() ? "Recycle Bin" : isTag() ? (TAGS[cur.slice(6)] || ["Tag"])[0] + " tag" : NX.fs.base(cur) || cur) + " - File Explorer";
+        win.el.querySelector(".wt-name").textContent = (isHome() ? "Home" : isTrash() ? "Recycle Bin" : isRecent() ? "Recent" : isTag() ? (TAGS[cur.slice(6)] || ["Tag"])[0] + " tag" : NX.fs.base(cur) || cur) + " - File Explorer";
         tabs[ti] = { cur, back, fwd }; tabsDraw();
         crumbs(); render(); side(); $(".fx-top [data-n=back]").disabled = !back.length; $(".fx-top [data-n=fwd]").disabled = !fwd.length; $(".fx-top [data-n=up]").disabled = !parentPath && isHome();
       }
       function go(p, noHist) { if (p === cur) return load(); if (cur && !noHist) { back.push(cur); fwd = []; } cur = p; sel.clear(); q = ""; $(".fx-search input").value = ""; load(); }
-      const here = () => isHome() || isTrash() || isTag() ? null : cur;
+      const here = () => isHome() || isTrash() || isTag() || isRecent() ? null : cur;
       async function act(k) {
         const s = selected();
         try {

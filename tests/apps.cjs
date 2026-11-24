@@ -134,6 +134,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const b = [...document.querySelectorAll("#ctx button")].find((x) => x.textContent === "Properties"); if (b) b.click(); }); await wait(300);
   ok(await p.evaluate(() => { const d = document.querySelector(".fx-props"); return !!d && /Type/.test(d.textContent) && /Size/.test(d.textContent) && /Green/.test(d.textContent); }), "Properties shows a file's type, size and tag");
   await p.evaluate(() => { const d = document.querySelector(".fx-props"); if (d) d.remove(); NX.setData("file-tags", {}); });
+  // File Explorer: Recent
+  await p.evaluate(() => { NX.closeAll(); NX.setData("recent-files", [{ name: "Trip plan.txt", path: "/Documents/Trip plan.txt", kind: "text", at: Date.now() }]); NX.open("files"); }); await wait(800);
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-side .fx-place")].find((b) => /Recent/.test(b.textContent)).click()); await wait(500);
+  ok(await p.evaluate(() => { const it = [...document.querySelectorAll(".win[data-app=files] .fx-item")]; return it.length === 1 && it[0].title === "Trip plan.txt" && /Recent/.test(document.querySelector(".win[data-app=files] .wt-name").textContent); }), "File Explorer: Recent shows the files you opened lately");
+  await p.evaluate(() => { NX.setData("recent-files", []); NX.closeAll(); });
   // File Explorer: sorting
   await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Pictures" }); }); await wait(900);
   await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=sort]").click()); await wait(200);
