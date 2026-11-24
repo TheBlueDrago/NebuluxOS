@@ -66,7 +66,7 @@
   }
   function lock(clockFirst) {
     NX.me = null; applyLook(); const L = $("#lock"); L.hidden = false; L.className = clockFirst ? "locked" : "signin"; $("#desktop").hidden = true;
-    const tick = () => { const d = new Date(); $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); lkStatus(); lkWeather(); };
+    const tick = () => { const d = new Date(); L.dataset.time = NX.fmtTime ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""; $("#lk-time").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, ""); $("#lk-date").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); lkStatus(); lkWeather(); };
     tick(); clearInterval(lockT); lockT = setInterval(tick, 1000);
     const users = NX.users(); chosen = (users.find((u) => u.id === NX.get("lastUser")) || users[0] || null); mode = users.length ? "signin" : "setup";
     if (!users.length && NX.oobe) { L.hidden = true; clearInterval(lockT); NX.oobe((u) => { L.hidden = false; enter(u); }); return; }
