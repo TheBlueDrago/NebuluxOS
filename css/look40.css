@@ -177,3 +177,14 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 [data-glass=solid]{--bg:color-mix(in srgb,var(--aura) 12%,#1a1330);--bg2:color-mix(in srgb,var(--aura) 14%,#211938);--glass:color-mix(in srgb,var(--aura) 16%,#161028)}
 [data-glass=solid][data-theme=light]{--bg:color-mix(in srgb,var(--aura) 5%,#f7f5fc);--bg2:color-mix(in srgb,var(--aura) 6%,#fbfaff);--glass:color-mix(in srgb,var(--aura) 7%,#f3f0fb)}
 [data-glass=solid] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+/* ---------- Themes (Settings > Personalization) ---------- */
+.s-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+.s-theme{display:flex;flex-direction:column;gap:7px;padding:6px;border-radius:12px;background:var(--card);border:1px solid var(--line);text-align:left;transition:transform .18s var(--ease-spring,ease),border-color .15s}
+.s-theme:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.s-theme.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.s-th-pic{position:relative;display:block;aspect-ratio:16/9;border-radius:8px;background-size:cover;background-position:center;overflow:hidden}
+.s-th-win{position:absolute;left:18%;top:20%;width:64%;height:58%;border-radius:6px;background:#1a1330d9;backdrop-filter:blur(6px);box-shadow:0 6px 16px #0006;padding:6px;display:flex;flex-direction:column;gap:5px}
+.s-th-win.light{background:#f7f5fce6}
+.s-th-win b{display:block;height:6px;border-radius:3px;background:var(--c);width:60%}.s-th-win b+b{width:85%;opacity:.35;background:currentColor;color:#fff}.s-th-win.light b+b{color:#1b1530}
+.s-th-n{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:0 4px 2px}.s-th-n i{width:10px;height:10px;border-radius:50%}

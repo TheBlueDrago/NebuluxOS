@@ -398,3 +398,14 @@
     }
   }, { passive: true });
 })();
+
+// ---------- Themes: one click sets the background, dark or light, the accent color, the corners and the glass ----------
+NX.looks40 = [
+  { name: "Nebulux", wall: 10, theme: "dark", accent: "#7c5cff", corners: "round", glass: "frosted" },
+  { name: "Aurora", wall: 11, theme: "dark", accent: "#22d3ee", corners: "xround", glass: "clear" },
+  { name: "Ember", wall: 2, theme: "dark", accent: "#f97316", corners: "square", glass: "solid" },
+  { name: "Polar", wall: 8, theme: "dark", accent: "#34d399", corners: "round", glass: "frosted" },
+  { name: "Pearl", wall: 12, theme: "light", accent: "#c026d3", corners: "xround", glass: "clear" },
+  { name: "Daybreak", wall: 5, theme: "light", accent: "#2563eb", corners: "round", glass: "frosted" },
+];
+NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.theme === t.theme && p.accent === t.accent && (p.corners40 || "round") === t.corners && (p.glass || "frosted") === t.glass; };

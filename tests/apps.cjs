@@ -362,6 +362,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.setPref("contrast", true)); await wait(200);
   ok(await p.evaluate(() => document.documentElement.classList.contains("hc") && getComputedStyle(document.documentElement).getPropertyValue("--line").trim() === "#ffffff66"), "Increase contrast makes outlines stronger");
   await p.evaluate(() => NX.setPref("contrast", false));
+  // Themes
+  const thBefore = await p.evaluate(() => JSON.stringify(NX.prefs()));
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
+  await p.evaluate(() => { const w = [...document.querySelectorAll(".win")].pop(); const b = [...w.querySelectorAll(".s-nav button, .s-side button, [data-pg]")].find((x) => /Personalization/.test(x.textContent)); b && b.click(); }); await wait(400);
+  ok(await p.evaluate(() => { const b = document.querySelector('[data-look="2"]'); if (!b) return false; b.click(); const q = NX.prefs(); return q.wallpaper === 2 && q.accent === "#f97316" && q.corners40 === "square" && document.querySelector('[data-look="2"]').classList.contains("on"); }), "a Theme sets the background, accent, corners and glass in one click");
+  await p.evaluate((j) => { const o = JSON.parse(j); ["wallpaper", "theme", "accent", "corners40", "glass"].forEach((k) => NX.setPref(k, o[k])); NX.closeAll && NX.closeAll(); }, thBefore);
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");
