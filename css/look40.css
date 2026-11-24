@@ -1,0 +1,78 @@
+/* Nebulux OS 4.0 look: "Aura" glass tinted by your wallpaper, a floating taskbar, refined windows and menus,
+   springier motion, and a calmer lock screen. Loaded after os.css, so it only changes the look, not the layout. */
+
+/* ---------- Aura: every glass surface takes a little of the wallpaper's color (js/app-40.js sets --aura) ---------- */
+:root{--aura:#2a1d55;--ease-spring:cubic-bezier(.2,1.25,.35,1);--ease-out:cubic-bezier(.16,1,.3,1);--r-win:14px;--r-menu:16px}
+:root{--bg:color-mix(in srgb,var(--aura) 14%,#1a1330e8);--bg2:color-mix(in srgb,var(--aura) 16%,#211938f0);--glass:color-mix(in srgb,var(--aura) 18%,#161028d0)}
+[data-theme=light]{--bg:color-mix(in srgb,var(--aura) 6%,#f7f5fcf2);--bg2:color-mix(in srgb,var(--aura) 7%,#fbfaffef);--glass:color-mix(in srgb,var(--aura) 8%,#f3f0fbde)}
+.nx-lite{--bg:color-mix(in srgb,var(--aura) 14%,#1a1330);--bg2:color-mix(in srgb,var(--aura) 16%,#211938);--glass:color-mix(in srgb,var(--aura) 18%,#161028)}
+.nx-lite[data-theme=light]{--bg:color-mix(in srgb,var(--aura) 6%,#f7f5fc);--bg2:color-mix(in srgb,var(--aura) 7%,#fbfaff);--glass:color-mix(in srgb,var(--aura) 8%,#f3f0fb)}
+.hc{--bg:#120d22;--bg2:#17112b;--glass:#100b20}.hc[data-theme=light]{--bg:#fff;--bg2:#fff;--glass:#f4f2fb}
+
+/* ---------- headings in the display face ---------- */
+h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Variable Display","Segoe UI",var(--font);letter-spacing:-.2px}
+
+/* ---------- windows ---------- */
+.win{border-radius:var(--r-win)}
+.win .titlebar{height:40px;padding-left:14px;background:linear-gradient(180deg,#ffffff0a,transparent)}
+[data-theme=light] .win .titlebar{background:linear-gradient(180deg,#ffffffb0,transparent)}
+.win:not(.active) .titlebar{opacity:.62}
+.win .wt-name{font-weight:600;font-size:12.5px}
+.wb{width:44px;border-radius:0;transition:background .12s,color .12s}
+.wb-close:hover{background:#e5484d;color:#fff}
+.win.maxed{border-radius:0}
+/* opening: a soft spring up from slightly smaller */
+.win.opening{transform:translateY(10px) scale(.95);opacity:0}
+.win{transition:transform .26s var(--ease-spring),opacity .18s ease,box-shadow .2s}
+.win.dragging{transition:none}
+
+/* ---------- the floating taskbar (Settings > Personalization; on by default) ---------- */
+#desktop.tb-float #taskbar{left:8px;right:8px;bottom:5px;height:calc(var(--tb) - 8px);border-radius:16px;border:1px solid #ffffff1c;box-shadow:0 14px 40px #0008,inset 0 1px 0 #ffffff1a}
+[data-theme=light] #desktop.tb-float #taskbar{border-color:#1b123a1a;box-shadow:0 14px 40px #2b1d5a33,inset 0 1px 0 #fff}
+#desktop.tb-float.tb-auto #taskbar{transform:translateY(calc(100% + 10px))}#desktop.tb-float.tb-auto.tb-show #taskbar{transform:none}
+.tb-app{border-radius:10px}
+
+/* ---------- Start, quick settings, calendar and the other flyouts ---------- */
+.flyout{border-radius:var(--r-menu);animation:fly40 .26s var(--ease-out)}
+@keyframes fly40{from{transform:translateY(18px) scale(.985);opacity:0}}
+#start{left:50%}
+#start .sm-search input,#start .sm-search{border-radius:14px}
+.sm-tile{border-radius:12px;transition:background .12s,transform .15s var(--ease-spring)}
+.sm-tile:hover{background:var(--hover);transform:translateY(-2px)}
+.sm-tile .ico{transition:filter .15s}.sm-tile:hover .ico{filter:drop-shadow(0 8px 14px #0007)}
+.sm-res{border-radius:10px}
+
+/* ---------- menus and notifications ---------- */
+.ctx{border-radius:14px;padding:6px;background:var(--bg2);box-shadow:0 22px 50px #000a,0 0 0 1px #ffffff17,inset 0 1px 0 #ffffff14;animation:ctx40 .16s var(--ease-out)}
+[data-theme=light] .ctx{box-shadow:0 22px 50px #2b1d5a33,0 0 0 1px #1b123a17,inset 0 1px 0 #fff}
+@keyframes ctx40{from{transform:scale(.96);opacity:0}}
+.ctx button{border-radius:8px;padding:8px 12px}
+.ctx button:hover{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+.toast{border-radius:14px;padding:12px 16px;box-shadow:0 18px 40px #0009,0 0 0 1px #ffffff17;animation:toast40 .32s var(--ease-spring)}
+@keyframes toast40{from{transform:translateX(30px) scale(.98);opacity:0}}
+
+/* ---------- desktop icons: a soft card behind the one you point at ---------- */
+.dicon{border-radius:12px}
+.dicon:hover{background:#ffffff1a}
+.dicon.sel{background:color-mix(in srgb,var(--accent) 30%,#ffffff10);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+
+/* ---------- the lock screen: a thin, large clock ---------- */
+#lk-time{font-family:"Segoe UI Variable Display","Segoe UI",var(--font);font-weight:300;letter-spacing:-3px;font-size:clamp(72px,14vw,150px)}
+#lk-date{font-weight:500;letter-spacing:.2px}
+.lk-hint{padding:6px 14px;border-radius:20px;background:#0003;backdrop-filter:blur(6px);display:inline-block}
+.lk-form input{border-radius:12px!important}
+
+/* ---------- buttons and switches ---------- */
+.btn{border-radius:9px;transition:background .12s,transform .1s,box-shadow .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 40%,transparent)}
+.btn.primary:hover{box-shadow:0 6px 20px color-mix(in srgb,var(--accent) 55%,transparent)}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){.win,.flyout,.ctx,.toast,.sm-tile{animation:none!important;transition:none!important}}
+.noanim .win,.noanim .flyout,.noanim .ctx,.noanim .toast{animation:none!important}
+
+/* fixes after the first look */
+.win.active .titlebar{opacity:1}
+#start{height:auto;max-height:min(720px,calc(100vh - var(--tb) - 24px))}
+#start .sm-body{flex:1 1 auto;min-height:0}

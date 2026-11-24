@@ -289,6 +289,27 @@
   document.addEventListener("nx:prefs", (e) => { if (e.detail === "stage") { stageDraw(); const t = NX.topWin && NX.topWin(); if (stageOn() && t) NX.focus(t.id); } });
   setInterval(stageDraw, 2000);
 
+  // ---------- the 4.0 look: Aura (glass tinted by the wallpaper's color) and the floating taskbar ----------
+  let auraFor = null;
+  const auraApply = () => {
+    const root = document.documentElement, d = document.getElementById("desktop");
+    if (d) d.classList.toggle("tb-float", !NX.me || NX.prefs().tbFloat !== false);
+    const p = NX.me ? NX.prefs() : null, w = p ? p.wallpaper : 0, key = String(w) + (w === "custom" ? NX.data("wall-custom", "").length : "");
+    if (key === auraFor) return; auraFor = key;
+    if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? w : 0]; if (col) root.style.setProperty("--aura", col); return; }
+    const src = NX.data("wall-custom", null); if (!src || !/^data:image\//.test(src)) return; // your own picture is kept as a data: picture, which can be read
+    const img = new Image();
+    img.onload = () => { try {
+      const c = document.createElement("canvas"); c.width = c.height = 24; const g = c.getContext("2d"); g.drawImage(img, 0, 0, 24, 24);
+      const px = g.getImageData(0, 0, 24, 24).data; let r = 0, gg = 0, b = 0, n = 0;
+      for (let k = 0; k < px.length; k += 4) { const w = 1 + (Math.max(px[k], px[k + 1], px[k + 2]) - Math.min(px[k], px[k + 1], px[k + 2])) / 40; r += px[k] * w; gg += px[k + 1] * w; b += px[k + 2] * w; n += w; } // colorful pixels count more
+      root.style.setProperty("--aura", "rgb(" + Math.round(r / n) + "," + Math.round(gg / n) + "," + Math.round(b / n) + ")");
+    } catch (e) { /* a picture we can't read: the default aura stays */ } };
+    img.src = src;
+  };
+  NX.auraApply = auraApply;
+  document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
+
   // ---------- "Caps Lock is on" under any password box you're typing in ----------
   const capsCheck = (e) => { const t = e.target; if (!t || t.tagName !== "INPUT" || t.type !== "password" || !e.getModifierState) return; const on = e.getModifierState("CapsLock");
     let h = t.nextElementSibling && t.nextElementSibling.classList && t.nextElementSibling.classList.contains("nx-caps") ? t.nextElementSibling : null;

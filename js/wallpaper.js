@@ -16,6 +16,8 @@
     { name: "Morning Haze", light: true },
     { name: "Nebulux Four" }, // made for 4.0
   ];
+  // each picture's own color, for the 4.0 Aura glass (worked out once from the pictures)
+  NX.wallAura = ["#494085", "#21617c", "#a35324", "#2e3578", "#6d3360", "#cdc9f5", "#281b4b", "#321d4f", "#0e373c", "#dddaf3", "#231c44"];
   // ready-made pictures (painting them at start-up was slow without graphics acceleration); one picture for every size
   // your own picture (Settings > Personalization > Browse photos) is wallpaper "custom", kept for each person
   const own = () => (NX.me && NX.data ? NX.data("wall-custom", null) : null);
