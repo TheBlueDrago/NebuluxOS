@@ -503,6 +503,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.setPref("tbSearch", "icon")); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.querySelector("#tb-search span")).display === "none" && getComputedStyle(document.querySelector("#tb-search")).display !== "none"), "and search can be just the icon");
   await p.evaluate(() => { NX.setPref("tbSearch", "box"); NX.setPref("tbTaskView", true); NX.setPref("tbWidgets", true); });
+  // Night light strength
+  await p.evaluate(() => { NX.setPref("night", true); NX.setPref("nightStr", 100); }); await wait(600);
+  const nsHi = await p.evaluate(() => +getComputedStyle(document.querySelector("#night")).opacity);
+  await p.evaluate(() => NX.setPref("nightStr", 10)); await wait(600);
+  const nsLo = await p.evaluate(() => +getComputedStyle(document.querySelector("#night")).opacity);
+  ok(nsHi > 0.35 && nsLo < 0.15, "Night light strength changes how warm it gets");
+  await p.evaluate(() => { NX.setPref("night", false); NX.setPref("nightStr", 50); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

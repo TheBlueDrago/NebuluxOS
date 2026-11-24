@@ -559,3 +559,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop[data-tbsearch=hide] #tb-search{display:none}
 #desktop.tb-notv #tb-tview{display:none}
 #desktop.tb-nowg #tb-widgets{display:none}
+#night.on{opacity:calc(.08 + var(--ns,.5) * .34)}

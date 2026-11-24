@@ -38,7 +38,7 @@
     if (NX.me) { const lp = p.lockPic == null || p.lockPic === "match" ? (typeof p.wallpaper === "number" ? p.wallpaper : 0) : +p.lockPic; if (NX.get("lock-wall", 0) !== lp) NX.set("lock-wall", lp); }
     const lw = NX.get("lock-wall", 0), wall = NX.wallpaperURL(NX.me ? p.wallpaper : (typeof lw === "number" && NX.wallpapers[lw] ? lw : 0), innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
-    $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
+    $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night)); $("#night").style.setProperty("--ns", ((NX.me && p.nightStr) || 50) / 100);
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
   let resizeT = 0; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { applyLook(); if (NX.me) icons(); }, 150); });
