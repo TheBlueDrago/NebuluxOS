@@ -112,3 +112,4 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 .sw-pic{position:relative;display:grid;place-items:center;width:200px;height:124px;border-radius:10px;overflow:hidden;background:#0004}
 .sw-name{display:flex;align-items:center;gap:6px;max-width:100%}.sw-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:560px){.sw-item{width:150px}.sw-pic{width:134px;height:84px}}
+.ctx button{display:flex;align-items:center;gap:10px}.ctx button .ico{opacity:.8;flex:none}.ctx-sp{width:15px;flex:none}

@@ -176,8 +176,13 @@
 
   // (the Desktop folder's files are added by win11.js when the icons are drawn)
   // ---------- context menu ----------
+  // 4.0: every menu item gets a small icon that matches what it does
+  const MICON = [[/^new folder/i, "newfolder"], [/^new text|^new note|sticky/i, "ftext"], [/^refresh/i, "reload"], [/widgets/i, "apps"], [/background/i, "brush"], [/display/i, "display"], [/personaliz/i, "brush"], [/file explorer/i, "folder"],
+    [/^open in new tab/i, "plus"], [/^open/i, "fwd"], [/^cut$/i, "cut"], [/^copy$/i, "copy"], [/^paste$/i, "paste"], [/^rename/i, "rename"], [/^delete|for good|^empty/i, "trash"], [/^restore$/i, "restart"], [/properties/i, "info"], [/tag/i, "pin"],
+    [/unpin|pin to|quick access|taskbar/i, "pin"], [/^close/i, "close"], [/^minimize/i, "min"], [/^maximize|^restore/i, "max"], [/on top/i, "up"], [/uninstall/i, "trash"], [/settings/i, "settings"], [/desktop/i, "display"]];
+  const micon = (t) => { const m = MICON.find(([re]) => re.test(t)); return m ? NX.icon(m[1], 15) : `<span class="ctx-sp"></span>`; };
   function menu(x, y, items) {
-    closeFlyouts(); const m = $("#ctx"); m.innerHTML = items.map(([t], i) => `<button data-i="${i}">${NX.esc(t)}</button>`).join(""); m.hidden = false;
+    closeFlyouts(); const m = $("#ctx"); m.innerHTML = items.map(([t], i) => `<button data-i="${i}">${micon(t)}<span>${NX.esc(t)}</span></button>`).join(""); m.hidden = false;
     const r = m.getBoundingClientRect(); m.style.left = Math.min(x, innerWidth - r.width - 6) + "px"; m.style.top = Math.min(y, innerHeight - r.height - 6) + "px";
     m.querySelectorAll("button").forEach((b) => (b.onclick = () => { m.hidden = true; items[+b.dataset.i][1](); }));
   }
