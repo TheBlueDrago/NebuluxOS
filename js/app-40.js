@@ -724,3 +724,11 @@ NX.wxSky = (el, code, day) => {
   setInterval(tick, 1000);
   NX.lockNowPlaying = tick;
 })();
+
+// ---------- a fitting icon for each notification, picked from what it says ----------
+NX.noteIcon = (text) => {
+  const t = String(text || "");
+  const R = [[/Wi-?Fi|internet|online|connection|network/i, "wifi"], [/Bluetooth/i, "bt"], [/battery|charg/i, "battery"], [/update|Nebulux OS \d/i, "download"], [/screenshot|snip/i, "snip"], [/^Now:|event|calendar/i, "calendar"], [/remind/i, "reminders"], [/alarm|timer|focus|countdown/i, "time"], [/sav|file|folder|copied|moved|deleted|Recycle/i, "folder"], [/background|theme|color|accent/i, "brush"], [/volume|sound|mute/i, "volume"], [/install|Store/i, "store"], [/password|lock|sign/i, "lock"], [/Welcome/i, "logo"]];
+  for (const [re, ic] of R) if (re.test(t)) return ic;
+  return "logo";
+};

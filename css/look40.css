@@ -542,3 +542,13 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 [data-wbtn=dots] .pv-bar span{width:6px!important;height:6px!important;border-radius:50%!important;background:#febc2e!important;opacity:1!important}
 [data-wbtn=dots] .pv-bar span:last-child{background:#ff5f57!important}[data-wbtn=dots] .pv-bar span:nth-child(2){background:#28c840!important}
 .sm-thumb{width:30px;height:30px;border-radius:6px;object-fit:cover;flex:none;box-shadow:0 2px 6px #0005}
+
+/* ---------- notifications: an icon for each, and a dismiss button ---------- */
+.nc-item{position:relative;align-items:center;transition:opacity .2s,transform .2s}
+.nc-item.gone{opacity:0;transform:translateX(30px)}
+.nc-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 18%,var(--card2));flex:none}
+.nc-item>span:nth-child(2){flex:1;min-width:0}
+.nc-x{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;opacity:0;color:var(--sub);transition:opacity .15s}
+.nc-item:hover .nc-x,.nc-x:focus-visible{opacity:1}.nc-x:hover{background:var(--hover);color:var(--txt)}
+.toast svg{flex:none}
+#cal>.nc{max-height:min(24vh,230px)}
