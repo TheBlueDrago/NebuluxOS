@@ -308,6 +308,7 @@
     const st = $("[data-store]", S); if (st) st.onclick = () => { closeFlyouts(); NX.open("store"); };
     const aa = $("[data-allapps]", S); if (aa) aa.onclick = (e) => { e.stopPropagation(); startDraw("", "all"); };
     S.querySelectorAll("[data-rfile]").forEach((b) => (b.onclick = () => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; closeFlyouts(); if (f) NX.openFile(f); }));
+    S.querySelectorAll("[data-rfile]").forEach((b) => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; if (f && f.kind === "image" && NX.fs && NX.fs.url) NX.fs.url(f.path).then((u) => { const i = b.querySelector("svg"); if (i) i.outerHTML = `<img class="sm-thumb" src="${NX.esc(u)}" alt="">`; }).catch(() => {}); });
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     smFootWire(S);
   }
