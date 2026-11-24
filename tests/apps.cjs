@@ -210,6 +210,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const found0 = await p.evaluate(() => NX.pointerFound || 0);
   for (let k = 0; k < 8; k++) { const sw = Math.min(220, W / 2 - 10); await p.mouse.move(k % 2 ? W / 2 + sw : W / 2 - sw, H / 3, { steps: 4 }); }
   ok(await p.evaluate((f) => (NX.pointerFound || 0) > f, found0), "shaking the pointer makes it easy to find");
+  // a background that follows the day
+  await p.evaluate(() => { NX.setPref("dailyWall", false); NX.setPref("dynWall", true); }); await wait(300);
+  ok(await p.evaluate(() => NX.prefs().wallpaper === NX.dayWall(new Date().getHours()) && [NX.dayWall(8), NX.dayWall(13), NX.dayWall(18), NX.dayWall(23)].join() === "9,5,2,3"), "Background follows the day: morning, midday, sunset and night");
+  await p.evaluate(() => { NX.setPref("dynWall", false); NX.setPref("wallpaper", 0); });
   // Screen time
   await p.evaluate(() => { NX.closeAll(); NX.open("weather"); }); await wait(300);
   await p.evaluate(() => { NX.screenTimeTick(1500); NX.screenTimeTick(1500); });

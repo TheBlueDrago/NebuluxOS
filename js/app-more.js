@@ -193,7 +193,10 @@
   document.addEventListener("nx:key", (e) => { if (e.detail === "keys" && NX.me) NX.shortcuts(); });
 
   // ---------- A new background every day (Settings > Personalization) ----------
+  // a background that follows the day: Morning Haze in the morning, Daybreak at midday, Solar Flare at sunset, Deep Orbit at night
+  NX.dayWall = (h) => (h >= 6 && h < 11 ? 9 : h >= 11 && h < 17 ? 5 : h >= 17 && h < 20 ? 2 : 3);
   const daily = () => {
+    if (NX.me && NX.prefs().dynWall) { const pick = NX.dayWall(new Date().getHours()); if (pick !== NX.prefs().wallpaper && NX.wallpapers[pick]) NX.setPref("wallpaper", pick); return; }
     if (!NX.me || !NX.prefs().dailyWall) return;
     const p = NX.prefs(), day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
     const pool = NX.wallpapers.map((w, i) => [w, i]).filter(([w]) => !!w.light === (p.theme === "light")).map(([, i]) => i);
@@ -204,5 +207,5 @@
   // Auto mode: light from 7 AM, dark from 7 PM (Settings > Personalization > Choose your mode)
   NX.autoTheme = () => { if (!NX.me) return; const p = NX.prefs(); if (!p.themeAuto) return; const h = new Date().getHours(), want = h >= 7 && h < 19 ? "light" : "dark"; if (p.theme !== want) NX.setPref("theme", want); };
   setInterval(NX.autoTheme, 60000); setTimeout(NX.autoTheme, 1200);
-  setInterval(daily, 60000); setTimeout(daily, 1500); document.addEventListener("nx:prefs", (e) => { if (e.detail === "dailyWall" || e.detail === "theme") daily(); });
+  setInterval(daily, 60000); setTimeout(daily, 1500); document.addEventListener("nx:prefs", (e) => { if (e.detail === "dailyWall" || e.detail === "dynWall" || e.detail === "theme") daily(); });
 })();
