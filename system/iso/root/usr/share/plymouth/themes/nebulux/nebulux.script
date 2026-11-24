@@ -1,21 +1,56 @@
-# The Nebulux OS start-up screen: the night-sky color, the logo in the middle and a spinner under it.
+# The Nebulux OS start-up screen (4.0): the night-sky color, a soft glow that breathes behind the logo, the logo
+# fading in, and five small lights that pulse in a wave under it while the computer starts.
 Window.SetBackgroundTopColor(0.06, 0.03, 0.16);
 Window.SetBackgroundBottomColor(0.03, 0.02, 0.08);
+cx = Window.GetX() + Window.GetWidth() / 2;
+cy = Window.GetY() + Window.GetHeight() / 2;
+
+glow = Image("glow.png");
+glow_sprite = Sprite(glow);
+glow_sprite.SetX(cx - glow.GetWidth() / 2);
+glow_sprite.SetY(cy - 40 - glow.GetHeight() / 2);
+glow_sprite.SetZ(1);
+glow_sprite.SetOpacity(0);
+
 logo = Image("logo.png");
 logo_sprite = Sprite(logo);
-logo_sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - logo.GetWidth() / 2);
-logo_sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - logo.GetHeight() / 2 - 40);
-spinner = Image("spinner.png");
-spin_sprite = Sprite();
-angle = 0;
+logo_sprite.SetX(cx - logo.GetWidth() / 2);
+logo_sprite.SetY(cy - 40 - logo.GetHeight() / 2);
+logo_sprite.SetZ(2);
+logo_sprite.SetOpacity(0);
+
+dot = Image("dot.png");
+i = 0;
+while (i < 5) {
+  dots[i] = Sprite(dot);
+  dots[i].SetX(cx - dot.GetWidth() / 2 + (i - 2) * 22);
+  dots[i].SetY(cy + 100);
+  dots[i].SetZ(2);
+  dots[i].SetOpacity(0.2);
+  i = i + 1;
+}
+
+t = 0;
 fun refresh() {
-  angle = angle + 0.14;
-  turned = spinner.Rotate(angle);
-  spin_sprite.SetImage(turned);
-  spin_sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - turned.GetWidth() / 2);
-  spin_sprite.SetY(Window.GetY() + Window.GetHeight() / 2 + 90 - turned.GetHeight() / 2);
+  global.t = global.t + 1;
+  t = global.t;
+  # the logo fades in over the first second
+  fade = t / 50;
+  if (fade > 1) fade = 1;
+  logo_sprite.SetOpacity(fade);
+  # the glow breathes slowly
+  glow_sprite.SetOpacity(fade * (0.55 + 0.35 * Math.Sin(t / 28)));
+  # the lights pulse one after another
+  j = 0;
+  while (j < 5) {
+    w = Math.Sin(t / 7 - j * 0.7);
+    if (w < 0) w = 0;
+    dots[j].SetOpacity(fade * (0.2 + 0.8 * w));
+    j = j + 1;
+  }
 }
 Plymouth.SetRefreshFunction(refresh);
+
 # no password questions or messages on this screen
 fun quiet_message(text) { }
 Plymouth.SetMessageFunction(quiet_message);
