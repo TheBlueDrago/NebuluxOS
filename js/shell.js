@@ -32,7 +32,9 @@
     root.classList.toggle("nofx", !NX.fx() || sv);
     root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv)));
     const cf = NX.me ? p.colorFilter || "none" : "none"; root.classList.toggle("cf-gray", cf === "gray"); root.classList.toggle("cf-invert", cf === "invert"); root.classList.toggle("bigcursor", !!(NX.me && p.bigcursor)); root.classList.toggle("hc", !!(NX.me && p.contrast)); root.dataset.corners = NX.me ? p.corners40 || "round" : "round"; root.dataset.glass = NX.me ? p.glass || "frosted" : "frosted"; root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
-    const wall = NX.wallpaperURL(NX.me ? p.wallpaper : 0, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
+    // the lock screen picture (Settings > Personalization): saved for this computer so it shows before anyone signs in
+    if (NX.me) { const lp = p.lockPic == null || p.lockPic === "match" ? (typeof p.wallpaper === "number" ? p.wallpaper : 0) : +p.lockPic; if (NX.get("lock-wall", 0) !== lp) NX.set("lock-wall", lp); }
+    const lw = NX.get("lock-wall", 0), wall = NX.wallpaperURL(NX.me ? p.wallpaper : (typeof lw === "number" && NX.wallpapers[lw] ? lw : 0), innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night));
     $("#desktop").classList.toggle("tb-left", p.align === "left");

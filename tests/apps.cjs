@@ -373,6 +373,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const w = [...document.querySelectorAll(".win")].pop(); const b = [...w.querySelectorAll(".s-nav button, .s-side button, [data-pg]")].find((x) => /Personalization/.test(x.textContent)); b && b.click(); }); await wait(400);
   ok(await p.evaluate(() => { const b = document.querySelector('[data-look="2"]'); if (!b) return false; b.click(); const q = NX.prefs(); return q.wallpaper === 2 && q.accent === "#f97316" && q.corners40 === "square" && document.querySelector('[data-look="2"]').classList.contains("on"); }), "a Theme sets the background, accent, corners and glass in one click");
   await p.evaluate((j) => { const o = JSON.parse(j); ["wallpaper", "theme", "accent", "corners40", "glass"].forEach((k) => NX.setPref(k, o[k])); NX.closeAll && NX.closeAll(); }, thBefore);
+  // Lock screen picture: saved for this computer, used when nobody is signed in
+  await p.evaluate(() => NX.setPref("lockPic", 3)); await wait(150);
+  ok(await p.evaluate(() => NX.get("lock-wall", 0) === 3), "the lock screen picture is saved for the lock screen");
+  await p.evaluate(() => NX.setPref("lockPic", "match")); await wait(150);
+  ok(await p.evaluate(() => NX.get("lock-wall", -1) === (typeof NX.prefs().wallpaper === "number" ? NX.prefs().wallpaper : 0)), "Same as my background follows the background");
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");
