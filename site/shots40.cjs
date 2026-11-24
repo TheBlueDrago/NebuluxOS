@@ -20,10 +20,10 @@ const OUT = process.env.SHOTS_OUT || path.join(__dirname, "public", "shots");
   await wait(4000); await clean();
   // Quick Search
   await p.evaluate(() => NX.quickSearch()); await p.keyboard.type("set"); await shot("qsearch"); await p.keyboard.press("Escape");
-  // desktop widgets
-  await p.evaluate(() => NX.setPref("deskWidgets", ["clock", "weather", "events", "battery"])); await clean(); await shot("widgets");
   // Calendar
   await p.evaluate(() => NX.open("calendar")); await shot("calendar"); await clean();
+  // desktop widgets
+  await p.evaluate(() => NX.setPref("deskWidgets", ["clock", "weather", "events", "battery"])); await clean(); await shot("widgets");
   // Stage
   await p.evaluate(() => { NX.setPref("deskWidgets", []); NX.setPref("stage", true); NX.open("notes"); NX.open("calculator"); NX.open("clock"); NX.open("weather"); }); await wait(600); await shot("stage");
   await p.evaluate(() => { NX.setPref("stage", false); }); await clean();
