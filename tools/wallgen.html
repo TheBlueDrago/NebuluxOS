@@ -99,6 +99,28 @@ const PAINT = [
     x.filter = "blur(2px)"; x.drawImage(cv, 0, 0); x.filter = "none";
     grain(r, 4);
   },
+  // 10. Nebulux Four (4.0): a glowing four-petal bloom of light, folded like silk, over a deep nebula
+  () => {
+    const r = rng(404);
+    sky([[0, "#050314"], [.5, "#0d0824"], [1, "#05030f"]]);
+    glow(W * .5, H * .52, 1100, "124,92,255", .22); glow(W * .2, H * .2, 700, "34,211,238", .1); glow(W * .82, H * .8, 700, "236,72,153", .12);
+    stars(300, r, H, .8);
+    const cx = W * .5, cy = H * .53, L = document.createElement("canvas"); L.width = W; L.height = H; const g = L.getContext("2d");
+    g.globalCompositeOperation = "lighter";
+    const petal = (ang, c1, c2) => {
+      for (let k = 0; k < 160; k++) {
+        const t = k / 160, len = 560 + 80 * Math.sin(t * 6), wid = 330 * Math.sin(Math.PI * t) + 30, a = ang + (t - .5) * 1.05;
+        const ex = cx + Math.cos(a) * len, ey = cy + Math.sin(a) * len * .78;
+        const gr = g.createLinearGradient(cx, cy, ex, ey); gr.addColorStop(0, `rgba(${c1},0)`); gr.addColorStop(.3, `rgba(${c1},${.07 + .06 * Math.sin(t * 9) ** 2})`); gr.addColorStop(1, `rgba(${c2},0)`);
+        g.strokeStyle = gr; g.lineWidth = 1.6; g.beginPath(); g.moveTo(cx, cy);
+        g.bezierCurveTo(cx + Math.cos(a + .9) * wid, cy + Math.sin(a + .9) * wid * .78, ex - Math.cos(a - .6) * wid * .6, ey - Math.sin(a - .6) * wid * .5, ex, ey); g.stroke();
+      }
+    };
+    petal(-Math.PI / 4, "167,139,250", "240,171,252"); petal(Math.PI / 4, "56,189,248", "167,139,250"); petal(3 * Math.PI / 4, "240,171,252", "251,113,133"); petal(-3 * Math.PI / 4, "129,140,248", "34,211,238");
+    x.globalCompositeOperation = "lighter"; x.filter = "blur(14px)"; x.globalAlpha = .9; x.drawImage(L, 0, 0); x.filter = "blur(1px)"; x.globalAlpha = 1; x.drawImage(L, 0, 0); x.filter = "none";
+    glow(cx, cy, 220, "255,240,255", .4); glow(cx, cy, 70, "255,255,255", .7);
+    x.globalCompositeOperation = "source-over"; grain(r, 6);
+  },
 ];
 window.paint = (i) => { x.save(); x.clearRect(0, 0, W, H); PAINT[i](); x.restore(); return cv.toDataURL("image/jpeg", .9); };
 window.count = PAINT.length;

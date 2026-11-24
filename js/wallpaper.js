@@ -1,4 +1,4 @@
-// Nebulux OS wallpapers: nebula pictures (soft color clouds, a glowing swirl, stars) in img/wall-0.jpg ... wall-9.jpg.
+// Nebulux OS wallpapers: nebula pictures (soft color clouds, a glowing swirl, stars) in img/wall-0.jpg ... wall-10.jpg.
 // NX.wallpapers is the list; NX.wallpaperURL(i, w, h) gives a picture for the desktop, lock screen and previews.
 "use strict";
 (function () {
@@ -14,6 +14,7 @@
     { name: "Star Dunes" },
     { name: "Polar Lights" },
     { name: "Morning Haze", light: true },
+    { name: "Nebulux Four" }, // made for 4.0
   ];
   // ready-made pictures (painting them at start-up was slow without graphics acceleration); one picture for every size
   // your own picture (Settings > Personalization > Browse photos) is wallpaper "custom", kept for each person
