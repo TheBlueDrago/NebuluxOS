@@ -389,6 +389,8 @@
         const video = e.kind === "video";
         st.innerHTML = `${video ? "" : `<div class="mp-art">${NX.icon("faudio", 120)}<b>${NX.esc(e.name)}</b></div>`}<${video ? "video" : "audio"} controls autoplay playsinline></${video ? "video" : "audio"}><p class="mp-msg" hidden></p>`;
         const m = st.querySelector("video,audio"); m.volume = Math.max(0, Math.min(1, NX.prefs().volume / 100));
+        // picture in picture: the video keeps playing in a small window on top while you do other things
+        if (video && document.pictureInPictureEnabled) { st.insertAdjacentHTML("beforeend", `<button class="btn sm mp-pip" title="Picture in picture">${NX.icon("display", 14)}Picture in picture</button>`); st.querySelector(".mp-pip").onclick = () => (document.pictureInPictureElement ? document.exitPictureInPicture() : m.requestPictureInPicture()).catch((er) => NX.toast(er.message || "Picture in picture didn't start.")); }
         // what plays next: the same one again (Repeat one), a random one (Shuffle), the next one, or the first again (Repeat all)
         m.onended = () => { const rp = NX.data("mp-repeat", "off"); if (rp === "one") { m.currentTime = 0; m.play().catch(() => {}); return; }
           if (NX.data("mp-shuffle", false) && list.length > 1) { let k = i; while (k === i) k = Math.floor(Math.random() * list.length); i = k; play(); return; }
