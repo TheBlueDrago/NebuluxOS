@@ -151,6 +151,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.click(".win[data-app=notepad] [data-a=wrap]");
   ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").wrap === "off" && NX.data("np-wrap", true) === false), "and Word wrap turns off (and stays off)");
   await p.click(".win[data-app=notepad] [data-a=wrap]");
+  // Notepad Versions: keep a version, change the text, go back
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = "First draft"; t.dispatchEvent(new Event("input")); NX.wins.get("notepad").npKeep(true); t.value = "Second draft"; t.dispatchEvent(new Event("input")); }); await wait(600);
+  await p.evaluate(() => document.querySelector(".win[data-app=notepad] [data-a=ver]").click()); await wait(200);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /First draft/.test(b.textContent)).click()); await wait(600);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "First draft" && (NX.data("np-versions", {})[Object.keys(NX.data("np-versions", {}))[0]] || []).some((v) => v.t === "Second draft")), "Notepad Versions goes back to an earlier version, keeping the newer one");
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = "ab\ncd"; t.dispatchEvent(new Event("input")); NX.setData("np-versions", {}); }); await wait(600);
   // Notepad tabs: a second note, named from its first line, and switching keeps each one
   await p.click(".win[data-app=notepad] .np-tadd"); await wait(300); await p.keyboard.type("Shopping list"); await wait(700);
   const tabsNow = await p.evaluate(() => NX.wins.get("notepad").np2.tabs());

@@ -7,7 +7,7 @@
   A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
     open(body, win, opts) {
       body.classList.add("np");
-      body.innerHTML = `<div class="np-tabs" role="tablist" aria-label="Notes"></div><div class="np-bar"><button class="btn sm" data-a="new">New tab</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
+      body.innerHTML = `<div class="np-tabs" role="tablist" aria-label="Notes"></div><div class="np-bar"><button class="btn sm" data-a="new">New tab</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><button class="btn sm" data-a="ver" title="Go back to an earlier version">Versions</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
       const ta = body.querySelector("textarea"), cnt = body.querySelector(".np-count"), sv = body.querySelector(".np-saved"), saveBtn = body.querySelector("[data-a=save]");
       let size = NX.data("np-size", 15), t = 0, file = null; ta.style.fontSize = size + "px";
       // word wrap (on by default, kept for next time) and where the cursor is
@@ -40,7 +40,11 @@
       strip.onauxclick = (e) => { const b = e.target.closest("[data-ti]"); if (e.button === 1 && b) closeTab(+b.dataset.ti); };
       win.np2 = { tabs: () => tabs.map((x, k) => ({ file: x.file || null, name: tabName(x, k), on: k === ti })), newTab, closeTab, loadTab };
       const count = () => { const v = ta.value; cnt.textContent = (v.trim() ? v.trim().split(/\s+/).length : 0) + " words · " + v.length + " characters"; };
-      const saveNow = () => {
+      const verKey = () => (file ? "f:" + file : "n:" + (tabs[ti] ? tabs[ti].id : 1));
+      const keepVersion = (force) => { const k = verKey(), all = Object.assign({}, NX.data("np-versions", {})), L = all[k] || [], t = ta.value; if (!t.trim() || (L[0] && L[0].t === t)) return; if (!force && L[0] && Date.now() - L[0].at < 120000) return;
+        all[k] = [{ at: Date.now(), t: t.slice(0, 30000) }, ...L].slice(0, 12); const keys = Object.keys(all); if (keys.length > 40) keys.sort((a, b) => (all[a][0] || {}).at - (all[b][0] || {}).at).slice(0, keys.length - 40).forEach((x) => delete all[x]); NX.setData("np-versions", all); };
+      win.npKeep = keepVersion;
+      const saveNow = () => { keepVersion(false);
         if (!file) { NX.setData(keyOf(tabs[ti]), ta.value); sv.textContent = "Saved"; drawTabs(); return Promise.resolve(); }
         const p = file, text = ta.value;
         return NX.fs.write(p, text).then(() => { if (p === file) sv.textContent = "Saved in " + NX.fs.base(NX.fs.parent(p)); NX.filesChanged && NX.filesChanged(); }).catch((e) => { sv.textContent = "Not saved: " + e.message; });
@@ -62,6 +66,12 @@
           try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, first + ".txt", false); file = r.path; await NX.fs.write(file, ta.value); NX.setData(keyOf(tabs[ti]), ""); tabs[ti].file = file; tabsSave(); drawTabs(); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
         }
         if (k === "dl") { const url = URL.createObjectURL(new Blob([ta.value], { type: "text/plain" })), l = document.createElement("a"); l.href = url; l.download = file ? NX.fs.base(file) : "note.txt"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+        if (k === "ver") {
+          const L = (NX.data("np-versions", {})[verKey()] || []).filter((v) => v.t !== ta.value); const r = a.getBoundingClientRect();
+          if (!L.length) { NX.toast("No earlier versions yet. Notepad keeps one every couple of minutes while you write."); return; }
+          NX.menu(r.left, r.bottom + 4, L.slice(0, 10).map((v) => [new Date(v.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + "  ·  " + (v.t.split("\n").find((x) => x.trim()) || "").trim().slice(0, 28), () => { keepVersion(true); ta.value = v.t; ta.dispatchEvent(new Event("input")); NX.toast("Went back to the version from " + new Date(v.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + ". The newer text is kept in Versions."); }]));
+          return;
+        }
         if (k === "wrap") { const on = ta.wrap === "off"; setWrap(on); NX.setData("np-wrap", on); }
         if (k === "+" || k === "-") { size = Math.max(11, Math.min(32, size + (k === "+" ? 2 : -2))); ta.style.fontSize = size + "px"; NX.setData("np-size", size); }
       };
