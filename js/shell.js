@@ -287,7 +287,7 @@
   document.addEventListener("nx:prefs", (e) => { if (e.detail === "nightSched") { nightWas = null; nightTick(true); } });
 
   // ---------- flyouts: Start, quick settings, calendar ----------
-  function closeFlyouts(except) { if (except && NX.browserHide) NX.browserHide(); for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly", "clip"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
+  function closeFlyouts(except) { if (except !== "qs") qsEdit = false; if (except && NX.browserHide) NX.browserHide(); for (const id of ["start", "qs", "cal", "ctx", "widgets", "snapfly", "clip"]) if (id !== except) $("#" + id).hidden = true; $("#tb-start").classList.toggle("on", except === "start"); }
   function startDraw(q, view) {
     const p = NX.prefs(), all = visibleApps(), me = NX.me;
     if (view === "all" && !q) return allAppsDraw(all, me);
@@ -385,16 +385,21 @@
     box.querySelectorAll("[data-sfile]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.openFile(found[+b.dataset.sfile]); }));
   }
   function toggleStart(focus) { if (NX.browserHide) NX.browserHide(); if (NX.nativeHideActive) NX.nativeHideActive(); const S = $("#start"); if (!S.hidden) { closeFlyouts(); return; } closeFlyouts("start"); startDraw(""); S.hidden = false; if (focus) setTimeout(() => $(".sm-search input").focus(), 30); }
+  var qsEdit = false; // Edit mode: tap tiles to show or hide them
   function qsDraw() {
     const p = NX.prefs(), t = (k, icon, label, on, more) => more ? `<div class="qs-t qs-split ${on ? "on" : ""}"><button class="qs-main" data-k="${k}" aria-label="${label}">${NX.icon(icon, 18)}</button><button class="qs-more" data-more="${k}" aria-label="${label} list">${NX.icon("chevron", 12)}</button><span>${label}</span></div>` : `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
-    $("#qs").innerHTML = `<div class="qs-grid">${t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)}${t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)}${t("airplane", "plane", "Airplane mode", p.airplane)}${t("night", "moon", "Night light", p.night)}${t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")}${t("dnd", "bell", "Do not disturb", !!p.dnd)}${batt() ? t("saver", "leaf", "Battery saver", NX.saverOn()) : ""}${t("cast", "cast", "Cast", false)}</div>
+    const hide = p.qsHide || [], tiles = [["wifi", t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)], ["bt", t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)], ["airplane", t("airplane", "plane", "Airplane mode", p.airplane)], ["night", t("night", "moon", "Night light", p.night)], ["theme", t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")], ["dnd", t("dnd", "bell", "Do not disturb", !!p.dnd)], ...(batt() ? [["saver", t("saver", "leaf", "Battery saver", NX.saverOn())]] : []), ["cast", t("cast", "cast", "Cast", false)], ["snip", t("snip", "snip", "Screenshot", false)], ["bigcursor", t("bigcursor", "mouse", "Large pointer", !!p.bigcursor)]];
+    $("#qs").innerHTML = `<div class="qs-grid ${qsEdit ? "qs-editing" : ""}">${tiles.filter(([k]) => qsEdit || !hide.includes(k)).map(([k, h]) => qsEdit ? h.replace(/class="qs-t/, `class="qs-t ${hide.includes(k) ? "qs-hid" : "qs-shown"}`) : h).join("")}</div>
       <label class="qs-sl">${NX.icon("sun", 18)}<input type="range" min="30" max="100" value="${p.brightness}" data-s="brightness" aria-label="Brightness"></label><label class="qs-sl">${NX.icon("volume", 18)}<input type="range" min="0" max="100" value="${p.volume}" data-s="volume" aria-label="Volume"></label>
       ${NX.nowPlaying && NX.nowPlaying() ? (() => { const n = NX.nowPlaying(); return `<div class="qs-np"><span class="qs-npi">${NX.icon(n.video ? "fvideo" : "faudio", 26)}</span><span class="qs-npt"><b>${NX.esc(n.name)}</b><small>Media Player</small></span><button data-np="play" aria-label="${n.playing ? "Pause" : "Play"}">${n.playing ? '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>' : '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>'}</button><button data-np="next" aria-label="Next">${NX.icon("fwd", 16)}</button></div>`; })() : ""}
-      <div class="qs-foot"><button class="qs-batt" aria-label="Power and battery settings" ${batt() ? "" : "hidden"}>${batt() ? `${NX.battIcon(20)} ${batt().percent}%${batt().charging ? " (charging)" : ""}${NX.battLeft() ? `<small class="qs-left">${NX.battLeft()}</small>` : ""}` : ""}</button><button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
+      <div class="qs-foot"><button class="qs-batt" aria-label="Power and battery settings" ${batt() ? "" : "hidden"}>${batt() ? `${NX.battIcon(20)} ${batt().percent}%${batt().charging ? " (charging)" : ""}${NX.battLeft() ? `<small class="qs-left">${NX.battLeft()}</small>` : ""}` : ""}</button>${qsEdit ? `<button class="btn primary qs-done">Done</button>` : `<button class="qs-editb" aria-label="Edit quick settings" title="Edit quick settings">${NX.icon("rename", 18)}</button>`}<button class="qs-set" aria-label="All settings">${NX.icon("settings", 18)}</button></div>`;
     const Q = $("#qs");
     Q.querySelectorAll("[data-np]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const n = NX.nowPlaying && NX.nowPlaying(); if (!n) return; if (b.dataset.np === "play") n.toggle(); else n.next(); setTimeout(qsDraw, 150); }));
-    Q.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => {
+    Q.querySelectorAll("[data-k]").forEach((b) => (b.onclick = (ev) => {
       const k = b.dataset.k, P = NX.prefs();
+      if (qsEdit) { ev.stopPropagation(); const h = (P.qsHide || []).slice(), at = h.indexOf(k); if (at >= 0) h.splice(at, 1); else h.push(k); NX.setPref("qsHide", h); qsDraw(); return; }
+      if (k === "snip") { closeFlyouts(); setTimeout(() => NX.snipArea && NX.snipArea(), 250); return; }
+      if (k === "bigcursor") { NX.setPref("bigcursor", !P.bigcursor); qsDraw(); return; }
       if (k === "store") { closeFlyouts(); NX.open("store"); return; }
       if (k === "cast") { qsMore("cast"); return; }
       if (k === "theme") { NX.setPref("themeAuto", false); NX.setPref("theme", P.theme === "dark" ? "light" : "dark"); }
@@ -406,9 +411,11 @@
     }));
     const fill = (s) => s.style.setProperty("--fill", ((s.value - s.min) / (s.max - s.min)) * 100 + "%");
     Q.querySelectorAll("[data-s]").forEach((s) => { fill(s); s.oninput = () => { fill(s); NX.setPref(s.dataset.s, +s.value); }; });
-    $(".qs-set", Q).onclick = () => { closeFlyouts(); NX.open("settings"); };
+    $(".qs-set", Q).onclick = () => { qsEdit = false; closeFlyouts(); NX.open("settings"); };
+    const qe = $(".qs-editb", Q); if (qe) qe.onclick = (e) => { e.stopPropagation(); qsEdit = true; qsDraw(); };
+    const qd = $(".qs-done", Q); if (qd) qd.onclick = (e) => { e.stopPropagation(); qsEdit = false; qsDraw(); };
     $(".qs-batt", Q).onclick = () => { closeFlyouts(); NX.open("settings", { page: "system" }); };
-    Q.querySelectorAll("[data-more]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); qsMore(b.dataset.more); }));
+    Q.querySelectorAll("[data-more]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); if (qsEdit) { b.parentElement.querySelector("[data-k]").click(); return; } qsMore(b.dataset.more); }));
   }
   // ---------- the lists inside quick settings: Wi-Fi networks, Bluetooth devices, Cast ----------
   function qsMore(kind) {

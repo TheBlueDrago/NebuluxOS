@@ -393,3 +393,15 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .tb-app.nx-bounce svg,.tb-app.nx-bounce img{animation:tbBounce .8s cubic-bezier(.3,1.5,.5,1)}
 @keyframes tbBounce{0%{transform:translateY(0)}25%{transform:translateY(-9px) scale(1.06)}50%{transform:translateY(0)}70%{transform:translateY(-4px)}100%{transform:translateY(0)}}
 .noanim .tb-app.nx-bounce svg{animation:none}
+
+/* ---------- quick settings: Edit mode (tap a tile to show or hide it) ---------- */
+.qs-editb{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--sub)}.qs-editb:hover{background:var(--hover);color:var(--txt)}
+.qs-foot{gap:4px}.qs-foot .qs-batt{margin-right:auto}
+.qs-editing .qs-t{position:relative;animation:qsWig .5s ease-in-out infinite alternate}
+.qs-editing .qs-t:nth-child(2n){animation-delay:-.25s}
+@keyframes qsWig{from{transform:rotate(-.8deg)}to{transform:rotate(.8deg)}}
+.qs-editing .qs-t::after{content:"";position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12h12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 2px 6px #0006;z-index:2}
+.qs-editing .qs-t.qs-hid{opacity:.45}
+.qs-editing .qs-t.qs-hid::after{background-color:#22c55e;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12h12M12 6v12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")}
+.noanim .qs-editing .qs-t{animation:none}
+.qs-t[data-k=snip] svg{filter:grayscale(1) brightness(2.2) contrast(.9)}.qs-t.on[data-k=snip] svg{filter:none}[data-theme=light] .qs-t[data-k=snip] svg{filter:grayscale(1) brightness(.5)}

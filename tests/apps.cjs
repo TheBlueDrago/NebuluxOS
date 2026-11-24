@@ -418,6 +418,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const sel = document.querySelector("[data-saver]"); sel.value = "stars"; sel.dispatchEvent(new Event("change")); }); await wait(300);
   ok(await p.evaluate(() => NX.prefs().scrSaver === "stars" && NX.prefs().saver === false && !!document.querySelector("[data-saverpv]:not([disabled])")), "picking a screen saver in Settings doesn't touch battery saver");
   await p.evaluate(() => { NX.setPref("scrSaver", "off"); NX.closeAll(); });
+  // quick settings: Edit hides and shows tiles
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("qsHide", []); NX.shell.closeFlyouts(); document.querySelector("#tb-qs").click(); }); await wait(400);
+  await p.evaluate(() => document.querySelector("#qs .qs-editb").click()); await wait(200);
+  await p.evaluate(() => document.querySelector('#qs .qs-editing [data-k="airplane"]').click()); await wait(200);
+  await p.evaluate(() => document.querySelector("#qs .qs-done").click()); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector('#qs [data-k="airplane"]') && NX.prefs().qsHide.includes("airplane") && NX.prefs().airplane !== true && !!document.querySelector('#qs [data-k="snip"]')), "Edit in quick settings hides a tile (and there's a Screenshot tile)");
+  await p.evaluate(() => { NX.setPref("qsHide", []); NX.shell.closeFlyouts(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
