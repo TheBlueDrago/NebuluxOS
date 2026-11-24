@@ -1232,3 +1232,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 #nx-snip img{width:100%;height:100%;object-fit:contain;display:block;filter:brightness(.55);user-select:none}
 .sa-box{position:fixed;border:2px solid #fff;box-shadow:0 0 0 9999px #0000,0 0 0 1px #0008;backdrop-filter:brightness(1.8);-webkit-backdrop-filter:brightness(1.8);pointer-events:none}
 .sa-tip{position:fixed;top:18px;left:50%;transform:translateX(-50%);margin:0;padding:8px 16px;border-radius:20px;background:#000b;color:#fff;font-size:13px;pointer-events:none}
+
+/* quick settings: Now playing */
+.qs-np{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.qs-npi{flex:none}.qs-npt{flex:1;min-width:0;display:flex;flex-direction:column}.qs-npt b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qs-npt small{color:var(--sub);font-size:11.5px}
+.qs-np button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center}.qs-np button:hover{background:var(--hover)}.qs-np [data-np=play]{background:var(--accent);color:#fff}

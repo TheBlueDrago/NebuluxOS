@@ -110,6 +110,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("media");
   await p.evaluate(() => { const b = [...document.querySelectorAll(".win[data-app=media] .mp-item")].find((x) => /Video/.test(x.textContent)); if (b) b.click(); }); await wait(800);
   ok(await p.evaluate(() => !document.pictureInPictureEnabled || !!document.querySelector(".win[data-app=media] .mp-pip")), "a video in Media Player has Picture in picture");
+  await p.evaluate(() => { const m = document.querySelector(".win[data-app=media] video"); if (m) m.muted = true; document.querySelector("#tb-tray").click(); }); await wait(500);
+  ok(await p.evaluate(() => !!document.querySelector("#qs .qs-np") && /Video/.test(document.querySelector("#qs .qs-np").textContent)), "quick settings shows what's playing, with play and pause");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   await p.evaluate(() => NX.closeAll());
   // the taskbar: drag File Explorer to after YouTube
   const tbr = async (id) => p.evaluate((id) => { const r = document.querySelector(`#tb-apps [data-app="${id}"]`).getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }, id);
