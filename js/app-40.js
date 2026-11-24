@@ -310,6 +310,32 @@
   NX.auraApply = auraApply;
   document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
 
+  // ---------- Living wallpaper: a few stars slowly twinkle and drift over the background (Settings > Personalization).
+  // Off when there's no graphics chip (lite glass), when motion is turned down, and while windows fill the screen.
+  let star = null, starT = 0;
+  function livingWall() {
+    const d = document.getElementById("desktop"), want = !!(NX.me && NX.prefs().living !== false && !document.documentElement.classList.contains("nx-lite") && !document.documentElement.classList.contains("noanim") && !matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (!want) { if (star) { cancelAnimationFrame(starT); star.cv.remove(); star = null; } return; }
+    if (star || !d) return;
+    const cv = document.createElement("canvas"); cv.id = "nx-living"; cv.setAttribute("aria-hidden", "true"); d.insertBefore(cv, d.firstChild);
+    const g = cv.getContext("2d"), rnd = (a, b) => a + Math.random() * (b - a);
+    star = { cv, pts: [] };
+    const size = () => { cv.width = innerWidth; cv.height = innerHeight; star.pts = Array.from({ length: Math.round(innerWidth * innerHeight / 22000) }, () => ({ x: rnd(0, innerWidth), y: rnd(0, innerHeight), r: rnd(.4, 1.6), s: rnd(.02, .09), ph: rnd(0, 6.28), sp: rnd(.6, 1.8) })); };
+    size(); addEventListener("resize", size);
+    let last = 0;
+    const frame = (t) => { starT = requestAnimationFrame(frame); if (!star) return;
+      if (t - last < 50) return; last = t; // about 20 frames a second is plenty for twinkling
+      const cover = NX.topWin && NX.topWin(); if (cover && cover.max) return; // a full-screen window hides it anyway
+      g.clearRect(0, 0, cv.width, cv.height);
+      for (const p of star.pts) { p.y -= p.s; p.x += p.s * .35; if (p.y < -4) { p.y = cv.height + 4; p.x = rnd(0, cv.width); } if (p.x > cv.width + 4) p.x = -4;
+        const a = .25 + .55 * (.5 + .5 * Math.sin(t / 1000 * p.sp + p.ph)); g.globalAlpha = a; g.fillStyle = "#fff"; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill();
+        if (p.r > 1.3) { g.globalAlpha = a * .25; g.beginPath(); g.arc(p.x, p.y, p.r * 3.2, 0, 7); g.fill(); } }
+      g.globalAlpha = 1; };
+    starT = requestAnimationFrame(frame);
+  }
+  NX.livingWall = livingWall;
+  document.addEventListener("nx:prefs", () => setTimeout(livingWall, 20)); setInterval(livingWall, 3000); setTimeout(livingWall, 1000);
+
   // ---------- "Caps Lock is on" under any password box you're typing in ----------
   const capsCheck = (e) => { const t = e.target; if (!t || t.tagName !== "INPUT" || t.type !== "password" || !e.getModifierState) return; const on = e.getModifierState("CapsLock");
     let h = t.nextElementSibling && t.nextElementSibling.classList && t.nextElementSibling.classList.contains("nx-caps") ? t.nextElementSibling : null;

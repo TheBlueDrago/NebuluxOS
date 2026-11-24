@@ -76,3 +76,4 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 .win.active .titlebar{opacity:1}
 #start{height:auto;max-height:min(720px,calc(100vh - var(--tb) - 24px))}
 #start .sm-body{flex:1 1 auto;min-height:0}
+#nx-living{position:absolute;inset:0;pointer-events:none;z-index:0}#icons,#windows{z-index:1}
