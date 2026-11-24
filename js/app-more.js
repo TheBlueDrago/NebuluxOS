@@ -121,7 +121,12 @@
       async function draw() {
         const p = place();
         if (!p) { body.innerHTML = `<div class="wa-empty">${NX.icon("weather", 96)}<h2>See the weather</h2><p>Search for your city, or use where you are.</p>${search}</div>`; wire(); return; }
-        body.innerHTML = `<div class="wa-head"><div><h2>${NX.esc(p.name)}</h2><p class="wa-sub">${new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p></div>${search}</div><div class="wa-body"><p class="wa-note">${NX.netOK() ? "Getting the weather..." : "Connect to the internet to see the weather."}</p></div>`;
+        // your saved cities: one click shows any of them (the star saves or removes the one you're looking at)
+        const saved = NX.data("wx-cities", []), isSaved = saved.some((c) => c.name === p.name);
+        body.innerHTML = `<div class="wa-head"><div><h2>${NX.esc(p.name)} <button class="wa-star ${isSaved ? "on" : ""}" data-star aria-pressed="${isSaved}" title="${isSaved ? "Remove from saved cities" : "Save this city"}" aria-label="${isSaved ? "Remove from saved cities" : "Save this city"}"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="${isSaved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button></h2><p class="wa-sub">${new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p></div>${search}</div>
+          ${saved.length ? `<div class="wa-cities">${saved.map((c, k) => `<button class="${c.name === p.name ? "on" : ""}" data-city="${k}">${NX.esc(c.name.split(",")[0])}</button>`).join("")}</div>` : ""}<div class="wa-body"><p class="wa-note">${NX.netOK() ? "Getting the weather..." : "Connect to the internet to see the weather."}</p></div>`;
+        body.querySelector("[data-star]").onclick = () => { const L = NX.data("wx-cities", []); NX.setData("wx-cities", isSaved ? L.filter((c) => c.name !== p.name) : [...L, p].slice(-8)); draw(); };
+        body.querySelectorAll("[data-city]").forEach((b) => (b.onclick = () => { const c = NX.data("wx-cities", [])[+b.dataset.city]; if (c) setPlace(c); }));
         wire(); if (!NX.netOK()) return;
         try {
           const F = unit() === "F", u = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7${F ? "&temperature_unit=fahrenheit&wind_speed_unit=mph" : ""}`;

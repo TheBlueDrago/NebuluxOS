@@ -13,6 +13,7 @@
     ["Screenshots, better", "Nebulux + Shift + S lets you drag over just the part of the screen you want. After every screenshot, a small picture of it floats in the corner: click it to open it."],
     ["File Explorer, better", "Right-click a file to tag it Red, Orange, Yellow, Green, Blue or Purple, or to see its Properties. The sidebar has Recent, with the files you opened lately, and your tags."],
     ["Versions in Notepad", "Notepad keeps earlier versions of your notes as you write. Press Versions to go back to one."],
+    ["Saved cities in Weather", "Press the star to save a city, then switch between your cities with one click."],
     ["Favorites in Photos", "Press the heart on a picture, then Favorites to see only those."],
     ["Picture in picture", "Videos in Media Player can keep playing in a small window on top while you do other things."],
     ["Now playing", "While Media Player plays, quick settings shows what's playing, with play, pause and next."],

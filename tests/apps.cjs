@@ -53,6 +53,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const online = await p.waitForFunction(() => document.querySelector(".wa-now"), { timeout: 15000 }).then(() => true).catch(() => false); await shot("weather");
   if (online) ok(await p.evaluate(() => /Chicago/.test(document.querySelector(".wa-head h2").textContent) && document.querySelectorAll(".wa-hours > div").length >= 20 && document.querySelectorAll(".wa-days > div").length === 7), "it shows now, 24 hours and 7 days");
   else console.log("(offline: the forecast part was skipped)");
+  // saved cities
+  await p.evaluate(() => document.querySelector(".win[data-app=weather] [data-star]").click()); await wait(400);
+  ok(await p.evaluate(() => NX.data("wx-cities", []).some((c) => /Chicago/.test(c.name)) && /Chicago/.test(document.querySelector(".win[data-app=weather] .wa-cities").textContent)), "Weather saves a city to come back to");
+  await p.evaluate(() => NX.setData("wx-cities", []));
   if (online) {
     await p.evaluate(() => NX.wxInfo.refresh()); await wait(1500);
     await p.evaluate(() => NX.shell.lockKeep()); await wait(1300); await shot("lock-weather");
