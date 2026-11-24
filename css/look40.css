@@ -238,3 +238,5 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .tb-app{position:relative}.tb-cnt{position:absolute;top:3px;right:3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--glass,#161028),0 2px 6px #0006;pointer-events:none;animation:cntpop .35s var(--ease-spring,ease)}
 @keyframes cntpop{from{transform:scale(0)}to{transform:scale(1)}}
 .ob-themes{grid-template-columns:repeat(4,1fr);gap:8px;max-height:340px;overflow-y:auto;padding:2px}.ob-themes .s-th-n{font-size:12px}@media (max-width:760px){.ob-themes{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1200px){#snapfly{grid-template-columns:repeat(3,auto)}}
+#snapfly{border-radius:var(--r-menu,14px);background-image:radial-gradient(120% 70% at 50% -10%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 70%)}

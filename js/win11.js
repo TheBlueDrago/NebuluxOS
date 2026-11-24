@@ -114,7 +114,11 @@
     [[0, 0, .66, 1], [.66, 0, .34, 1]],
     [[0, 0, .5, 1], [.5, 0, .5, .5], [.5, .5, .5, .5]],
     [[0, 0, .5, .5], [.5, 0, .5, .5], [0, .5, .5, .5], [.5, .5, .5, .5]],
+    // wide screens: three columns, and a wide middle with narrow sides
+    [[0, 0, 1 / 3, 1], [1 / 3, 0, 1 / 3, 1], [2 / 3, 0, 1 / 3, 1]],
+    [[0, 0, .25, 1], [.25, 0, .5, 1], [.75, 0, .25, 1]],
   ];
+  const layouts = () => (innerWidth >= 1200 ? LAYOUTS : LAYOUTS.slice(0, 4));
   let hoverT = 0, fly = null;
   const hideFly = () => { clearTimeout(hoverT); const s = $("#snapfly"); if (s) s.hidden = true; fly = null; };
   document.addEventListener("pointerover", (e) => {
@@ -123,7 +127,7 @@
     clearTimeout(hoverT);
     hoverT = setTimeout(() => {
       const s = $("#snapfly"), r = b.getBoundingClientRect(), id = win.dataset.app; fly = id;
-      s.innerHTML = LAYOUTS.map((L, i) => `<div class="sf-lay">${L.map((z, k) => `<button class="sf-zone" data-l="${i}" data-z="${k}" style="left:${z[0] * 100}%;top:${z[1] * 100}%;width:${z[2] * 100}%;height:${z[3] * 100}%" aria-label="Snap here"></button>`).join("")}</div>`).join("");
+      s.innerHTML = layouts().map((L, i) => `<div class="sf-lay">${L.map((z, k) => `<button class="sf-zone" data-l="${i}" data-z="${k}" style="left:${z[0] * 100}%;top:${z[1] * 100}%;width:${z[2] * 100}%;height:${z[3] * 100}%" aria-label="Snap here"></button>`).join("")}</div>`).join("");
       s.hidden = false; const sr = s.getBoundingClientRect();
       s.style.left = Math.max(8, Math.min(innerWidth - sr.width - 8, r.right - sr.width + 20)) + "px"; s.style.top = (r.bottom + 6) + "px";
       s.querySelectorAll(".sf-zone").forEach((z) => (z.onclick = (ev) => { ev.stopPropagation(); const zz = LAYOUTS[+z.dataset.l][+z.dataset.z]; hideFly(); NX.snapRect(id, ...zz); }));
