@@ -94,3 +94,13 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 .s-nav.on::before{top:9px;bottom:9px;width:4px;animation:sbar .25s var(--ease-spring)}
 @keyframes sbar{from{transform:scaleY(.2)}}
 .s-row,.s-card{border-radius:12px}
+
+/* ---------- Task View 4.0: bigger cards with a live picture of each window ---------- */
+#taskview{background:color-mix(in srgb,var(--aura) 25%,#0b0620c4);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.nx-lite #taskview{background:color-mix(in srgb,var(--aura) 25%,#0b0620f0)}
+.tv-card{width:min(320px,40vw);border-radius:16px;box-shadow:0 20px 50px #0009,0 0 0 1px #ffffff1a;transition:transform .2s var(--ease-spring),box-shadow .2s;animation:tvin .35s var(--ease-spring) both}
+.tv-card:nth-child(2){animation-delay:.03s}.tv-card:nth-child(3){animation-delay:.06s}.tv-card:nth-child(n+4){animation-delay:.09s}
+.tv-card:hover,.tv-card:focus-visible{transform:translateY(-4px) scale(1.02);box-shadow:0 26px 60px #000a,0 0 0 2px var(--accent)}
+@keyframes tvin{from{opacity:0;transform:scale(.9) translateY(14px)}}
+.tv-face{height:clamp(140px,22vh,200px);position:relative;overflow:hidden}.tv-face.tv-live{background:#0004}
+.noanim .tv-card{animation:none}

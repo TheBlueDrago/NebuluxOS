@@ -11,6 +11,15 @@
     const list = [...NX.wins.values()].filter(((w) => !w.desk || !NX.desks || w.desk === NX.desks.current())).sort((a, b) => (+b.el.style.zIndex) - (+a.el.style.zIndex));
     tv.innerHTML = `<div class="tv-grid">${list.length ? list.map((w) => `<div class="tv-card" data-id="${w.id}" tabindex="0" role="button" aria-label="${NX.esc(w.app.name)}"><div class="tv-top">${NX.icon(w.app.icon || w.id, 18)}<span>${NX.esc(w.el.querySelector(".wt-name").textContent)}</span><button class="tv-x" data-x="${w.id}" aria-label="Close ${NX.esc(w.app.name)}">${NX.icon("close", 14)}</button></div><div class="tv-face">${NX.icon(w.app.icon || w.id, 64)}</div></div>`).join("") : `<p class="tv-none">No windows are open.</p>`}</div><div class="tv-desk"><span>${NX.icon("display", 16)}Desktop</span></div>`;
     tv.hidden = false;
+    // 4.0: each card shows a live miniature of its window (apps with a website inside keep their icon)
+    tv.querySelectorAll(".tv-card").forEach((card) => {
+      const w = NX.wins.get(card.dataset.id), face = card.querySelector(".tv-face"); if (!w || !face || w.el.querySelector("iframe")) return;
+      const r = { width: w.el.offsetWidth, height: w.el.offsetHeight }; if (!r.width || !r.height) return;
+      const FW = face.clientWidth || 300, FH = face.clientHeight || 180, k = Math.min(FW / r.width, FH / r.height);
+      const c = w.el.cloneNode(true); c.removeAttribute("id"); c.removeAttribute("data-app"); c.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id")); c.classList.remove("opening", "closing", "minimized", "offdesk", "maxed");
+      Object.assign(c.style, { position: "absolute", left: "0", top: "0", width: r.width + "px", height: r.height + "px", transform: "translate(" + Math.round((FW - r.width * k) / 2) + "px," + Math.round((FH - r.height * k) / 2) + "px) scale(" + k + ")", transformOrigin: "0 0", pointerEvents: "none", margin: 0, zIndex: 0, opacity: 1 });
+      c.setAttribute("aria-hidden", "true"); c.inert = true; face.innerHTML = ""; face.classList.add("tv-live"); face.appendChild(c);
+    });
     if (NX.desks) NX.desks.strip(tv, () => { tv.hidden = true; NX.taskView(); });
     tv.querySelectorAll("[data-id]").forEach((c) => { c.onclick = (e) => { if (e.target.closest("[data-x]")) return; tv.hidden = true; NX.focus(c.dataset.id); }; c.onkeydown = (e) => { if (e.key === "Enter") c.click(); }; });
     tv.querySelectorAll("[data-x]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); NX.close(b.dataset.x); tv.hidden = true; NX.taskView(); }));
