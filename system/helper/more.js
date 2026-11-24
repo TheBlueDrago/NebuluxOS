@@ -719,5 +719,21 @@ module.exports = function more({ api, run, FAKE }) {
 
   // Alt + F4: close the window in front, unless that is Nebulux OS itself (then the OS closes its own top window)
   const closeActive = async () => { if (FAKE) return false; const id = await activeId(); if (!id) return false; const cls = (await run("xdotool", ["getwindowclassname", String(id)], 3000)).out.trim(); if (!cls || /NebuluxShell/i.test(cls)) return false; await run("wmctrl", ["-i", "-c", "0x" + id.toString(16).padStart(8, "0")], 4000); return true; };
+  // An update brings its own window-manager setup (the keyboard shortcuts that work over every app), so a USB made with an
+  // older Nebulux OS gets new shortcuts too: the window manager is started again with the update's copy.
+  if (!FAKE) setTimeout(async () => {
+    try {
+      const base = path.resolve(__dirname, ".."), src = path.join(base, "wm", "openbox.xml"), key = path.join(base, "wm", "nebulux-key");
+      if (!/nebulux-update/.test(base) || !fs.existsSync(src) || !fs.existsSync(key)) return;
+      fs.chmodSync(key, 0o755);
+      const cfg = path.join(HOME, ".config", "nebulux-openbox.xml"), xml = fs.readFileSync(src, "utf8").split("/usr/local/bin/nebulux-key").join(key);
+      if (!/<openbox_config/.test(xml)) return;
+      const same = fs.existsSync(cfg) && fs.readFileSync(cfg, "utf8") === xml;
+      fs.mkdirSync(path.dirname(cfg), { recursive: true }); fs.writeFileSync(cfg, xml);
+      const ps = await run("pgrep", ["-af", "openbox"], 3000);
+      if (same && ps.out.includes(cfg)) return;
+      const p = spawn("openbox", ["--replace", "--config-file", cfg], { detached: true, stdio: "ignore" }); p.on("error", () => {}); p.unref();
+    } catch (e) { /* the USB's own setup stays */ }
+  }, 4000);
   return { rawFile, upload, closeActive, MEDIA_ROOT: () => real(MEDIA) };
 };

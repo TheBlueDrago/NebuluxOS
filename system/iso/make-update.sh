@@ -6,10 +6,12 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 V="$1"; URL="$2"; OUT="$3"
 T="$(mktemp -d)"
-mkdir -p "$T/www" "$T/helper" "$T/ext" "$OUT"
+mkdir -p "$T/www" "$T/helper" "$T/ext" "$T/wm" "$OUT"
 cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" "$REPO/img" "$T/www/"
 cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" "$T/helper/"
 cp -a "$REPO/system/browser-ext/." "$T/ext/"
+# the window-manager setup (keyboard shortcuts over every app); the helper starts it from here on older USBs
+mkdir -p "$T/wm"; cp -a "$REPO/system/iso/root/etc/nebulux/openbox.xml" "$REPO/system/iso/root/usr/local/bin/nebulux-key" "$T/wm/"
 echo "$V" > "$T/VERSION"
 tar -czf "$OUT/nebulux-update.tar.gz" -C "$T" --owner=0 --group=0 .
 rm -rf "$T"
