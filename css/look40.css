@@ -531,3 +531,13 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .lknp-i{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#ffffff1a;flex:none}
 .lknp-t{display:flex;flex-direction:column;min-width:0;text-align:left;margin-right:6px}.lknp-t b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}.lknp-t small{font-size:12px;opacity:.75}
 #lk-np button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;background:#ffffff1f;flex:none}#lk-np button:hover{background:#ffffff38}
+
+/* ---------- Personalization preview follows corners, glass, window buttons and the floating taskbar ---------- */
+.s-preview{border-radius:16px;max-width:440px}
+.s-pv-win{border-radius:calc(var(--r-win,12px) * .55);background:color-mix(in srgb,var(--aura) 14%,#1a1330d9);backdrop-filter:blur(8px)}
+.s-pv-win.light{background:color-mix(in srgb,var(--aura) 6%,#f7f5fce6)}
+[data-glass=clear] .s-pv-win{background:color-mix(in srgb,var(--aura) 14%,#1a1330a0)}[data-glass=clear] .s-pv-win.light{background:color-mix(in srgb,var(--aura) 6%,#f7f5fcb0)}
+[data-glass=solid] .s-pv-win{background:color-mix(in srgb,var(--aura) 12%,#1a1330)}[data-glass=solid] .s-pv-win.light{background:#f7f5fc}
+#desktop.tb-float .s-pv-task{left:22%;right:22%;bottom:6px;height:16px;border-radius:7px}
+[data-wbtn=dots] .pv-bar span{width:6px!important;height:6px!important;border-radius:50%!important;background:#febc2e!important;opacity:1!important}
+[data-wbtn=dots] .pv-bar span:last-child{background:#ff5f57!important}[data-wbtn=dots] .pv-bar span:nth-child(2){background:#28c840!important}
