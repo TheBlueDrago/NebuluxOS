@@ -227,3 +227,9 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 [data-wbtn=dots] .wb-min:hover{background:#febc2e}[data-wbtn=dots] .wb-max:hover{background:#28c840}[data-wbtn=dots] .wb-close:hover{background:#ff5f57;color:#0009}
 [data-wbtn=dots] .win:not(.active) .wb{background:#8884;box-shadow:none}
 [data-wbtn=dots] .titlebar .wb::after{content:"";position:absolute;inset:-8px}[data-wbtn=dots] .wb{position:relative}
+
+/* ---------- Task Manager 4.0: graphs with a grid and a glowing line ---------- */
+.tm-graph{border-radius:10px;background:linear-gradient(#0000002e,#00000014)}
+.tm-gl{stroke:currentColor;opacity:.055;stroke-width:1;vector-effect:non-scaling-stroke}
+.tm-card{border-radius:calc(var(--r-menu,14px) - 2px)}
+.tm-ch b{font-size:15px}
