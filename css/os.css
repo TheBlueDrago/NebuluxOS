@@ -1238,3 +1238,9 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .qs-npi{flex:none}.qs-npt{flex:1;min-width:0;display:flex;flex-direction:column}.qs-npt b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qs-npt small{color:var(--sub);font-size:11.5px}
 .qs-np button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center}.qs-np button:hover{background:var(--hover)}.qs-np [data-np=play]{background:var(--accent);color:#fff}
 .ag-app:focus-visible{outline:2px solid #fff;outline-offset:2px;background:#ffffff1f}
+/* What's new for a whole new version */
+.wn-hero{display:flex;align-items:center;gap:22px;padding:22px 24px;margin:-4px -4px 14px;border-radius:16px;background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--accent) 55%,transparent),transparent 60%),radial-gradient(120% 140% at 100% 100%,#ec489955,transparent 60%),var(--card);border:1px solid var(--line)}
+.wn-ver{font-size:76px;font-weight:800;line-height:1;letter-spacing:-2px;background:linear-gradient(135deg,#fff,#c4b5fd 50%,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent;flex:none}
+.wn-hero b{display:block;font-size:22px}.wn-hero small{display:block;color:var(--sub);margin-top:4px;font-size:13.5px}.wn-try{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+[data-theme=light] .wn-ver{background:linear-gradient(135deg,#4c1d95,#7c3aed 50%,#db2777);-webkit-background-clip:text;background-clip:text}
+@media (max-width:560px){.wn-hero{flex-direction:column;align-items:flex-start}.wn-ver{font-size:56px}}

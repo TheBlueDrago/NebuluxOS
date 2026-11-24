@@ -93,13 +93,16 @@
     if (!NX.me || NX.get(seenKey(NX.me), null) === NX.version || $(".wn-pop")) return;
     NX.set(seenKey(NX.me), NX.version);
     const d = document.createElement("div"); d.className = "wn-pop nx-pop"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "What's new");
-    d.innerHTML = `<div class="nx-pcard nx-pwide"><div class="nx-ph">${NX.icon("logo", 40)}<div><b>What's new in Nebulux OS ${NX.esc(NX.version)}</b><small>Everything that was added, in one place.</small></div></div>
+    // a whole new version (like 4.0) gets a big welcome with buttons to try the main new things
+    const big = /^\d+\.0$/.test(NX.version);
+    d.innerHTML = `<div class="nx-pcard nx-pwide">${big ? `<div class="wn-hero"><span class="wn-ver">${NX.esc(NX.version)}</span><div><b>A whole new Nebulux OS</b><small>Quick Search, Stage, desktop widgets, Calendar, hot corners and much more.</small><div class="wn-try"><button class="btn primary" data-w="qs">Try Quick Search</button><button class="btn" data-w="grid">See every app</button><button class="btn" data-w="pers">Desktop extras</button></div></div></div>` : `<div class="nx-ph">${NX.icon("logo", 40)}<div><b>What's new in Nebulux OS ${NX.esc(NX.version)}</b><small>Everything that was added, in one place.</small></div></div>`}
       <div class="wn-list">${NX.whatsNew.map((w) => `<div class="wn-item"><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div>`).join("")}</div>
       ${(NX.whatsNewBefore || []).length ? `<details class="wn-before"><summary>Earlier updates</summary><div class="wn-list">${NX.whatsNewBefore.map((w) => `<div class="wn-old"><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div>`).join("")}</div></details>` : ""}
       <div class="nx-pbtns"><button class="btn" data-w="more">See it in Settings</button><button class="btn primary" data-w="ok">OK</button></div></div>`;
     document.body.appendChild(d);
     d.querySelector("[data-w=ok]").onclick = () => d.remove();
     d.querySelector("[data-w=more]").onclick = () => { d.remove(); NX.open("settings", { page: "update" }); };
+    d.querySelectorAll("[data-w=qs],[data-w=grid],[data-w=pers]").forEach((b) => (b.onclick = () => { d.remove(); const k = b.dataset.w; if (k === "qs" && NX.quickSearch) NX.quickSearch(); if (k === "grid" && NX.appGrid) NX.appGrid(); if (k === "pers") NX.open("settings", { page: "personal" }); }));
     d.querySelector("[data-w=ok]").focus({ preventScroll: true }); d.querySelector(".nx-pcard").scrollTop = 0;
   }
   const add = NX.addUser;

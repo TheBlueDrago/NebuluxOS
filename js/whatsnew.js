@@ -1,8 +1,30 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "3.8";
+  NX.version = "4.0";
   NX.whatsNew = [
+    ["Quick Search", "Press Nebulux + Space for one search box in the middle of the screen: apps, settings, your files, apps from the Store, sums like 12*12, conversions like 5 km in miles, and the weather."],
+    ["Stage", "Settings > Personalization > Stage keeps only the window you're using out. Your other windows wait as cards on the left, one click away."],
+    ["Desktop widgets", "Put a clock, the weather, what's next in your calendar and the battery right on your wallpaper."],
+    ["Calendar", "A new Calendar app with the whole month, colored events and reminders."],
+    ["Peek", "Select a file in File Explorer and press Space to see it right away: pictures, videos, music, text and PDFs. Press Space again to close it."],
+    ["App Grid", "Nebulux + G shows every app, big, on the whole screen. Type to find one, or use the arrow keys."],
+    ["Hot corners", "Push the pointer into a corner of the screen to show the desktop, open Task View, the App Grid, Quick Search, Start, a new sticky note, or lock."],
+    ["Screenshots, better", "Nebulux + Shift + S lets you drag over just the part of the screen you want. After every screenshot, a small picture of it floats in the corner: click it to open it."],
+    ["Color tags", "Right-click a file in File Explorer to tag it Red, Orange, Yellow, Green, Blue or Purple. Tags in the sidebar show everything with that color."],
+    ["Versions in Notepad", "Notepad keeps earlier versions of your notes as you write. Press Versions to go back to one."],
+    ["Favorites in Photos", "Press the heart on a picture, then Favorites to see only those."],
+    ["Picture in picture", "Videos in Media Player can keep playing in a small window on top while you do other things."],
+    ["Now playing", "While Media Player plays, quick settings shows what's playing, with play, pause and next."],
+    ["Screen time", "Settings > System shows how long you used each app today. It's counted only on this computer."],
+    ["A background that follows the day", "Morning, midday, sunset and night backgrounds that change by themselves, and a new background made for 4.0: Nebulux Four."],
+    ["Magnifier", "Nebulux + Plus zooms in around the pointer, Nebulux + Minus zooms out, and Nebulux + Esc stops."],
+    ["Increase contrast", "Settings > Accessibility > Increase contrast gives stronger outlines and brighter text."],
+    ["A taskbar your way", "Hide the taskbar until you need it, let its icons grow under the pointer, and show the battery percentage or seconds in the clock."],
+    ["Shake to find the pointer", "Lost the pointer? Shake the mouse and it grows for a moment."],
+    ["Smoother windows", "Windows glide into their taskbar button when you minimize them, and back out when you open them."],
+    ["Alt + F4", "Closes the window you're using, real apps too."],
+    ["Caps Lock warning", "Password boxes tell you when Caps Lock is on."],
     ["Sticky notes on your desktop", "Press the pin on a sticky note to put it on your desktop. Type in it, drag it by the top, and take it off with its x."],
     ["Star Tiles", "A new sliding puzzle game in the Nebulux Store: put the tiles in order from 1 to 15. Works without the internet, and keeps your best."],
     ["Countdowns", "Clock > Countdown counts the days to a birthday, a trip or the last day of school."],
@@ -88,6 +110,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Tabs in Notepad");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Sticky notes on your desktop");
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
