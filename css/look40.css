@@ -77,3 +77,20 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 #start{height:auto;max-height:min(720px,calc(100vh - var(--tb) - 24px))}
 #start .sm-body{flex:1 1 auto;min-height:0}
 #nx-living{position:absolute;inset:0;pointer-events:none;z-index:0}#icons,#windows{z-index:1}
+
+/* ---------- signing in: the desktop rises in, icons and taskbar follow ---------- */
+#desktop.nx-arrive{animation:arrive .55s var(--ease-out)}
+#desktop.nx-arrive #icons .dicon{animation:arriveIcon .5s var(--ease-spring) both}
+#desktop.nx-arrive #icons .dicon:nth-child(2){animation-delay:.04s}#desktop.nx-arrive #icons .dicon:nth-child(3){animation-delay:.08s}#desktop.nx-arrive #icons .dicon:nth-child(4){animation-delay:.12s}#desktop.nx-arrive #icons .dicon:nth-child(5){animation-delay:.16s}#desktop.nx-arrive #icons .dicon:nth-child(n+6){animation-delay:.2s}
+#desktop.nx-arrive #taskbar{animation:arriveBar .5s .1s var(--ease-out) both}
+@keyframes arrive{from{opacity:0;transform:scale(1.03)}}
+@keyframes arriveIcon{from{opacity:0;transform:translateY(14px) scale(.9)}}
+@keyframes arriveBar{from{opacity:0;transform:translateY(24px)}}
+.noanim #desktop.nx-arrive,.noanim #desktop.nx-arrive *{animation:none!important}
+
+/* ---------- Settings: a cleaner sidebar with a sliding marker ---------- */
+.s-nav{border-radius:10px;transition:background .12s}
+.s-nav.on{background:color-mix(in srgb,var(--accent) 16%,var(--card2))}
+.s-nav.on::before{top:9px;bottom:9px;width:4px;animation:sbar .25s var(--ease-spring)}
+@keyframes sbar{from{transform:scaleY(.2)}}
+.s-row,.s-card{border-radius:12px}

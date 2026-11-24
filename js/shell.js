@@ -121,6 +121,7 @@
     NX.me = u; NX.set("lastUser", u.id); clearInterval(lockT);
     const L = $("#lock"); L.className = "out"; setTimeout(() => { L.hidden = true; }, 350);
     $("#desktop").hidden = false; applyLook(); icons(); taskbar(); tray(); clock(); closeFlyouts();
+    { const D = $("#desktop"); D.classList.remove("nx-arrive"); void D.offsetWidth; D.classList.add("nx-arrive"); setTimeout(() => D.classList.remove("nx-arrive"), 900); }
     document.dispatchEvent(new CustomEvent("nx:signin", { detail: { back } }));
     NX.unread = 0; const bd = document.getElementById("tb-badge"); if (bd) bd.hidden = true;
     if (!back) setTimeout(() => NX.toast("Welcome, " + u.name + "."), 500);
