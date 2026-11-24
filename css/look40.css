@@ -188,3 +188,9 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .s-th-win.light{background:#f7f5fce6}
 .s-th-win b{display:block;height:6px;border-radius:3px;background:var(--c);width:60%}.s-th-win b+b{width:85%;opacity:.35;background:currentColor;color:#fff}.s-th-win.light b+b{color:#1b1530}
 .s-th-n{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:0 4px 2px}.s-th-n i{width:10px;height:10px;border-radius:50%}
+
+/* ---------- Start: folder shortcuts beside the power button ---------- */
+.sm-right{display:flex;align-items:center;gap:4px}.sm-places{display:flex;gap:2px;padding-right:6px;margin-right:4px;border-right:1px solid var(--line)}
+.sm-places button{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--sub);transition:background .15s,color .15s,transform .15s var(--ease-spring,ease)}
+.sm-places button:hover{background:var(--hover);color:var(--txt);transform:translateY(-1px)}
+.sm-places svg{filter:grayscale(1) brightness(1.5);opacity:.85}.sm-places button:hover svg{filter:none;opacity:1}[data-theme=light] .sm-places svg{filter:grayscale(1) brightness(.6)}

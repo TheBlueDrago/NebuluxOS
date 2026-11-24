@@ -362,6 +362,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.setPref("contrast", true)); await wait(200);
   ok(await p.evaluate(() => document.documentElement.classList.contains("hc") && getComputedStyle(document.documentElement).getPropertyValue("--line").trim() === "#ffffff66"), "Increase contrast makes outlines stronger");
   await p.evaluate(() => NX.setPref("contrast", false));
+  // Start: folder shortcuts
+  await p.evaluate(() => { NX.closeAll(); document.querySelector("#tb-start, .tb-start, [data-tb=start]").click(); }); await wait(500);
+  await p.evaluate(() => document.querySelector('[data-place="Pictures"]').click()); await wait(800);
+  ok(await p.evaluate(() => { const w = document.querySelector(".win[data-app=files]"); return !!w && /Pictures/.test(w.textContent); }), "Start's Pictures shortcut opens File Explorer at Pictures");
+  await p.evaluate(() => NX.closeAll());
   // Themes
   const thBefore = await p.evaluate(() => JSON.stringify(NX.prefs()));
   await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
