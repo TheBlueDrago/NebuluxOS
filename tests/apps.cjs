@@ -288,6 +288,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("magnifier");
   await p.keyboard.down("Meta"); await p.keyboard.press("Escape"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => NX.magnifier.level() === 1 && !document.getElementById("desktop").style.transform), "and Nebulux + Esc stops it");
+  // Increase contrast
+  await p.evaluate(() => NX.setPref("contrast", true)); await wait(200);
+  ok(await p.evaluate(() => document.documentElement.classList.contains("hc") && getComputedStyle(document.documentElement).getPropertyValue("--line").trim() === "#ffffff66"), "Increase contrast makes outlines stronger");
+  await p.evaluate(() => NX.setPref("contrast", false));
   // Accessibility: the large mouse pointer
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "access" }); }); await wait(700);
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=settings] [data-pref=bigcursor]"); t.checked = true; t.dispatchEvent(new Event("change", { bubbles: true })); }); await wait(300);
