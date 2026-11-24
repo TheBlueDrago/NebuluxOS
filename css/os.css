@@ -1226,3 +1226,9 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .stg-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:14px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 12px 28px #0007,0 0 0 1px var(--line);font-size:12px;color:var(--txt);transition:transform .15s}
 .stg-card:hover{transform:translateX(4px) scale(1.03)}.stg-card span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:700px){#desktop.stage #windows{left:0}#nx-stage{display:none}}
+
+/* Nebulux + Shift + S: pick part of the screen */
+#nx-snip{position:fixed;inset:0;z-index:7000;background:#000;cursor:crosshair;touch-action:none}
+#nx-snip img{width:100%;height:100%;object-fit:contain;display:block;filter:brightness(.55);user-select:none}
+.sa-box{position:fixed;border:2px solid #fff;box-shadow:0 0 0 9999px #0000,0 0 0 1px #0008;backdrop-filter:brightness(1.8);-webkit-backdrop-filter:brightness(1.8);pointer-events:none}
+.sa-tip{position:fixed;top:18px;left:50%;transform:translateX(-50%);margin:0;padding:8px 16px;border-radius:20px;background:#000b;color:#fff;font-size:13px;pointer-events:none}

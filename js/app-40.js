@@ -176,9 +176,30 @@
   document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : "settings", k === "battery" ? { page: "system" } : undefined); });
   document.addEventListener("nx:prefs", () => setTimeout(deskWidgets, 30)); setInterval(deskWidgets, 15000); setTimeout(deskWidgets, 1500);
 
+  // ---------- Nebulux + Shift + S: take the screen, then drag over the part you want (Esc keeps all of it) ----------
+  NX.snipArea = async () => {
+    if (document.getElementById("nx-snip")) return; if (NX.shell) NX.shell.closeFlyouts();
+    let r; try { r = await take(true); } catch (e) { NX.toast(e.message); return; }
+    const url = await NX.fs.url(r.path).catch(() => null); if (!url) { shotThumb(r); return; }
+    const o = document.createElement("div"); o.id = "nx-snip"; o.innerHTML = `<img alt="" draggable="false"><div class="sa-box" hidden></div><p class="sa-tip">Drag over the part you want. Esc keeps the whole screen.</p>`; document.body.appendChild(o);
+    const img = o.querySelector("img"), box = o.querySelector(".sa-box"); img.src = url; await img.decode().catch(() => {});
+    let a = null, sel = null; const done = () => { removeEventListener("keydown", key, true); o.remove(); };
+    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); done(); shotThumb(r); } };
+    addEventListener("keydown", key, true);
+    const at = (e) => { const b = img.getBoundingClientRect(); return [Math.max(0, Math.min(b.width, e.clientX - b.left)), Math.max(0, Math.min(b.height, e.clientY - b.top)), b]; };
+    o.onpointerdown = (e) => { e.preventDefault(); o.setPointerCapture(e.pointerId); a = at(e); };
+    o.onpointermove = (e) => { if (!a) return; const p = at(e), b = a[2]; sel = { x: Math.min(a[0], p[0]), y: Math.min(a[1], p[1]), w: Math.abs(p[0] - a[0]), h: Math.abs(p[1] - a[1]), bw: b.width, bh: b.height };
+      box.hidden = false; box.style.left = b.left + sel.x + "px"; box.style.top = b.top + sel.y + "px"; box.style.width = sel.w + "px"; box.style.height = sel.h + "px"; };
+    o.onpointerup = async () => { a = null; if (!sel || sel.w < 6 || sel.h < 6) { sel = null; box.hidden = true; return; }
+      const kx = img.naturalWidth / sel.bw, ky = img.naturalHeight / sel.bh, c = document.createElement("canvas"); c.width = Math.round(sel.w * kx); c.height = Math.round(sel.h * ky);
+      c.getContext("2d").drawImage(img, sel.x * kx, sel.y * ky, c.width, c.height, 0, 0, c.width, c.height); done();
+      try { const blob = await new Promise((ok) => c.toBlob(ok, "image/png")), out = await NX.fs.upload(NX.fs.parent(r.path), NX.fs.base(r.path).replace(/\.png$/i, "") + " (part).png", blob); NX.filesChanged && NX.filesChanged(); shotThumb(out); } catch (er) { NX.toast(er.message); shotThumb(r); } };
+    NX.snipTest = { select: (x, y, w, h) => { const b = img.getBoundingClientRect(); sel = { x, y, w, h, bw: b.width, bh: b.height }; return o.onpointerup(); } };
+  };
+
   // ---------- after a screenshot, a small picture of it floats in the corner for 6 seconds: click it to open it in Photos ----------
+  const take = NX.screenshot || (async () => { throw new Error("Screenshots aren't available here."); });
   if (NX.screenshot) {
-    const take = NX.screenshot;
     NX.screenshot = async (quiet) => { const r = await take(true); if (!quiet && r && r.path) shotThumb(r); else if (!quiet) NX.toast("Screenshot saved."); return r; };
   }
   async function shotThumb(r) {

@@ -483,6 +483,7 @@
     const winKeys = (key) => {
       if (key === "desk") NX.showDesktop(); if (key === "lock") lockKeep(); if (key === "files") NX.open("files");
       if (key === "shot" && NX.screenshot) NX.screenshot().catch((er) => NX.toast(er.message));
+      if (key === "snip" && NX.snipArea) NX.snipArea();
       if (key === "tm") NX.open("taskmgr");
       if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets(); if (key === "clip" && NX.clip) NX.clip.toggle();
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
@@ -494,7 +495,8 @@
       if (e.metaKey || e.getModifierState && e.getModifierState("OS")) winAlone = false;
       if (!NX.me) return;
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
-      if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && /^s$/i.test(e.key))) { e.preventDefault(); winKeys("shot"); }
+      if (e.key === "PrintScreen") { e.preventDefault(); winKeys("shot"); }
+      else if (e.metaKey && e.shiftKey && /^s$/i.test(e.key)) { e.preventDefault(); winKeys(NX.snipArea ? "snip" : "shot"); }
       else if (e.metaKey && !e.ctrlKey && /^[edlwv]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets", v: "clip" }[e.key.toLowerCase()]); }
       else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
       else if (e.metaKey && !e.ctrlKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
