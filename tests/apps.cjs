@@ -288,6 +288,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("magnifier");
   await p.keyboard.down("Meta"); await p.keyboard.press("Escape"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => NX.magnifier.level() === 1 && !document.getElementById("desktop").style.transform), "and Nebulux + Esc stops it");
+  // Caps Lock warning on password boxes
+  ok(await p.evaluate(() => { const i = document.createElement("input"); i.type = "password"; document.body.appendChild(i); i.focus(); const ev = new KeyboardEvent("keydown", { key: "A", bubbles: true, modifierCapsLock: true }); i.dispatchEvent(ev); const shown = !!(i.nextElementSibling && i.nextElementSibling.classList.contains("nx-caps")); i.dispatchEvent(new KeyboardEvent("keyup", { key: "A", bubbles: true })); const gone = !(i.nextElementSibling && i.nextElementSibling.classList.contains("nx-caps")); i.remove(); return shown && gone; }), "a password box says when Caps Lock is on");
   // Increase contrast
   await p.evaluate(() => NX.setPref("contrast", true)); await wait(200);
   ok(await p.evaluate(() => document.documentElement.classList.contains("hc") && getComputedStyle(document.documentElement).getPropertyValue("--line").trim() === "#ffffff66"), "Increase contrast makes outlines stronger");

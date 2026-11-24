@@ -205,6 +205,13 @@
   // the Nebulux key (Start) and other flyouts bring it up too
   new MutationObserver(() => { const d = document.getElementById("desktop"); if (d && d.classList.contains("tb-auto") && flyoutOpen()) d.classList.add("tb-show"); }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ["hidden"] });
 
+  // ---------- "Caps Lock is on" under any password box you're typing in ----------
+  const capsCheck = (e) => { const t = e.target; if (!t || t.tagName !== "INPUT" || t.type !== "password" || !e.getModifierState) return; const on = e.getModifierState("CapsLock");
+    let h = t.nextElementSibling && t.nextElementSibling.classList && t.nextElementSibling.classList.contains("nx-caps") ? t.nextElementSibling : null;
+    if (on && !h) { h = document.createElement("small"); h.className = "nx-caps"; h.setAttribute("role", "status"); h.textContent = "Caps Lock is on"; t.after(h); } else if (!on && h) h.remove(); };
+  addEventListener("keydown", capsCheck, true); addEventListener("keyup", capsCheck, true);
+  addEventListener("focusout", (e) => { const n = e.target && e.target.nextElementSibling; if (n && n.classList && n.classList.contains("nx-caps")) n.remove(); }, true);
+
   // ---------- keys: Nebulux + Space (Quick Search) and Nebulux + G (App Grid); on the USB they come from the window manager ----------
   addEventListener("keydown", (e) => {
     const win = e.metaKey || (e.getModifierState && e.getModifierState("OS"));
