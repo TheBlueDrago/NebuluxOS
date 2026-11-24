@@ -1122,3 +1122,35 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .cd-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
 .cd-n{min-width:64px;text-align:center;font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cd-row span{flex:1;display:flex;flex-direction:column;min-width:0}.cd-row small{color:var(--sub);font-size:12px}
+
+/* ---------- 4.0: Quick Search ---------- */
+#nx-qs{position:fixed;inset:0;z-index:6100;display:flex;justify-content:center;align-items:flex-start;padding-top:14vh;background:#05030c55}
+.qs2-box{width:min(640px,calc(100vw - 24px));border-radius:16px;background:var(--bg2);box-shadow:0 30px 80px #000c,0 0 0 1px #ffffff1f;overflow:hidden;animation:nlin .16s ease-out}
+.qs2-in{display:flex;align-items:center;gap:12px;padding:14px 18px}.qs2-in input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--txt);font-size:22px}
+.qs2-res{max-height:52vh;overflow:auto;border-top:1px solid var(--line);padding:6px}.qs2-res[hidden]{display:none}
+.qs2-res h4{margin:8px 10px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub)}
+.qs2-it{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:10px;text-align:left}.qs2-it span{display:flex;flex-direction:column;min-width:0}.qs2-it b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qs2-it small{color:var(--sub);font-size:12px}
+.qs2-it.on,.qs2-it:hover{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+/* Peek */
+#nx-peek{position:fixed;inset:0;z-index:6100;display:grid;place-items:center;background:#05030ccc;outline:0;padding:20px}
+.pk2-card{width:min(900px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;border-radius:16px;background:var(--bg2);box-shadow:0 30px 80px #000c,0 0 0 1px #ffffff1f;overflow:hidden;animation:nlin .16s ease-out}
+.pk2-top{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 18px;border-bottom:1px solid var(--line)}.pk2-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pk2-sp{flex:1}
+.pk2-body{flex:1;min-height:0;overflow:auto;display:grid;place-items:center;background:#0006}
+.pk2-body img,.pk2-body video{max-width:100%;max-height:calc(100vh - 120px);display:block}
+.pk2-body pre{justify-self:stretch;align-self:stretch;margin:0;padding:18px 20px;white-space:pre-wrap;font:14px/1.5 ui-monospace,Consolas,monospace;color:var(--txt);background:var(--bg2)}
+.pk2-aud{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px}.pk2-msg{color:var(--sub);padding:30px}
+/* App Grid */
+#nx-grid{position:fixed;inset:0;z-index:6000;display:flex;flex-direction:column;align-items:center;gap:26px;padding:6vh 4vw;background:#0b0620d9;overflow:auto;animation:fly .2s ease-out}
+.nx-lite #nx-grid{background:#0b0620f5}
+.ag-q{width:min(320px,90vw);background:#ffffff1a;border:1px solid #ffffff2e;border-radius:10px;padding:9px 14px;color:#fff;font-size:15px;outline:0;text-align:center}
+.ag-apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:20px 10px;width:min(1100px,100%)}
+.ag-app{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px;border-radius:16px;color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px #000a;transition:transform .12s}.ag-app:hover{background:#ffffff14;transform:translateY(-3px)}.ag-app[hidden]{display:none}
+.ag-app .ico{filter:drop-shadow(0 8px 18px #0008)}
+/* grow taskbar icons */
+#tb-apps.tb-mag{overflow:visible}#tb-apps.tb-mag .ico{transition:transform .08s ease-out;transform-origin:50% 100%}
+/* shake to find the pointer */
+.nx-find{position:fixed;z-index:9999;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;pointer-events:none;border:4px solid var(--accent);background:radial-gradient(circle,color-mix(in srgb,var(--accent) 35%,transparent),transparent 70%);animation:nxfind 1.1s ease-out forwards}
+@keyframes nxfind{0%{transform:scale(.3);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(.2);opacity:0}}
+/* Settings: hot corners */
+.s-corners{display:flex;flex-direction:column;gap:12px}.s-cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+.s-cgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--sub)}.s-cgrid select{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--txt);font-size:13.5px}

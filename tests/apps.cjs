@@ -166,6 +166,47 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector(".win[data-app=tiles] [data-i='15']").click()); await wait(200);
   ok(await p.evaluate(() => /Solved|New best/.test(document.querySelector(".win[data-app=tiles] .tl-msg").textContent) && NX.data("tiles-best", null).moves === 1), "and knows when it's solved, keeping your best");
   await shot("tiles");
+  // ---------- 4.0 ----------
+  // Quick Search: Nebulux + Space
+  await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("Space"); await p.keyboard.up("Meta"); await wait(300);
+  ok(await p.evaluate(() => !!document.querySelector("#nx-qs input") && document.activeElement === document.querySelector("#nx-qs input")), "Nebulux + Space opens Quick Search");
+  await p.keyboard.type("12*12"); await wait(300);
+  ok(await p.evaluate(() => /= 144/.test(document.querySelector("#nx-qs .qs2-it").textContent)), "it does sums: 12*12 = 144");
+  await p.evaluate(() => { const i = document.querySelector("#nx-qs input"); i.value = ""; }); await p.keyboard.type("camer"); await wait(500);
+  ok(await p.evaluate(() => /Camera/.test(document.querySelector("#nx-qs .qs2-it.on").textContent)), "and finds apps");
+  await shot("quicksearch");
+  await p.keyboard.press("Enter"); await wait(600);
+  ok(await p.evaluate(() => !document.querySelector("#nx-qs") && !!document.querySelector(".win[data-app=camera]")), "Enter opens the top result");
+  await p.evaluate(() => NX.closeAll()); await p.evaluate(() => NX.quickSearch()); await p.keyboard.type("grocer"); await wait(900);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#nx-qs .qs2-it")].some((b) => /Groceries|grocer/i.test(b.textContent))), "and files");
+  await p.keyboard.press("Escape"); await wait(200);
+  // Peek: Space on a file
+  await p.evaluate(() => NX.open("files", { place: "Pictures" })); await wait(900);
+  await p.evaluate(() => { const b = document.querySelector(".win[data-app=files] .fx-item"); b.click(); b.focus(); }); await wait(200);
+  await p.keyboard.press("Space"); await wait(800);
+  ok(await p.evaluate(() => !!document.querySelector("#nx-peek img")), "Space on a picture in File Explorer shows it right away (Peek)");
+  await shot("peek");
+  await p.keyboard.press("Space"); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector("#nx-peek")), "and Space closes it");
+  // App Grid
+  await p.evaluate(() => { NX.closeAll(); NX.appGrid(); }); await wait(400);
+  ok(await p.evaluate(() => document.querySelectorAll("#nx-grid .ag-app").length >= 10), "the App Grid shows every app");
+  await shot("appgrid");
+  await p.keyboard.type("weath"); await p.keyboard.press("Enter"); await wait(600);
+  ok(await p.evaluate(() => !document.querySelector("#nx-grid") && !!document.querySelector(".win[data-app=weather]")), "and type + Enter opens one");
+  // hot corners
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("corners", { tr: "grid" }); }); await p.mouse.move(W / 2, H / 2); await p.mouse.move(W - 1, 0, { steps: 5 }); await wait(500);
+  ok(await p.evaluate(() => !!document.querySelector("#nx-grid")), "a hot corner opens what you chose (top right: App Grid)");
+  await p.evaluate(() => { document.querySelector("#nx-grid").remove(); NX.setPref("corners", {}); }); await p.mouse.move(W / 2, H / 2);
+  // grow taskbar icons
+  await p.evaluate(() => NX.setPref("magnify", true)); const tbi = await p.evaluate(() => { const r = document.querySelector("#tb-apps .tb-app").getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; });
+  await p.mouse.move(tbi[0], tbi[1], { steps: 3 }); await wait(200);
+  ok(await p.evaluate(() => /scale\(1\.[2-6]/.test(document.querySelector("#tb-apps .tb-app .ico").style.transform)), "taskbar icons grow under the pointer when turned on");
+  await p.evaluate(() => NX.setPref("magnify", false)); await p.mouse.move(W / 2, H / 3);
+  // shake to find the pointer
+  const found0 = await p.evaluate(() => NX.pointerFound || 0);
+  for (let k = 0; k < 8; k++) await p.mouse.move(k % 2 ? W / 2 + 220 : W / 2 - 220, H / 3, { steps: 4 });
+  ok(await p.evaluate((f) => (NX.pointerFound || 0) > f, found0), "shaking the pointer makes it easy to find");
   // Settings > Apps: search your apps
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
   await p.type(".win[data-app=settings] .s-appq", "camer"); await wait(200);

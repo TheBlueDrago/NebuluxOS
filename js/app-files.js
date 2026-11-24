@@ -271,6 +271,7 @@
       listEl.addEventListener("keydown", (ev) => {
         if (body.querySelector(".nx-ask")) return; const k = ev.key, c = ev.ctrlKey || ev.metaKey;
         if (k === "Delete") { ev.preventDefault(); act(isTrash() ? "purge" : "delete"); }
+        else if (k === " " && sel.size === 1 && NX.peekFile && !isTrash()) { const e1 = items.find((x) => (x.path || x.id) === [...sel][0]); if (e1 && !e1.dir) { ev.preventDefault(); NX.peekFile(e1, items.filter((x) => !x.dir)); } }
         else if (k === "F2" && sel.size === 1) { ev.preventDefault(); act("rename"); }
         else if (k === "Enter" && sel.size === 1) { ev.preventDefault(); openItem(selected()[0]); }
         else if (k === "Backspace" && !c) { ev.preventDefault(); nav("up"); }

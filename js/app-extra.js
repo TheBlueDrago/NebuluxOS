@@ -83,6 +83,28 @@
     } };
 
   // ---------- Calculator: a real calculator (no eval), with keyboard keys ----------
+  // works out a sum like 2^10 or sin(30) + log(100) (a small parser, no eval); used by Calculator and Quick Search
+  NX.calcEval = (src, degrees) => {
+    const s = String(src).replace(/\s+/g, "").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/π/g, "pi"); let i = 0;
+    const fail = () => { throw new Error("That doesn't look right."); };
+    const toRad = (x) => (degrees ? x * Math.PI / 180 : x), fromRad = (x) => (degrees ? x * 180 / Math.PI : x);
+    const FN = { sin: (x) => Math.sin(toRad(x)), cos: (x) => Math.cos(toRad(x)), tan: (x) => Math.tan(toRad(x)), asin: (x) => fromRad(Math.asin(x)), acos: (x) => fromRad(Math.acos(x)), atan: (x) => fromRad(Math.atan(x)), log: Math.log10, ln: Math.log, sqrt: Math.sqrt, abs: Math.abs };
+    const fact = (n) => { if (n < 0 || n !== Math.floor(n) || n > 170) fail(); let r = 1; for (let k = 2; k <= n; k++) r *= k; return r; };
+    const peek = () => s[i];
+    const num = () => { const m = /^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i)); if (!m) fail(); i += m[0].length; return parseFloat(m[0]); };
+    const atom = () => {
+      if (peek() === "(") { i++; const v = expr(); if (peek() !== ")") fail(); i++; return v; }
+      if (peek() === "-") { i++; return -power(); } if (peek() === "+") { i++; return power(); }
+      const w = /^[a-z]+/i.exec(s.slice(i));
+      if (w) { const name = w[0].toLowerCase(); i += w[0].length; if (name === "pi") return Math.PI; if (name === "e") return Math.E; const f = FN[name]; if (!f || peek() !== "(") fail(); i++; const v = expr(); if (peek() !== ")") fail(); i++; return f(v); }
+      return num();
+    };
+    const post = () => { let v = atom(); while (peek() === "!" || peek() === "%") { v = peek() === "!" ? fact(v) : v / 100; i++; } return v; };
+    const power = () => { const b = post(); if (peek() === "^") { i++; return Math.pow(b, power()); } return b; };
+    const term = () => { let v = power(); for (;;) { const c = peek(); if (c === "*") { i++; v *= power(); } else if (c === "/") { i++; const d = power(); v = d === 0 ? Infinity : v / d; } else if (c === "(" || (c && /[a-z\d.]/i.test(c) && /[\d)!%a-z.]/i.test(s[i - 1] || ""))) { v *= power(); } else return v; } };
+    const expr = () => { let v = term(); for (;;) { if (peek() === "+") { i++; v += term(); } else if (peek() === "-") { i++; v -= term(); } else return v; } };
+    if (!s) return 0; const v = expr(); if (i < s.length) fail(); return v;
+  };
   A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 340, h: 520, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
     open(body, win) {
       body.classList.add("calc");
@@ -156,27 +178,6 @@
       };
       // Scientific: type or tap a whole expression, like 2^10 or sin(30) + log(100); worked out by a small parser (no eval)
       const sci = body.querySelector(".c-sci"); let deg = true;
-      NX.calcEval = (src, degrees) => {
-        const s = String(src).replace(/\s+/g, "").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/π/g, "pi"); let i = 0;
-        const fail = () => { throw new Error("That doesn't look right."); };
-        const toRad = (x) => (degrees ? x * Math.PI / 180 : x), fromRad = (x) => (degrees ? x * 180 / Math.PI : x);
-        const FN = { sin: (x) => Math.sin(toRad(x)), cos: (x) => Math.cos(toRad(x)), tan: (x) => Math.tan(toRad(x)), asin: (x) => fromRad(Math.asin(x)), acos: (x) => fromRad(Math.acos(x)), atan: (x) => fromRad(Math.atan(x)), log: Math.log10, ln: Math.log, sqrt: Math.sqrt, abs: Math.abs };
-        const fact = (n) => { if (n < 0 || n !== Math.floor(n) || n > 170) fail(); let r = 1; for (let k = 2; k <= n; k++) r *= k; return r; };
-        const peek = () => s[i];
-        const num = () => { const m = /^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i)); if (!m) fail(); i += m[0].length; return parseFloat(m[0]); };
-        const atom = () => {
-          if (peek() === "(") { i++; const v = expr(); if (peek() !== ")") fail(); i++; return v; }
-          if (peek() === "-") { i++; return -power(); } if (peek() === "+") { i++; return power(); }
-          const w = /^[a-z]+/i.exec(s.slice(i));
-          if (w) { const name = w[0].toLowerCase(); i += w[0].length; if (name === "pi") return Math.PI; if (name === "e") return Math.E; const f = FN[name]; if (!f || peek() !== "(") fail(); i++; const v = expr(); if (peek() !== ")") fail(); i++; return f(v); }
-          return num();
-        };
-        const post = () => { let v = atom(); while (peek() === "!" || peek() === "%") { v = peek() === "!" ? fact(v) : v / 100; i++; } return v; };
-        const power = () => { const b = post(); if (peek() === "^") { i++; return Math.pow(b, power()); } return b; };
-        const term = () => { let v = power(); for (;;) { const c = peek(); if (c === "*") { i++; v *= power(); } else if (c === "/") { i++; const d = power(); v = d === 0 ? Infinity : v / d; } else if (c === "(" || (c && /[a-z\d.]/i.test(c) && /[\d)!%a-z.]/i.test(s[i - 1] || ""))) { v *= power(); } else return v; } };
-        const expr = () => { let v = term(); for (;;) { if (peek() === "+") { i++; v += term(); } else if (peek() === "-") { i++; v -= term(); } else return v; } };
-        if (!s) return 0; const v = expr(); if (i < s.length) fail(); return v;
-      };
       const SK = [["sin", "sin("], ["cos", "cos("], ["tan", "tan("], ["(", "("], [")", ")"], ["log", "log("], ["ln", "ln("], ["√", "sqrt("], ["x^y", "^"], ["x!", "!"], ["π", "π"], ["7"], ["8"], ["9"], ["÷", "÷"], ["e", "e"], ["4"], ["5"], ["6"], ["×", "×"], ["Deg", "DEG"], ["1"], ["2"], ["3"], ["−", "−"], ["C", "C"], ["⌫", "BS"], ["0"], ["."], ["+"], ["=", "="]];
       const sciDraw = () => {
         sci.innerHTML = `<div class="sc-disp"><input class="sc-in" aria-label="Expression" spellcheck="false" autocomplete="off"><b class="sc-out">0</b></div><div class="sc-keys">${SK.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-sk="${NX.esc(k || l)}">${l}</button>`).join("")}</div>`;
