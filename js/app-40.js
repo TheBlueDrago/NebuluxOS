@@ -113,6 +113,19 @@
       draw();
     } };
 
+  // ---------- Screen time: how long each app was in front today (counted every 30 seconds, kept for 7 days, only on this computer) ----------
+  let stBuf = {}, stN = 0;
+  const dayKey = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  NX.screenTime = (day) => { const all = Object.assign({}, NX.data("screen-time", {})), d = day || dayKey(), out = Object.assign({}, all[d] || {}); for (const [k, v] of Object.entries(stBuf)) if (k.startsWith(d + "|")) { const id = k.slice(d.length + 1); out[id] = (out[id] || 0) + v; } return out; };
+  const stFlush = () => { if (!NX.me || !Object.keys(stBuf).length) return; const all = NX.data("screen-time", {}); for (const [k, v] of Object.entries(stBuf)) { const [d, id] = k.split("|"); all[d] = all[d] || {}; all[d][id] = (all[d][id] || 0) + v; } const keep = Object.keys(all).sort().slice(-7); NX.setData("screen-time", Object.fromEntries(keep.map((d) => [d, all[d]]))); stBuf = {}; };
+  NX.screenTimeTick = (secs) => {
+    if (!NX.me || document.getElementById("lock") && !document.getElementById("lock").hidden) return;
+    const ids = new Set(); const t = NX.topWin && NX.topWin(); if (t) ids.add(t.id); if (NX.nativeActive) for (const id of NX.nativeActive) ids.add(id);
+    for (const id of ids) { const k = dayKey() + "|" + id; stBuf[k] = (stBuf[k] || 0) + (secs || 30); }
+    if (++stN % 4 === 0) stFlush();
+  };
+  setInterval(() => NX.screenTimeTick(30), 30000); addEventListener("pagehide", stFlush); document.addEventListener("nx:signout", stFlush);
+
   // ---------- keys: Nebulux + Space (Quick Search) and Nebulux + G (App Grid); on the USB they come from the window manager ----------
   addEventListener("keydown", (e) => {
     const win = e.metaKey || (e.getModifierState && e.getModifierState("OS"));

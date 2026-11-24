@@ -210,6 +210,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const found0 = await p.evaluate(() => NX.pointerFound || 0);
   for (let k = 0; k < 8; k++) { const sw = Math.min(220, W / 2 - 10); await p.mouse.move(k % 2 ? W / 2 + sw : W / 2 - sw, H / 3, { steps: 4 }); }
   ok(await p.evaluate((f) => (NX.pointerFound || 0) > f, found0), "shaking the pointer makes it easy to find");
+  // Screen time
+  await p.evaluate(() => { NX.closeAll(); NX.open("weather"); }); await wait(300);
+  await p.evaluate(() => { NX.screenTimeTick(1500); NX.screenTimeTick(1500); });
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(800);
+  await p.evaluate(() => NX.screenTimeTick(30));
+  ok(await p.evaluate(() => (NX.screenTime().weather || 0) >= 3000 && /Weather/.test(document.querySelector("#s-st").textContent) && /\d+ min/.test(document.querySelector("#s-st").textContent)), "Settings > System shows screen time for each app today");
+  await p.evaluate(() => document.querySelector("#s-st").scrollIntoView()); await shot("screentime");
   // Calendar app
   await p.evaluate(() => { NX.closeAll(); NX.setData("events", []); NX.open("calendar"); }); await wait(600);
   await p.evaluate(() => { const f = document.querySelector(".win[data-app=calendar] .ca-add"); f.n.value = "Dentist"; f.t.value = "15:30"; f.querySelectorAll("[name=c]")[3].checked = true; f.requestSubmit(); }); await wait(300);
