@@ -272,7 +272,7 @@
     const lvl = b.percent <= 10 ? 10 : 20; if (lvl >= lowTold) return; lowTold = lvl;
     NX.toast(lvl === 10 ? "Battery is very low (" + b.percent + "%). Plug in your computer soon." : "Battery is at " + b.percent + "%." + (NX.prefs().saverAuto !== false ? " Battery saver is on." : " Turn on Battery saver to make it last longer."));
   });
-  function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d, !!NX.prefs().clockSec); $("#tb-date").textContent = d.toLocaleDateString(); }
+  function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d, !!NX.prefs().clockSec); $("#tb-date").textContent = d.toLocaleDateString(); const full = d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" }); if ($("#tb-clock").title !== full) $("#tb-clock").title = full; }
   setInterval(() => { if (NX.me) clock(); }, 1000);
   // Night light on a schedule: on at "nightFrom", off at "nightTo" (it can run past midnight). Turning it on or off
   // by hand still works; the schedule takes over again at the next on or off time.
