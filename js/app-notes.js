@@ -28,7 +28,7 @@
           top.onpointerup = () => { top.onpointermove = top.onpointerup = null; save(now().map((x) => (x.id === n.id ? Object.assign({}, x, { x: parseInt(el.style.left), y: parseInt(el.style.top) }) : x))); }; };
       }
       el.className = "dn-note c-" + n.c;
-      el.style.left = (n.x != null ? n.x : innerWidth - 260 - (k % 3) * 24) + "px"; el.style.top = (n.y != null ? n.y : 24 + k * 34) + "px";
+      el.style.left = (n.x != null ? n.x : innerWidth - ((NX.prefs().deskWidgets || []).length ? 520 : 260) - (k % 3) * 24) + "px"; el.style.top = (n.y != null ? n.y : 24 + k * 34) + "px";
       if (!have.has(n.id)) el.querySelector("textarea").value = n.t;
     });
   }

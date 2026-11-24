@@ -136,6 +136,28 @@
   NX.magnifier = { zoom: (dir) => { mag = dir === 0 ? 1 : Math.max(1, Math.min(4, +(mag + dir * .5).toFixed(2))); if (mag > 1 && dir > 0 && mag === 1.5) NX.toast("Magnifier is on. Nebulux + Minus zooms out, Nebulux + Esc stops."); magApply(); return mag; }, level: () => mag };
   addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; if (mag > 1) magApply(); }, { passive: true });
 
+  // ---------- desktop widgets: a clock, the weather, what's next in your calendar and the battery, right on the wallpaper ----------
+  NX.deskWidgetKinds = { clock: "Clock", weather: "Weather", events: "Up next", battery: "Battery" };
+  function deskWidgets() {
+    const on = NX.me ? (NX.prefs().deskWidgets || []).filter((k) => NX.deskWidgetKinds[k]) : [];
+    let box = document.getElementById("nx-dwidgets");
+    if (!on.length) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement("div"); box.id = "nx-dwidgets"; const ic = document.getElementById("icons"); (ic ? ic.parentNode : document.getElementById("desktop")).insertBefore(box, ic ? ic.nextSibling : null); }
+    const d = new Date(), html = on.map((k) => {
+      if (k === "clock") return `<section class="dw dw-clock" data-dw="clock"><b>${NX.esc(NX.fmtTime(d))}</b><span>${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</span></section>`;
+      if (k === "weather") { const w = NX.data("wx", null), p = NX.data("wx-place", null); return `<section class="dw dw-wx" data-dw="weather">${w && p && NX.wxInfo ? `${NX.wxInfo.icon(w.code, 46)}<div><b>${w.now}°${w.unit}</b><span>${NX.esc(NX.wxInfo.name(w.code))}</span><small>${NX.esc(p.name)}</small></div>` : `<div><b>Weather</b><small>Pick your city in Widgets or the Weather app.</small></div>`}</section>`; }
+      if (k === "events") { const key = (x) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"), today = key(d), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+        const next = NX.data("events", []).filter((e) => e.date > today || (e.date === today && (!e.time || e.time >= hm))).sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || ""))).slice(0, 3);
+        return `<section class="dw dw-ev" data-dw="events"><h4>Up next</h4>${next.length ? next.map((e) => `<div><i style="background:${e.color || "#7c5cff"}"></i><span><b>${NX.esc(e.title)}</b><small>${e.date === today ? "Today" : new Date(e.date + "T12:00").toLocaleDateString(undefined, Object.assign({ weekday: "short", month: "short", day: "numeric" }, e.date.slice(0, 4) !== String(d.getFullYear()) ? { year: "numeric" } : {}))}${e.time ? " · " + NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : ""}</small></span></div>`).join("") : `<small>Nothing planned. Add events in Calendar.</small>`}</section>`; }
+      if (k === "battery") { const b = NX.batt && NX.batt(); return `<section class="dw dw-bt" data-dw="battery">${b ? `${NX.battIcon(40)}<div><b>${b.percent}%</b><small>${b.charging ? "Charging" : (NX.battLeft && NX.battLeft()) || "On battery"}</small></div>` : `<div><b>Battery</b><small>No battery on this computer.</small></div>`}</section>`; }
+      return "";
+    }).join("");
+    if (box.innerHTML !== html) box.innerHTML = html;
+  }
+  NX.deskWidgets = deskWidgets;
+  document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : "settings", k === "battery" ? { page: "system" } : undefined); });
+  document.addEventListener("nx:prefs", () => setTimeout(deskWidgets, 30)); setInterval(deskWidgets, 15000); setTimeout(deskWidgets, 1500);
+
   // ---------- keys: Nebulux + Space (Quick Search) and Nebulux + G (App Grid); on the USB they come from the window manager ----------
   addEventListener("keydown", (e) => {
     const win = e.metaKey || (e.getModifierState && e.getModifierState("OS"));

@@ -237,6 +237,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.setPref("dailyWall", false); NX.setPref("dynWall", true); }); await wait(300);
   ok(await p.evaluate(() => NX.prefs().wallpaper === NX.dayWall(new Date().getHours()) && [NX.dayWall(8), NX.dayWall(13), NX.dayWall(18), NX.dayWall(23)].join() === "9,5,2,3"), "Background follows the day: morning, midday, sunset and night");
   await p.evaluate(() => { NX.setPref("dynWall", false); NX.setPref("wallpaper", 0); });
+  // desktop widgets
+  await p.evaluate(() => { NX.closeAll(); NX.setData("events", [{ id: "e1", date: "2099-01-01", time: "", title: "Far away", told: "", color: "#22c55e" }]); NX.open("settings", { page: "personal" }); }); await wait(700);
+  await p.evaluate(() => ["clock", "events", "battery"].forEach((k) => { const c = document.querySelector(`.win[data-app=settings] [data-dwk=${k}]`); c.checked = true; c.dispatchEvent(new Event("change", { bubbles: true })); })); await wait(300);
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+  ok(await p.evaluate(() => { const b = document.getElementById("nx-dwidgets"); return !!b && b.querySelectorAll(".dw").length === 3 && /Far away/.test(b.querySelector(".dw-ev").textContent) && /\d/.test(b.querySelector(".dw-clock b").textContent); }), "Desktop widgets show the clock, what's up next and the battery");
+  await shot("deskwidgets");
+  await p.evaluate(() => document.querySelector("#nx-dwidgets .dw-ev").click()); await wait(500);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=calendar]")), "and clicking Up next opens Calendar");
+  await p.evaluate(() => { NX.setPref("deskWidgets", []); NX.setData("events", []); NX.closeAll(); }); await wait(200);
   // Screen time
   await p.evaluate(() => { NX.closeAll(); NX.open("weather"); }); await wait(300);
   await p.evaluate(() => { NX.screenTimeTick(1500); NX.screenTimeTick(1500); });
