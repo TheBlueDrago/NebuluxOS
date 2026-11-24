@@ -178,6 +178,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Meta"); await p.keyboard.down("Shift"); await p.keyboard.press("KeyS"); await p.keyboard.up("Shift"); await p.keyboard.up("Meta");
   ok(await until(async () => p.evaluate(async () => { const pl = await NX.fs.places(); return (await NX.fs.list(pl.folders[3].path + (pl.sep) + "Screenshots")).entries.some((e) => /^Screenshot .*\.png$/.test(e.name)); })), "Windows + Shift + S saves a screenshot in Pictures > Screenshots");
   ok(await p.evaluate(() => document.querySelector("#start").hidden), "and doesn't open Start");
+  ok(await until(() => p.evaluate(() => { const i = document.querySelector("#nx-shot img"); return !!i && i.naturalWidth > 0; })), "a picture of the screenshot floats in the corner");
+  await p.evaluate(() => { const s = document.querySelector("#nx-shot"); if (s) s.remove(); });
   await p.evaluate(() => NX.open("photos")); await wait(800);
   ok(await until(() => p.evaluate(() => { const i = document.querySelector(".win[data-app=photos] .ph-tile img"); return !!i && i.naturalWidth > 0; })), "Photos shows the screenshot from the real files");
   await p.evaluate(() => NX.close("photos")); await wait(200);

@@ -62,6 +62,7 @@
         if (f.kind === "image") { b.innerHTML = `<img alt="${NX.esc(f.name)}" src="${await NX.fs.url(f.path)}">`; }
         else if (f.kind === "video") { b.innerHTML = `<video controls autoplay src="${await NX.fs.url(f.path)}"></video>`; }
         else if (f.kind === "audio") { b.innerHTML = `<div class="pk2-aud">${NX.icon("faudio", 96)}<audio controls autoplay src="${await NX.fs.url(f.path)}"></audio></div>`; }
+        else if (f.kind === "pdf") { b.innerHTML = `<embed type="application/pdf" src="${await NX.fs.url(f.path)}">`; }
         else if (f.kind === "text") { const t = await NX.fs.read(f.path); b.innerHTML = `<pre></pre>`; $("pre", b).textContent = t.length > 60000 ? t.slice(0, 60000) + "\n..." : t; }
         else b.innerHTML = `<div class="pk2-aud">${NX.icon(FI[f.kind] || "file", 96)}<p class="pk2-msg">${f.size != null ? (f.size > 1e6 ? (f.size / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(f.size / 1e3)) + " KB") : ""}${f.mtime ? " · changed " + new Date(f.mtime).toLocaleString() : ""}</p></div>`;
       } catch (er) { b.innerHTML = `<p class="pk2-msg">${NX.esc(er.message || "This file can't be shown.")}</p>`; }
@@ -157,6 +158,20 @@
   NX.deskWidgets = deskWidgets;
   document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : "settings", k === "battery" ? { page: "system" } : undefined); });
   document.addEventListener("nx:prefs", () => setTimeout(deskWidgets, 30)); setInterval(deskWidgets, 15000); setTimeout(deskWidgets, 1500);
+
+  // ---------- after a screenshot, a small picture of it floats in the corner for 6 seconds: click it to open it in Photos ----------
+  if (NX.screenshot) {
+    const take = NX.screenshot;
+    NX.screenshot = async (quiet) => { const r = await take(true); if (!quiet && r && r.path) shotThumb(r); else if (!quiet) NX.toast("Screenshot saved."); return r; };
+  }
+  async function shotThumb(r) {
+    let el = document.getElementById("nx-shot"); if (el) el.remove();
+    el = document.createElement("button"); el.id = "nx-shot"; el.setAttribute("aria-label", "Screenshot saved. Open it in Photos"); el.title = "Saved in Pictures. Click to open it";
+    el.innerHTML = `<img alt=""><span>Screenshot saved</span>`; document.body.appendChild(el);
+    try { el.querySelector("img").src = await NX.fs.url(r.path); } catch (e) { /* the text is enough */ }
+    const t = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 300); }, 6000);
+    el.onclick = () => { clearTimeout(t); el.remove(); NX.open("photos", { path: r.path }); };
+  }
 
   // ---------- keys: Nebulux + Space (Quick Search) and Nebulux + G (App Grid); on the USB they come from the window manager ----------
   addEventListener("keydown", (e) => {
