@@ -3,7 +3,9 @@
 (function () {
   let gid = 0;
   const grad = (a, b, c) => { const id = "g" + ++gid; return [id, `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/>${c ? `<stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/>` : `<stop offset="1" stop-color="${b}"/>`}</linearGradient></defs>`]; };
-  const tile = (a, b, c, inner) => { const [id, d] = grad(a, b, c); return `${d}<rect x="2" y="2" width="44" height="44" rx="11" fill="url(#${id})"/>${inner}`; };
+  // 4.0: every tile has a soft light from the top and a thin bright edge, so icons look lit rather than flat
+  const tile = (a, b, c, inner) => { const [id, d] = grad(a, b, c), hl = "h" + ++gid;
+    return `${d}<defs><linearGradient id="${hl}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="11" fill="url(#${id})"/><rect x="2" y="2" width="44" height="44" rx="11" fill="url(#${hl})"/><rect x="2.5" y="2.5" width="43" height="43" rx="10.5" fill="none" stroke="#fff" stroke-opacity=".18"/>${inner}`; };
   const W = "#fff";
   const I = {
     // the Nebulux mark: a planet with an orbit ring and a small moon
