@@ -12,13 +12,16 @@
   let desks = [{ id: "d1", name: "" }], cur = "d1", flashT = 0;
   const label = (d, i) => d.name || "Desktop " + (i + 1);
   const idx = () => Math.max(0, desks.findIndex((d) => d.id === cur));
-  const saveNames = () => NX.setData("desks", desks.map((d) => ({ id: d.id, name: d.name })));
+  const saveNames = () => NX.setData("desks", desks.map((d) => ({ id: d.id, name: d.name, wall: d.wall })));
   const tellSystem = () => { if (NX.native) NX.api("POST", "/desks", { count: desks.length, cur: idx() }).catch(() => {}); };
 
   function apply() {
     for (const w of NX.wins.values()) { if (!w.desk) w.desk = cur; w.el.classList.toggle("offdesk", w.desk !== cur); }
     if (NX.shell) NX.shell.taskbar();
     const tb = $("#tb-desk"); if (tb) tb.textContent = desks.length > 1 ? String(idx() + 1) : "";
+    // each desktop can have its own background (right-click it in Task View)
+    const D = document.getElementById("desktop"), dw = (desks[idx()] || {}).wall;
+    if (D) { if (typeof dw === "number" && NX.wallpapers[dw]) D.style.setProperty("--wall", `url(${NX.wallpaperURL(dw, innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1))})`); else D.style.removeProperty("--wall"); }
   }
   function flash() {
     const f = $("#deskflash"); if (!f) return;
@@ -56,7 +59,7 @@
 
   document.addEventListener("nx:signin", () => {
     const saved = NX.data("desks", null);
-    desks = Array.isArray(saved) && saved.length ? saved.slice(0, MAX).map((d, i) => ({ id: String(d.id || "d" + (i + 1)), name: String(d.name || "") })) : [{ id: "d1", name: "" }];
+    desks = Array.isArray(saved) && saved.length ? saved.slice(0, MAX).map((d, i) => ({ id: String(d.id || "d" + (i + 1)), name: String(d.name || ""), wall: typeof d.wall === "number" ? d.wall : undefined })) : [{ id: "d1", name: "" }];
     if (!desks.some((d) => d.id === cur)) cur = desks[0].id;
     apply(); tellSystem();
   });
@@ -65,12 +68,13 @@
   function strip(tv, redraw) {
     const el = document.createElement("div"); el.className = "tv-desks";
     el.innerHTML = desks.map((d, i) => { const n = [...NX.wins.values()].filter((w) => w.desk === d.id).length;
-      return `<div class="tv-dk ${d.id === cur ? "on" : ""}" data-dk="${d.id}" role="button" tabindex="0" aria-label="${NX.esc(label(d, i))}"><div class="tv-dkp">${n ? `${n} window${n === 1 ? "" : "s"}` : "Empty"}</div><span class="tv-dkn">${NX.esc(label(d, i))}</span>${desks.length > 1 ? `<button class="tv-dkx" data-dkx="${d.id}" aria-label="Close ${NX.esc(label(d, i))}">${NX.icon("close", 12)}</button>` : ""}</div>`; }).join("") +
+      return `<div class="tv-dk ${d.id === cur ? "on" : ""}" style="--wall:${typeof d.wall === "number" ? `url(${NX.wallpaperURL(d.wall, 192, 108)})` : getComputedStyle(document.documentElement).getPropertyValue("--wall").trim().replace(/"/g, "'")}" data-dk="${d.id}" role="button" tabindex="0" aria-label="${NX.esc(label(d, i))}"><div class="tv-dkp">${n ? `${n} window${n === 1 ? "" : "s"}` : "Empty"}</div><span class="tv-dkn">${NX.esc(label(d, i))}</span>${desks.length > 1 ? `<button class="tv-dkx" data-dkx="${d.id}" aria-label="Close ${NX.esc(label(d, i))}">${NX.icon("close", 12)}</button>` : ""}</div>`; }).join("") +
       (desks.length < MAX ? `<button class="tv-dkadd" aria-label="New desktop">${NX.icon("plus", 18)}<span>New desktop</span></button>` : "");
     tv.appendChild(el);
     el.querySelectorAll("[data-dk]").forEach((c) => {
       c.onclick = (e) => { e.stopPropagation(); if (e.target.closest("[data-dkx]") || e.target.closest("input")) return; go(c.dataset.dk, true); redraw(); };
       c.onkeydown = (e) => { if (e.key === "Enter") c.click(); };
+      c.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); const d = desks.find((x) => x.id === c.dataset.dk); NX.menu(e.clientX, e.clientY - 10, [["Background", null], ["Same as my background", () => { d.wall = undefined; saveNames(); apply(); redraw(); }, typeof d.wall === "number" ? "blank" : "check"], ...NX.wallpapers.map((w, k) => [w.name, () => { d.wall = k; saveNames(); apply(); redraw(); }, d.wall === k ? "check" : "blank"])]); };
       c.querySelector(".tv-dkn").ondblclick = (e) => {
         e.stopPropagation(); const s = e.currentTarget, d = desks.find((x) => x.id === c.dataset.dk);
         const inp = document.createElement("input"); inp.className = "tv-dkin"; inp.maxLength = 24; inp.value = label(d, desks.indexOf(d)); s.replaceWith(inp); inp.focus(); inp.select();

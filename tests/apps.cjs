@@ -488,6 +488,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(await p.evaluate(() => { const l = document.querySelector('.tb-app[data-app="clock"] .tb-lbl'); return !!l && getComputedStyle(l).display !== "none" && l.textContent === "Clock"; }), "Show app names on the taskbar puts the name next to the icon");
     await p.evaluate(() => { NX.setPref("tbLabels", false); NX.closeAll(); });
   }
+  // a background for each desktop
+  await p.evaluate(() => { NX.closeAll(); NX.taskView(); }); await wait(500);
+  await p.evaluate(() => { const c = document.querySelector(".tv-dk"); const r = c.getBoundingClientRect(); c.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: r.x + 20, clientY: r.y + 20 })); }); await wait(300);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => b.textContent === "Solar Flare").click()); await wait(300);
+  ok(await p.evaluate(() => /url\(/.test(document.querySelector("#desktop").style.getPropertyValue("--wall")) && NX.data("desks", [])[0].wall === 2), "right-click a desktop in Task View to give it its own background");
+  await p.evaluate(() => { const c = document.querySelector(".tv-dk"); const r = c.getBoundingClientRect(); c.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: r.x + 20, clientY: r.y + 20 })); }); await wait(300);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Same as my background/.test(b.textContent)).click()); await wait(300);
+  ok(await p.evaluate(() => !document.querySelector("#desktop").style.getPropertyValue("--wall")), "and Same as my background takes it off");
+  await p.keyboard.press("Escape"); await p.evaluate(() => { const t = document.querySelector("#taskview"); if (t) t.hidden = true; NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
