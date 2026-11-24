@@ -351,6 +351,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => NX.magnifier.level() === 1 && !document.getElementById("desktop").style.transform), "and Nebulux + Esc stops it");
   // Caps Lock warning on password boxes
   ok(await p.evaluate(() => { const i = document.createElement("input"); i.type = "password"; document.body.appendChild(i); i.focus(); const ev = new KeyboardEvent("keydown", { key: "A", bubbles: true, modifierCapsLock: true }); i.dispatchEvent(ev); const shown = !!(i.nextElementSibling && i.nextElementSibling.classList.contains("nx-caps")); i.dispatchEvent(new KeyboardEvent("keyup", { key: "A", bubbles: true })); const gone = !(i.nextElementSibling && i.nextElementSibling.classList.contains("nx-caps")); i.remove(); return shown && gone; }), "a password box says when Caps Lock is on");
+  // the accent color from your background
+  await p.evaluate(() => { NX.setPref("wallpaper", 1); NX.setPref("accent", "auto"); }); await wait(300);
+  const acc1 = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
+  await p.evaluate(() => NX.setPref("wallpaper", 2)); await wait(300);
+  const acc2 = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
+  ok(/^hsl\(/.test(acc1) && /^hsl\(/.test(acc2) && acc1 !== acc2, "the accent color can follow the background (" + acc1 + ", " + acc2 + ")");
+  await p.evaluate(() => { NX.setPref("accent", "#7c5cff"); NX.setPref("wallpaper", 0); });
   // Increase contrast
   await p.evaluate(() => NX.setPref("contrast", true)); await wait(200);
   ok(await p.evaluate(() => document.documentElement.classList.contains("hc") && getComputedStyle(document.documentElement).getPropertyValue("--line").trim() === "#ffffff66"), "Increase contrast makes outlines stronger");

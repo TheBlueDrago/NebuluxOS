@@ -144,3 +144,6 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 [data-ri=access],[data-ri=user]{--ri1:#2dd4bf;--ri2:#0f766e}[data-ri=shield],[data-ri=lock]{--ri1:#94a3b8;--ri2:#334155}[data-ri=refresh],[data-ri=restart],[data-ri=info]{--ri1:#60a5fa;--ri2:#2563eb}[data-ri=usb],[data-ri=tv],[data-ri=cast]{--ri1:#a78bfa;--ri2:#5b21b6}
 [data-ri=volume]{--ri1:#fb7185;--ri2:#e11d48}[data-ri=home]{--ri1:#a78bfa;--ri2:#6d28d9}[data-ri=update]{--ri1:#60a5fa;--ri2:#2563eb}
 .s-ri.s-ni{width:26px;height:26px;border-radius:7px}.s-ri.s-ni .ico{width:15px;height:15px}
+
+/* the "from your background" accent swatch */
+.s-acc-auto{background:conic-gradient(#ff4fa3,#f5a524,#34d399,#22c3ee,#7c5cff,#ff4fa3)!important}

@@ -27,7 +27,7 @@
   let lastWall = null;
   function applyLook() {
     const p = NX.prefs(), root = document.documentElement;
-    root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent);
+    root.dataset.theme = NX.me ? p.theme : "dark"; root.style.setProperty("--accent", p.accent === "auto" && NX.autoAccent ? NX.autoAccent() : p.accent);
     const sv = !!(NX.me && NX.saverOn()); root.classList.toggle("saver", sv);
     root.classList.toggle("nofx", !NX.fx() || sv);
     root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv)));

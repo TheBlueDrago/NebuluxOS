@@ -296,18 +296,27 @@
     if (d) d.classList.toggle("tb-float", !NX.me || NX.prefs().tbFloat !== false);
     const p = NX.me ? NX.prefs() : null, w = p ? p.wallpaper : 0, key = String(w) + (w === "custom" ? NX.data("wall-custom", "").length : "");
     if (key === auraFor) return; auraFor = key;
-    if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? w : 0]; if (col) root.style.setProperty("--aura", col); return; }
+    if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? w : 0]; if (col) root.style.setProperty("--aura", col); if (p && p.accent === "auto") root.style.setProperty("--accent", NX.autoAccent()); return; }
     const src = NX.data("wall-custom", null); if (!src || !/^data:image\//.test(src)) return; // your own picture is kept as a data: picture, which can be read
     const img = new Image();
     img.onload = () => { try {
       const c = document.createElement("canvas"); c.width = c.height = 24; const g = c.getContext("2d"); g.drawImage(img, 0, 0, 24, 24);
       const px = g.getImageData(0, 0, 24, 24).data; let r = 0, gg = 0, b = 0, n = 0;
       for (let k = 0; k < px.length; k += 4) { const w = 1 + (Math.max(px[k], px[k + 1], px[k + 2]) - Math.min(px[k], px[k + 1], px[k + 2])) / 40; r += px[k] * w; gg += px[k + 1] * w; b += px[k + 2] * w; n += w; } // colorful pixels count more
-      root.style.setProperty("--aura", "rgb(" + Math.round(r / n) + "," + Math.round(gg / n) + "," + Math.round(b / n) + ")");
+      root.style.setProperty("--aura", "rgb(" + Math.round(r / n) + "," + Math.round(gg / n) + "," + Math.round(b / n) + ")"); if (NX.prefs().accent === "auto") root.style.setProperty("--accent", NX.autoAccent());
     } catch (e) { /* a picture we can't read: the default aura stays */ } };
     img.src = src;
   };
   NX.auraApply = auraApply;
+  // the accent color from your background: the wallpaper's color, made bright and colorful enough for buttons
+  NX.autoAccent = () => {
+    const a = getComputedStyle(document.documentElement).getPropertyValue("--aura").trim(), m = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(a) || /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(a);
+    if (!m) return "#7c5cff"; let [r, g, b] = m.slice(1, 4).map((x) => (a[0] === "#" ? parseInt(x, 16) : +x) / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; let h = 0;
+    if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = Math.round(h * 60 + 360) % 360;
+    const sat = d ? Math.max(62, Math.min(85, Math.round((d / (1 - Math.abs(2 * l - 1))) * 100))) : 0;
+    return d < .06 ? "#7c5cff" : "hsl(" + h + " " + sat + "% 62%)";
+  };
   document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
 
   // ---------- Living wallpaper: a few stars slowly twinkle and drift over the background (Settings > Personalization).
