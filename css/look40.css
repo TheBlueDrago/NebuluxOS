@@ -524,3 +524,10 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .stn-note{box-shadow:0 2px 0 #0000001a,0 10px 24px #0000004d;transition:transform .2s var(--ease-spring,ease),box-shadow .2s;border-radius:6px 6px 14px 6px!important}
 .stn-note:hover,.stn-note:focus-within{transform:translateY(-3px) rotate(-.4deg);box-shadow:0 2px 0 #0000001a,0 18px 34px #00000066}
 .stn-cols{opacity:0;transition:opacity .15s}.stn-note:hover .stn-cols,.stn-note:focus-within .stn-cols{opacity:1}
+
+/* ---------- lock screen: now playing ---------- */
+#lk-np{display:flex;align-items:center;gap:12px;width:max-content;max-width:min(420px,90vw);margin:18px auto 0;padding:10px 12px 10px 10px;border-radius:18px;background:#0d082266;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid #ffffff26;color:#fff;box-shadow:0 14px 40px #0006}
+#lock.signin #lk-np{display:none}
+.lknp-i{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#ffffff1a;flex:none}
+.lknp-t{display:flex;flex-direction:column;min-width:0;text-align:left;margin-right:6px}.lknp-t b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}.lknp-t small{font-size:12px;opacity:.75}
+#lk-np button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;background:#ffffff1f;flex:none}#lk-np button:hover{background:#ffffff38}

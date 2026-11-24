@@ -124,6 +124,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.setData("mp-shuffle", false); NX.setData("mp-repeat", "off"); const b = [...document.querySelectorAll(".win[data-app=media] .mp-item")].find((x) => /Recording/.test(x.textContent)); b && b.click(); }); await wait(1200);
   ok(await p.evaluate(() => { const a = document.querySelector(".win[data-app=media] .mp-music"); return !!a && a.querySelectorAll(".mp-bars i").length === 28 && (a.classList.contains("playing") || document.querySelector(".win[data-app=media] video, .win[data-app=media] audio").paused); }), "a song shows dancing bars while it plays");
   await shot("media-song");
+  await p.evaluate(() => { const m = document.querySelector(".win[data-app=media] video, .win[data-app=media] audio"); if (m) { m.loop = true; m.muted = true; m.play().catch(() => {}); } NX.shell.lockKeep(); }); await wait(1600); await shot("lock-np");
+  await p.waitForFunction(() => { const n = document.querySelector("#lk-np"); return !!n && /Recording/.test(n.textContent); }, { timeout: 4000 }).catch(() => {});
+  ok(await p.evaluate(() => { const n = document.querySelector("#lk-np"); return !!n && /Recording/.test(n.textContent); }), "the lock screen shows what's playing");
+  await p.evaluate(() => document.querySelector("#lk-np [data-lknp=play]").click()); await wait(300);
+  ok(await p.evaluate(() => !NX.nowPlaying() || NX.nowPlaying().playing === false || document.querySelector(".win[data-app=media] video, .win[data-app=media] audio").paused), "and its pause button pauses it");
+  await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(400);
   await p.evaluate(() => { const b = [...document.querySelectorAll(".win[data-app=media] .mp-item")].find((x) => /Video/.test(x.textContent)); if (b) b.click(); }); await wait(800);
   ok(await p.evaluate(() => !document.pictureInPictureEnabled || !!document.querySelector(".win[data-app=media] .mp-pip")), "a video in Media Player has Picture in picture");
   await p.evaluate(() => { const m = document.querySelector(".win[data-app=media] video"); if (m) m.muted = true; document.querySelector("#tb-tray").click(); }); await wait(500);

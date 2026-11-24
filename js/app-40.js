@@ -697,3 +697,23 @@ NX.wxSky = (el, code, day) => {
   if (kind === "fog") h += `<i class="wx-fog"></i><i class="wx-fog b"></i>`;
   s.innerHTML = h; el.prepend(s);
 };
+
+// ---------- the lock screen shows what's playing, with play, pause and next ----------
+(function () {
+  const PLAY = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>', PAUSE = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>';
+  function tick() {
+    const L = document.getElementById("lock"), d = document.getElementById("lk-date"); if (!L || !d) return;
+    const n = !L.hidden && NX.nowPlaying ? NX.nowPlaying() : null; let el = document.getElementById("lk-np");
+    if (!n) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement("div"); el.id = "lk-np";
+      el.innerHTML = `<span class="lknp-i">${NX.icon(n.video ? "fvideo" : "faudio", 26)}</span><span class="lknp-t"><b></b><small>Media Player</small></span><button data-lknp="play" aria-label="Play or pause"></button><button data-lknp="next" aria-label="Next">${NX.icon("fwd", 16)}</button>`;
+      (document.getElementById("lk-wx") || d).after(el);
+      el.addEventListener("click", (e) => { e.stopPropagation(); const b = e.target.closest("[data-lknp]"), m = NX.nowPlaying && NX.nowPlaying(); if (!b || !m) return; if (b.dataset.lknp === "play") m.toggle(); else m.next(); setTimeout(tick, 150); });
+      ["pointerdown", "keydown", "touchstart"].forEach((t) => el.addEventListener(t, (e) => e.stopPropagation()));
+    }
+    el.querySelector("b").textContent = n.name; const pb = el.querySelector("[data-lknp=play]"); const want = n.playing ? PAUSE : PLAY; if (pb.innerHTML !== want) pb.innerHTML = want;
+  }
+  setInterval(tick, 1000);
+  NX.lockNowPlaying = tick;
+})();
