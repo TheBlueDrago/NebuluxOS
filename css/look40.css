@@ -161,3 +161,9 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 .lk-form.pw{background:none!important;border:0!important;overflow:visible!important;width:320px}.lk-form.pw input{flex:1;width:100%}
 .lk-form.pw .lk-go:hover{filter:brightness(1.15)}
 body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
+
+/* ---------- volume and brightness 4.0: a bigger pill that springs up, with a thick glowing bar ---------- */
+#osd{border-radius:22px;padding:12px 20px;min-width:300px;box-shadow:0 18px 40px #0009,0 0 0 1px #ffffff1a,inset 0 1px 0 #ffffff1a;animation:osdin .28s var(--ease-spring)}
+@keyframes osdin{from{transform:translateX(-50%) translateY(16px) scale(.94);opacity:0}}
+.osd-bar{height:8px;border-radius:4px;background:#ffffff1f}.osd-bar i{border-radius:4px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#fff));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 60%,transparent);transition:width .15s var(--ease-out)}
+[data-theme=light] .osd-bar{background:#1b123a1a}
