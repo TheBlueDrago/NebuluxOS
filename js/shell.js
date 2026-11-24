@@ -480,8 +480,20 @@
     $("#lock").addEventListener("click", (e) => { if ($("#lock").className === "locked" && !e.target.closest("button")) reveal(); });
     let winAlone = false, sw = null;
     // Alt + Tab: a row of your open windows; let go of Alt to switch
-    const swDraw = () => { const el = document.getElementById("switcher"); el.innerHTML = sw.list.map((w, i) => `<button class="sw-item ${i === sw.i ? "on" : ""}" data-i="${i}">${NX.icon(w.app.icon || w.id, 40)}<span>${NX.esc(w.app.name)}</span></button>`).join(""); el.hidden = false;
-      el.querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => { sw.i = +b.dataset.i; swEnd(); })); };
+    // 4.0: each item shows a live picture of its window above its icon and name (built once; Tab only moves the highlight)
+    const swDraw = () => { const el = document.getElementById("switcher");
+      if (el.dataset.n !== String(sw.list.length) || el.hidden) {
+        el.dataset.n = sw.list.length;
+        el.innerHTML = sw.list.map((w, i) => `<button class="sw-item" data-i="${i}"><span class="sw-pic"></span><span class="sw-name">${NX.icon(w.app.icon || w.id, 18)}<span>${NX.esc(w.app.name)}</span></span></button>`).join("");
+        el.querySelectorAll(".sw-item").forEach((b, i) => { const w = sw.list[i], pic = b.querySelector(".sw-pic");
+          if (!w.el || w.el.querySelector("iframe") || !w.el.offsetWidth) { pic.innerHTML = NX.icon(w.app.icon || w.id, 48); return; }
+          const r = { width: w.el.offsetWidth, height: w.el.offsetHeight }, PW = 200, PH = 124, k = Math.min(PW / r.width, PH / r.height), c = w.el.cloneNode(true);
+          c.removeAttribute("id"); c.removeAttribute("data-app"); c.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id")); c.classList.remove("opening", "closing", "minimized", "offdesk", "maxed");
+          Object.assign(c.style, { position: "absolute", left: "0", top: "0", width: r.width + "px", height: r.height + "px", transform: "translate(" + Math.round((PW - r.width * k) / 2) + "px," + Math.round((PH - r.height * k) / 2) + "px) scale(" + k + ")", transformOrigin: "0 0", pointerEvents: "none", margin: 0, opacity: 1 });
+          c.inert = true; c.setAttribute("aria-hidden", "true"); pic.appendChild(c); });
+        el.querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => { sw.i = +b.dataset.i; swEnd(); }));
+      }
+      el.querySelectorAll(".sw-item").forEach((b, i) => b.classList.toggle("on", i === sw.i)); el.hidden = false; };
     const swEnd = () => { const el = document.getElementById("switcher"); if (!sw) return; const w = sw.list[sw.i]; sw = null; el.hidden = true; if (w) NX.focus(w.id); };
     const winKeys = (key) => {
       if (key === "desk") NX.showDesktop(); if (key === "lock") lockKeep(); if (key === "files") NX.open("files");

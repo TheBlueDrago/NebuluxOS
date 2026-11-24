@@ -104,3 +104,11 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 @keyframes tvin{from{opacity:0;transform:scale(.9) translateY(14px)}}
 .tv-face{height:clamp(140px,22vh,200px);position:relative;overflow:hidden}.tv-face.tv-live{background:#0004}
 .noanim .tv-card{animation:none}
+
+/* ---------- Alt + Tab 4.0: live pictures ---------- */
+#switcher{border-radius:20px;padding:16px;gap:10px;box-shadow:0 30px 80px #000b,0 0 0 1px #ffffff1a;animation:ctx40 .16s var(--ease-out)}
+.sw-item{width:216px;padding:8px;border-radius:14px;gap:8px}
+.sw-item.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.sw-pic{position:relative;display:grid;place-items:center;width:200px;height:124px;border-radius:10px;overflow:hidden;background:#0004}
+.sw-name{display:flex;align-items:center;gap:6px;max-width:100%}.sw-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.sw-item{width:150px}.sw-pic{width:134px;height:84px}}
