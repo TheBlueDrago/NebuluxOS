@@ -440,3 +440,31 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   document.addEventListener("nx:prefs", () => setTimeout(apply, 20)); setTimeout(apply, 300);
   const mo = () => { if (!document.getElementById("nx-pointer")) document.documentElement.classList.remove("nx-pc"); }; document.addEventListener("nx:prefs", () => setTimeout(mo, 40));
 })();
+
+// ---------- system sounds: a soft chime when you sign in, and an optional gentle sound for notifications ----------
+(function () {
+  let ac = null;
+  // notes: [frequency, start (s), length (s), loudness]
+  function play(notes) {
+    try {
+      const v = (NX.prefs().volume || 0) / 100; if (!v) return;
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume();
+      const t = ac.currentTime + 0.02;
+      for (const [f, at, len, loud] of notes) {
+        const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine"; o2.type = "triangle"; o.frequency.value = f; o2.frequency.value = f * 2; o2.detune.value = 4;
+        const g2 = ac.createGain(); g2.gain.value = 0.18;
+        g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(loud * v, t + at + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + at + len);
+        o.connect(g); o2.connect(g2).connect(g); g.connect(ac.destination);
+        o.start(t + at); o2.start(t + at); o.stop(t + at + len + 0.05); o2.stop(t + at + len + 0.05);
+      }
+    } catch (e) { /* no sound on this computer */ }
+  }
+  NX.sounds = {
+    signin: () => play([[523.25, 0, 1.1, 0.10], [659.25, 0.09, 1.1, 0.09], [783.99, 0.18, 1.2, 0.08], [1046.5, 0.3, 1.4, 0.06]]),
+    note: () => play([[880, 0, 0.35, 0.07], [1318.5, 0.07, 0.45, 0.05]]),
+  };
+  document.addEventListener("nx:signin", (e) => { if (NX.me && NX.prefs().signinSound !== false && !(e.detail && e.detail.back)) setTimeout(NX.sounds.signin, 250); });
+  let lastNote = 0;
+  NX.onToast = () => { if (NX.me && NX.prefs().noteSound && Date.now() - lastNote > 2500) { lastNote = Date.now(); NX.sounds.note(); } };
+})();

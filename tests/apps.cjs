@@ -396,6 +396,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => document.documentElement.classList.contains("nx-pc") && /cursor:url/.test(document.getElementById("nx-pointer").textContent) && getComputedStyle(document.body).cursor.includes("url(")), "an accent-colored pointer applies");
   await p.evaluate(() => NX.setPref("pointerColor", "white")); await wait(200);
   ok(await p.evaluate(() => !document.getElementById("nx-pointer") && !document.documentElement.classList.contains("nx-pc")), "White brings back the normal pointer");
+  // system sounds (the test browser is muted)
+  ok(await p.evaluate(() => { let n = 0; const o = NX.sounds.note; NX.sounds.note = () => n++; NX.setPref("noteSound", true); NX.toast("Sound test"); NX.setPref("noteSound", false); NX.toast("Quiet test"); NX.sounds.note = o; return n === 1 && NX.notes[0].text === "Quiet test"; }), "the notification sound plays only when it's on");
+  ok(await p.evaluate(() => typeof NX.sounds.signin === "function"), "there's a sign-in chime");
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");

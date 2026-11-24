@@ -10,6 +10,7 @@
     NX.notes.unshift({ text: String(text), at: Date.now() }); NX.notes.length = Math.min(NX.notes.length, 30); NX.unread = (NX.unread || 0) + 1;
     if (NX.me) { const c = document.getElementById("tb-badge"); if (c) { c.textContent = NX.unread > 9 ? "9+" : NX.unread; c.hidden = false; } }
     if (NX.me && NX.prefs().dnd) return; // Do not disturb: kept in the notification center, not shown
+    if (NX.onToast) NX.onToast(text);
     const box = $("#toasts"), t = document.createElement("div"); t.className = "toast"; t.innerHTML = `${NX.icon("logo", 18)}<span>${NX.esc(text)}</span>`;
     box.appendChild(t); while (box.children.length > 3) box.firstChild.remove();
     setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3600);
