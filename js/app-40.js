@@ -298,6 +298,7 @@
     const root = document.documentElement, d = document.getElementById("desktop");
     if (d) d.classList.toggle("tb-float", !NX.me || NX.prefs().tbFloat !== false);
     if (d) d.classList.toggle("tb-labels", !!(NX.me && NX.prefs().tbLabels));
+    if (d) { const P = NX.me ? NX.prefs() : {}; d.dataset.tbsearch = P.tbSearch || "box"; d.classList.toggle("tb-notv", P.tbTaskView === false); d.classList.toggle("tb-nowg", P.tbWidgets === false); }
     const p = NX.me ? NX.prefs() : null, w = p ? p.wallpaper : 0, key = String(w) + (w === "custom" ? NX.data("wall-custom", "").length : "");
     if (key === auraFor) return; auraFor = key;
     if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? w : 0]; if (col) root.style.setProperty("--aura", col); if (p && p.accent === "auto") root.style.setProperty("--accent", NX.autoAccent()); return; }
@@ -321,7 +322,7 @@
     const sat = d ? Math.max(62, Math.min(85, Math.round((d / (1 - Math.abs(2 * l - 1))) * 100))) : 0;
     return d < .06 ? "#7c5cff" : "hsl(" + h + " " + sat + "% 62%)";
   };
-  document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "tbLabels", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
+  document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "tbLabels", "tbSearch", "tbTaskView", "tbWidgets", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
 
   // ---------- Living wallpaper: a few stars slowly twinkle and drift over the background (Settings > Personalization).
   // Off when there's no graphics chip (lite glass), when motion is turned down, and while windows fill the screen.

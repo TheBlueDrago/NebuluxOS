@@ -552,3 +552,11 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .nc-item:hover .nc-x,.nc-x:focus-visible{opacity:1}.nc-x:hover{background:var(--hover);color:var(--txt)}
 .toast svg{flex:none}
 #cal>.nc{max-height:min(24vh,230px)}
+
+/* ---------- taskbar items: search box / icon / hidden, Task view and Widgets buttons ---------- */
+#desktop[data-tbsearch=icon] .tb-searchbox{padding:0;width:40px;min-width:40px;justify-content:center;border:0;background:none}
+#desktop[data-tbsearch=icon] .tb-searchbox span{display:none}
+#desktop[data-tbsearch=icon] .tb-searchbox:hover{background:var(--hover)}
+#desktop[data-tbsearch=hide] #tb-search{display:none}
+#desktop.tb-notv #tb-tview{display:none}
+#desktop.tb-nowg #tb-widgets{display:none}

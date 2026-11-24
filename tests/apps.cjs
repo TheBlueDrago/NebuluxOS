@@ -497,6 +497,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Same as my background/.test(b.textContent)).click()); await wait(300);
   ok(await p.evaluate(() => !document.querySelector("#desktop").style.getPropertyValue("--wall")), "and Same as my background takes it off");
   await p.keyboard.press("Escape"); await p.evaluate(() => { const t = document.querySelector("#taskview"); if (t) t.hidden = true; NX.closeAll(); });
+  // taskbar items
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("tbSearch", "hide"); NX.setPref("tbTaskView", false); NX.setPref("tbWidgets", false); }); await wait(200);
+  ok(await p.evaluate(() => ["#tb-search", "#tb-tview", "#tb-widgets"].every((q) => getComputedStyle(document.querySelector(q)).display === "none")), "taskbar items: search, Task view and Widgets can be hidden");
+  await p.evaluate(() => NX.setPref("tbSearch", "icon")); await wait(200);
+  ok(await p.evaluate(() => getComputedStyle(document.querySelector("#tb-search span")).display === "none" && getComputedStyle(document.querySelector("#tb-search")).display !== "none"), "and search can be just the icon");
+  await p.evaluate(() => { NX.setPref("tbSearch", "box"); NX.setPref("tbTaskView", true); NX.setPref("tbWidgets", true); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
