@@ -550,6 +550,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.keyboard.press("Enter"); await wait(600);
   ok(await p.evaluate(() => !document.querySelector("#nx-qs") && !!document.querySelector(".win[data-app=calculator]")), "and Enter opens the first one");
   await p.evaluate(() => NX.closeAll());
+  // Settings search finds settings by name, not just page names
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
+  await p.type(".win[data-app=settings] .s-search input", "screen saver"); await wait(300);
+  ok(await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] .s-nav")].map((b) => b.textContent.trim()).join() === "Personalization"), "Find a setting: screen saver finds Personalization");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

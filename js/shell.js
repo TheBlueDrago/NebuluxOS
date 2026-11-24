@@ -375,7 +375,7 @@
   async function startExtras(q, S) {
     const gen = ++searchGen, ql = q.toLowerCase(), box = $(".sm-results", S); if (!box) return;
     const web = box.querySelector("[data-web]");
-    const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql))).slice(0, 3);
+    const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql) || (pg.keys || "").includes(ql))).slice(0, 3);
     if (pages.length) { web.insertAdjacentHTML("beforebegin", `<h4 class="sm-sub">Settings</h4>` + pages.map((pg) => `<button class="sm-res" data-spage="${pg.id}">${NX.icon(pg.icon, 28)}<span><b>${NX.esc(pg.name)}</b><small>Settings</small></span></button>`).join(""));
       box.querySelectorAll("[data-spage]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open("settings", { page: b.dataset.spage }); })); }
     if (!NX.fs || ql.length < 2) return;

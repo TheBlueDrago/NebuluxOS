@@ -5,16 +5,16 @@
   const ACCENTS = ["#7c5cff", "#ff4fa3", "#22c3ee", "#34d399", "#f5a524", "#ef4444", "#3b82f6", "#a855f7"];
   const PAGES = [
     { id: "home", name: "Home", icon: "home" },
-    { id: "system", name: "System", icon: "display" },
-    { id: "devices", name: "Bluetooth & devices", icon: "bt" },
-    { id: "network", name: "Network & internet", icon: "wifi" },
-    { id: "personal", name: "Personalization", icon: "brush" },
-    { id: "apps", name: "Apps", icon: "apps" },
-    { id: "accounts", name: "Accounts", icon: "user" },
-    { id: "time", name: "Time & language", icon: "time" },
-    { id: "access", name: "Accessibility", icon: "access" },
-    { id: "privacy", name: "Privacy & security", icon: "shield" },
-    { id: "update", name: "Nebulux Update", icon: "restart" },
+    { id: "system", name: "System", icon: "display", keys: "display brightness night light scale screen tv sound volume chime notification storage clean up back up backup usb battery power sleep clipboard focus screen time troubleshoot" },
+    { id: "devices", name: "Bluetooth & devices", icon: "bt", keys: "bluetooth mouse pointer speed printer devices" },
+    { id: "network", name: "Network & internet", icon: "wifi", keys: "wi-fi wifi internet hotspot airplane ethernet vpn" },
+    { id: "personal", name: "Personalization", icon: "brush", keys: "background wallpaper themes theme dark light mode accent color colour corners glass transparency window buttons dots lock screen picture screen saver taskbar floating search widgets task view app names stage hot corners desktop widgets snap assist shake living stars daily start fit" },
+    { id: "apps", name: "Apps", icon: "apps", keys: "apps startup default uninstall install" },
+    { id: "accounts", name: "Accounts", icon: "user", keys: "account password picture sign-in users" },
+    { id: "time", name: "Time & language", icon: "time", keys: "time date clock 24-hour seconds time zone language region keyboard" },
+    { id: "access", name: "Accessibility", icon: "access", keys: "accessibility magnifier contrast pointer size color pointer colour animation large text filters grayscale scroll bars" },
+    { id: "privacy", name: "Privacy & security", icon: "shield", keys: "privacy location recent files security" },
+    { id: "update", name: "Nebulux Update", icon: "restart", keys: "update what's new version" },
     { id: "about", name: "About", icon: "info", under: "system" },
   ];
   NX.settingsPages = PAGES;
@@ -54,13 +54,13 @@
 
   NX.apps.settings = { name: "Settings", icon: "settings", builtIn: true, w: 980, h: 640, minW: 420, minH: 360, desc: "Change how Nebulux OS looks and works.",
     open(body, win, opts) {
-      let page = opts.page || "home", q = "";
+      let page = opts.page || "home", q = "", qRaw = ""; // qRaw keeps the spaces you type
       body.classList.add("settings");
       const draw = () => {
         const p = NX.prefs(), me = NX.me;
-        const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}"><span class="s-ri s-ni" data-ri="${x.icon}">${NX.icon(x.icon, 15)}</span><span>${x.name}</span></button>`).join("");
+        const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q) || (x.keys || "").includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}"><span class="s-ri s-ni" data-ri="${x.icon}">${NX.icon(x.icon, 15)}</span><span>${x.name}</span></button>`).join("");
         body.innerHTML = `<aside class="s-side"><div class="s-me" data-p="accounts">${NX.avatar(me, "av")}<span><b>${NX.esc(me.name)}</b><small>Local account</small></span></div>
-          <label class="s-search">${NX.icon("search", 16)}<input placeholder="Find a setting" value="${NX.esc(q)}" aria-label="Find a setting"></label><nav>${nav || `<p class="s-none">No settings match.</p>`}</nav></aside>
+          <label class="s-search">${NX.icon("search", 16)}<input placeholder="Find a setting" value="${NX.esc(qRaw)}" aria-label="Find a setting"></label><nav>${nav || `<p class="s-none">No settings match.</p>`}</nav></aside>
           <section class="s-main"><h1>${(() => { const pg = PAGES.find((x) => x.id === page); return pg.under ? `<button class="s-crumb" data-p="${pg.under}">${PAGES.find((x) => x.id === pg.under).name}</button><span class="s-crumbsep">${NX.icon("chevron", 14)}</span>${pg.name}` : pg.name; })()}</h1>${pageHTML(page, p, me)}</section>`;
         wire();
       };
@@ -360,7 +360,7 @@
         if (NX.native) wireHW();
         const cr = body.querySelector("#s-clearrecent"); if (cr) cr.onclick = () => { NX.setData("recent-files", []); NX.toast("Recently opened files cleared."); draw(); };
         body.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { page = b.dataset.p; draw(); body.querySelector(".s-main").scrollTop = 0; }));
-        const si = body.querySelector(".s-search input"); si.oninput = () => { q = si.value.trim().toLowerCase(); const pos = si.selectionStart; draw(); const n = body.querySelector(".s-search input"); n.focus(); n.setSelectionRange(pos, pos); };
+        const si = body.querySelector(".s-search input"); si.oninput = () => { qRaw = si.value; q = si.value.trim().toLowerCase(); const pos = si.selectionStart; draw(); const n = body.querySelector(".s-search input"); n.focus(); n.setSelectionRange(pos, pos); };
         body.querySelectorAll("[data-pref]").forEach((inp) => {
           const k = inp.dataset.pref;
           if (inp.type === "checkbox") inp.onchange = () => { NX.setPref(k, inp.checked); if (inp.checked && k === "dynWall") NX.setPref("dailyWall", false); if (inp.checked && k === "dailyWall") NX.setPref("dynWall", false); if (k === "airplane" && inp.checked) { NX.setPref("wifi", false); NX.setPref("bt", false); } if ((k === "wifi" || k === "bt") && inp.checked) NX.setPref("airplane", false); draw(); if (NX.native && ["wifi", "bt", "airplane"].includes(k)) setTimeout(() => { if (page === "network") fillWifi(); if (page === "devices") fillBt(); }, 1500); };
