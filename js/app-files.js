@@ -149,6 +149,16 @@
       const TAGS = { red: ["Red", "#ef4444"], orange: ["Orange", "#f97316"], yellow: ["Yellow", "#eab308"], green: ["Green", "#22c55e"], blue: ["Blue", "#3b82f6"], purple: ["Purple", "#a855f7"] };
       const tags = () => NX.data("file-tags", {});
       const tagDot = (e) => { const t = e.path && tags()[e.path]; return t && TAGS[t.c] ? `<i class="fx-tag" style="background:${TAGS[t.c][1]}" title="${TAGS[t.c][0]}"></i>` : ""; };
+      // Properties: what a file is, how big, where, when it changed, and its tag
+      const props = async (e) => {
+        if (!e.dir && (e.size == null || !e.mtime)) { try { const r = await NX.fs.list(NX.fs.parent(e.path)); const f = r.entries.find((x) => x.path === e.path); if (f) e = Object.assign({}, e, f); } catch (er) { /* show what we have */ } }
+        const d = document.createElement("div"); d.className = "nx-pop fx-props"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", e.name + " properties");
+        const t = tags()[e.path], typ = e.dir ? "Folder" : e.kind === "file" ? (e.name.includes(".") ? e.name.split(".").pop().toUpperCase() + " file" : "File") : e.kind[0].toUpperCase() + e.kind.slice(1);
+        const rows = [["Type", typ], ...(e.dir ? [] : [["Size", size(e.size) + (e.size > 1023 ? " (" + Number(e.size).toLocaleString() + " bytes)" : "")]]), ["Location", NX.fs.parent(e.path) || ""], ["Changed", e.mtime ? new Date(e.mtime).toLocaleString() : ""], ["Tag", t && TAGS[t.c] ? TAGS[t.c][0] : "None"]];
+        d.innerHTML = `<div class="nx-pcard"><div class="nx-ph">${NX.icon(ICON[e.kind] || "file", 40)}<div><b>${NX.esc(e.name)}</b><small>${NX.esc(typ)}</small></div></div><dl class="fx-pl">${rows.filter((r) => r[1]).map(([k, v]) => `<dt>${k}</dt><dd>${NX.esc(v)}</dd>`).join("")}</dl><div class="nx-pbtns"><button class="btn primary" data-pok>OK</button></div></div>`;
+        document.body.appendChild(d); const ok = d.querySelector("[data-pok]"); ok.onclick = () => d.remove(); ok.focus(); d.onkeydown = (ev) => { if (ev.key === "Escape") d.remove(); };
+        if (e.dir) NX.fs.list(e.path).then((r) => { const dd = document.createElement("dd"), dt = document.createElement("dt"); dt.textContent = "Inside"; const n = r.entries.length; dd.textContent = n === 1 ? "1 item" : n + " items"; d.querySelector(".fx-pl").append(dt, dd); }).catch(() => {});
+      };
       const setTag = (list, c) => { const T = Object.assign({}, tags()); for (const e of list) { if (!e.path) continue; if (c) T[e.path] = { c, name: e.name, dir: !!e.dir, kind: e.kind }; else delete T[e.path]; } NX.setData("file-tags", T); side(); render(); };
       const selected = () => items.filter((e) => sel.has(e.path || e.id));
       const err = (e) => NX.toast(e && e.message || String(e));
@@ -272,7 +282,7 @@
         if (b && !sel.has(b.dataset.k)) { sel = new Set([b.dataset.k]); marks(); }
         const s = selected(), M = [];
         if (isTrash()) { if (s.length) M.push(["Restore", () => act("restore")], ["Delete for good", () => act("purge")]); M.push(["Empty Recycle Bin", () => act("empty")]); }
-        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
+        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (s.length === 1 && !isTrash()) M.push(["Properties", () => props(s[0])]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
         else if (!isHome()) { M.push(["New folder", () => act("newfolder")], ["New text file", () => act("newtext")]); if (NX.fsClip) M.push(["Paste", () => act("paste")]); M.push(["Refresh", () => load()]); }
         if (M.length) NX.menu(ev.clientX, ev.clientY, M);
       });

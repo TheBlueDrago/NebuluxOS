@@ -1244,3 +1244,5 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .wn-hero b{display:block;font-size:22px}.wn-hero small{display:block;color:var(--sub);margin-top:4px;font-size:13.5px}.wn-try{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 [data-theme=light] .wn-ver{background:linear-gradient(135deg,#4c1d95,#7c3aed 50%,#db2777);-webkit-background-clip:text;background-clip:text}
 @media (max-width:560px){.wn-hero{flex-direction:column;align-items:flex-start}.wn-ver{font-size:56px}}
+
+.fx-pl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:14px 0 6px;font-size:13.5px}.fx-pl dt{color:var(--sub)}.fx-pl dd{margin:0;word-break:break-all}

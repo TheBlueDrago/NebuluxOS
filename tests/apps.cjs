@@ -130,7 +130,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-side .fx-place")].find((b) => /Green/.test(b.textContent)).click()); await wait(500);
   ok(await p.evaluate((n) => { const it = [...document.querySelectorAll(".win[data-app=files] .fx-item")]; return it.length === 1 && it[0].title === n && /Green tag/.test(document.querySelector(".win[data-app=files] .wt-name").textContent); }, fx0[2]), "and the Green tag lists just that file");
   await shot("tags");
-  await p.evaluate(() => NX.setData("file-tags", {}));
+  await p.mouse.click(fx0[0] + 0, fx0[1], { button: "right" }); await wait(200);
+  await p.evaluate(() => { const b = [...document.querySelectorAll("#ctx button")].find((x) => x.textContent === "Properties"); if (b) b.click(); }); await wait(300);
+  ok(await p.evaluate(() => { const d = document.querySelector(".fx-props"); return !!d && /Type/.test(d.textContent) && /Size/.test(d.textContent) && /Green/.test(d.textContent); }), "Properties shows a file's type, size and tag");
+  await p.evaluate(() => { const d = document.querySelector(".fx-props"); if (d) d.remove(); NX.setData("file-tags", {}); });
   // File Explorer: sorting
   await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Pictures" }); }); await wait(900);
   await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=sort]").click()); await wait(200);
