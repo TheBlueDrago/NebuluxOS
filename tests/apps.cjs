@@ -234,6 +234,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.closeAll(); NX.appGrid(); }); await wait(400);
   ok(await p.evaluate(() => document.querySelectorAll("#nx-grid .ag-app").length >= 10), "the App Grid shows every app");
   await shot("appgrid");
+  await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowRight"); await wait(100);
+  ok(await p.evaluate(() => document.activeElement === document.querySelectorAll("#nx-grid .ag-app")[1]), "arrow keys move through the App Grid");
+  await p.evaluate(() => document.querySelector("#nx-grid .ag-q").focus());
   await p.keyboard.type("weath"); await p.keyboard.press("Enter"); await wait(600);
   ok(await p.evaluate(() => !document.querySelector("#nx-grid") && !!document.querySelector(".win[data-app=weather]")), "and type + Enter opens one");
   // hot corners

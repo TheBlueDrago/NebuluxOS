@@ -103,7 +103,11 @@
     document.body.appendChild(o);
     const q = $(".ag-q", o);
     q.oninput = () => { const v = q.value.trim().toLowerCase(); o.querySelectorAll(".ag-app").forEach((b) => (b.hidden = !!v && !NX.apps[b.dataset.app].name.toLowerCase().includes(v))); };
-    q.onkeydown = (e) => { if (e.key === "Escape") o.remove(); if (e.key === "Enter") { const b = [...o.querySelectorAll(".ag-app")].find((x) => !x.hidden); if (b) b.click(); } };
+    q.onkeydown = (e) => { if (e.key === "Escape") o.remove(); if (e.key === "Enter") { const b = [...o.querySelectorAll(".ag-app")].find((x) => !x.hidden); if (b) b.click(); } if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); const b = [...o.querySelectorAll(".ag-app")].find((x) => !x.hidden); if (b) b.focus(); } };
+    // arrow keys move between apps (Enter opens one)
+    o.querySelector(".ag-apps").onkeydown = (e) => { const all = [...o.querySelectorAll(".ag-app")].filter((x) => !x.hidden), i = all.indexOf(document.activeElement); if (i < 0) return;
+      const cols = Math.max(1, Math.round(o.querySelector(".ag-apps").clientWidth / (all[0].getBoundingClientRect().width + 10))), d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+      if (e.key === "Escape") o.remove(); if (d == null) return; e.preventDefault(); const n = i + d; if (n < 0) { q.focus(); return; } if (all[n]) all[n].focus(); };
     o.onclick = (e) => { const b = e.target.closest(".ag-app"); if (b) { o.remove(); NX.open(b.dataset.app); } else if (!e.target.closest(".ag-q")) o.remove(); };
     q.focus();
   };
