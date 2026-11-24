@@ -510,6 +510,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const nsLo = await p.evaluate(() => +getComputedStyle(document.querySelector("#night")).opacity);
   ok(nsHi > 0.35 && nsLo < 0.15, "Night light strength changes how warm it gets");
   await p.evaluate(() => { NX.setPref("night", false); NX.setPref("nightStr", 50); });
+  // your own picture: Choose a fit
+  const wBefore = await p.evaluate(() => NX.prefs().wallpaper);
+  await p.evaluate(() => { const cv = document.createElement("canvas"); cv.width = 40; cv.height = 30; cv.getContext("2d").fillRect(0, 0, 40, 30); NX.setData("wall-custom", cv.toDataURL()); NX.setPref("wallpaper", "custom"); NX.setPref("wallFit", "fit"); NX.closeAll(); NX.open("settings", { page: "personal" }); }); await wait(700);
+  ok(await p.evaluate(() => getComputedStyle(document.querySelector("#desktop")).backgroundSize === "contain" && !!document.querySelector("button[data-wfit=fit].on")), "Choose a fit shows your own picture whole (Fit)");
+  await p.evaluate((w) => { NX.setPref("wallFit", "fill"); NX.setPref("wallpaper", w); NX.closeAll(); }, wBefore);
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

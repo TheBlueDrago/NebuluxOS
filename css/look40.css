@@ -561,3 +561,8 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop.tb-nowg #tb-widgets{display:none}
 #night.on{opacity:calc(.08 + var(--ns,.5) * .34)}
 
+
+/* ---------- your own background picture: Fill, Fit, Stretch or Center ---------- */
+#desktop[data-wfit=fit]{background:var(--wall) center/contain no-repeat #0b0620}
+#desktop[data-wfit=stretch]{background:var(--wall) center/100% 100% no-repeat #0b0620}
+#desktop[data-wfit=center]{background:var(--wall) center/auto no-repeat #0b0620}
