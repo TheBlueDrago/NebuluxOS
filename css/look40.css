@@ -113,3 +113,14 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 .sw-name{display:flex;align-items:center;gap:6px;max-width:100%}.sw-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:560px){.sw-item{width:150px}.sw-pic{width:134px;height:84px}}
 .ctx button{display:flex;align-items:center;gap:10px}.ctx button .ico{opacity:.8;flex:none}.ctx-sp{width:15px;flex:none}
+
+/* ---------- quick settings 4.0: round tiles, a glow on what's on, thick sliders ---------- */
+.qs-t .ico{border-radius:14px;transition:background .15s,box-shadow .2s,transform .12s var(--ease-spring)}
+.qs-t:active .ico{transform:scale(.94)}
+.qs-t.on .ico{box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 45%,transparent)}
+.qs-split .qs-main{border-radius:14px 0 0 14px}.qs-split .qs-more{border-radius:0 14px 14px 0}
+.qs-split.on .qs-main,.qs-split.on .qs-more{box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent)}
+.qs-sl{margin-top:16px;padding:6px 12px;border-radius:14px;background:var(--card)}
+.qs-sl input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--fill,50%),var(--hover) var(--fill,50%))}
+.qs-sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px #0007;cursor:pointer}
+.qs-sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#fff;box-shadow:0 2px 6px #0007}

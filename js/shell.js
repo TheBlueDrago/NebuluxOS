@@ -389,7 +389,8 @@
       else { NX.setPref(k, !(P[k] && !P.airplane)); if (k !== "night") NX.setPref("airplane", false); }
       qsDraw();
     }));
-    Q.querySelectorAll("[data-s]").forEach((s) => (s.oninput = () => NX.setPref(s.dataset.s, +s.value)));
+    const fill = (s) => s.style.setProperty("--fill", ((s.value - s.min) / (s.max - s.min)) * 100 + "%");
+    Q.querySelectorAll("[data-s]").forEach((s) => { fill(s); s.oninput = () => { fill(s); NX.setPref(s.dataset.s, +s.value); }; });
     $(".qs-set", Q).onclick = () => { closeFlyouts(); NX.open("settings"); };
     $(".qs-batt", Q).onclick = () => { closeFlyouts(); NX.open("settings", { page: "system" }); };
     Q.querySelectorAll("[data-more]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); qsMore(b.dataset.more); }));
