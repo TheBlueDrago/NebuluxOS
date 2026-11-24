@@ -121,6 +121,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.click(".win[data-app=media] [data-mpc=shuffle]"); await p.click(".win[data-app=media] [data-mpc=repeat]"); await p.click(".win[data-app=media] [data-mpc=repeat]"); await wait(200);
   ok(await p.evaluate(() => NX.data("mp-shuffle", false) === true && NX.data("mp-repeat", "off") === "one" && document.querySelector("[data-mpc=repeat]").classList.contains("on") && document.querySelector("[data-mpc=repeat] i").textContent === "1"), "Media Player has Shuffle and Repeat (all, then this one)");
   await shot("media");
+  await p.evaluate(() => { NX.setData("mp-shuffle", false); NX.setData("mp-repeat", "off"); const b = [...document.querySelectorAll(".win[data-app=media] .mp-item")].find((x) => /Recording/.test(x.textContent)); b && b.click(); }); await wait(1200);
+  ok(await p.evaluate(() => { const a = document.querySelector(".win[data-app=media] .mp-music"); return !!a && a.querySelectorAll(".mp-bars i").length === 28 && (a.classList.contains("playing") || document.querySelector(".win[data-app=media] video, .win[data-app=media] audio").paused); }), "a song shows dancing bars while it plays");
+  await shot("media-song");
   await p.evaluate(() => { const b = [...document.querySelectorAll(".win[data-app=media] .mp-item")].find((x) => /Video/.test(x.textContent)); if (b) b.click(); }); await wait(800);
   ok(await p.evaluate(() => !document.pictureInPictureEnabled || !!document.querySelector(".win[data-app=media] .mp-pip")), "a video in Media Player has Picture in picture");
   await p.evaluate(() => { const m = document.querySelector(".win[data-app=media] video"); if (m) m.muted = true; document.querySelector("#tb-tray").click(); }); await wait(500);

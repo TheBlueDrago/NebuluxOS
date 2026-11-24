@@ -432,8 +432,12 @@
       async function play() {
         const e = list[i]; if (!e) return library(); win.el.querySelector(".wt-name").textContent = e.name + " - Media Player";
         const video = e.kind === "video";
-        st.innerHTML = `${video ? "" : `<div class="mp-art">${NX.icon("faudio", 120)}<b>${NX.esc(e.name)}</b></div>`}<${video ? "video" : "audio"} controls autoplay playsinline></${video ? "video" : "audio"}><p class="mp-msg" hidden></p>`;
+        st.innerHTML = `${video ? "" : musicArt(e)}<${video ? "video" : "audio"} controls autoplay playsinline></${video ? "video" : "audio"}><p class="mp-msg" hidden></p>`;
         const m = st.querySelector("video,audio"); m.volume = Math.max(0, Math.min(1, NX.prefs().volume / 100));
+        // the bars under a song dance while it plays and rest when it stops
+        // a .webm with only sound in it (like a Voice Recorder recording) looks like a song, not a black video
+        if (video) m.addEventListener("loadedmetadata", () => { if (m.videoWidth || st.querySelector(".mp-music")) return; m.insertAdjacentHTML("beforebegin", musicArt(e)); m.classList.add("mp-snd"); const a2 = st.querySelector(".mp-music"), on2 = () => a2.classList.toggle("playing", !m.paused && !m.ended); m.addEventListener("play", on2); m.addEventListener("pause", on2); m.addEventListener("ended", on2); on2(); });
+        const art = st.querySelector(".mp-music"); if (art) { const on = () => art.classList.toggle("playing", !m.paused && !m.ended); m.addEventListener("play", on); m.addEventListener("pause", on); m.addEventListener("ended", on); }
         NX.nowPlaying = () => (document.body.contains(m) && m.currentSrc ? { name: e.name, video, playing: !m.paused, toggle: () => (m.paused ? m.play().catch(() => {}) : m.pause()), next: () => { if (list.length > 1) { i = (i + 1) % list.length; play(); } } } : null);
         // picture in picture: the video keeps playing in a small window on top while you do other things
         if (video && document.pictureInPictureEnabled) { st.insertAdjacentHTML("beforeend", `<button class="btn sm mp-pip" title="Picture in picture">${NX.icon("display", 14)}Picture in picture</button>`); st.querySelector(".mp-pip").onclick = () => (document.pictureInPictureElement ? document.exitPictureInPicture() : m.requestPictureInPicture()).catch((er) => NX.toast(er.message || "Picture in picture didn't start.")); }
@@ -445,6 +449,7 @@
         try { m.src = await NX.fs.url(e.path); } catch (er) { m.onerror(); }
         drawList();
       }
+      const musicArt = (e) => `<div class="mp-art mp-music"><div class="mp-glow"></div>${NX.icon("faudio", 120)}<b>${NX.esc(e.name)}</b><div class="mp-bars" aria-hidden="true">${Array.from({ length: 28 }, (_, k) => `<i style="--d:${((k * 37) % 11) / 10 + 0.45}s;--h:${30 + ((k * 53) % 70)}%"></i>`).join("")}</div></div>`;
       function drawList() { li.innerHTML = list.map((e, k) => `<button class="mp-item ${k === i ? "on" : ""}" data-i="${k}">${NX.icon(e.kind === "video" ? "fvideo" : "faudio", 20)}<span>${NX.esc(e.name)}</span></button>`).join("") || `<p class="fx-none">Nothing to play yet.</p>`; li.querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => { i = +b.dataset.i; play(); })); }
       async function library() {
         win.el.querySelector(".wt-name").textContent = "Media Player"; list = [];
