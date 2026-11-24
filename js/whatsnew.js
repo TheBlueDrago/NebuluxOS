@@ -3,6 +3,19 @@
 (function () {
   NX.version = "4.0";
   NX.whatsNew = [
+    ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
+    ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],
+    ["Corners and glass your way", "Pick square, round or extra round corners, and clear, frosted or solid glass, in Settings > Personalization."],
+    ["Window buttons", "Keep the plain window buttons, or switch to three colored dots in Settings > Personalization."],
+    ["Live Task View and Alt + Tab", "Task View and Alt + Tab show a live picture of each window instead of just its icon."],
+    ["An accent color that matches", "Choose Auto under Accent color and Nebulux OS picks a color from your background."],
+    ["Seven new backgrounds", "Silk Waves, Star Dunes, Polar Lights, Morning Haze, Nebulux Four, Aurora Ribbon and Pearl Dawn."],
+    ["Pick your lock screen picture", "Settings > Personalization > Lock screen picture shows any background on the lock screen, or the same one as your desktop."],
+    ["A brighter Settings", "Every setting has a small colored icon, and the menu marker slides to the page you pick."],
+    ["Notifications and calendar as cards", "The clock opens your notifications and the calendar as two floating cards."],
+    ["Widgets, better", "Widgets shows what's next in your calendar and your reminders, with a color for each card."],
+    ["Folders you can spot", "Desktop, Documents, Downloads, Pictures, Music and Videos each have their own icon, and Start has one-click buttons for them beside the power button."],
+    ["A new start-up screen", "A soft glow breathes behind the Nebulux logo while lights pulse under it as your computer starts."],
     ["Quick Search", "Press Nebulux + Space for one search box in the middle of the screen: apps, settings, your files, apps from the Store, sums like 12*12, conversions like 5 km in miles, and the weather."],
     ["Stage", "Settings > Personalization > Stage keeps only the window you're using out. Your other windows wait as cards on the left, one click away."],
     ["Desktop widgets", "Put a clock, the weather, what's next in your calendar and the battery right on your wallpaper."],
@@ -55,7 +68,7 @@
     ["Voice Recorder", "Record your voice, a lesson or a meeting, and see it move as you talk. Recordings are saved in Music, ready to play."],
     ["Weather", "A full Weather app: the weather now, the next 24 hours and the whole week, for any city or wherever you are."],
     ["Every shortcut in one place", "Press Nebulux + / (or open Get Started > Shortcuts) to see every keyboard shortcut."],
-    ["Four new backgrounds", "Silk Waves, Star Dunes, Polar Lights and Morning Haze. Settings > Personalization can also give you a new background every day."],
+    ["A new background every day", "Settings > Personalization can give you a new background every day."],
     ["Weather where you are", "Widgets can use your location for the weather, instead of typing your city."],
     ["A more colorful Store", "Every app's page in the Nebulux Store glows in that app's own color."],
     ["A faster screen", "On computers where Nebulux OS draws the screen without the graphics chip, windows, menus and the taskbar use solid glass instead of blurring what's behind them, so everything moves faster."],
