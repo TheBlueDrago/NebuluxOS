@@ -291,7 +291,7 @@
       <div class="sm-body ${q ? "sm-searching" : ""}">${q ? `<div class="sm-split"><div class="sm-left"><h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div></div><aside class="sm-detail" aria-label="Details"></aside></div>` :
       `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-allapps="1">All apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
       <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
-      <div class="sm-foot"><button class="sm-me" data-me="1">${NX.avatar(me, "av")}<span>${NX.esc(me.name)}</span></button><div class="sm-right"><div class="sm-places">${[["Documents", "file"], ["Downloads", "download"], ["Pictures", "folder"], ["Settings", "settings"]].map(([n, ic]) => `<button data-place="${n}" title="${n}" aria-label="${n}">${NX.icon(ic, 17)}</button>`).join("")}</div><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="sleep">${NX.icon("moon", 16)}Sleep</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div></div>`;
+      ${smFoot(me)}`;
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
     si.onkeydown = (e) => { if (e.key === "Enter") { const f = $(".sm-res", S); if (f) f.click(); } };
@@ -302,9 +302,7 @@
     const aa = $("[data-allapps]", S); if (aa) aa.onclick = (e) => { e.stopPropagation(); startDraw("", "all"); };
     S.querySelectorAll("[data-rfile]").forEach((b) => (b.onclick = () => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; closeFlyouts(); if (f) NX.openFile(f); }));
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
-    $(".sm-pwb", S).onclick = (e) => { e.stopPropagation(); const m = $(".sm-pwm", S); m.hidden = !m.hidden; };
-    S.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => { closeFlyouts(); const n = b.dataset.place; if (n === "Settings") NX.open("settings"); else NX.open("files", { place: n }); }));
-    S.querySelectorAll("[data-pw]").forEach((b) => (b.onclick = () => { const k = b.dataset.pw; if (k === "lock") lockKeep(); else if (k === "out") signOut(); else if (k === "sleep") sleep(); else power(k === "restart" ? "restart" : "off"); }));
+    smFootWire(S);
   }
   // Recommended: recently opened files first (like Windows 11), then recently used apps
   const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "Just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : new Date(t).toLocaleDateString(); };
@@ -315,6 +313,13 @@
     rec.slice(0, 6 - out.length).forEach((id) => out.push(`<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 30)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>Recently opened</small></span></button>`));
     return out.length ? out.join("") : `<p class="sm-empty">The apps and files you open will show up here.</p>`;
   }
+  // the bottom of Start: you, the folder shortcuts and the power button (both Start views)
+  const smFoot = (me) => `<div class="sm-foot"><button class="sm-me" data-me="1">${NX.avatar(me, "av")}<span>${NX.esc(me.name)}</span></button><div class="sm-right"><div class="sm-places">${[["Documents", "file"], ["Downloads", "download"], ["Pictures", "folder"], ["Settings", "settings"]].map(([n, ic]) => `<button data-place="${n}" title="${n}" aria-label="${n}">${NX.icon(ic, 17)}</button>`).join("")}</div><div class="sm-pw"><button class="sm-pwb" aria-label="Power" title="Power">${NX.icon("power", 18)}</button><div class="sm-pwm" hidden><button data-pw="lock">${NX.icon("lock", 16)}Lock</button><button data-pw="out">${NX.icon("signout", 16)}Sign out</button><button data-pw="sleep">${NX.icon("moon", 16)}Sleep</button><button data-pw="restart">${NX.icon("restart", 16)}Restart</button><button data-pw="off">${NX.icon("power", 16)}Shut down</button></div></div></div></div>`;
+  function smFootWire(S) {
+    $(".sm-pwb", S).onclick = (e) => { e.stopPropagation(); const m = $(".sm-pwm", S); m.hidden = !m.hidden; };
+    S.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => { closeFlyouts(); const n = b.dataset.place; if (n === "Settings") NX.open("settings"); else NX.open("files", { place: n }); }));
+    S.querySelectorAll("[data-pw]").forEach((b) => (b.onclick = () => { const k = b.dataset.pw; if (k === "lock") lockKeep(); else if (k === "out") signOut(); else if (k === "sleep") sleep(); else power(k === "restart" ? "restart" : "off"); }));
+  }
   // All apps: every app, A to Z, with letter headings
   function allAppsDraw(all, me) {
     const S = $("#start"), list = [...all].sort((a, b) => NX.apps[a].name.localeCompare(NX.apps[b].name));
@@ -322,11 +327,11 @@
     for (const id of list) { const L = NX.apps[id].name[0].toUpperCase(); if (L !== letter) { letter = L; rows += `<h5 class="sm-letter">${NX.esc(L)}</h5>`; } rows += `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 28)}<span><b>${NX.esc(NX.apps[id].name)}</b></span></button>`; }
     S.innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search"></label>
       <div class="sm-body"><div class="sm-h"><h4>All apps</h4><button class="sm-all" data-back="1">${NX.icon("back", 12)} Back</button></div><div class="sm-allist">${rows}<button class="sm-res" data-store="1">${NX.icon("store", 28)}<span><b>Get more apps</b><small>Nebulux Store</small></span></button></div></div>
-      <div class="sm-foot"><button class="sm-me" data-me="1">${NX.avatar(me, "av")}<span>${NX.esc(me.name)}</span></button></div>`;
+      ${smFoot(me)}`;
     S.querySelectorAll("[data-app]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }));
     $("[data-back]", S).onclick = (e) => { e.stopPropagation(); startDraw(""); };
     $("[data-store]", S).onclick = () => { closeFlyouts(); NX.open("store"); };
-    $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
+    $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); }; smFootWire(S);
     const si = $(".sm-search input", S); si.oninput = () => { startDraw(si.value); const n = $(".sm-search input"); n.focus(); };
   }
   // the details panel of Start search
