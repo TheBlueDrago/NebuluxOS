@@ -16,14 +16,17 @@
     const A = area(); w.w = clamp(w.w, w.minW, A.w); w.h = clamp(w.h, w.minH, A.h);
     w.x = clamp(w.x, -w.w + 120, A.w - 120); w.y = clamp(w.y, 0, A.h - 40);
   }
+  // minimize and restore glide into and out of the app's taskbar button
+  const toTaskbar = (w) => { const b = document.querySelector(`#tb-apps [data-app="${w.id}"]`), r = w.el.getBoundingClientRect(); if (!b || !r.width) return "translateY(60px) scale(.6)"; const t = b.getBoundingClientRect(); return `translate(${t.left + t.width / 2 - (r.left + r.width / 2)}px, ${t.top + t.height / 2 - (r.top + r.height / 2)}px) scale(.08)`; };
+  const animOK = () => typeof Element.prototype.animate === "function" && !(NX.me && NX.prefs().anim === false) && !matchMedia("(prefers-reduced-motion: reduce)").matches;
   NX.focus = (id) => {
     const w = wins.get(id); if (!w) return;
-    if (w.min) { w.min = false; w.el.classList.remove("minimized"); }
+    if (w.min) { w.min = false; const tr = toTaskbar(w); w.el.classList.remove("minimized"); if (animOK()) w.el.animate([{ transform: tr, opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" }); }
     w.el.style.zIndex = ++z;
     for (const o of wins.values()) o.el.classList.toggle("active", o === w);
     NX.shell && NX.shell.taskbar();
   };
-  NX.minimize = (id) => { const w = wins.get(id); if (!w) return; w.min = true; w.el.classList.add("minimized"); w.el.classList.remove("active"); NX.shell && NX.shell.taskbar(); };
+  NX.minimize = (id) => { const w = wins.get(id); if (!w) return; if (!w.min && animOK()) w.el.animate([{ transform: "none", opacity: 1 }, { transform: toTaskbar(w), opacity: 0 }], { duration: 240, easing: "cubic-bezier(.4,0,.8,.4)" }); w.min = true; w.el.classList.add("minimized"); w.el.classList.remove("active"); NX.shell && NX.shell.taskbar(); };
   NX.toggleMax = (id) => {
     const w = wins.get(id); if (!w) return; w.max = !w.max; w.snap = null; w.el.classList.toggle("maxed", w.max);
     w.el.querySelector(".wb-max").innerHTML = NX.icon(w.max ? "restore" : "max", 16); w.el.querySelector(".wb-max").title = w.max ? "Restore down" : "Maximize";
