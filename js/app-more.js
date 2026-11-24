@@ -139,6 +139,7 @@
             <h3>This week</h3><div class="wa-days">${j.daily.time.map((t, k) => { const lo = Math.min(...j.daily.temperature_2m_min), hi = Math.max(...j.daily.temperature_2m_max), a = (j.daily.temperature_2m_min[k] - lo) / (hi - lo || 1) * 100, b = (j.daily.temperature_2m_max[k] - lo) / (hi - lo || 1) * 100;
               return `<div><span>${k ? new Date(t + "T12:00").toLocaleDateString(undefined, { weekday: "long" }) : "Today"}</span>${I.icon(j.daily.weather_code[k], 30)}<small>${j.daily.precipitation_probability_max[k] ? j.daily.precipitation_probability_max[k] + "%" : ""}</small><em>${r(j.daily.temperature_2m_min[k])}°</em><i><u style="left:${a}%;width:${Math.max(4, b - a)}%"></u></i><b>${r(j.daily.temperature_2m_max[k])}°</b></div>`; }).join("")}</div>
             <p class="wa-credit">Weather by Open-Meteo</p>`;
+          if (NX.wxSky) NX.wxSky($(".wa-now", body), c.weather_code, now >= new Date(j.daily.sunrise[0]).getTime() && now < new Date(j.daily.sunset[0]).getTime());
         } catch (e) { $(".wa-body", body).innerHTML = `<p class="wa-note">The weather service didn't answer. Try again in a moment.</p>`; }
       }
       draw();

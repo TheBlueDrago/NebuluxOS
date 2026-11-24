@@ -677,3 +677,22 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
     draw(); t = setInterval(() => { if (NX.focusSession.on()) draw(); }, 1000);
   };
 })();
+
+// ---------- Weather: an animated sky behind the weather now (sun, clouds, rain, snow, storm, fog, stars at night) ----------
+NX.wxSky = (el, code, day) => {
+  if (!el) return; code = +code;
+  const kind = code >= 95 ? "storm" : (code >= 71 && code <= 77) || code === 85 || code === 86 ? "snow" : (code >= 51 && code <= 67) || (code >= 80 && code <= 82) ? "rain" : code === 45 || code === 48 ? "fog" : code >= 2 ? "cloud" : "clear";
+  el.dataset.sky = kind; el.dataset.day = day ? "1" : "0";
+  const old = el.querySelector(".wx-sky"); if (old) old.remove();
+  const s = document.createElement("div"); s.className = "wx-sky"; s.setAttribute("aria-hidden", "true");
+  const R = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
+  let h = "";
+  if (kind === "clear" && day) h = `<i class="wx-sun"></i>`;
+  if (!day && (kind === "clear" || kind === "cloud")) for (let i = 0; i < 40; i++) h += `<i class="wx-star" style="left:${R(0, 100)}%;top:${R(0, 90)}%;animation-delay:-${R(0, 4)}s;--z:${R(.5, 1.6)}"></i>`;
+  if (kind === "cloud" || kind === "rain" || kind === "storm" || kind === "snow") for (let i = 0; i < 5; i++) h += `<i class="wx-cloud" style="top:${R(-10, 40)}%;animation-duration:${R(40, 80)}s;animation-delay:-${R(0, 80)}s;--z:${R(.7, 1.4)}"></i>`;
+  if (kind === "rain" || kind === "storm") for (let i = 0; i < 60; i++) h += `<i class="wx-drop" style="left:${R(0, 100)}%;animation-duration:${R(.5, .9)}s;animation-delay:-${R(0, 1)}s"></i>`;
+  if (kind === "snow") for (let i = 0; i < 50; i++) h += `<i class="wx-flake" style="left:${R(0, 100)}%;animation-duration:${R(5, 11)}s;animation-delay:-${R(0, 11)}s;--z:${R(.5, 1.3)}"></i>`;
+  if (kind === "storm") h += `<i class="wx-flash"></i>`;
+  if (kind === "fog") h += `<i class="wx-fog"></i><i class="wx-fog b"></i>`;
+  s.innerHTML = h; el.prepend(s);
+};

@@ -475,3 +475,34 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .cf-t{display:flex;flex-direction:column}.cf-t small{color:var(--sub);font-size:12px}
 .cal-focus [data-cf=stop]{margin-left:auto}
 #cal .cal-g button{aspect-ratio:auto;height:34px;width:34px;justify-self:center}#cal .cal-g{padding:4px 14px 10px;row-gap:1px}#cal .cal-top{padding:12px 18px}#cal .cal-h{padding-top:8px}
+
+/* ---------- Weather: the animated sky ---------- */
+.wa-now{position:relative;overflow:hidden;isolation:isolate}
+.wa-now>*:not(.wx-sky){position:relative;z-index:1}
+.wx-sky{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.wa-now[data-sky]{border-color:#ffffff22;color:#fff}
+.wa-now[data-sky] small,.wa-now[data-sky] dt{color:#ffffffc0}
+.wa-now[data-sky=clear][data-day="1"]{background:linear-gradient(160deg,#2f7be6,#5aa8f5 55%,#8cc8ff)}
+.wa-now[data-sky=cloud][data-day="1"]{background:linear-gradient(160deg,#4a6584,#6f88a6 60%,#93a9c2)}
+.wa-now[data-sky=rain]{background:linear-gradient(160deg,#2b3a52,#405470 60%,#56698a)}
+.wa-now[data-sky=storm]{background:linear-gradient(160deg,#181c2e,#2c3350 60%,#3d4466)}
+.wa-now[data-sky=snow]{background:linear-gradient(160deg,#5f7494,#8a9db8 60%,#b4c2d6)}
+.wa-now[data-sky=fog]{background:linear-gradient(160deg,#5d6676,#7f8796 60%,#a2a9b5)}
+.wa-now[data-day="0"][data-sky=clear],.wa-now[data-day="0"][data-sky=cloud]{background:linear-gradient(160deg,#0b1030,#1b1f4a 60%,#2d2a63)}
+.wx-sun{position:absolute;right:8%;top:-40%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,#fff6c9 0 18%,#ffd76a55 32%,transparent 66%);animation:wxSun 6s ease-in-out infinite alternate}
+@keyframes wxSun{to{transform:scale(1.1)}}
+.wx-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;transform:scale(var(--z));animation:wxTw 4s ease-in-out infinite}
+@keyframes wxTw{50%{opacity:.25}}
+.wx-cloud{position:absolute;left:-40%;width:260px;height:80px;border-radius:50px;background:#ffffff2e;filter:blur(6px);transform:scale(var(--z));animation:wxCloud linear infinite}
+.wx-cloud::before,.wx-cloud::after{content:"";position:absolute;border-radius:50%;background:inherit}
+.wx-cloud::before{width:120px;height:120px;left:40px;top:-55px}.wx-cloud::after{width:90px;height:90px;left:130px;top:-35px}
+@keyframes wxCloud{to{left:120%}}
+.wx-drop{position:absolute;top:-20px;width:1.5px;height:18px;background:linear-gradient(#ffffff00,#cfe3ffaa);animation:wxDrop linear infinite}
+@keyframes wxDrop{to{transform:translate(-30px,340px)}}
+.wx-flake{position:absolute;top:-10px;width:6px;height:6px;border-radius:50%;background:#fff;opacity:.85;transform:scale(var(--z));animation:wxSnow linear infinite}
+@keyframes wxSnow{to{transform:translate(40px,340px) scale(var(--z))}}
+.wx-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:wxFlash 7s infinite}
+@keyframes wxFlash{0%,90%,94%,100%{opacity:0}91%,93%{opacity:.35}}
+.wx-fog{position:absolute;left:-50%;width:200%;height:60%;top:20%;background:linear-gradient(90deg,transparent,#ffffff30,transparent,#ffffff26,transparent);animation:wxFog 20s linear infinite}.wx-fog.b{top:55%;animation-duration:30s;animation-direction:reverse}
+@keyframes wxFog{to{transform:translateX(25%)}}
+.noanim .wx-sky *{animation:none!important}
