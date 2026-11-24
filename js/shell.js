@@ -165,10 +165,13 @@
   function icons() {
     if (!NX.me) return; const box = $("#icons"), p = NX.prefs(), list = p.desktop.filter((id) => NX.apps[id] && (NX.apps[id].builtIn || p.installed.includes(id)));
     const rows = Math.max(1, Math.floor((box.clientHeight || innerHeight - 60) / 96));
-    box.dataset.apps = list.length; box.dataset.rows = rows;
-    box.innerHTML = list.map((id, i) => `<button class="dicon" data-app="${id}" style="grid-row:${(i % rows) + 1};grid-column:${Math.floor(i / rows) + 1}">${NX.icon(NX.apps[id].icon || id, 40)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("");
+    const bin = p.deskBin !== false, nb = list.length;
+    box.dataset.apps = nb + (bin ? 1 : 0); box.dataset.rows = rows;
+    box.innerHTML = list.map((id, i) => `<button class="dicon" data-app="${id}" style="grid-row:${(i % rows) + 1};grid-column:${Math.floor(i / rows) + 1}">${NX.icon(NX.apps[id].icon || id, 40)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")
+      + (bin ? `<button class="dicon dbin" style="grid-row:${(nb % rows) + 1};grid-column:${Math.floor(nb / rows) + 1}">${NX.icon(NX.binFull ? "binfull" : "binempty", 40)}<span>Recycle Bin</span></button>` : "");
+    const db = box.querySelector(".dbin"); if (db) { db.onclick = (e) => { e.stopPropagation(); NX.open("files", { path: "::trash" }); }; db.onkeydown = (e) => { if (e.key === "Enter") NX.open("files", { path: "::trash" }); }; db.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); menu(e.clientX, e.clientY, [["Open", () => NX.open("files", { path: "::trash" })], ["Empty Recycle Bin", async () => { if (!(await NX.ask(document.getElementById("desktop"), { title: "Empty the Recycle Bin?", text: "Everything in it will be deleted for good.", ok: "Empty it", danger: true }))) return; await NX.fs.emptyTrash(); NX.binCheck && NX.binCheck(); }]]); }; }
     setTimeout(iconsDone, 0);
-    box.querySelectorAll(".dicon").forEach((b) => {
+    box.querySelectorAll(".dicon:not(.dbin)").forEach((b) => {
       // one click opens it (a slow double-click on a slow computer used to do nothing)
       b.onclick = (e) => { e.stopPropagation(); box.querySelectorAll(".dicon").forEach((x) => x.classList.toggle("sel", x === b)); sel = b.dataset.app; NX.open(b.dataset.app); };
       b.onkeydown = (e) => { if (e.key === "Enter") NX.open(b.dataset.app); };

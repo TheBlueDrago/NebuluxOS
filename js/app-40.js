@@ -488,3 +488,14 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   const end = () => { start = null; if (box) { box.remove(); box = null; } };
   document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end); addEventListener("blur", end);
 })();
+
+// ---------- the desktop Recycle Bin shows whether anything is in it ----------
+(function () {
+  let busy = false;
+  NX.binCheck = async () => {
+    if (!NX.me || busy || !NX.fs || !NX.fs.trash) return; busy = true;
+    try { const full = ((await NX.fs.trash()).entries || []).length > 0; if (full !== !!NX.binFull) { NX.binFull = full; if (NX.shell) NX.shell.icons(); } } catch (e) { /* skip */ }
+    busy = false;
+  };
+  document.addEventListener("nx:files", () => setTimeout(NX.binCheck, 200)); document.addEventListener("nx:signin", () => setTimeout(NX.binCheck, 800)); setInterval(NX.binCheck, 20000);
+})();

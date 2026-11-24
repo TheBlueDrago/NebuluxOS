@@ -399,6 +399,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // system sounds (the test browser is muted)
   ok(await p.evaluate(() => { let n = 0; const o = NX.sounds.note; NX.sounds.note = () => n++; NX.setPref("noteSound", true); NX.toast("Sound test"); NX.setPref("noteSound", false); NX.toast("Quiet test"); NX.sounds.note = o; return n === 1 && NX.notes[0].text === "Quiet test"; }), "the notification sound plays only when it's on");
   ok(await p.evaluate(() => typeof NX.sounds.signin === "function"), "there's a sign-in chime");
+  // the Recycle Bin on the desktop
+  await p.evaluate(async () => { NX.closeAll(); const d = await NX.folder("Documents"); await NX.fs.write(d + "/bin test.txt", "x"); await NX.fs.remove([d + "/bin test.txt"]).catch(() => NX.fs.del && NX.fs.del([d + "/bin test.txt"])); NX.filesChanged(); }); await wait(900);
+  ok(await p.evaluate(() => { const b = document.querySelector("#icons .dbin"); return !!b && /Recycle Bin/.test(b.textContent) && NX.binFull === true; }), "the desktop Recycle Bin shows it has something in it");
+  await p.evaluate(() => document.querySelector("#icons .dbin").click()); await wait(800);
+  ok(await p.evaluate(() => { const w = document.querySelector(".win[data-app=files]"); return !!w && /bin test/.test(w.textContent); }), "and opens the Recycle Bin");
+  await p.evaluate(async () => { await NX.fs.emptyTrash(); NX.closeAll(); await NX.binCheck(); });
+  ok(await p.evaluate(() => NX.binFull === false), "and is empty again after emptying it");
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");
