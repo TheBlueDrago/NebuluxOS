@@ -587,3 +587,8 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #lk-next>span{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:14px;background:#0d082259;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid #ffffff22;color:#fff;font-size:13.5px;text-shadow:none}
 .lkn-ev i{width:8px;height:8px;border-radius:50%;flex:none}.lkn-ev small{opacity:.75}
 .wn-pop .wn-try{flex-wrap:wrap;gap:6px}.wn-pop .wn-try .btn{padding:6px 11px;font-size:12.5px}
+
+/* ---------- a new background fades in over the old one ---------- */
+.wall-fade{position:absolute;inset:0;background:center/cover;z-index:0;pointer-events:none;opacity:1;transition:opacity .7s ease}
+.wall-fade.go{opacity:0}
+#desktop[data-wfit=fit] .wall-fade{background-size:contain;background-repeat:no-repeat}

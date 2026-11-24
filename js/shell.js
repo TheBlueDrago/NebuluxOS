@@ -37,7 +37,15 @@
     // the lock screen picture (Settings > Personalization): saved for this computer so it shows before anyone signs in
     if (NX.me) { const lp = p.lockPic == null || p.lockPic === "match" ? (typeof p.wallpaper === "number" ? p.wallpaper : 0) : +p.lockPic; if (NX.get("lock-wall", 0) !== lp) NX.set("lock-wall", lp); }
     const lw = NX.get("lock-wall", 0), wall = NX.wallpaperURL(NX.me ? p.wallpaper : (typeof lw === "number" && NX.wallpapers[lw] ? lw : 0), innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
-    if (wall !== lastWall) { lastWall = wall; root.style.setProperty("--wall", `url(${wall})`); }
+    if (wall !== lastWall) {
+      // a new background fades in over the old one (not when signing in, and not with animations off)
+      const D = $("#desktop"), was = lastWall;
+      if (was && NX.me && D && !D.hidden && !root.classList.contains("noanim") && !root.classList.contains("nx-lite") && !D.style.getPropertyValue("--wall")) {
+        const f = document.createElement("div"); f.className = "wall-fade"; f.style.backgroundImage = `url(${was})`; D.insertBefore(f, D.firstChild);
+        requestAnimationFrame(() => requestAnimationFrame(() => f.classList.add("go"))); setTimeout(() => f.remove(), 900);
+      }
+      lastWall = wall; root.style.setProperty("--wall", `url(${wall})`);
+    }
     $("#dim").style.opacity = NX.me && !NX.hw.brightness ? ((100 - p.brightness) / 100) * 0.75 : 0; $("#night").classList.toggle("on", !!(NX.me && p.night)); $("#night").style.setProperty("--ns", ((NX.me && p.nightStr) || 50) / 100);
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
