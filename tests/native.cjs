@@ -393,6 +393,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.update.whatsNew());
   ok(await p.evaluate(() => !document.querySelector(".wn-pop")), "and shows only once");
 
+  // Back up to a USB drive (Settings > System)
+  await p.evaluate(async () => fetch("/api/fake/reset-files", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token } })); // the USB drive was ejected earlier: plug it back in
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "system" }); });
+  ok(await until(() => p.evaluate(() => !!document.querySelector("#s-bkgo")), 8000), "Settings > System offers Back up to the USB drive");
+  await p.evaluate(() => document.querySelector("#s-bkgo").click());
+  ok(await until(() => p.evaluate(() => /^Done/.test(document.querySelector("#s-bkmsg").textContent)), 15000), "Back up now copies the files to the drive");
+  ok(await p.evaluate(async () => { const b = NX.data("backup-last", {}); const l = await NX.fs.list(b.path); const names = l.entries.map((e) => e.name); return ["Documents", "Pictures"].every((n) => names.includes(n)); }), "and the backup has Documents and Pictures in it");
+  await p.evaluate(() => NX.closeAll());
+
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

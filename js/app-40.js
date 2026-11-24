@@ -733,3 +733,41 @@ NX.noteIcon = (text) => {
   for (const [re, ic] of R) if (re.test(t)) return ic;
   return "logo";
 };
+
+// ---------- Back up (Settings > System): copy Documents, Pictures, Music, Videos and Desktop to a USB drive ----------
+(function () {
+  const FOLDERS = ["Desktop", "Documents", "Pictures", "Music", "Videos"];
+  const stamp = () => { const d = new Date(), z = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}.${z(d.getMinutes())}`; };
+  NX.backupNow = async (drive, say) => {
+    const fsx = NX.fs; if (!drive || !drive.mount) throw new Error("Open the drive in File Explorer first, then try again.");
+    say && say("Getting the drive ready...");
+    let root = fsx.join(drive.mount, "Nebulux Backup");
+    try { await fsx.list(root); } catch (e) { root = (await fsx.create(drive.mount, "Nebulux Backup", true)).path || root; }
+    const made = await fsx.create(root, stamp(), true), dest = made.path || fsx.join(root, stamp());
+    // the main folders themselves are protected, so each gets a new folder on the drive and what's inside is copied into it
+    for (const n of FOLDERS) {
+      let src; try { src = await NX.folder(n); } catch (e) { continue; }
+      const items = ((await fsx.list(src)).entries || []).map((e) => e.path).filter(Boolean); if (!items.length) continue;
+      say && say("Copying " + n + "...");
+      const sub = await fsx.create(dest, n, true); await fsx.copy(items, sub.path || fsx.join(dest, n), false);
+    }
+    const rec = { at: Date.now(), drive: drive.label || "USB drive", path: dest }; NX.setData("backup-last", rec); return rec;
+  };
+  NX.backupFill = async (box) => {
+    if (!box || !NX.fs || !NX.fs.drives) return;
+    let ds = []; try { ds = await NX.fs.drives(); } catch (e) { ds = []; }
+    const last = NX.data("backup-last", null), lastTxt = last ? `Last backup: ${new Date(last.at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })} to ${NX.esc(last.drive)}` : "No backups yet";
+    if (!ds.length) { box.innerHTML = `<div class="s-bth"><span class="s-hwt">${NX.icon("download", 20)}<b>Plug in a USB drive to back up your files</b></span></div><p class="s-note">${lastTxt}. A backup copies your Desktop, Documents, Pictures, Music and Videos into a Nebulux Backup folder on the drive.</p>`; return; }
+    box.innerHTML = `<div class="s-bth"><span class="s-hwt">${NX.icon("download", 20)}<b>Back up to</b></span><select class="s-sel" id="s-bkdrive">${ds.map((d, i) => `<option value="${i}">${NX.esc(d.label || "USB drive")}${d.mount ? "" : " (not open)"}</option>`).join("")}</select><button class="btn primary" id="s-bkgo">Back up now</button></div><p class="s-note" id="s-bkmsg">${lastTxt}. Copies your Desktop, Documents, Pictures, Music and Videos into a Nebulux Backup folder on the drive.</p>${last && last.path ? `<button class="btn sm" id="s-bkopen">Open the last backup</button>` : ""}`;
+    const msg = box.querySelector("#s-bkmsg"), go = box.querySelector("#s-bkgo");
+    go.onclick = async () => {
+      let d = ds[+box.querySelector("#s-bkdrive").value];
+      if (d && !d.mount && NX.fs.mount) { try { msg.textContent = "Opening the drive..."; await NX.fs.mount(d.dev); ds = await NX.fs.drives(); d = ds.find((x) => x.dev === d.dev) || d; } catch (e) { msg.textContent = e.message; return; } }
+      go.disabled = true; go.textContent = "Backing up...";
+      try { const r = await NX.backupNow(d, (t) => (msg.textContent = t)); msg.textContent = "Done. Your files are in " + r.path + "."; NX.toast("Backup done: your files are on " + r.drive + "."); }
+      catch (e) { msg.textContent = e.message || "The backup didn't finish."; }
+      go.disabled = false; go.textContent = "Back up now";
+    };
+    const op = box.querySelector("#s-bkopen"); if (op) op.onclick = () => NX.open("files", { path: NX.data("backup-last", {}).path });
+  };
+})();
