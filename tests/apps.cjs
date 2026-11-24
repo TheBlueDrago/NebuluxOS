@@ -378,6 +378,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => NX.get("lock-wall", 0) === 3), "the lock screen picture is saved for the lock screen");
   await p.evaluate(() => NX.setPref("lockPic", "match")); await wait(150);
   ok(await p.evaluate(() => NX.get("lock-wall", -1) === (typeof NX.prefs().wallpaper === "number" ? NX.prefs().wallpaper : 0)), "Same as my background follows the background");
+  // Window buttons: Dots
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("wbtn", "dots"); NX.open("notepad"); }); await wait(500);
+  ok(await p.evaluate(() => { const b = document.querySelector(".win .wb-close"); return getComputedStyle(b).borderRadius === "50%" && b.getBoundingClientRect().width === 14; }), "Dots window buttons are round");
+  await p.evaluate(() => document.querySelector(".win .wb-close").click()); await wait(400);
+  ok(await p.evaluate(() => !document.querySelector(".win[data-app=notepad]") || document.querySelector(".nx-dlg, .dlg")), "the red dot closes the window");
+  await p.evaluate(() => { NX.setPref("wbtn", "plain"); NX.closeAll(); });
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");

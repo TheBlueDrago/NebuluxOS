@@ -119,6 +119,7 @@
           ${row("brush", "Accent color", "Used for buttons, switches and highlights", `<div class="s-acc"><button data-acc="auto" class="s-acc-auto ${p.accent === "auto" ? "on" : ""}" title="From your background" aria-label="Accent color from your background"></button>${ACCENTS.map((c) => `<button data-acc="${c}" class="${c === p.accent ? "on" : ""}" style="background:${c}" aria-label="Accent ${c}"></button>`).join("")}</div>`)}
           ${row("contrast", "Transparency effects", NX.native ? "See-through, frosted windows and taskbar. Off makes Nebulux OS faster on this computer." : "See-through, frosted windows and taskbar", toggle("transparency", NX.fx()))}
           ${row("max", "Corners", "How round windows, menus and buttons are", `<div class="seg">${[["square", "Square"], ["round", "Round"], ["xround", "Extra round"]].map(([v, t]) => `<button data-corners="${v}" class="${(p.corners40 || "round") === v ? "on" : ""}">${t}</button>`).join("")}</div>`)}
+          ${row("max", "Window buttons", "Plain buttons, or three colored dots", `<div class="seg">${[["plain", "Plain"], ["dots", "Dots"]].map(([v, t]) => `<button data-wbtn="${v}" class="${(p.wbtn || "plain") === v ? "on" : ""}">${t}</button>`).join("")}</div>`)}
           ${row("spark", "Glass", "How much of the background shows through", `<div class="seg">${[["clear", "Clear"], ["frosted", "Frosted"], ["solid", "Solid"]].map(([v, t]) => `<button data-glass="${v}" class="${(p.glass || "frosted") === v ? "on" : ""}">${t}</button>`).join("")}</div>`)}
           <h3>Taskbar</h3>${row("taskbar", "Taskbar alignment", "Where the Start button and apps sit", `<div class="seg"><button data-align="center" class="${p.align === "center" ? "on" : ""}">Center</button><button data-align="left" class="${p.align === "left" ? "on" : ""}">Left</button></div>`)}`;
         if (pg === "apps") {
@@ -384,6 +385,7 @@
         body.querySelectorAll("[data-uninstall]").forEach((b) => (b.onclick = () => { NX.uninstall(b.dataset.uninstall); draw(); }));
         body.querySelectorAll("[data-look]").forEach((b) => (b.onclick = () => { const t = NX.looks40[+b.dataset.look]; NX.setPref("wallpaper", t.wall); NX.setPref("theme", t.theme); NX.setPref("accent", t.accent); NX.setPref("corners40", t.corners); NX.setPref("glass", t.glass); draw(); }));
         const lps = body.querySelector("[data-lockpic]"); if (lps) lps.onchange = () => NX.setPref("lockPic", lps.value === "match" ? "match" : +lps.value);
+        body.querySelectorAll("button[data-wbtn]").forEach((b) => (b.onclick = () => { NX.setPref("wbtn", b.dataset.wbtn); draw(); }));
         body.querySelectorAll("[data-corners]").forEach((b) => (b.onclick = () => { NX.setPref("corners40", b.dataset.corners); draw(); }));
         body.querySelectorAll("[data-glass]").forEach((b) => (b.onclick = () => { NX.setPref("glass", b.dataset.glass); draw(); }));
         body.querySelectorAll("[data-dwk]").forEach((c) => (c.onchange = () => { NX.setPref("deskWidgets", [...body.querySelectorAll("[data-dwk]:checked")].map((x) => x.dataset.dwk)); }));
