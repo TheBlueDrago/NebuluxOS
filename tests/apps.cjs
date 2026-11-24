@@ -246,6 +246,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector("#nx-dwidgets .dw-ev").click()); await wait(500);
   ok(await p.evaluate(() => !!document.querySelector(".win[data-app=calendar]")), "and clicking Up next opens Calendar");
   await p.evaluate(() => { NX.setPref("deskWidgets", []); NX.setData("events", []); NX.closeAll(); }); await wait(200);
+  // auto-hide the taskbar
+  await p.evaluate(() => NX.setPref("tbAuto", true)); await p.mouse.move(W / 2, H / 2); await wait(500);
+  const tbTop = () => p.evaluate(() => document.getElementById("taskbar").getBoundingClientRect().top);
+  ok(await tbTop() >= H - 2, "Hide the taskbar: it slides away");
+  await p.mouse.move(W / 2, H - 1, { steps: 4 }); await wait(400);
+  ok(await tbTop() < H - 30, "and comes back when the pointer touches the bottom");
+  await p.mouse.move(W / 2, H / 2, { steps: 4 }); await wait(1100);
+  ok(await tbTop() >= H - 2, "and slides away again after");
+  await p.evaluate(() => NX.setPref("tbAuto", false)); await wait(400);
   // seconds in the clock and the battery percentage
   await p.evaluate(() => { NX.setPref("clockSec", true); NX.setPref("battPct", true); }); await wait(1200);
   ok(await p.evaluate(() => /\d:\d\d:\d\d/.test(document.getElementById("tb-time").textContent) && (!NX.batt() || /\d+%/.test((document.querySelector(".tb-bpct") || {}).textContent || ""))), "the taskbar can show seconds and the battery percentage");

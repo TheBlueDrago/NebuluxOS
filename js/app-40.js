@@ -173,6 +173,21 @@
     el.onclick = () => { clearTimeout(t); el.remove(); NX.open("photos", { path: r.path }); };
   }
 
+  // ---------- auto-hide the taskbar: it slides away, and comes back when the pointer touches the bottom of the screen ----------
+  let tbHideT = 0;
+  const flyoutOpen = () => ["start", "qs", "cal", "widgets", "clip", "ctx", "snapfly"].some((id) => { const e = document.getElementById(id); return e && !e.hidden; });
+  const tbAutoApply = () => { const d = document.getElementById("desktop"); if (!d) return; const on = !!(NX.me && NX.prefs().tbAuto); if (d.classList.contains("tb-auto") !== on) { d.classList.toggle("tb-auto", on); d.classList.remove("tb-show"); dispatchEvent(new Event("resize")); } };
+  NX.tbAutoApply = tbAutoApply;
+  document.addEventListener("nx:prefs", (e) => { if (e.detail === "tbAuto") tbAutoApply(); }); setInterval(tbAutoApply, 2000); setTimeout(tbAutoApply, 800);
+  addEventListener("pointermove", (e) => {
+    const d = document.getElementById("desktop"); if (!d || !d.classList.contains("tb-auto")) return;
+    const tb = document.getElementById("taskbar"), over = e.clientY >= innerHeight - 3 || (tb && d.classList.contains("tb-show") && e.clientY >= tb.getBoundingClientRect().top - 6);
+    if (over) { clearTimeout(tbHideT); d.classList.add("tb-show"); }
+    else if (d.classList.contains("tb-show")) { clearTimeout(tbHideT); tbHideT = setTimeout(() => { if (!flyoutOpen()) d.classList.remove("tb-show"); }, 700); }
+  }, { passive: true });
+  // the Nebulux key (Start) and other flyouts bring it up too
+  new MutationObserver(() => { const d = document.getElementById("desktop"); if (d && d.classList.contains("tb-auto") && flyoutOpen()) d.classList.add("tb-show"); }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ["hidden"] });
+
   // ---------- keys: Nebulux + Space (Quick Search) and Nebulux + G (App Grid); on the USB they come from the window manager ----------
   addEventListener("keydown", (e) => {
     const win = e.metaKey || (e.getModifierState && e.getModifierState("OS"));

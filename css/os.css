@@ -1208,3 +1208,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 [data-theme=light] .dw{background:#ffffffbf;color:#1b1530;box-shadow:0 14px 34px #2b1d5a2e,inset 0 1px 0 #fff,0 0 0 1px #1b123a14}.nx-lite[data-theme=light] .dw{background:#fffffff2}
 
 .tb-batt{display:inline-flex;align-items:center;gap:4px}.tb-bpct{font-size:11.5px;font-variant-numeric:tabular-nums}
+
+/* auto-hide taskbar */
+#desktop.tb-auto #windows,#desktop.tb-auto #icons{bottom:0}#desktop.tb-auto #taskview{bottom:0}
+#desktop.tb-auto #taskbar{transform:translateY(100%);transition:transform .22s ease}#desktop.tb-auto.tb-show #taskbar{transform:none}
