@@ -38,7 +38,7 @@
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
   let resizeT = 0; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { applyLook(); if (NX.me) icons(); }, 150); });
-  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery", "dnd", "saver", "saverAuto"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
+  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (k === "battPct") tray(); if (k === "clockSec") clock(); if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery", "dnd", "saver", "saverAuto"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
 
   NX.fx = () => { const v = NX.me ? NX.prefs().transparency : undefined; return v == null ? !NX.native : !!v; };
   NX.fast = /[?&]fast(&|=|$)/.test(location.search); // tests skip the boot animation
@@ -229,7 +229,7 @@
   NX.peek = { show: peek, hide: peekHide };
   function tray() {
     if (!NX.me) return; const p = NX.prefs();
-    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="${battText()}">${NX.battIcon(20)}</span>` : ""}`;
+    $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="${battText()}">${NX.battIcon(20)}${p.battPct ? `<small class="tb-bpct">${batt().percent}%</small>` : ""}</span>` : ""}`;
   }
   // the battery: this computer's own, on the real OS and in a browser tab (none on a desktop PC). The bar inside the
   // icon goes down with it and changes color: green while charging, orange at 20% or less, red at 10% or less, and
@@ -255,8 +255,8 @@
     const lvl = b.percent <= 10 ? 10 : 20; if (lvl >= lowTold) return; lowTold = lvl;
     NX.toast(lvl === 10 ? "Battery is very low (" + b.percent + "%). Plug in your computer soon." : "Battery is at " + b.percent + "%." + (NX.prefs().saverAuto !== false ? " Battery saver is on." : " Turn on Battery saver to make it last longer."));
   });
-  function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d); $("#tb-date").textContent = d.toLocaleDateString(); }
-  setInterval(() => { if (NX.me) clock(); }, 5000);
+  function clock() { const d = new Date(); $("#tb-time").textContent = NX.fmtTime(d, !!NX.prefs().clockSec); $("#tb-date").textContent = d.toLocaleDateString(); }
+  setInterval(() => { if (NX.me) clock(); }, 1000);
   // Night light on a schedule: on at "nightFrom", off at "nightTo" (it can run past midnight). Turning it on or off
   // by hand still works; the schedule takes over again at the next on or off time.
   let nightWas = null;
