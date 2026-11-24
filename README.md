@@ -96,6 +96,11 @@ Then start Nebulux OS like this (all on one line):
 
 ## What's in it
 
+- **New in 4.0:**
+  - **Quick Search** (Nebulux + Space): apps, settings, files, Store apps, sums, unit conversions and the weather in one box.
+  - **Stage**, **desktop widgets**, **hot corners**, the **App Grid** (Nebulux + G), an auto-hiding taskbar and icons that grow under the pointer.
+  - **Calendar**, **Peek** (Space on a file), **color tags** in File Explorer, **Versions** in Notepad, **favorites** in Photos, **picture in picture**, and **Now playing** in quick settings.
+  - Screenshots of part of the screen (Nebulux + Shift + S), **Magnifier** (Nebulux + Plus), **Increase contrast**, **Screen time**, and a background that follows the day.
 - **Sign-in:** a lock screen with the clock.
   - Accounts with passwords, more than one account, and a 30-second lock after 5 wrong tries.
   - Only a salted, scrambled form of each password is kept.
