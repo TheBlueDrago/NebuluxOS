@@ -13,6 +13,7 @@
     if (NX.onToast) NX.onToast(text);
     const box = $("#toasts"), t = document.createElement("div"); t.className = "toast"; t.innerHTML = `${NX.icon("logo", 18)}<span>${NX.esc(text)}</span>`;
     box.appendChild(t); while (box.children.length > 3) box.firstChild.remove();
+    t.title = "Click to close"; t.onclick = () => { t.classList.add("out"); setTimeout(() => t.remove(), 350); };
     setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3600);
   };
   // the internet: this computer's real connection, plus the OS's own Wi-Fi switch and airplane mode

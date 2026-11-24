@@ -289,3 +289,9 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 
 /* ---------- the desktop selection box ---------- */
 #nx-lasso{position:fixed;z-index:60;pointer-events:none;border:1px solid color-mix(in srgb,var(--accent) 80%,#fff);background:color-mix(in srgb,var(--accent) 22%,transparent);border-radius:4px}
+
+/* ---------- toasts: a thin bar shows how long they stay; click one to close it ---------- */
+.toast{position:relative;overflow:hidden;cursor:pointer}
+.toast::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:100%;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 40%,#fff));transform-origin:left;animation:toastbar 3.2s linear forwards;opacity:.8}
+@keyframes toastbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.noanim .toast::after{animation:none;display:none}
