@@ -632,3 +632,29 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
     if (z && w) setTimeout(() => NX.snapRect(w, ...L[+z.dataset.l][+z.dataset.z]), 0);
   }, true);
 })();
+
+// ---------- Ctrl + Alt + Delete: Lock, Switch user, Sign out, Change a password, Task Manager ----------
+(function () {
+  function open() {
+    if (!NX.me || document.getElementById("nx-sec")) return; if (NX.shell) NX.shell.closeFlyouts();
+    const o = document.createElement("div"); o.id = "nx-sec"; o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Security options");
+    const it = [["lock", "Lock"], ["switch", "Switch user"], ["out", "Sign out"], ["pass", "Change a password"], ["tm", "Task Manager"]];
+    o.innerHTML = `<div class="sec-list">${it.map(([k, t]) => `<button data-sec="${k}">${t}</button>`).join("")}<button data-sec="cancel" class="sec-cancel">Cancel</button></div>
+      <div class="sec-power"><button data-sec="restart" title="Restart" aria-label="Restart">${NX.icon("restart", 20)}</button><button data-sec="off" title="Shut down" aria-label="Shut down">${NX.icon("power", 20)}</button></div>`;
+    document.body.appendChild(o);
+    const close = () => { o.classList.add("out"); setTimeout(() => o.remove(), 200); };
+    o.querySelectorAll("[data-sec]").forEach((b) => (b.onclick = () => {
+      const k = b.dataset.sec; close(); const S = NX.shell || {};
+      if (k === "lock" || k === "switch") S.lockKeep && S.lockKeep();
+      else if (k === "out") S.signOut && S.signOut();
+      else if (k === "pass") NX.open("settings", { page: "accounts" });
+      else if (k === "tm") NX.open("taskmgr");
+      else if (k === "restart" || k === "off") S.power && S.power(k === "restart" ? "restart" : "off");
+    }));
+    o.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+    setTimeout(() => { const f = o.querySelector("[data-sec=lock]"); if (f) f.focus(); }, 50);
+  }
+  NX.securityScreen = open;
+  document.addEventListener("nx:key", (e) => { if (e.detail === "sec") open(); });
+  addEventListener("keydown", (e) => { if (e.ctrlKey && e.altKey && (e.key === "Delete" || e.code === "Delete")) { e.preventDefault(); open(); } }, true);
+})();

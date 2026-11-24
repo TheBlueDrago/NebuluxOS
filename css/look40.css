@@ -451,3 +451,15 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .pv-none{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--sub);text-align:center;font-size:13px;opacity:.8}
 .fx-tools [data-t=preview].on{background:color-mix(in srgb,var(--accent) 25%,transparent);color:var(--txt)}
 @media (max-width:700px){.fx-pv{display:none!important}}
+
+/* ---------- Ctrl + Alt + Delete ---------- */
+#nx-sec{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--aura,#2a1d5a) 40%,#06030fe6);backdrop-filter:blur(30px) saturate(1.3);-webkit-backdrop-filter:blur(30px) saturate(1.3);animation:nxfade .25s ease-out;color:#fff}
+#nx-sec.out{opacity:0;transition:opacity .2s}
+.sec-list{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:280px}
+.sec-list button{font-size:20px;font-weight:300;padding:8px 14px;border-radius:10px;color:#fff;text-align:left;transition:background .15s,transform .15s}
+.sec-list button:hover,.sec-list button:focus-visible{background:#ffffff1c;transform:translateX(4px)}
+.sec-cancel{margin-top:22px;font-size:15px!important;font-weight:600!important;background:#ffffff18;padding:10px 34px!important}
+.sec-power{position:absolute;right:28px;bottom:28px;display:flex;gap:8px}
+.sec-power button{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#fff;background:#ffffff14}.sec-power button:hover{background:#ffffff2a}
+#nx-sec::before{content:"";position:absolute;inset:-40px;background:var(--wall) center/cover;filter:blur(40px) brightness(.45) saturate(1.2);z-index:-1}
+#nx-sec{isolation:isolate}

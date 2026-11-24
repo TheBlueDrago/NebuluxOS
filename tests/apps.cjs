@@ -458,6 +458,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(await p.evaluate(() => { const pv = document.querySelector(".win[data-app=files] .fx-pv"); return !pv.hidden && /Welcome.txt/.test(pv.textContent) && /Welcome to Nebulux OS/.test(pv.querySelector(".pv-txt").textContent); }), "File Explorer's Preview pane shows the selected file and its first lines");
     await p.evaluate(() => { NX.setData("fx-pv", false); NX.closeAll(); });
   }
+  // Ctrl + Alt + Delete
+  await p.evaluate(() => { NX.closeAll(); document.dispatchEvent(new CustomEvent("nx:key", { detail: "sec" })); }); await wait(400); await shot("ctrl-alt-del");
+  ok(await p.evaluate(() => { const o = document.querySelector("#nx-sec"); return !!o && ["Lock", "Switch user", "Sign out", "Change a password", "Task Manager", "Cancel"].every((t) => [...o.querySelectorAll("button")].some((b) => b.textContent === t)); }), "Ctrl + Alt + Delete shows Lock, Switch user, Sign out, Change a password and Task Manager");
+  await p.evaluate(() => document.querySelector("#nx-sec [data-sec=tm]").click()); await wait(600);
+  ok(await p.evaluate(() => !document.querySelector("#nx-sec") && !!document.querySelector(".win[data-app=taskmgr]")), "and Task Manager opens from it");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
