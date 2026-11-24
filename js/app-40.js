@@ -771,3 +771,18 @@ NX.noteIcon = (text) => {
     const op = box.querySelector("#s-bkopen"); if (op) op.onclick = () => NX.open("files", { path: NX.data("backup-last", {}).path });
   };
 })();
+
+// ---------- new windows grow out of the place you clicked (a taskbar button, a Start tile, a desktop icon) ----------
+(function () {
+  let pt = null;
+  addEventListener("pointerdown", (e) => { pt = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
+  document.addEventListener("nx:winopen", (e) => {
+    const w = NX.wins.get(e.detail); if (!w || !pt || Date.now() - pt.t > 900) return;
+    const root = document.documentElement; if (root.classList.contains("noanim") || root.classList.contains("nx-lite")) return;
+    const el = w.el;
+    const par = (el.offsetParent || document.body).getBoundingClientRect(), ox = pt.x - par.left - el.offsetLeft, oy = pt.y - par.top - el.offsetTop; pt = null;
+    el.style.transformOrigin = `${Math.round(ox)}px ${Math.round(oy)}px`;
+    const an = el.animate([{ transform: "scale(.16)", opacity: 0 }, { transform: "scale(1.012)", opacity: 1, offset: .7 }, { transform: "none", opacity: 1 }], { duration: 420, easing: "cubic-bezier(.2,.8,.25,1)" });
+    an.onfinish = an.oncancel = () => { el.style.transformOrigin = ""; };
+  });
+})();
