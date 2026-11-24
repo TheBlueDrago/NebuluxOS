@@ -499,3 +499,68 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   };
   document.addEventListener("nx:files", () => setTimeout(NX.binCheck, 200)); document.addEventListener("nx:signin", () => setTimeout(NX.binCheck, 800)); setInterval(NX.binCheck, 20000);
 })();
+
+// ---------- screen saver: after a few idle minutes, a starfield or a floating clock; any key or move ends it ----------
+(function () {
+  let last = Date.now(), el = null, raf = 0;
+  const KINDS = { off: "None", stars: "Starfield", clock: "Floating clock" };
+  NX.saverKinds = KINDS;
+  const poke = () => { last = Date.now(); if (el) stop(); };
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, poke, { capture: true, passive: true }));
+  function playing() { return [...document.querySelectorAll("video,audio")].some((m) => !m.paused && !m.ended); }
+  function start(kind) {
+    if (el) return; kind = kind || NX.prefs().saver;
+    el = document.createElement("div"); el.id = "nx-saver"; el.setAttribute("aria-hidden", "true");
+    el.innerHTML = kind === "clock" ? `<div class="sv-clock"><b></b><span></span></div>` : `<canvas></canvas>`;
+    document.body.appendChild(el); requestAnimationFrame(() => el && el.classList.add("on"));
+    if (kind === "clock") clock(); else stars();
+  }
+  function stop() {
+    cancelAnimationFrame(raf); const e = el; el = null; if (!e) return;
+    e.classList.remove("on"); setTimeout(() => e.remove(), 400);
+    if (NX.me && NX.prefs().saverLock && !e.dataset.preview && NX.shell && NX.shell.lockKeep) NX.shell.lockKeep();
+  }
+  function stars() {
+    const c = el.querySelector("canvas"), g = c.getContext("2d"), lite = document.documentElement.classList.contains("nx-lite");
+    const fit = () => { c.width = innerWidth; c.height = innerHeight; }; fit();
+    const acc = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#7c5cff";
+    const N = lite ? 160 : 420, S = [], rnd = () => ({ x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2, z: Math.random() * 1 + 0.05, h: Math.random() < 0.25 });
+    for (let i = 0; i < N; i++) S.push(rnd());
+    let t0 = performance.now();
+    const draw = (t) => {
+      if (!el) return; const dt = Math.min(0.05, (t - t0) / 1000); t0 = t;
+      if (c.width !== innerWidth) fit();
+      g.fillStyle = "rgba(4,2,12,0.35)"; g.fillRect(0, 0, c.width, c.height);
+      const cx = c.width / 2, cy = c.height / 2, k = Math.max(c.width, c.height) * 0.5;
+      for (const s of S) {
+        const pz = s.z; s.z -= dt * 0.32; if (s.z <= 0.02) { Object.assign(s, rnd(), { z: 1.05 }); continue; }
+        const x = cx + (s.x / s.z) * k * 0.5, y = cy + (s.y / s.z) * k * 0.5, px = cx + (s.x / pz) * k * 0.5, py = cy + (s.y / pz) * k * 0.5;
+        if (x < -50 || x > c.width + 50 || y < -50 || y > c.height + 50) { Object.assign(s, rnd(), { z: 1.05 }); continue; }
+        const a = Math.min(1, (1.05 - s.z) * 1.4);
+        g.strokeStyle = s.h ? acc : "#ffffff"; g.globalAlpha = a; g.lineWidth = Math.max(0.6, (1.1 - s.z) * 2.6);
+        g.beginPath(); g.moveTo(px, py); g.lineTo(x, y); g.stroke();
+      }
+      g.globalAlpha = 1; raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+  }
+  function clock() {
+    const box = el.querySelector(".sv-clock"); let x = innerWidth * 0.3, y = innerHeight * 0.35, vx = 38, vy = 26, t0 = performance.now();
+    const step = (t) => {
+      if (!el) return; const dt = Math.min(0.05, (t - t0) / 1000); t0 = t; const d = new Date();
+      box.querySelector("b").textContent = NX.fmtTime ? NX.fmtTime(d) : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      box.querySelector("span").textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+      const w = box.offsetWidth, h = box.offsetHeight; x += vx * dt; y += vy * dt;
+      if (x < 20 || x + w > innerWidth - 20) { vx = -vx; x = Math.max(20, Math.min(innerWidth - w - 20, x)); }
+      if (y < 20 || y + h > innerHeight - 20) { vy = -vy; y = Math.max(20, Math.min(innerHeight - h - 20, y)); }
+      box.style.transform = `translate(${x}px,${y}px)`; raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  NX.saver = { start, stop, preview: (k) => { last = Date.now(); start(k); if (el) el.dataset.preview = "1"; }, get on() { return !!el; } };
+  setInterval(() => {
+    const p = NX.me ? NX.prefs() : null; if (!p || !p.saver || p.saver === "off" || el) return;
+    const lk = document.getElementById("lock"); if (lk && !lk.hidden) return;
+    if (Date.now() - last >= (p.saverWait || 5) * 60000 && !playing()) start();
+  }, 5000);
+})();

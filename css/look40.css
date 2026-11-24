@@ -372,3 +372,12 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .s-wn{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
 .s-wn .wn-item{flex-direction:row;align-items:flex-start;gap:12px;border-radius:12px;padding:12px 14px}
 .s-wn .wn-item>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+
+/* ---------- screen saver ---------- */
+#nx-saver{position:fixed;inset:0;z-index:9000;background:#04020c;opacity:0;transition:opacity .4s;cursor:none}
+#nx-saver.on{opacity:1}#nx-saver canvas{width:100%;height:100%;display:block}
+.sv-clock{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:flex-start;color:#fff;will-change:transform}
+.sv-clock b{font:200 96px/1 "Segoe UI Variable Display","Segoe UI",sans-serif;letter-spacing:1px;text-shadow:0 0 40px color-mix(in srgb,var(--accent) 70%,transparent)}
+.sv-clock span{font-size:20px;color:#cfc6f2;margin-top:8px}
+@media (max-width:560px){.sv-clock b{font-size:60px}.sv-clock span{font-size:15px}}
+.s-svc{display:flex;gap:6px;flex-wrap:wrap;align-items:center}

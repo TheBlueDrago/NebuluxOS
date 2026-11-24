@@ -406,6 +406,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => { const w = document.querySelector(".win[data-app=files]"); return !!w && /bin test/.test(w.textContent); }), "and opens the Recycle Bin");
   await p.evaluate(async () => { await NX.fs.emptyTrash(); NX.closeAll(); await NX.binCheck(); });
   ok(await p.evaluate(() => NX.binFull === false), "and is empty again after emptying it");
+  // screen saver
+  await p.evaluate(() => { NX.closeAll(); NX.saver.preview("stars"); }); await wait(900); await shot("saver-stars");
+  ok(await p.evaluate(() => !!document.querySelector("#nx-saver.on canvas")), "the Starfield screen saver shows");
+  await p.mouse.move(200, 200); await p.mouse.move(260, 240); await wait(600);
+  ok(await p.evaluate(() => !document.querySelector("#nx-saver") && document.querySelector("#lock").hidden), "moving the mouse ends it (a preview doesn't lock)");
+  await p.evaluate(() => NX.saver.preview("clock")); await wait(900); await shot("saver-clock");
+  ok(await p.evaluate(() => /\d/.test(document.querySelector("#nx-saver .sv-clock b").textContent)), "the Floating clock screen saver shows the time");
+  await p.keyboard.press("Shift"); await wait(600);
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");
