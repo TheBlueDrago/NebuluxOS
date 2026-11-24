@@ -305,3 +305,61 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
   .s-row:has(.s-rc > :not(.tg):not(button):not(.btn)) .s-rc{flex-basis:100%;display:flex;justify-content:flex-start;overflow-x:auto}
   .s-rc .seg{flex-wrap:nowrap}
 }
+
+/* ---------- the update popup 4.0: a glowing header, notes as cards, Update now with a live bar ---------- */
+.upd-pop{background:#05030f8c;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.upd-pop.out{opacity:0;transition:opacity .2s}
+.upd-card{width:min(520px,calc(100vw - 28px));max-height:calc(100vh - 48px);overflow-y:auto;border-radius:22px;background:var(--bg2);backdrop-filter:blur(40px) saturate(1.5);-webkit-backdrop-filter:blur(40px) saturate(1.5);box-shadow:0 40px 100px #000c,0 0 0 1px #ffffff1c,inset 0 1px 0 #ffffff26;color:var(--txt);animation:updIn .5s var(--ease-spring,cubic-bezier(.2,1.3,.4,1))}
+@keyframes updIn{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
+.upd-hero{position:relative;overflow:hidden;padding:30px 28px 24px;text-align:center;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 38%,#130b2e),#0d0822 70%);color:#fff;border-bottom:1px solid #ffffff14}
+.upd-orb{position:absolute;border-radius:50%;filter:blur(38px);opacity:.75;pointer-events:none;animation:updOrb 9s ease-in-out infinite alternate}
+.upd-orb.a{width:220px;height:220px;left:-60px;top:-80px;background:var(--accent)}
+.upd-orb.b{width:200px;height:200px;right:-50px;top:-40px;background:#ec4899;animation-delay:-3s;opacity:.55}
+.upd-orb.c{width:240px;height:160px;left:30%;bottom:-110px;background:#22d3ee;animation-delay:-6s;opacity:.4}
+@keyframes updOrb{to{transform:translate(30px,20px) scale(1.15)}}
+.upd-logo{position:relative;width:88px;height:88px;margin:0 auto 14px;display:grid;place-items:center;border-radius:26px;background:#ffffff14;box-shadow:inset 0 1px 0 #ffffff33,0 14px 34px #0008}
+.upd-logo svg{position:relative;z-index:1;filter:drop-shadow(0 6px 16px #0009)}
+.upd-ring{position:absolute;inset:-6px;border-radius:30px;background:conic-gradient(from var(--ua,0deg),transparent,var(--accent),#f0abfc,transparent 60%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:2px;animation:updSpin 3.2s linear infinite}@property --ua{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes updSpin{to{--ua:360deg}}
+.upd-pill{position:relative;display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:#ffffff1a;border:1px solid #ffffff2a;font-size:12.5px;color:#e9e4ff;margin-bottom:10px}
+.upd-pill b{color:#fff;font-weight:700}
+.upd-hero h2{position:relative;margin:0;font-size:25px;font-weight:700;letter-spacing:-.3px}
+.upd-hero p{position:relative;margin:8px auto 0;max-width:380px;color:#d9d2f5;font-size:13.5px;line-height:1.45}
+.upd-body{padding:20px 24px 22px;display:flex;flex-direction:column;gap:12px}
+.upd-body h4{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub)}
+.upd-notes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.upd-n{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:13px;opacity:0;animation:updNote .4s var(--ease-out,ease) forwards;animation-delay:calc(.15s + var(--k) * .05s)}
+@keyframes updNote{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.upd-n i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 25%,transparent);color:color-mix(in srgb,var(--accent) 60%,#fff)}
+.upd-acts{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.upd-go{height:44px;font-size:15px;font-weight:600;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 10px 26px color-mix(in srgb,var(--accent) 45%,transparent)}
+.upd-more{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.upd-more .btn{height:36px;border-radius:10px}
+.upd-foot{color:var(--sub);font-size:12px;line-height:1.45;text-align:center}
+.upd-prog{display:flex;flex-direction:column;gap:8px;align-items:stretch;text-align:center}.upd-prog small{color:var(--sub);font-size:13px}
+.upd-bar{height:8px;border-radius:999px;background:var(--card2);overflow:hidden;position:relative}
+.upd-bar i{position:absolute;top:0;bottom:0;width:40%;border-radius:999px;background:linear-gradient(90deg,var(--accent),#f0abfc);animation:updBar 1.3s ease-in-out infinite}
+@keyframes updBar{from{left:-40%}to{left:100%}}
+.upd-prog.done .upd-bar i{left:0;width:100%;animation:none;background:#22c55e}.upd-prog.failed .upd-bar i{left:0;width:100%;animation:none;background:#ef4444}
+[data-theme=light] .upd-card{box-shadow:0 40px 100px #2b1d5a55,0 0 0 1px #1b123a17,inset 0 1px 0 #fff}
+.upd-installing{display:flex;flex-direction:column;align-items:center;gap:14px}.upd-installing .upd-bar{width:260px}.upd-logo.big{width:110px;height:110px;border-radius:32px}.upd-logo.big .upd-ring{border-radius:36px}
+.noanim .upd-card,.noanim .upd-n,.noanim .upd-orb,.noanim .upd-ring{animation:none;opacity:1}
+@media (max-width:480px){.upd-notes,.upd-more{grid-template-columns:1fr}.upd-hero{padding:24px 18px 20px}.upd-hero h2{font-size:21px}}
+
+/* ---------- What's new 4.0: the same glowing look as the update popup, a colored icon on each item, OK always in view ---------- */
+.wn-pop{background:#05030f8c;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.wn-pop .nx-pcard{border-radius:22px;padding:0 0 0;gap:0;box-shadow:0 40px 100px #000c,0 0 0 1px #ffffff1c,inset 0 1px 0 #ffffff26;animation:updIn .5s var(--ease-spring,cubic-bezier(.2,1.3,.4,1));width:min(720px,calc(100vw - 28px))}
+.wn-pop .nx-pcard>.nx-ph{padding:22px 24px 6px}
+.wn-pop .wn-hero{position:relative;overflow:hidden;margin:0 0 6px;border-radius:22px 22px 0 0;padding:30px 30px 26px;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 40%,#130b2e),#0d0822 72%);color:#fff;border-bottom:1px solid #ffffff14}
+.wn-pop .wn-hero>*:not(.upd-orb){position:relative}
+.wn-pop .wn-hero small{color:#d9d2f5}
+.wn-pop .wn-ver{font-size:92px;filter:drop-shadow(0 8px 30px color-mix(in srgb,var(--accent) 60%,transparent))}
+.wn-pop .wn-try .btn:not(.primary){background:#ffffff18;border-color:#ffffff2a;color:#fff}
+.wn-pop .wn-list,.wn-pop .wn-before{margin:10px 22px 0}
+.wn-pop .wn-item{flex-direction:row;align-items:flex-start;gap:12px;border-radius:14px;padding:13px 14px;opacity:0;animation:updNote .4s var(--ease-out,ease) forwards;animation-delay:calc(.12s + var(--k) * .04s);transition:border-color .15s,transform .15s}
+.wn-pop .wn-item:hover{border-color:color-mix(in srgb,var(--c) 55%,var(--line));transform:translateY(-1px)}
+.wn-pop .wn-item>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.wn-ic{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 55%,#000));box-shadow:0 6px 14px color-mix(in srgb,var(--c) 40%,transparent),inset 0 1px 0 #ffffff40}
+.wn-ic svg{width:16px;height:16px}
+.wn-foot{position:sticky;bottom:0;margin:14px 0 0;padding:14px 22px;background:color-mix(in srgb,var(--bg2) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);z-index:2}
+.noanim .wn-pop .wn-item,.noanim .wn-pop .nx-pcard{animation:none;opacity:1}
+.wn-pop .nx-pcard>*{flex-shrink:0}

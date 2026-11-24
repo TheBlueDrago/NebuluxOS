@@ -20,7 +20,7 @@
   // the overlay while it installs; the screen starts again on the new version by itself
   function installing(v) {
     const o = $("#off"); if (!o) return;
-    o.hidden = false; o.innerHTML = `<div class="off-msg">${NX.icon("logo", 56)}<span class="spin"></span><b>Updating to Nebulux OS ${NX.esc(v)}</b><small>Keep the computer on. It starts again by itself.</small></div>`;
+    o.hidden = false; o.innerHTML = `<div class="off-msg upd-installing"><div class="upd-logo big"><span class="upd-ring"></span>${NX.icon("logo", 72)}</div><b>Updating to Nebulux OS ${NX.esc(v || "")}</b><div class="upd-bar"><i></i></div><small>Keep the computer on. It starts again by itself.</small></div>`;
   }
   async function install(onMsg) {
     const v = info && info.latest;
@@ -45,23 +45,39 @@
   function ask(u) {
     if (asked || $(".upd-pop")) return; asked = true;
     const d = document.createElement("div"); d.className = "upd-pop nx-pop"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Nebulux OS update");
-    const notes = (u.notes || []).slice(0, 8);
-    d.innerHTML = `<div class="nx-pcard"><div class="nx-ph">${NX.icon("logo", 40)}<div><b>Nebulux OS ${NX.esc(u.latest)} is ready</b><small>You're on ${NX.esc(u.current)}. Updating takes a minute and keeps your files and settings.</small></div></div>
-      ${notes.length ? `<ul class="nx-plist">${notes.map((n) => `<li>${NX.esc(n)}</li>`).join("")}</ul>` : ""}
-      ${u.needsIso ? `<p class="nx-pnote">This version also changes the core of Nebulux OS (its kernel and drivers). The update brings the new screens and apps; for everything, download the new Nebulux OS from nebuluxos.thebluedragonstriker.workers.dev and write it to your USB.</p>` : ""}
-      ${NX.persistent === false ? `<p class="nx-pnote">This USB doesn't save changes, so the update lasts until the computer restarts.</p>` : ""}
-      <div class="nx-pbtns"><button class="btn" data-u="never">Never</button><button class="btn" data-u="remind">Remind me</button><button class="btn primary" data-u="later">Later</button></div>
-      <small class="nx-pfoot">Later installs it tonight. Remind me asks again in 30 minutes. Never skips it, until you update from Settings.</small></div>`;
+    const notes = (u.notes || []).slice(0, 8), big = /^\d+\.0$/.test(String(u.latest || ""));
+    const tick = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    d.innerHTML = `<div class="upd-card">
+      <div class="upd-hero"><i class="upd-orb a"></i><i class="upd-orb b"></i><i class="upd-orb c"></i>
+        <div class="upd-logo"><span class="upd-ring"></span>${NX.icon("logo", 58)}</div>
+        <span class="upd-pill">${NX.esc(u.current || "")}<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>${NX.esc(u.latest)}</b></span>
+        <h2>Nebulux OS ${NX.esc(u.latest)} is ready</h2>
+        <p>${big ? "A big update with a whole new look. " : ""}Updating takes a minute and keeps your files, apps and settings.</p></div>
+      <div class="upd-body">
+        ${notes.length ? `<h4>What's in it</h4><div class="upd-notes">${notes.map((n, k) => `<div class="upd-n" style="--k:${k}"><i>${tick}</i><span>${NX.esc(n)}</span></div>`).join("")}</div>` : ""}
+        ${u.needsIso ? `<p class="nx-pnote">This version also changes the core of Nebulux OS (its kernel and drivers). The update brings the new screens and apps; for everything, download the new Nebulux OS from nebuluxos.thebluedragonstriker.workers.dev and write it to your USB again.</p>` : ""}
+        ${NX.persistent === false ? `<p class="nx-pnote">This USB doesn't save changes, so the update lasts until the computer restarts.</p>` : ""}
+        <div class="upd-prog" hidden><div class="upd-bar"><i></i></div><small>Getting ready...</small></div>
+        <div class="upd-acts"><button class="btn primary upd-go" data-u="now">${NX.icon("download", 16)}Update now</button><div class="upd-more"><button class="btn" data-u="later">Later</button><button class="btn" data-u="remind">Remind me</button><button class="btn" data-u="never">Never</button></div></div>
+        <small class="upd-foot">Later installs it tonight. Remind me asks again in 30 minutes. Never skips it, until you update from Settings.</small>
+      </div></div>`;
     document.body.appendChild(d);
-    const close = () => { d.remove(); asked = false; };
-    d.querySelectorAll("[data-u]").forEach((b) => (b.onclick = () => {
+    const close = () => { d.classList.add("out"); setTimeout(() => d.remove(), 220); asked = false; };
+    d.querySelectorAll("[data-u]").forEach((b) => (b.onclick = async () => {
       const k = b.dataset.u;
+      if (k === "now") {
+        const pg = d.querySelector(".upd-prog"), msg = pg.querySelector("small"), acts = d.querySelector(".upd-acts");
+        acts.hidden = true; d.querySelector(".upd-foot").hidden = true; pg.hidden = false; pg.classList.remove("failed", "done"); msg.textContent = "Getting ready..."; d.classList.add("working");
+        try { await install((t) => { msg.textContent = t; }); if (!d.isConnected) return; if (!$("#off") || $("#off").hidden) { pg.classList.add("done"); msg.textContent = "Nebulux OS is up to date."; setTimeout(close, 1500); } }
+        catch (e) { d.classList.remove("working"); pg.classList.add("failed"); msg.textContent = e.message || "The update didn't install."; acts.hidden = false; b.lastChild.textContent = "Try again"; }
+        return;
+      }
       if (k === "later") { NX.set("upd-later", u.latest); NX.toast("Nebulux OS " + u.latest + " installs tonight."); night(); }
       if (k === "remind") { NX.set("upd-remind", Date.now() + REMIND); NX.toast("You'll be reminded in 30 minutes."); clearTimeout(remindT); remindT = setTimeout(consider, REMIND + 500); }
       if (k === "never") { NX.set("upd-skip", u.latest); NX.toast("Skipped. Settings > Nebulux Update can still install it."); }
-      close();
+      d.remove(); asked = false;
     }));
-    const f = d.querySelector("[data-u=later]"); if (f) f.focus({ preventScroll: true });
+    const f = d.querySelector("[data-u=now]"); if (f) f.focus({ preventScroll: true });
   }
 
   // tonight: installs between 2 and 4 in the morning
@@ -88,6 +104,8 @@
   }
 
   // What's new: once for each person after an update (new accounts start on this version, so they don't see it)
+  // a color and a small picture for each What's new item
+  const WNC = ["#7c5cff", "#22d3ee", "#f472b6", "#34d399", "#f59e0b", "#60a5fa", "#a78bfa", "#fb7185"], WNI = ["spark", "brush", "apps", "search", "time", "folder", "sun", "bell"];
   const seenKey = (u) => "seen-whatsnew-" + u.id;
   function whatsNew() {
     if (!NX.me || NX.get(seenKey(NX.me), null) === NX.version || $(".wn-pop")) return;
@@ -95,14 +113,14 @@
     const d = document.createElement("div"); d.className = "wn-pop nx-pop"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "What's new");
     // a whole new version (like 4.0) gets a big welcome with buttons to try the main new things
     const big = /^\d+\.0$/.test(NX.version);
-    d.innerHTML = `<div class="nx-pcard nx-pwide">${big ? `<div class="wn-hero"><span class="wn-ver">${NX.esc(NX.version)}</span><div><b>A whole new Nebulux OS</b><small>A whole new look with Themes, plus Quick Search, Stage, desktop widgets, Calendar and much more.</small><div class="wn-try"><button class="btn primary" data-w="qs">Try Quick Search</button><button class="btn" data-w="grid">See every app</button><button class="btn" data-w="pers">Desktop extras</button></div></div></div>` : `<div class="nx-ph">${NX.icon("logo", 40)}<div><b>What's new in Nebulux OS ${NX.esc(NX.version)}</b><small>Everything that was added, in one place.</small></div></div>`}
-      <div class="wn-list">${NX.whatsNew.map((w) => `<div class="wn-item"><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div>`).join("")}</div>
+    d.innerHTML = `<div class="nx-pcard nx-pwide">${big ? `<div class="wn-hero"><i class="upd-orb a"></i><i class="upd-orb b"></i><i class="upd-orb c"></i><span class="wn-ver">${NX.esc(NX.version)}</span><div><b>A whole new Nebulux OS</b><small>A whole new look with Themes, plus Quick Search, Stage, desktop widgets, Calendar and much more.</small><div class="wn-try"><button class="btn primary" data-w="qs">Try Quick Search</button><button class="btn" data-w="grid">See every app</button><button class="btn" data-w="pers">Desktop extras</button><button class="btn" data-w="themes">Pick a theme</button></div></div></div>` : `<div class="nx-ph">${NX.icon("logo", 40)}<div><b>What's new in Nebulux OS ${NX.esc(NX.version)}</b><small>Everything that was added, in one place.</small></div></div>`}
+      <div class="wn-list">${NX.whatsNew.map((w, k) => `<div class="wn-item" style="--k:${Math.min(k, 14)};--c:${WNC[k % WNC.length]}"><i class="wn-ic">${NX.icon(WNI[k % WNI.length], 16)}</i><div><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div></div>`).join("")}</div>
       ${(NX.whatsNewBefore || []).length ? `<details class="wn-before"><summary>Earlier updates</summary><div class="wn-list">${NX.whatsNewBefore.map((w) => `<div class="wn-old"><b>${NX.esc(w[0])}</b><span>${NX.esc(w[1])}</span></div>`).join("")}</div></details>` : ""}
-      <div class="nx-pbtns"><button class="btn" data-w="more">See it in Settings</button><button class="btn primary" data-w="ok">OK</button></div></div>`;
+      <div class="nx-pbtns wn-foot"><button class="btn" data-w="more">See it in Settings</button><button class="btn primary" data-w="ok">OK</button></div></div>`;
     document.body.appendChild(d);
     d.querySelector("[data-w=ok]").onclick = () => d.remove();
     d.querySelector("[data-w=more]").onclick = () => { d.remove(); NX.open("settings", { page: "update" }); };
-    d.querySelectorAll("[data-w=qs],[data-w=grid],[data-w=pers]").forEach((b) => (b.onclick = () => { d.remove(); const k = b.dataset.w; if (k === "qs" && NX.quickSearch) NX.quickSearch(); if (k === "grid" && NX.appGrid) NX.appGrid(); if (k === "pers") NX.open("settings", { page: "personal" }); }));
+    d.querySelectorAll("[data-w=qs],[data-w=grid],[data-w=pers],[data-w=themes]").forEach((b) => (b.onclick = () => { d.remove(); const k = b.dataset.w; if (k === "qs" && NX.quickSearch) NX.quickSearch(); if (k === "grid" && NX.appGrid) NX.appGrid(); if (k === "pers") NX.open("settings", { page: "personal" }); if (k === "themes") { NX.open("settings", { page: "personal" }); setTimeout(() => { const t = document.querySelector(".win[data-app=settings] .s-themes"); if (t) t.scrollIntoView({ block: "start", behavior: "smooth" }); }, 450); } }));
     d.querySelector("[data-w=ok]").focus({ preventScroll: true }); d.querySelector(".nx-pcard").scrollTop = 0;
   }
   const add = NX.addUser;
