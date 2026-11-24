@@ -233,3 +233,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .tm-gl{stroke:currentColor;opacity:.055;stroke-width:1;vector-effect:non-scaling-stroke}
 .tm-card{border-radius:calc(var(--r-menu,14px) - 2px)}
 .tm-ch b{font-size:15px}
+
+/* ---------- a count on a taskbar button (Reminders that are due) ---------- */
+.tb-app{position:relative}.tb-cnt{position:absolute;top:3px;right:3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--glass,#161028),0 2px 6px #0006;pointer-events:none;animation:cntpop .35s var(--ease-spring,ease)}
+@keyframes cntpop{from{transform:scale(0)}to{transform:scale(1)}}

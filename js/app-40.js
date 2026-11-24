@@ -412,3 +412,11 @@ NX.looks40 = [
   { name: "Daybreak", wall: 5, theme: "light", accent: "#2563eb", corners: "round", glass: "frosted" },
 ];
 NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.theme === t.theme && p.accent === t.accent && (p.corners40 || "round") === t.corners && (p.glass || "frosted") === t.glass; };
+
+// ---------- a count on Reminders' taskbar button: how many reminders are due ----------
+(function () {
+  const due = () => { if (!NX.me) return 0; const d = new Date(), now = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); return NX.data("todos", []).filter((t) => !t.done && t.due && t.due <= now).length; };
+  NX.appBadge = (id) => { if (id !== "reminders") return ""; const n = due(); return n ? (n > 9 ? "9+" : String(n)) : ""; };
+  let last = -1; const tick = () => { const n = due(); if (n !== last) { last = n; if (NX.shell && NX.me) NX.shell.taskbar(); } };
+  document.addEventListener("nx:todos", () => setTimeout(tick, 30)); setInterval(tick, 30000);
+})();

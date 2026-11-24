@@ -384,6 +384,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector(".win .wb-close").click()); await wait(400);
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=notepad]") || document.querySelector(".nx-dlg, .dlg")), "the red dot closes the window");
   await p.evaluate(() => { NX.setPref("wbtn", "plain"); NX.closeAll(); });
+  // a count on Reminders' taskbar button when reminders are due
+  await p.evaluate(() => { NX.closeAll(); NX.setData("todos", [{ id: "bd1", text: "Late one", done: false, due: "2020-01-01T09:00", rang: 1 }]); document.dispatchEvent(new CustomEvent("nx:todos")); NX.open("reminders"); }); await wait(600);
+  ok(await p.evaluate(() => { const c = document.querySelector('.tb-app[data-app="reminders"] .tb-cnt'); return !!c && c.textContent === "1"; }), "Reminders' taskbar button shows how many are due");
+  await p.evaluate(() => { NX.setData("todos", []); document.dispatchEvent(new CustomEvent("nx:todos")); NX.closeAll(); });
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");
