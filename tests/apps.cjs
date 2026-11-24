@@ -515,6 +515,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const cv = document.createElement("canvas"); cv.width = 40; cv.height = 30; cv.getContext("2d").fillRect(0, 0, 40, 30); NX.setData("wall-custom", cv.toDataURL()); NX.setPref("wallpaper", "custom"); NX.setPref("wallFit", "fit"); NX.closeAll(); NX.open("settings", { page: "personal" }); }); await wait(700);
   ok(await p.evaluate(() => getComputedStyle(document.querySelector("#desktop")).backgroundSize === "contain" && !!document.querySelector("button[data-wfit=fit].on")), "Choose a fit shows your own picture whole (Fit)");
   await p.evaluate((w) => { NX.setPref("wallFit", "fill"); NX.setPref("wallpaper", w); NX.closeAll(); }, wBefore);
+  // drag a window into a corner: a quarter of the screen
+  if (W > 700) {
+    await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(700);
+    const q0 = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wt-name").getBoundingClientRect(); return { x: r.x + 30, y: r.y + r.height / 2 }; });
+    const A = await p.evaluate(() => { const r = document.querySelector("#windows").getBoundingClientRect(); return { w: r.width, h: r.height, x: r.x, y: r.y }; });
+    await p.mouse.move(q0.x, q0.y); await p.mouse.down(); await p.mouse.move(q0.x + 60, q0.y + 60, { steps: 4 }); await p.mouse.move(A.x + A.w - 2, A.y + A.h - 20, { steps: 8 }); await wait(150); await p.mouse.up(); await wait(500);
+    ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return Math.abs(r.x - A.width / 2) < 3 && Math.abs(r.width - A.width / 2) < 3 && Math.abs(r.height - A.height / 2) < 3; }), "dragging a window into a corner snaps it to a quarter");
+    await p.evaluate(() => NX.closeAll());
+  }
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

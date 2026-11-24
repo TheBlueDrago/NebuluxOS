@@ -109,7 +109,8 @@
           if (w.max || w.snap) { const fx = (sx - el.getBoundingClientRect().left) / el.getBoundingClientRect().width; w.max = false; w.snap = null; el.classList.remove("maxed"); el.querySelector(".wb-max").innerHTML = NX.icon("max", 16); w.w = w.rw || w.w; w.h = w.rh || w.h; ox = sx - fx * w.w; oy = 0; } }
         w.x = Math.round(ox + dx); w.y = Math.round(clamp(oy + dy, 0, A2.h - 40)); w.x = clamp(w.x, -w.w + 120, A2.w - 120); place(w);
         const r = desk.getBoundingClientRect(), px = ev.clientX - r.left, py = ev.clientY - r.top;
-        zone = py < 6 ? "max" : px < 6 ? "left" : px > A2.w - 6 ? "right" : null;
+        const edgeL = px < 6, edgeR = px > A2.w - 6, nearT = py < 60, nearB = py > A2.h - 60;
+        zone = (edgeL || edgeR) && (nearT || nearB) ? (nearT ? "t" : "b") + (edgeL ? "l" : "r") : py < 6 ? "max" : edgeL ? "left" : edgeR ? "right" : null; // corners snap to a quarter
         if (hint) { hint.className = zone ? "show " + zone : ""; }
       };
       const up = () => {
@@ -118,6 +119,7 @@
         if (moved && zone) {
           w.rw = w.w; w.rh = w.h;
           if (zone === "max") { w.max = false; NX.toggleMax(id); }
+          else if (zone.length === 2) NX.snapRect(id, zone[1] === "l" ? 0 : .5, zone[0] === "t" ? 0 : .5, .5, .5);
           else { const A3 = area(); w.snap = zone; w.x = zone === "left" ? 0 : Math.round(A3.w / 2); w.y = 0; w.w = Math.round(A3.w / 2); w.h = A3.h; place(w); w.onresize && w.onresize(); }
         }
       };

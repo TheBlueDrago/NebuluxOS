@@ -566,3 +566,5 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop[data-wfit=fit]{background:var(--wall) center/contain no-repeat #0b0620}
 #desktop[data-wfit=stretch]{background:var(--wall) center/100% 100% no-repeat #0b0620}
 #desktop[data-wfit=center]{background:var(--wall) center/auto no-repeat #0b0620}
+#snaphint.tl,#snaphint.bl{right:50%}#snaphint.tr,#snaphint.br{left:50%}
+#snaphint.tl,#snaphint.tr{bottom:calc(50% + var(--tb) / 2 + 4px)}#snaphint.bl,#snaphint.br{top:calc(50% - var(--tb) / 2 + 4px)}
