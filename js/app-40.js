@@ -222,7 +222,7 @@
     else if (win && e.key === "Escape" && NX.magnifier.level() > 1) { e.preventDefault(); NX.magnifier.zoom(0); }
     else if (e.key === "Escape" && $("#nx-grid")) $("#nx-grid").remove();
   });
-  document.addEventListener("nx:key", (e) => { if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); if (e.detail === "zoom-in") NX.magnifier.zoom(1); if (e.detail === "zoom-out") NX.magnifier.zoom(-1); if (e.detail === "zoom-off") NX.magnifier.zoom(0); });
+  document.addEventListener("nx:key", (e) => { if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); if (/^zoom-/.test(e.detail) && NX.shell) NX.shell.closeFlyouts(); if (e.detail === "zoom-in") NX.magnifier.zoom(1); if (e.detail === "zoom-out") NX.magnifier.zoom(-1); if (e.detail === "zoom-off") NX.magnifier.zoom(0); });
 
   // ---------- hot corners: push the pointer into a corner to do something (Settings > Personalization) ----------
   NX.cornerActions = { none: ["Nothing", null], desktop: ["Show the desktop", () => NX.showDesktop && NX.showDesktop()], tview: ["Task View", () => NX.taskView && NX.taskView()], grid: ["App Grid", () => NX.appGrid()], search: ["Quick Search", () => NX.quickSearch()], lock: ["Lock", () => NX.shell && NX.shell.lockKeep && NX.shell.lockKeep()], start: ["Start", () => NX.shell && NX.shell.toggleStart && NX.shell.toggleStart()], note: ["New sticky note", () => { const L = NX.data("sticky-notes", []); L.unshift({ id: NX.uid(), t: "", c: "sun", at: Date.now(), pin: true }); NX.setData("sticky-notes", L); if (NX.deskNotes) NX.deskNotes(); setTimeout(() => { const t = document.querySelector("#nx-dnotes .dn-note textarea"); if (t) t.focus(); }, 60); }] };
