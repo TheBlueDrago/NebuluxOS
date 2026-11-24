@@ -337,12 +337,19 @@
     size(); addEventListener("resize", size);
     let last = 0;
     const frame = (t) => { starT = requestAnimationFrame(frame); if (!star) return;
-      if (t - last < 50) return; last = t; // about 20 frames a second is plenty for twinkling
+      if (t - last < (star.sh ? 16 : 50)) return; last = t; // about 20 frames a second is plenty for twinkling (a shooting star gets full speed)
       const cover = NX.topWin && NX.topWin(); if (cover && cover.max) return; // a full-screen window hides it anyway
       g.clearRect(0, 0, cv.width, cv.height);
       for (const p of star.pts) { p.y -= p.s; p.x += p.s * .35; if (p.y < -4) { p.y = cv.height + 4; p.x = rnd(0, cv.width); } if (p.x > cv.width + 4) p.x = -4;
         const a = .25 + .55 * (.5 + .5 * Math.sin(t / 1000 * p.sp + p.ph)); g.globalAlpha = a; g.fillStyle = "#fff"; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill();
         if (p.r > 1.3) { g.globalAlpha = a * .25; g.beginPath(); g.arc(p.x, p.y, p.r * 3.2, 0, 7); g.fill(); } }
+      // now and then a shooting star streaks across the sky
+      if (!star.sh && t > (star.next || (star.next = t + rnd(6000, 14000)))) { const ang = rnd(.35, .6); star.sh = { x: rnd(cv.width * .2, cv.width * .9), y: rnd(0, cv.height * .35), vx: -Math.cos(ang) * rnd(.9, 1.3), vy: Math.sin(ang) * rnd(.9, 1.3), t0: t, life: rnd(900, 1400) }; }
+      if (star.sh) { const s = star.sh, k = (t - s.t0) / s.life; if (k >= 1) { star.sh = null; star.next = t + rnd(12000, 26000); } else {
+        const x = s.x + s.vx * (t - s.t0), y = s.y + s.vy * (t - s.t0), len = 140, fade = Math.sin(k * Math.PI), gr = g.createLinearGradient(x, y, x - s.vx * len, y - s.vy * len);
+        gr.addColorStop(0, "rgba(255,255,255," + (.95 * fade) + ")"); gr.addColorStop(1, "rgba(255,255,255,0)");
+        g.globalAlpha = 1; g.strokeStyle = gr; g.lineWidth = 1.8; g.lineCap = "round"; g.beginPath(); g.moveTo(x, y); g.lineTo(x - s.vx * len, y - s.vy * len); g.stroke();
+        g.fillStyle = "rgba(255,255,255," + fade + ")"; g.beginPath(); g.arc(x, y, 1.8, 0, 7); g.fill(); } }
       g.globalAlpha = 1; };
     starT = requestAnimationFrame(frame);
   }
