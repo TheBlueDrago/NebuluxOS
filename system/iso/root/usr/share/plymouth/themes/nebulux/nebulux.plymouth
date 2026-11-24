@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=Nebulux OS
-Description=The Nebulux OS start-up screen: the logo with a spinner
+Description=The Nebulux OS start-up screen: the logo with a soft glow and pulsing lights
 ModuleName=script
 
 [script]
