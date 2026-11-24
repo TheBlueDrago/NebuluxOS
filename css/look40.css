@@ -214,3 +214,6 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wg-dw.dw{background:var(--card);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;border:1px solid var(--line);color:var(--txt);padding:14px;cursor:pointer}
 .wg-dw.dw:hover{transform:translateY(-2px)}
 .wg-dw.dw b{font-size:13.5px}.wg-dw.dw h4{opacity:1}
+
+/* ---------- phones: the taskbar apps fade out at the edge when there are more than fit (they scroll) ---------- */
+@media (max-width:560px){#tb-apps{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);padding-right:14px}}
