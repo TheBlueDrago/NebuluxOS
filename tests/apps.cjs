@@ -205,7 +205,7 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.setPref("magnify", false)); await p.mouse.move(W / 2, H / 3);
   // shake to find the pointer
   const found0 = await p.evaluate(() => NX.pointerFound || 0);
-  for (let k = 0; k < 8; k++) await p.mouse.move(k % 2 ? W / 2 + 220 : W / 2 - 220, H / 3, { steps: 4 });
+  for (let k = 0; k < 8; k++) { const sw = Math.min(220, W / 2 - 10); await p.mouse.move(k % 2 ? W / 2 + sw : W / 2 - sw, H / 3, { steps: 4 }); }
   ok(await p.evaluate((f) => (NX.pointerFound || 0) > f, found0), "shaking the pointer makes it easy to find");
   // Settings > Apps: search your apps
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
