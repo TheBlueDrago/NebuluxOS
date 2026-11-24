@@ -321,7 +321,7 @@
     const sat = d ? Math.max(62, Math.min(85, Math.round((d / (1 - Math.abs(2 * l - 1))) * 100))) : 0;
     return d < .06 ? "#7c5cff" : "hsl(" + h + " " + sat + "% 62%)";
   };
-  document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
+  document.addEventListener("nx:prefs", (e) => { if (!e.detail || ["wallpaper", "tbFloat", "tbLabels", "theme"].includes(e.detail)) auraApply(); }); setInterval(auraApply, 3000); setTimeout(auraApply, 300);
 
   // ---------- Living wallpaper: a few stars slowly twinkle and drift over the background (Settings > Personalization).
   // Off when there's no graphics chip (lite glass), when motion is turned down, and while windows fill the screen.
