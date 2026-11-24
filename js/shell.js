@@ -189,7 +189,7 @@
     [/unpin|pin to|quick access|taskbar/i, "pin"], [/^close/i, "close"], [/^minimize/i, "min"], [/^maximize|^restore/i, "max"], [/on top/i, "up"], [/uninstall/i, "trash"], [/settings/i, "settings"], [/desktop/i, "display"]];
   const micon = (t) => { const m = MICON.find(([re]) => re.test(t)); return m ? NX.icon(m[1], 15) : `<span class="ctx-sp"></span>`; };
   function menu(x, y, items) {
-    closeFlyouts(); const m = $("#ctx"); m.innerHTML = items.map(([t], i) => `<button data-i="${i}">${micon(t)}<span>${NX.esc(t)}</span></button>`).join(""); m.hidden = false;
+    closeFlyouts(); const m = $("#ctx"); m.innerHTML = items.map(([t, fn, ic], i) => fn === null ? (t ? `<div class="ctx-h">${NX.esc(t)}</div>` : `<i class="ctx-sep"></i>`) : `<button data-i="${i}">${ic ? NX.icon(ic, 16) : micon(t)}<span>${NX.esc(t)}</span></button>`).join(""); m.hidden = false;
     const r = m.getBoundingClientRect(); m.style.left = Math.min(x, innerWidth - r.width - 6) + "px"; m.style.top = Math.min(y, innerHeight - r.height - 6) + "px";
     m.querySelectorAll("button").forEach((b) => (b.onclick = () => { m.hidden = true; items[+b.dataset.i][1](); }));
   }
@@ -204,7 +204,9 @@
         if (NX.nativeRunning && NX.nativeRunning.has(id)) { NX.nativeToggle(id); return; } if (NX.browserHide) NX.browserHide(); if (!w) NX.open(id); else if (!w.min && w === top) NX.minimize(id); else NX.focus(id); };
       b.onpointerenter = (e) => { if (e.pointerType === "mouse") peekSoon(b); };
       b.onpointerleave = () => peekLeave();
-      b.oncontextmenu = (e) => { e.preventDefault(); peekHide(); const id = b.dataset.app, w = NX.wins.get(id); menu(e.clientX, e.clientY - 10, [[NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : NX.nativeRunning && NX.nativeRunning.has(id) && NX.nativeClose ? [["Close window", () => NX.nativeClose(id)]] : [])]); };
+      b.oncontextmenu = (e) => { e.preventDefault(); peekHide(); const id = b.dataset.app, w = NX.wins.get(id); const JK = { notepad: ["text"], photos: ["image"], media: ["video", "audio"], files: null }, FIC = { image: "fimage", video: "fvideo", audio: "faudio", text: "ftext", pdf: "fpdf" };
+      const jl = id in JK && NX.prefs().showrecent !== false ? NX.data("recent-files", []).filter((f) => !JK[id] || JK[id].includes(f.kind)).slice(0, 5) : [];
+      menu(e.clientX, e.clientY - 10, [...(jl.length ? [["Recent", null], ...jl.map((f) => [f.name, () => NX.openFile(f), FIC[f.kind] || "file"]), ["", null]] : []), [NX.apps[id].name, () => NX.open(id)], [NX.prefs().pinned.includes(id) ? "Unpin from taskbar" : "Pin to taskbar", () => pin(id)], ...(w ? [["Close window", () => NX.close(id)]] : NX.nativeRunning && NX.nativeRunning.has(id) && NX.nativeClose ? [["Close window", () => NX.nativeClose(id)]] : [])]); };
       // drag a pinned app sideways to put it somewhere else on the taskbar
       b.onpointerdown = (e) => {
         if (e.button !== 0 || !NX.prefs().pinned.includes(b.dataset.app)) return;

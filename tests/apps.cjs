@@ -429,6 +429,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(await p.evaluate(() => [...NX.wins.values()].filter((w) => !w.min).map((w) => w.id).join() === "clock"), "shaking a window minimizes the others");
     await p.evaluate(() => NX.closeAll());
   }
+  // jump lists: right-click Notepad on the taskbar for its recent files
+  await p.evaluate(async () => { NX.closeAll(); const d = await NX.folder("Documents"); await NX.fs.write(d + "/Jump list.txt", "hi"); NX.setData("recent-files", [{ name: "Jump list.txt", path: d + "/Jump list.txt", kind: "text", at: Date.now() }, { name: "Pic.png", path: "/x/Pic.png", kind: "image", at: Date.now() }]); NX.open("notepad"); }); await wait(600);
+  await p.evaluate(() => { const b = document.querySelector('.tb-app[data-app="notepad"]'); const r = b.getBoundingClientRect(); b.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: r.x + 10, clientY: r.y })); }); await wait(300);
+  ok(await p.evaluate(() => { const m = document.querySelector("#ctx"); return !m.hidden && /Recent/.test(m.textContent) && /Jump list.txt/.test(m.textContent) && !/Pic.png/.test(m.textContent); }), "right-clicking Notepad on the taskbar lists its recent files");
+  await p.evaluate(() => { [...document.querySelectorAll("#ctx button")].find((b) => /Jump list/.test(b.textContent)).click(); }); await wait(600);
+  ok(await p.evaluate(() => /hi/.test(document.querySelector(".win[data-app=notepad] textarea").value)), "and opens one with a click");
+  await p.evaluate(() => { NX.setData("recent-files", []); NX.closeAll(); });
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");
