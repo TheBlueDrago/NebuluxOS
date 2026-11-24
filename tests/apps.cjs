@@ -425,6 +425,17 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector("#qs .qs-done").click()); await wait(200);
   ok(await p.evaluate(() => !document.querySelector('#qs [data-k="airplane"]') && NX.prefs().qsHide.includes("airplane") && NX.prefs().airplane !== true && !!document.querySelector('#qs [data-k="snip"]')), "Edit in quick settings hides a tile (and there's a Screenshot tile)");
   await p.evaluate(() => { NX.setPref("qsHide", []); NX.shell.closeFlyouts(); });
+  // the snap bar: drag a window to the top and drop it on a layout
+  if (W > 700) {
+    await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(700);
+    const t0 = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wt-name").getBoundingClientRect(); return { x: r.x + 30, y: r.y + r.height / 2 }; });
+    await p.mouse.move(t0.x, t0.y); await p.mouse.down(); await p.mouse.move(t0.x + 80, t0.y + 60, { steps: 4 }); await p.mouse.move(W / 2, 200, { steps: 5 }); await p.mouse.move(W / 2, 40, { steps: 5 }); await wait(400);
+    const zr = await p.evaluate(() => { const i = document.querySelector('#nx-snapbar.near [data-l="4"][data-z="2"]'); if (!i) return null; const r = i.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    if (zr) { await p.mouse.move(zr.x, zr.y, { steps: 4 }); await wait(200); }
+    await p.mouse.up(); await wait(500);
+    ok(!!zr && await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return Math.abs(r.x - A.width * 2 / 3) < 3 && Math.abs(r.width - A.width / 3) < 3; }), "dragging a window to the top shows the snap bar, and dropping it on a zone snaps it there");
+    await p.evaluate(() => NX.closeAll());
+  }
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

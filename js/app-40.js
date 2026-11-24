@@ -610,3 +610,25 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
     return r;
   };
 })();
+
+// ---------- the snap bar: drag a window to the top of the screen and drop it on a layout ----------
+(function () {
+  const L = [[[0, 0, .5, 1], [.5, 0, .5, 1]], [[0, 0, .66, 1], [.66, 0, .34, 1]], [[0, 0, .5, 1], [.5, 0, .5, .5], [.5, .5, .5, .5]], [[0, 0, .5, .5], [.5, 0, .5, .5], [0, .5, .5, .5], [.5, .5, .5, .5]], [[0, 0, 1 / 3, 1], [1 / 3, 0, 1 / 3, 1], [2 / 3, 0, 1 / 3, 1]]];
+  let bar = null, hot = null, id = null;
+  const make = () => {
+    bar = document.createElement("div"); bar.id = "nx-snapbar";
+    bar.innerHTML = L.map((lay, i) => `<div class="sb-lay">${lay.map((z, k) => `<i data-l="${i}" data-z="${k}" style="left:${z[0] * 100}%;top:${z[1] * 100}%;width:${z[2] * 100}%;height:${z[3] * 100}%"></i>`).join("")}</div>`).join("");
+    document.body.appendChild(bar);
+  };
+  addEventListener("pointermove", (e) => {
+    const dw = document.documentElement.classList.contains("nx-drag") && document.querySelector(".win.dragging");
+    if (!dw || innerWidth < 700) { if (bar) bar.classList.remove("show", "near"); hot = null; return; }
+    id = dw.dataset.app; if (!bar) make();
+    bar.classList.toggle("show", e.clientY < 120); bar.classList.toggle("near", e.clientY < 70);
+    hot = null; bar.querySelectorAll("i").forEach((z) => { const r = z.getBoundingClientRect(), on = bar.classList.contains("near") && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; z.classList.toggle("hot", on); if (on) hot = z; });
+  }, true);
+  addEventListener("pointerup", () => {
+    if (!bar) return; const z = hot, w = id; bar.classList.remove("show", "near"); bar.querySelectorAll("i.hot").forEach((x) => x.classList.remove("hot")); hot = null;
+    if (z && w) setTimeout(() => NX.snapRect(w, ...L[+z.dataset.l][+z.dataset.z]), 0);
+  }, true);
+})();
