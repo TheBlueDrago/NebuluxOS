@@ -600,3 +600,13 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
     else if (shaken.length) { shaken.forEach((o) => NX.open(o)); shaken = []; if (NX.focus) NX.focus(id); }
   };
 })();
+
+// ---------- a little bounce on an app's taskbar button when it opens ----------
+(function () {
+  const open0 = NX.open;
+  NX.open = (id, opts) => {
+    const had = NX.wins.has(id) || (NX.nativeRunning && NX.nativeRunning.has(id)), r = open0(id, opts);
+    if (!had && NX.me) [40, 260].forEach((ms) => setTimeout(() => { const b = document.querySelector(`#tb-apps .tb-app[data-app="${id}"]`); if (b && !b.dataset.bounced) { b.dataset.bounced = "1"; b.classList.add("nx-bounce"); setTimeout(() => b.classList.remove("nx-bounce"), 900); } }, ms));
+    return r;
+  };
+})();
