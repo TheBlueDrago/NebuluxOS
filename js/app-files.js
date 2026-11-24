@@ -340,25 +340,43 @@
       const LOOKS = { none: ["Original", ""], warm: ["Warm", "sepia(.25) saturate(1.2) hue-rotate(-8deg)"], cool: ["Cool", "saturate(1.05) hue-rotate(12deg) brightness(1.02)"], bw: ["Black and white", "grayscale(1)"], vintage: ["Vintage", "sepia(.55) contrast(.92) brightness(1.05)"], vivid: ["Vivid", "saturate(1.6) contrast(1.08)"] };
       let ed = null;
       const edFilter = () => ed ? `brightness(${ed.b / 100}) contrast(${ed.c / 100}) saturate(${ed.s / 100}) ${LOOKS[ed.look][1]}`.trim() : "";
-      function editClose() { const p = body.querySelector(".ph-ed"); if (p) p.remove(); ed = null; const img = v.querySelector("img"); if (img) img.style.filter = ""; }
+      // the crop box drawn over the picture
+      function cropBox() {
+        let bx = v.querySelector(".ph-cbox"); const img = v.querySelector("img"), k = ed && ed.crop;
+        if (!k || !img) { if (bx) bx.remove(); return; }
+        if (!bx) { bx = document.createElement("div"); bx.className = "ph-cbox"; v.appendChild(bx); }
+        const r = img.getBoundingClientRect(), vr = v.getBoundingClientRect();
+        Object.assign(bx.style, { left: r.left - vr.left + v.scrollLeft + k.x * r.width + "px", top: r.top - vr.top + v.scrollTop + k.y * r.height + "px", width: k.w * r.width + "px", height: k.h * r.height + "px" });
+      }
+      function editClose() { const p = body.querySelector(".ph-ed"); if (p) p.remove(); ed = null; cropBox(); v.classList.remove("ph-cropping"); v.onpointerdown = v.onpointermove = v.onpointerup = null; const img = v.querySelector("img"); if (img) img.style.filter = ""; }
       function editOpen() {
         const img = v.querySelector("img"); if (!img || !list[i]) return; editClose(); ed = { b: 100, c: 100, s: 100, look: "none" };
         const pane = document.createElement("div"); pane.className = "ph-ed";
         const sl = (k, label, min, max) => `<label><span>${label}</span><input type="range" min="${min}" max="${max}" value="100" data-ed="${k}" aria-label="${label}"></label>`;
-        pane.innerHTML = `${sl("b", "Brightness", 40, 160)}${sl("c", "Contrast", 40, 160)}${sl("s", "Color", 0, 200)}<div class="ph-looks">${Object.entries(LOOKS).map(([k, [n]]) => `<button class="${k === "none" ? "on" : ""}" data-look="${k}">${n}</button>`).join("")}</div><div class="ph-edacts"><button class="btn" data-ed2="rot">${NX.icon("rotate", 14)}Rotate</button><button class="btn" data-ed2="reset">Reset</button><span class="fx-sp"></span><button class="btn" data-ed2="cancel">Cancel</button><button class="btn primary" data-ed2="save">Save a copy</button></div>`;
+        pane.innerHTML = `${sl("b", "Brightness", 40, 160)}${sl("c", "Contrast", 40, 160)}${sl("s", "Color", 0, 200)}<div class="ph-looks">${Object.entries(LOOKS).map(([k, [n]]) => `<button class="${k === "none" ? "on" : ""}" data-look="${k}">${n}</button>`).join("")}</div><div class="ph-edacts"><button class="btn" data-ed2="rot">${NX.icon("rotate", 14)}Rotate</button><button class="btn" data-ed2="crop">${NX.icon("cut", 14)}Crop</button><button class="btn" data-ed2="reset">Reset</button><span class="fx-sp"></span><button class="btn" data-ed2="cancel">Cancel</button><button class="btn primary" data-ed2="save">Save a copy</button></div>`;
         body.appendChild(pane);
         const apply = () => { img.style.filter = edFilter(); };
         pane.oninput = (e) => { const r = e.target.closest("[data-ed]"); if (!r) return; ed[r.dataset.ed] = +r.value; apply(); };
         pane.onclick = async (e) => {
           const lk = e.target.closest("[data-look]"); if (lk) { ed.look = lk.dataset.look; pane.querySelectorAll("[data-look]").forEach((x) => x.classList.toggle("on", x === lk)); apply(); return; }
           const a = e.target.closest("[data-ed2]"); if (!a) return; const k2 = a.dataset.ed2;
-          if (k2 === "rot") { turn = (turn + 90) % 360; tf(); }
-          if (k2 === "reset") { ed = { b: 100, c: 100, s: 100, look: "none" }; pane.querySelectorAll("[data-ed]").forEach((x) => (x.value = 100)); pane.querySelectorAll("[data-look]").forEach((x) => x.classList.toggle("on", x.dataset.look === "none")); turn = 0; tf(); apply(); }
+          if (k2 === "rot") { turn = (turn + 90) % 360; ed.crop = null; cropBox(); tf(); }
+          // Crop: drag over the part to keep (as parts of the picture you see, so it works after Rotate too)
+          if (k2 === "crop") {
+            const on = !v.classList.contains("ph-cropping"); v.classList.toggle("ph-cropping", on); a.classList.toggle("on", on);
+            if (!on) return; let st = null;
+            v.onpointerdown = (ev) => { if (!v.classList.contains("ph-cropping")) return; ev.preventDefault(); v.setPointerCapture(ev.pointerId); const r = img.getBoundingClientRect(); st = [(ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height]; };
+            v.onpointermove = (ev) => { if (!st) return; const r = img.getBoundingClientRect(), q = [Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)), Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height))]; const s0 = [Math.max(0, Math.min(1, st[0])), Math.max(0, Math.min(1, st[1]))]; ed.crop = { x: Math.min(s0[0], q[0]), y: Math.min(s0[1], q[1]), w: Math.abs(q[0] - s0[0]), h: Math.abs(q[1] - s0[1]) }; cropBox(); };
+            v.onpointerup = () => { st = null; if (ed.crop && (ed.crop.w < .02 || ed.crop.h < .02)) { ed.crop = null; cropBox(); } };
+            return;
+          }
+          if (k2 === "reset") { ed.crop = null; cropBox(); ed = { b: 100, c: 100, s: 100, look: "none" }; pane.querySelectorAll("[data-ed]").forEach((x) => (x.value = 100)); pane.querySelectorAll("[data-look]").forEach((x) => x.classList.toggle("on", x.dataset.look === "none")); turn = 0; tf(); apply(); }
           if (k2 === "cancel") { turn = 0; tf(); editClose(); }
           if (k2 === "save") {
             const it = list[i], W0 = img.naturalWidth, H0 = img.naturalHeight, side = turn % 180 !== 0, c = document.createElement("canvas"); c.width = side ? H0 : W0; c.height = side ? W0 : H0;
             const g = c.getContext("2d"); g.filter = edFilter() || "none"; g.translate(c.width / 2, c.height / 2); g.rotate(turn * Math.PI / 180); g.drawImage(img, -W0 / 2, -H0 / 2);
-            const png = /\.png$/i.test(it.name), blob = await new Promise((ok) => c.toBlob(ok, png ? "image/png" : "image/jpeg", .92));
+            let outC = c; if (ed.crop) { const k = ed.crop, cc = document.createElement("canvas"); cc.width = Math.max(1, Math.round(k.w * c.width)); cc.height = Math.max(1, Math.round(k.h * c.height)); cc.getContext("2d").drawImage(c, Math.round(k.x * c.width), Math.round(k.y * c.height), cc.width, cc.height, 0, 0, cc.width, cc.height); outC = cc; }
+            const png = /\.png$/i.test(it.name), blob = await new Promise((ok) => outC.toBlob(ok, png ? "image/png" : "image/jpeg", .92));
             try { const name = it.name.replace(/( \(edited\))?\.[^.]+$/, "") + " (edited)." + (png ? "png" : "jpg"), out = await NX.fs.upload(NX.fs.parent(it.path), name, blob); NX.filesChanged && NX.filesChanged(); NX.toast("Saved as " + out.name + ".");
               list.splice(i + 1, 0, { name: out.name, path: out.path, kind: "image" }); i++; show(); }
             catch (er) { NX.toast(er.message || "The picture couldn't be saved."); }

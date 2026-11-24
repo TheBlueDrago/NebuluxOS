@@ -1263,3 +1263,4 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 /* Weather: saved cities */
 .wa-head h2{display:flex;align-items:center;gap:6px}.wa-star{color:var(--sub);width:32px;height:32px;border-radius:8px;display:grid;place-items:center}.wa-star:hover{background:var(--hover)}.wa-star.on{color:#fbbf24}
 .wa-cities{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.wa-cities button{padding:6px 14px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:13px}.wa-cities button.on{background:var(--accent);border-color:transparent;color:#fff}
+.ph-view{position:relative}.ph-cropping{cursor:crosshair}.ph-cbox{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px #0009;pointer-events:none;z-index:2}.ph-edacts [data-ed2=crop].on{background:var(--accent);color:#fff}

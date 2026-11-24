@@ -31,8 +31,17 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const r = document.querySelector(".ph-ed [data-ed=b]"); r.value = 130; r.dispatchEvent(new Event("input", { bubbles: true })); document.querySelector(".ph-ed [data-look=bw]").click(); });
   ok(await p.evaluate(() => /grayscale\(1\)/.test(document.querySelector(".win[data-app=photos] .ph-view img").style.filter) && /brightness\(1\.3\)/.test(document.querySelector(".win[data-app=photos] .ph-view img").style.filter)), "Photos > Edit shows the changes right away");
   await shot("photos-edit");
+  // Crop: keep the middle half
+  const nat = await p.evaluate(() => { const i = document.querySelector(".win[data-app=photos] .ph-view img"); return [i.naturalWidth, i.naturalHeight]; });
+  await p.evaluate(() => document.querySelector(".ph-ed [data-ed2=crop]").click());
+  const ib = await p.evaluate(() => { const r = document.querySelector(".win[data-app=photos] .ph-view img").getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; });
+  await p.mouse.move(ib[0] + ib[2] * .25, ib[1] + ib[3] * .25); await p.mouse.down(); await p.mouse.move(ib[0] + ib[2] * .75, ib[1] + ib[3] * .75, { steps: 6 }); await p.mouse.up(); await wait(200);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=photos] .ph-cbox")), "Photos > Edit > Crop shows the part you keep");
+  await shot("photos-crop");
   await p.evaluate(() => document.querySelector(".ph-ed [data-ed2=save]").click()); await wait(1500);
   ok((await p.evaluate(async () => (await NX.fs.list(await NX.folder("Pictures"))).entries.map((e) => e.name))).some((n) => /\(edited\)\.jpg$/.test(n)) && await p.evaluate(() => !document.querySelector(".ph-ed")), "and saves the edited picture as a copy");
+  const cropped = await p.evaluate(() => { const i = document.querySelector(".win[data-app=photos] .ph-view img"); return [i.naturalWidth, i.naturalHeight]; });
+  ok(Math.abs(cropped[0] - nat[0] / 2) <= 3 && Math.abs(cropped[1] - nat[1] / 2) <= 3, "cropped to just that part (" + cropped.join("x") + " from " + nat.join("x") + ")");
   await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=all]").click()); await wait(600);
   await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=favs]").click()); await wait(600);
   ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=photos] .ph-tile").length === 1 && !!document.querySelector(".win[data-app=photos] .ph-tile .ph-heart")), "and Favorites shows only those");

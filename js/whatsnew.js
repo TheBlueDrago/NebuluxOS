@@ -14,7 +14,7 @@
     ["File Explorer, better", "Right-click a file to tag it Red, Orange, Yellow, Green, Blue or Purple, or to see its Properties. The sidebar has Recent, with the files you opened lately, and your tags."],
     ["Versions in Notepad", "Notepad keeps earlier versions of your notes as you write. Press Versions to go back to one."],
     ["Saved cities in Weather", "Press the star to save a city, then switch between your cities with one click."],
-    ["Favorites in Photos", "Press the heart on a picture, then Favorites to see only those."],
+    ["Photos, better", "Crop a picture in Edit, press the heart to make it a favorite, and Favorites shows only those."],
     ["Picture in picture", "Videos in Media Player can keep playing in a small window on top while you do other things."],
     ["Now playing", "While Media Player plays, quick settings shows what's playing, with play, pause and next."],
     ["Screen time", "Settings > System shows how long you used each app today. It's counted only on this computer."],
