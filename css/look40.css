@@ -363,3 +363,12 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wn-foot{position:sticky;bottom:0;margin:14px 0 0;padding:14px 22px;background:color-mix(in srgb,var(--bg2) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);z-index:2}
 .noanim .wn-pop .wn-item,.noanim .wn-pop .nx-pcard{animation:none;opacity:1}
 .wn-pop .nx-pcard>*{flex-shrink:0}
+
+/* ---------- Settings > Nebulux Update 4.0 ---------- */
+.s-upd40{position:relative;overflow:hidden;padding:24px;border-radius:16px;background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 36%,#130b2e),#0d0822 75%);color:#fff;border-color:#ffffff1c}
+.s-upd40>*:not(.upd-orb){position:relative}.s-upd40 .upd-orb.a{width:180px;height:180px}.s-upd40 .upd-orb.b{width:160px;height:160px}
+.s-upd40 .upd-logo{width:76px;height:76px;margin:0;border-radius:22px;flex:none}.s-upd40 .upd-ring{border-radius:26px}
+.s-upd40 small{color:#d9d2f5}.s-upd40 .btn:not(.primary){background:#ffffff18;border-color:#ffffff2a;color:#fff}
+.s-wn{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.s-wn .wn-item{flex-direction:row;align-items:flex-start;gap:12px;border-radius:12px;padding:12px 14px}
+.s-wn .wn-item>div{display:flex;flex-direction:column;gap:4px;min-width:0}
