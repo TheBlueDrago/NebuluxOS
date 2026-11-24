@@ -21,7 +21,7 @@
     ["Snap into thirds", "On wide screens, the snap layouts under the maximize button add three columns, and a wide middle with narrow sides."],
     ["Music you can see", "Media Player shows a glow and dancing bars while a song plays. Voice Recorder recordings play like songs too."],
     ["An analog clock", "The Clock app shows a clock face with hands beside the time."],
-    ["Paint, tidier", "Paint's tools are icons in one row: Brush, Line, Box, Circle, Fill and Eraser, then Undo and Clear."],
+    ["Paint, tidier, with Text", "Paint's tools are icons in one row: Brush, Line, Box, Circle, Fill, Text and Eraser, then Undo and Clear. The new Text tool writes words on your picture."],
     ["Reminders that count", "Reminders' taskbar button shows how many reminders are due."],
     ["Task Manager graphs", "Processor and memory graphs with a grid and a glowing line."],
     ["A better update window", "Updates now show what's in them as cards, with Update now and a live progress bar, plus Later, Remind me and Never."],

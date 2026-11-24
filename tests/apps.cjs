@@ -558,6 +558,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // the tray's tooltip
   await p.evaluate(() => NX.setPref("volume", 42)); await wait(200);
   ok(await p.evaluate(() => /Volume: 42%/.test(document.querySelector("#tb-qs").title)), "pointing at the tray shows the volume and connection");
+  // Paint: the Text tool
+  await p.evaluate(() => { NX.closeAll(); NX.open("paint"); }); await wait(800);
+  await p.evaluate(() => document.querySelector(".win[data-app=paint] [data-t=text]").click());
+  const pc = await p.evaluate(() => { const r = document.querySelector(".win[data-app=paint] canvas").getBoundingClientRect(); return { x: r.x + 40, y: r.y + 40 }; });
+  await p.mouse.click(pc.x, pc.y); await wait(300);
+  await p.keyboard.type("Hi"); await p.keyboard.press("Enter"); await wait(300);
+  ok(await p.evaluate(() => { const c = document.querySelector(".win[data-app=paint] canvas"), d = c.getContext("2d").getImageData(0, 0, Math.min(c.width, 200), Math.min(c.height, 120)).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] < 200 || d[i + 1] < 200 || d[i + 2] < 200) n++; return n > 30; }), "Paint's Text tool writes text on the picture");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
