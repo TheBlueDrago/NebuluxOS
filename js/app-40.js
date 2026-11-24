@@ -35,7 +35,12 @@
     const paint = () => { res.innerHTML = items.map((it, k) => `${it.head ? `<h4>${it.head}</h4>` : ""}<button class="qs2-it ${k === at ? "on" : ""}" data-k="${k}" role="option" aria-selected="${k === at}">${it.icon}<span><b>${NX.esc(it.name)}</b><small>${NX.esc(it.sub)}</small></span></button>`).join(""); res.hidden = !items.length; };
     const run = async () => {
       const q = inp.value.trim(), ql = q.toLowerCase(), gen = ++qsGen; items = []; at = 0;
-      if (!q) { paint(); return; }
+      if (!q) { // nothing typed yet: your recent apps and files, like Spotlight and Windows search
+        const P = NX.prefs(), recA = (P.recent || []).filter((id) => NX.apps[id]).slice(0, 5), recF = P.showrecent === false ? [] : NX.data("recent-files", []).slice(0, 4);
+        recA.forEach((id, k) => items.push({ head: k ? "" : "Recent apps", icon: NX.icon(NX.apps[id].icon || id, 30), name: NX.apps[id].name, sub: "App", go: () => NX.open(id) }));
+        recF.forEach((f, k) => items.push({ head: k ? "" : "Recent files", icon: NX.icon(FI[f.kind] || "file", 30), name: f.name, sub: "Opened " + new Date(f.at).toLocaleDateString([], { month: "short", day: "numeric" }), go: () => NX.openFile(f) }));
+        paint(); return;
+      }
       // a sum
       if (/[\d)]/.test(q) && /[-+*/^×÷%!()]|sqrt|sin|cos|tan|log|ln/.test(q) && NX.calcEval) { try { const v = NX.calcEval(q, true); if (isFinite(v)) { const r = String(+v.toPrecision(12)); items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: "= " + r, sub: "Press Enter to copy it", go: () => { navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } }); } } catch (e) { /* not a sum */ } }
       const cv = NX.qsConvert(q); if (cv) items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: cv.text, sub: "Press Enter to copy it", go: () => { const r = String(cv.value); navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } });
@@ -58,7 +63,7 @@
       const fi = found.slice(0, 5).map((e, k) => ({ head: k ? "" : "Files", icon: NX.icon(FI[e.kind] || "file", 30), name: e.name, sub: e.where, go: () => (e.dir ? NX.open("files", { path: e.path }) : NX.openFile(e)) }));
       items.splice(items.indexOf(web), 0, ...fi); paint();
     };
-    inp.oninput = run;
+    inp.oninput = run; run();
     inp.onkeydown = (e) => {
       if (e.key === "Escape") { e.preventDefault(); close(); }
       else if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (items.length) { at = (at + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length; paint(); const b = res.querySelector(".on"); if (b) b.scrollIntoView({ block: "nearest" }); } }

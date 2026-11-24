@@ -544,6 +544,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Sort by name/.test(b.textContent)).click()); await wait(300);
   ok(await p.evaluate(() => { const n = [...document.querySelectorAll("#icons .dicon:not(.dbin):not(.dfile)")].map((b) => b.textContent.trim()); return n.length > 1 && n.every((x, i) => !i || n[i - 1].localeCompare(x) <= 0); }), "right-click the desktop > Sort by name puts the icons A to Z");
   await p.evaluate((d) => { NX.setPref("desktop", d); NX.shell.icons(); }, deskBefore);
+  // Quick Search before typing: recent apps and files
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("recent", ["calculator", "clock"]); NX.quickSearch(); }); await wait(300);
+  ok(await p.evaluate(() => { const r = document.querySelector("#nx-qs .qs2-res"); return !!r && /Recent apps/i.test(r.textContent) && /Calculator/.test(r.textContent); }), "Quick Search shows your recent apps before you type");
+  await p.keyboard.press("Enter"); await wait(600);
+  ok(await p.evaluate(() => !document.querySelector("#nx-qs") && !!document.querySelector(".win[data-app=calculator]")), "and Enter opens the first one");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
