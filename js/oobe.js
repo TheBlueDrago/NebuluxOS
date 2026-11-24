@@ -96,12 +96,12 @@
         f.onsubmit = (e) => { e.preventDefault(); next(); };
       }
       if (k === "look") {
-        const f = frame("Let's make it yours", "Pick a mode, a color and a background. You can change them any time in Settings.",
-          `<div class="ob-modes"><button type="button" class="ob-mode ${st.theme === "dark" ? "on" : ""}" data-theme="dark"><span class="ob-pv dark"></span>Dark</button><button type="button" class="ob-mode ${st.theme === "light" ? "on" : ""}" data-theme="light"><span class="ob-pv light"></span>Light</button></div>
-           <div class="ob-accs">${ACCENTS.map((c) => `<button type="button" class="${c === st.accent ? "on" : ""}" data-acc="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join("")}</div>
-           <div class="ob-walls">${NX.wallpapers.slice(0, 4).map((w, k2) => `<button type="button" class="${k2 === st.wall ? "on" : ""}" data-wall="${k2}" title="${w.name}" aria-label="${w.name}"><img src="${NX.wallpaperURL(k2, 160, 90)}" alt=""></button>`).join("")}</div>`, { next: "Done" });
-        const sel = (attr, key, val) => f.querySelectorAll(`[${attr}]`).forEach((b) => (b.onclick = () => { st[key] = val(b); f.querySelectorAll(`[${attr}]`).forEach((x) => x.classList.toggle("on", x === b)); }));
-        sel("data-theme", "theme", (b) => b.dataset.theme); sel("data-acc", "accent", (b) => b.dataset.acc); sel("data-wall", "wall", (b) => +b.dataset.wall);
+        // a theme sets the background, dark or light, the accent, the corners and the glass in one click
+        const looks = [{ name: "Classic", wall: 0, theme: "dark", accent: ACCENTS[0], corners: "round", glass: "frosted" }, ...(NX.looks40 || [])];
+        const isOn = (t) => st.wall === t.wall && st.theme === t.theme && st.accent === t.accent && (st.corners || "round") === t.corners && (st.glass || "frosted") === t.glass;
+        const f = frame("Pick your look", "A theme sets your background, colors and glass. You can change it any time in Settings > Personalization.",
+          `<div class="s-themes ob-themes">${looks.map((t, n) => `<button type="button" class="s-theme ${isOn(t) ? "on" : ""}" data-look="${n}" aria-label="${t.name}"><span class="s-th-pic" style="background-image:url(${NX.wallpaperURL(t.wall, 192, 108)})"><i class="s-th-win ${t.theme}" style="--c:${t.accent}"><b></b><b></b></i></span><span class="s-th-n"><i style="background:${t.accent}"></i>${t.name}</span></button>`).join("")}</div>`, { next: "Done" });
+        f.querySelectorAll("[data-look]").forEach((b) => (b.onclick = () => { const t = looks[+b.dataset.look]; Object.assign(st, { wall: t.wall, theme: t.theme, accent: t.accent, corners: t.corners, glass: t.glass }); f.querySelectorAll("[data-look]").forEach((x) => x.classList.toggle("on", x === b)); }));
         f.onsubmit = (e) => { e.preventDefault(); finish(); };
       }
       const focusEl = box.querySelector(".ob-in") || box.querySelector(".ob-next"); if (focusEl && !box.querySelector(".ob-in")) setTimeout(() => focusEl.focus(), 30);
@@ -144,7 +144,7 @@
       let u;
       try { u = await NX.addUser(st.name, st.pass); } catch (e) { i = steps.indexOf("name"); draw(); err(e.message); return; }
       NX.me = u;
-      NX.setPref("theme", st.theme); NX.setPref("accent", st.accent); NX.setPref("wallpaper", st.wall); NX.setPref("region", st.region); NX.setPref("keyboard", st.kb); NX.setPref("tips", st.tips); NX.setPref("location", st.location);
+      NX.setPref("theme", st.theme); if (st.corners) NX.setPref("corners40", st.corners); if (st.glass) NX.setPref("glass", st.glass); NX.setPref("accent", st.accent); NX.setPref("wallpaper", st.wall); NX.setPref("region", st.region); NX.setPref("keyboard", st.kb); NX.setPref("tips", st.tips); NX.setPref("location", st.location);
       NX.me = null;
       const say = [["Hi", 1400], ["This might take a few minutes", 1700], ["Getting things ready", 1500], ["Don't turn off your computer", 1300]];
       const fast = NX.fast;
