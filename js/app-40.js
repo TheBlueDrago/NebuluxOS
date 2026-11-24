@@ -370,7 +370,7 @@
   document.addEventListener("nx:key", (e) => { if (e.detail === "close") closeTop(); if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); if (/^zoom-/.test(e.detail) && NX.shell) NX.shell.closeFlyouts(); if (e.detail === "zoom-in") NX.magnifier.zoom(1); if (e.detail === "zoom-out") NX.magnifier.zoom(-1); if (e.detail === "zoom-off") NX.magnifier.zoom(0); });
 
   // ---------- hot corners: push the pointer into a corner to do something (Settings > Personalization) ----------
-  NX.cornerActions = { none: ["Nothing", null], desktop: ["Show the desktop", () => NX.showDesktop && NX.showDesktop()], tview: ["Task View", () => NX.taskView && NX.taskView()], grid: ["App Grid", () => NX.appGrid()], search: ["Quick Search", () => NX.quickSearch()], lock: ["Lock", () => NX.shell && NX.shell.lockKeep && NX.shell.lockKeep()], start: ["Start", () => NX.shell && NX.shell.toggleStart && NX.shell.toggleStart()], note: ["New sticky note", () => { const L = NX.data("sticky-notes", []); L.unshift({ id: NX.uid(), t: "", c: "sun", at: Date.now(), pin: true }); NX.setData("sticky-notes", L); if (NX.deskNotes) NX.deskNotes(); setTimeout(() => { const t = document.querySelector("#nx-dnotes .dn-note textarea"); if (t) t.focus(); }, 60); }] };
+  NX.cornerActions = { none: ["Nothing", null], saver: ["Start the screen saver", () => NX.saver && NX.saver.start(NX.prefs().scrSaver && NX.prefs().scrSaver !== "off" ? NX.prefs().scrSaver : "stars")], desktop: ["Show the desktop", () => NX.showDesktop && NX.showDesktop()], tview: ["Task View", () => NX.taskView && NX.taskView()], grid: ["App Grid", () => NX.appGrid()], search: ["Quick Search", () => NX.quickSearch()], lock: ["Lock", () => NX.shell && NX.shell.lockKeep && NX.shell.lockKeep()], start: ["Start", () => NX.shell && NX.shell.toggleStart && NX.shell.toggleStart()], note: ["New sticky note", () => { const L = NX.data("sticky-notes", []); L.unshift({ id: NX.uid(), t: "", c: "sun", at: Date.now(), pin: true }); NX.setData("sticky-notes", L); if (NX.deskNotes) NX.deskNotes(); setTimeout(() => { const t = document.querySelector("#nx-dnotes .dn-note textarea"); if (t) t.focus(); }, 60); }] };
   let cornerAt = null, cornerT = 0;
   addEventListener("pointermove", (e) => {
     if (!NX.me || e.pointerType !== "mouse") return; const c = NX.prefs().corners || {};
@@ -502,14 +502,14 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
 
 // ---------- screen saver: after a few idle minutes, a starfield or a floating clock; any key or move ends it ----------
 (function () {
-  let last = Date.now(), el = null, raf = 0;
+  let last = Date.now(), el = null, raf = 0, grace = 0;
   const KINDS = { off: "None", stars: "Starfield", clock: "Floating clock" };
   NX.saverKinds = KINDS;
-  const poke = () => { last = Date.now(); if (el) stop(); };
+  const poke = () => { last = Date.now(); if (el && Date.now() > grace) stop(); };
   ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, poke, { capture: true, passive: true }));
   function playing() { return [...document.querySelectorAll("video,audio")].some((m) => !m.paused && !m.ended); }
   function start(kind) {
-    if (el) return; kind = kind || NX.prefs().scrSaver;
+    if (el) return; grace = Date.now() + 1200; kind = kind || NX.prefs().scrSaver;
     el = document.createElement("div"); el.id = "nx-saver"; el.setAttribute("aria-hidden", "true");
     el.innerHTML = kind === "clock" ? `<div class="sv-clock"><b></b><span></span></div>` : `<canvas></canvas>`;
     document.body.appendChild(el); requestAnimationFrame(() => el && el.classList.add("on"));
