@@ -124,3 +124,23 @@ h1,h2,.wn-hero b,.rm-head h2,.ca-head h2,.wa-head h2{font-family:"Segoe UI Varia
 .qs-sl input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--fill,50%),var(--hover) var(--fill,50%))}
 .qs-sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px #0007;cursor:pointer}
 .qs-sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#fff;box-shadow:0 2px 6px #0007}
+
+/* ---------- Settings 4.0: colored icon squares on every row ---------- */
+.s-ri{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(135deg,var(--ri1,#64748b),var(--ri2,#475569));box-shadow:inset 0 1px 0 #ffffff40,0 2px 6px #0004}
+.s-ri .ico{width:18px;height:18px}
+[data-ri=wifi],[data-ri=globe],[data-ri=plane]{--ri1:#38bdf8;--ri2:#2563eb}
+[data-ri=bt]{--ri1:#60a5fa;--ri2:#1d4ed8}
+[data-ri=sun],[data-ri=display]{--ri1:#facc15;--ri2:#f59e0b}
+[data-ri=moon]{--ri1:#818cf8;--ri2:#4338ca}
+[data-ri=sound],[data-ri=bell]{--ri1:#fb7185;--ri2:#e11d48}
+[data-ri=battery],[data-ri=leaf],[data-ri=power]{--ri1:#4ade80;--ri2:#16a34a}
+[data-ri=brush],[data-ri=contrast],[data-ri=spark]{--ri1:#c084fc;--ri2:#7c3aed}
+[data-ri=apps],[data-ri=taskbar],[data-ri=max]{--ri1:#a78bfa;--ri2:#6d28d9}
+[data-ri=time]{--ri1:#94a3b8;--ri2:#475569}
+[data-ri=mouse],[data-ri=keyboard]{--ri1:#9ca3af;--ri2:#4b5563}
+[data-ri=search],[data-ri=zoomin],[data-ri=eye]{--ri1:#22d3ee;--ri2:#0891b2}
+[data-ri=trash]{--ri1:#f87171;--ri2:#b91c1c}
+[data-ri=files]{--ri1:#fbbf24;--ri2:#d97706}
+[data-ri=access],[data-ri=user]{--ri1:#2dd4bf;--ri2:#0f766e}[data-ri=shield],[data-ri=lock]{--ri1:#94a3b8;--ri2:#334155}[data-ri=refresh],[data-ri=restart],[data-ri=info]{--ri1:#60a5fa;--ri2:#2563eb}[data-ri=usb],[data-ri=tv],[data-ri=cast]{--ri1:#a78bfa;--ri2:#5b21b6}
+[data-ri=volume]{--ri1:#fb7185;--ri2:#e11d48}[data-ri=home]{--ri1:#a78bfa;--ri2:#6d28d9}[data-ri=update]{--ri1:#60a5fa;--ri2:#2563eb}
+.s-ri.s-ni{width:26px;height:26px;border-radius:7px}.s-ri.s-ni .ico{width:15px;height:15px}
