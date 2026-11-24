@@ -1219,3 +1219,10 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 .hc .win,.hc .flyout,.hc #taskbar{box-shadow:0 0 0 2px var(--line),0 18px 40px #0008}
 .hc button:focus-visible,.hc input:focus-visible{outline:3px solid #fde047!important;outline-offset:2px}
 .nx-caps{display:block;margin-top:6px;font-size:12px;font-weight:600;color:#fbbf24}
+
+/* ---------- 4.0: Stage ---------- */
+#desktop.stage #windows{left:176px}#desktop.stage #icons{visibility:hidden}
+#nx-stage{position:absolute;left:12px;top:50%;transform:translateY(calc(-50% - var(--tb) / 2));z-index:5;width:152px;display:flex;flex-direction:column;gap:12px}
+.stg-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:14px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 12px 28px #0007,0 0 0 1px var(--line);font-size:12px;color:var(--txt);transition:transform .15s}
+.stg-card:hover{transform:translateX(4px) scale(1.03)}.stg-card span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:700px){#desktop.stage #windows{left:0}#nx-stage{display:none}}

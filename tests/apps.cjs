@@ -249,6 +249,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector("#nx-dwidgets .dw-ev").click()); await wait(500);
   ok(await p.evaluate(() => !!document.querySelector(".win[data-app=calendar]")), "and clicking Up next opens Calendar");
   await p.evaluate(() => { NX.setPref("deskWidgets", []); NX.setData("events", []); NX.closeAll(); }); await wait(200);
+  // Stage
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("stage", true); NX.open("notepad"); NX.open("clock"); NX.open("weather"); }); await wait(900);
+  ok(await p.evaluate(() => !NX.wins.get("weather").min && NX.wins.get("clock").min && NX.wins.get("notepad").min && document.querySelectorAll("#nx-stage .stg-card").length === 2), "Stage: only the window you're using stays out, the others wait on the left");
+  await shot("stage");
+  await p.evaluate(() => document.querySelector("#nx-stage [data-stage=notepad]").click()); await wait(700);
+  ok(await p.evaluate(() => !NX.wins.get("notepad").min && NX.wins.get("weather").min && !!document.querySelector("#nx-stage [data-stage=weather]")), "and clicking a card swaps it in");
+  await p.evaluate(() => { NX.setPref("stage", false); NX.closeAll(); }); await wait(400);
+  ok(await p.evaluate(() => !document.getElementById("nx-stage") && !document.getElementById("desktop").classList.contains("stage")), "and Stage turns off cleanly");
   // auto-hide the taskbar
   await p.evaluate(() => NX.setPref("tbAuto", true)); await p.mouse.move(W / 2, H / 2); await wait(500);
   const tbTop = () => p.evaluate(() => document.getElementById("taskbar").getBoundingClientRect().top);

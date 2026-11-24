@@ -205,6 +205,31 @@
   // the Nebulux key (Start) and other flyouts bring it up too
   new MutationObserver(() => { const d = document.getElementById("desktop"); if (d && d.classList.contains("tb-auto") && flyoutOpen()) d.classList.add("tb-show"); }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ["hidden"] });
 
+  // ---------- Stage: only the window you're using stays out; your other windows wait as cards on the left (Settings > Personalization) ----------
+  let stageOrder = [];
+  const stageOn = () => !!(NX.me && NX.prefs().stage);
+  const deskOf = (w) => !w.desk || !NX.desks || w.desk === NX.desks.current();
+  function stageDraw() {
+    const d = document.getElementById("desktop"); if (!d) return;
+    const on = stageOn(); if (d.classList.contains("stage") !== on) { d.classList.toggle("stage", on); dispatchEvent(new Event("resize")); }
+    let box = document.getElementById("nx-stage");
+    const top = NX.topWin && NX.topWin(), others = on ? stageOrder.filter((id) => NX.wins.has(id) && deskOf(NX.wins.get(id)) && (!top || id !== top.id)).slice(0, 6) : [];
+    if (!on) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement("div"); box.id = "nx-stage"; box.setAttribute("aria-label", "Your other windows"); (document.getElementById("windows") || d).parentNode.insertBefore(box, document.getElementById("taskbar")); }
+    const html = others.map((id) => { const a = NX.apps[id] || {}, w = NX.wins.get(id), t = (w && w.el.querySelector(".wt-name") || {}).textContent || a.name; return `<button class="stg-card" data-stage="${id}" title="${NX.esc(t)}">${NX.icon(a.icon || id, 36)}<span>${NX.esc(t)}</span></button>`; }).join("");
+    if (box.innerHTML !== html) box.innerHTML = html;
+  }
+  NX.stageDraw = stageDraw;
+  if (NX.focus) {
+    const focus0 = NX.focus;
+    NX.focus = (id) => { focus0(id); stageOrder = [id, ...stageOrder.filter((x) => x !== id)];
+      if (stageOn()) { for (const w of NX.wins.values()) if (w.id !== id && !w.min && deskOf(w) && !w.onTop) NX.minimize(w.id); } stageDraw(); };
+  }
+  if (NX.close) { const close0 = NX.close; NX.close = (id) => { const r = close0(id); stageOrder = stageOrder.filter((x) => x !== id); setTimeout(stageDraw, 50); return r; }; }
+  document.addEventListener("click", (e) => { const c = e.target.closest && e.target.closest("[data-stage]"); if (c) NX.focus(c.dataset.stage); });
+  document.addEventListener("nx:prefs", (e) => { if (e.detail === "stage") { stageDraw(); const t = NX.topWin && NX.topWin(); if (stageOn() && t) NX.focus(t.id); } });
+  setInterval(stageDraw, 2000);
+
   // ---------- "Caps Lock is on" under any password box you're typing in ----------
   const capsCheck = (e) => { const t = e.target; if (!t || t.tagName !== "INPUT" || t.type !== "password" || !e.getModifierState) return; const on = e.getModifierState("CapsLock");
     let h = t.nextElementSibling && t.nextElementSibling.classList && t.nextElementSibling.classList.contains("nx-caps") ? t.nextElementSibling : null;
