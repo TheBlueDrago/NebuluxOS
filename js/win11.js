@@ -187,6 +187,7 @@
     g.items.forEach((f, k) => { if (f.kind === "image") NX.fs.url(f.path).then((u) => { const t = o.querySelector(`[data-k="${k}"] .d-thumb`); if (t) t.innerHTML = `<img src="${NX.esc(u)}" alt="">`; }).catch(() => {}); });
   }
   document.addEventListener("pointerdown", (e) => { const o = document.getElementById("nx-stack"); if (o && !e.target.closest("#nx-stack, .dstack")) o.remove(); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape") { const o = document.getElementById("nx-stack"); if (o) o.remove(); } }, true);
   document.addEventListener("nx:prefs", (e) => { if (e.detail === "stacks") { const o = document.getElementById("nx-stack"); if (o) o.remove(); deskFiles(); } });
   document.addEventListener("nx:icons", deskFiles);
   document.addEventListener("nx:files", () => { if (NX.me) deskFiles(); });
