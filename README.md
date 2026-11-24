@@ -97,6 +97,9 @@ Then start Nebulux OS like this (all on one line):
 ## What's in it
 
 - **New in 4.0:**
+  - **A whole new look:** glass that takes color from your background, a floating taskbar, twinkling stars over the wallpaper, live window pictures in Task View and Alt + Tab, notifications and the calendar as floating cards, colored Settings icons, folder icons, and a new start-up screen.
+  - **Themes** (also the last step of setup), **corners** (square, round, extra round), **glass** (clear, frosted, solid), colored-dot **window buttons**, an **Auto** accent color, a **lock screen picture**, **pointer color**, a sign-in **chime**, and seven new backgrounds.
+  - Snap layouts in **thirds** on wide screens, an **analog clock**, dancing bars in **Media Player**, a tidier **Paint**, **Reminders** with a due count on the taskbar, and **Task Manager** graphs that glow.
   - **Quick Search** (Nebulux + Space): apps, settings, files, Store apps, sums, unit conversions and the weather in one box.
   - **Stage**, **desktop widgets**, **hot corners**, the **App Grid** (Nebulux + G), an auto-hiding taskbar and icons that grow under the pointer.
   - **Calendar**, **Peek** (Space on a file), **color tags** in File Explorer, **Versions** in Notepad, **favorites** in Photos, **picture in picture**, and **Now playing** in quick settings.
