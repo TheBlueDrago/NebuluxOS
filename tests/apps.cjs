@@ -555,6 +555,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.type(".win[data-app=settings] .s-search input", "screen saver"); await wait(300);
   ok(await p.evaluate(() => [...document.querySelectorAll(".win[data-app=settings] .s-nav")].map((b) => b.textContent.trim()).join() === "Personalization"), "Find a setting: screen saver finds Personalization");
   await p.evaluate(() => NX.closeAll());
+  // the tray's tooltip
+  await p.evaluate(() => NX.setPref("volume", 42)); await wait(200);
+  ok(await p.evaluate(() => /Volume: 42%/.test(document.querySelector("#tb-qs").title)), "pointing at the tray shows the volume and connection");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

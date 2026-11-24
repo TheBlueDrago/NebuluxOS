@@ -42,7 +42,7 @@
     $("#desktop").classList.toggle("tb-left", p.align === "left");
   }
   let resizeT = 0; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { applyLook(); if (NX.me) icons(); }, 150); });
-  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (k === "battPct") tray(); if (k === "clockSec") clock(); if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery", "dnd", "saver", "saverAuto"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
+  document.addEventListener("nx:prefs", (e) => { applyLook(); const k = e.detail; if (["battPct", "volume", "airplane", "wifi"].includes(k)) tray(); if (k === "clockSec") clock(); if (["installed", "pinned", "desktop", "align"].includes(k)) { icons(); taskbar(); } if (["wifi", "bt", "airplane", "volume", "brightness", "night", "theme", "net", "battery", "dnd", "saver", "saverAuto"].includes(k)) { tray(); if (!$("#qs").hidden) qsDraw(); } if (k === "clock24") clock(); });
 
   NX.fx = () => { const v = NX.me ? NX.prefs().transparency : undefined; return v == null ? !NX.native : !!v; };
   NX.fast = /[?&]fast(&|=|$)/.test(location.search); // tests skip the boot animation
@@ -245,6 +245,7 @@
   NX.peek = { show: peek, hide: peekHide };
   function tray() {
     if (!NX.me) return; const p = NX.prefs();
+    $("#tb-qs").title = [p.airplane ? "Airplane mode is on" : NX.netOK() ? "Connected to the internet" : "Not connected", "Volume: " + (p.volume || 0) + "%", ...(batt() ? [battText()] : [])].join("\n");
     $("#tb-tray").innerHTML = `${NX.icon(p.airplane ? "plane" : NX.netOK() ? "wifi" : "wifioff", 16)}${NX.icon("volume", 16)}${batt() ? `<span class="tb-batt" title="${battText()}">${NX.battIcon(20)}${p.battPct ? `<small class="tb-bpct">${batt().percent}%</small>` : ""}</span>` : ""}`;
   }
   // the battery: this computer's own, on the real OS and in a browser tab (none on a desktop PC). The bar inside the
