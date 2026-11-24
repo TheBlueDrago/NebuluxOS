@@ -233,6 +233,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
   await p.type(".win[data-app=settings] .s-appq", "camer"); await wait(200);
   ok(await p.evaluate(() => { const v = [...document.querySelectorAll(".win[data-app=settings] [data-appn]")].filter((r) => !r.hidden).map((r) => r.dataset.appn); return v.length === 1 && v[0] === "camera"; }), "Settings > Apps finds an app as you type");
+  // Magnifier
+  await p.evaluate(() => NX.closeAll()); await p.mouse.move(300, 200);
+  await p.keyboard.down("Meta"); await p.keyboard.press("Equal"); await p.keyboard.press("Equal"); await p.keyboard.up("Meta"); await wait(300);
+  ok(await p.evaluate(() => NX.magnifier.level() === 2 && /scale\(2\)/.test(document.getElementById("desktop").style.transform)), "Nebulux + Plus zooms in (Magnifier)");
+  await shot("magnifier");
+  await p.keyboard.down("Meta"); await p.keyboard.press("Escape"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => NX.magnifier.level() === 1 && !document.getElementById("desktop").style.transform), "and Nebulux + Esc stops it");
   // Accessibility: the large mouse pointer
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "access" }); }); await wait(700);
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=settings] [data-pref=bigcursor]"); t.checked = true; t.dispatchEvent(new Event("change", { bubbles: true })); }); await wait(300);

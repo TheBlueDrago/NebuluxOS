@@ -1178,3 +1178,6 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 
 .s-stn{display:flex;align-items:center;gap:8px}
 .s-st .s-str{grid-template-columns:minmax(140px,1.2fr) 2fr 110px}.s-st .s-str>b{text-align:right}
+
+/* Magnifier */
+#desktop{transition:transform .12s ease-out}.nx-zoomed body{overflow:hidden}

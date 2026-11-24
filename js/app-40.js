@@ -126,14 +126,24 @@
   };
   setInterval(() => NX.screenTimeTick(30), 30000); addEventListener("pagehide", stFlush); document.addEventListener("nx:signout", stFlush);
 
+  // ---------- Magnifier: Nebulux + Plus zooms in around the pointer, Nebulux + Minus zooms out, Nebulux + Esc stops ----------
+  let mag = 1, mx = 0, my = 0;
+  const magApply = () => { const d = document.getElementById("desktop"); if (!d) return; if (mag <= 1.001) { mag = 1; d.style.transform = ""; d.style.transformOrigin = ""; document.documentElement.classList.remove("nx-zoomed"); }
+    else { d.style.transformOrigin = mx + "px " + my + "px"; d.style.transform = "scale(" + mag + ")"; document.documentElement.classList.add("nx-zoomed"); } };
+  NX.magnifier = { zoom: (dir) => { mag = dir === 0 ? 1 : Math.max(1, Math.min(4, +(mag + dir * .5).toFixed(2))); if (mag > 1 && dir > 0 && mag === 1.5) NX.toast("Magnifier is on. Nebulux + Minus zooms out, Nebulux + Esc stops."); magApply(); return mag; }, level: () => mag };
+  addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; if (mag > 1) magApply(); }, { passive: true });
+
   // ---------- keys: Nebulux + Space (Quick Search) and Nebulux + G (App Grid); on the USB they come from the window manager ----------
   addEventListener("keydown", (e) => {
     const win = e.metaKey || (e.getModifierState && e.getModifierState("OS"));
     if (win && e.key === " ") { e.preventDefault(); NX.quickSearch(); }
     else if (win && /^g$/i.test(e.key)) { e.preventDefault(); NX.appGrid(); }
+    else if (win && (e.key === "+" || e.key === "=")) { e.preventDefault(); NX.magnifier.zoom(1); }
+    else if (win && (e.key === "-" || e.key === "_")) { e.preventDefault(); NX.magnifier.zoom(-1); }
+    else if (win && e.key === "Escape" && NX.magnifier.level() > 1) { e.preventDefault(); NX.magnifier.zoom(0); }
     else if (e.key === "Escape" && $("#nx-grid")) $("#nx-grid").remove();
   });
-  document.addEventListener("nx:key", (e) => { if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); });
+  document.addEventListener("nx:key", (e) => { if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); if (e.detail === "zoom-in") NX.magnifier.zoom(1); if (e.detail === "zoom-out") NX.magnifier.zoom(-1); if (e.detail === "zoom-off") NX.magnifier.zoom(0); });
 
   // ---------- hot corners: push the pointer into a corner to do something (Settings > Personalization) ----------
   NX.cornerActions = { none: ["Nothing", null], desktop: ["Show the desktop", () => NX.showDesktop && NX.showDesktop()], tview: ["Task View", () => NX.taskView && NX.taskView()], grid: ["App Grid", () => NX.appGrid()], search: ["Quick Search", () => NX.quickSearch()], lock: ["Lock", () => NX.shell && NX.shell.lockKeep && NX.shell.lockKeep()], start: ["Start", () => NX.shell && NX.shell.toggleStart && NX.shell.toggleStart()] };

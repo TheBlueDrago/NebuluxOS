@@ -174,7 +174,7 @@
 
   // ---------- The keyboard shortcut guide: Nebulux + / (or from Get Started) ----------
   const KEYS = [
-    ["The basics", [["Nebulux", "Open or close Start"], ["Nebulux + D", "Show the desktop"], ["Nebulux + E", "Open File Explorer"], ["Nebulux + L", "Lock the computer"], ["Nebulux + W", "Widgets"], ["Nebulux + /", "This list of shortcuts"], ["Nebulux + Space", "Quick Search"], ["Nebulux + G", "App Grid: every app"]]],
+    ["The basics", [["Nebulux", "Open or close Start"], ["Nebulux + D", "Show the desktop"], ["Nebulux + E", "Open File Explorer"], ["Nebulux + L", "Lock the computer"], ["Nebulux + W", "Widgets"], ["Nebulux + /", "This list of shortcuts"], ["Nebulux + Space", "Quick Search"], ["Nebulux + G", "App Grid: every app"], ["Nebulux + Plus or Minus", "Magnifier: zoom in and out"]]],
     ["Windows", [["Alt + Tab", "Switch between windows"], ["Nebulux + Tab", "Task View: every window and desktop"], ["Nebulux + Left or Right", "Snap a window to half the screen"], ["Nebulux + Up", "Make a window full size"], ["Nebulux + Down", "Make it smaller, then minimize it"], ["Nebulux + 1 to 9", "Open the app at that place on the taskbar"]]],
     ["Desktops", [["Ctrl + Nebulux + D", "Add a desktop"], ["Ctrl + Nebulux + Left or Right", "Switch desktops"], ["Ctrl + Nebulux + F4", "Close this desktop"]]],
     ["Handy", [["Nebulux + V", "Clipboard history"], ["Print Screen", "Take a screenshot"], ["Nebulux + Shift + S", "Snipping Tool"], ["Ctrl + Shift + Esc", "Task Manager"], ["Ctrl + C", "Copy"], ["Ctrl + V", "Paste"]]],
