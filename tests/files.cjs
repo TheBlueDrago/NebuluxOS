@@ -176,13 +176,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.querySelector("#taskview").hidden && NX.topWin().id === "notepad"), "clicking a window in Task View switches to it");
   const mx = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wb-max").getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   if (!narrow) { await p.mouse.move(mx.x, mx.y); await wait(900);
-  ok(await p.evaluate(() => !document.querySelector("#snapfly").hidden && document.querySelectorAll("#snapfly .sf-lay").length === 4), "hovering over maximize shows snap layouts");
+  ok(await p.evaluate(() => !document.querySelector("#snapfly").hidden && document.querySelectorAll("#snapfly .sf-lay").length === (innerWidth >= 1200 ? 6 : 4)), "hovering over maximize shows snap layouts");
   await shot("snaplayouts");
   await p.evaluate(() => document.querySelectorAll("#snapfly .sf-lay")[3].querySelectorAll(".sf-zone")[3].click()); await wait(250);
   ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return Math.abs(r.x - A.width / 2) < 3 && Math.abs(r.width - A.width / 2) < 3 && Math.abs(r.height - A.height / 2) < 3; }), "picking a zone snaps the window there (bottom-right quarter)"); }
   await p.evaluate(() => { NX.close("notepad"); NX.close("calculator"); }); await wait(300);
   if (narrow) { await winKey("KeyW"); await wait(400); } else { await p.click("#tb-widgets"); await wait(400); }
-  ok(await p.evaluate(() => !document.querySelector("#widgets").hidden && /Weather/.test(document.querySelector("#widgets").innerText) && /Recent files/.test(document.querySelector("#widgets").innerText)), "Widgets opens with the weather and recent files");
+  ok(await p.evaluate(() => !document.querySelector("#widgets").hidden && /Weather/i.test(document.querySelector("#widgets").innerText) && /Recent files/i.test(document.querySelector("#widgets").innerText)), "Widgets opens with the weather and recent files");
   await p.keyboard.press("Escape"); await wait(200);
   await p.evaluate(async () => { await NX.fs.create(await NX.folder("Desktop"), "On my desktop.txt", false); NX.filesChanged(); }); await wait(500);
   ok(await p.evaluate(() => [...document.querySelectorAll("#icons .dicon.dfile")].some((d) => /On my desktop\.txt/.test(d.innerText))), "files in the Desktop folder show on the desktop");

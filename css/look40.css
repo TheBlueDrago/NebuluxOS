@@ -255,3 +255,19 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .noanim .mp-music.playing .mp-bars i,.noanim .mp-music.playing .mp-glow{animation:none}
 .mp-stage video.mp-snd{flex:none;width:calc(100% - 40px);height:54px;margin:14px 20px;background:transparent}.mp-stage:has(.mp-snd){justify-content:center}
 .mp-stage:has(.mp-snd) .mp-pip{display:none}
+
+/* ---------- Clock 4.0: an analog face beside the time ---------- */
+.clk-top{display:flex;align-items:center;justify-content:center;gap:26px;margin:4px 0 6px}
+.clk-top .clk-big{font-size:46px;text-align:left}.clk-top .clk-sub{text-align:left}
+.clk-analog{width:118px;height:118px;flex:none;filter:drop-shadow(0 10px 24px #0007)}
+.ca-face{fill:color-mix(in srgb,var(--accent) 14%,var(--card2));stroke:color-mix(in srgb,var(--accent) 45%,transparent);stroke-width:1.2}
+.ca-ticks line{stroke:var(--sub);stroke-width:1.6;stroke-linecap:round}
+.ca-h{stroke:var(--txt);stroke-width:4;stroke-linecap:round}.ca-m{stroke:var(--txt);stroke-width:2.6;stroke-linecap:round}
+.ca-s{stroke:var(--accent);stroke-width:1.2;stroke-linecap:round}.ca-dot{fill:var(--accent)}
+@media (max-width:560px){.clk-top{flex-direction:column;gap:10px}.clk-top .clk-big,.clk-top .clk-sub{text-align:center}.clk-analog{width:96px;height:96px}}
+
+/* ---------- Photos: a friendlier empty screen ---------- */
+.ph-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;background:radial-gradient(50% 45% at 50% 45%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%)}
+.ph-empty svg{filter:drop-shadow(0 14px 30px #0008)}.ph-empty b{font-size:18px;color:#f4f1ff}.ph-empty .ph-msg{margin:0;max-width:360px}
+.ph-eb{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;justify-content:center}
+.ph-empty .ph-msg{position:static;height:auto;flex:none;padding:0;display:block}
