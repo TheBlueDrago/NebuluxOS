@@ -149,6 +149,20 @@
     if (gen !== deskGen) return;
     box.querySelectorAll(".dicon.dfile").forEach((x) => x.remove());
     const used = +box.dataset.apps || 0, rows = +box.dataset.rows || 6;
+    // Stacks (desktop right-click > Use stacks): files grouped into one pile per kind, like macOS
+    if (NX.prefs().stacks && list.length) {
+      const G = [["Folders", (x) => x.dir, "folder"], ["Pictures", (x) => x.kind === "image", "fimage"], ["Movies", (x) => x.kind === "video", "fvideo"], ["Music", (x) => x.kind === "audio", "faudio"], ["Documents", (x) => x.kind === "text" || x.kind === "pdf", "ftext"], ["Other", () => true, "file"]];
+      const left = list.slice(0, 200), groups = [];
+      for (const [n, test, ic] of G) { const items = left.filter((x) => !x.taken && test(x)); items.forEach((x) => (x.taken = 1)); if (items.length) groups.push({ n, ic, items }); }
+      groups.forEach((g, j) => {
+        const i = used + j, b = document.createElement("button");
+        b.className = "dicon dfile dstack"; b.style.gridRow = (i % rows) + 1; b.style.gridColumn = Math.floor(i / rows) + 1; b.title = g.n;
+        b.innerHTML = `<span class="st-pile"><i></i><i></i>${NX.icon(g.ic, 40)}</span><span>${g.n} <small>${g.items.length}</small></span>`;
+        b.onclick = (e) => { e.stopPropagation(); stackOpen(b, g, list); };
+        box.appendChild(b);
+      });
+      return;
+    }
     list.slice(0, 60).forEach((f, j) => {
       const i = used + j, b = document.createElement("button");
       b.className = "dicon dfile"; b.style.gridRow = (i % rows) + 1; b.style.gridColumn = Math.floor(i / rows) + 1; b.title = f.name;
@@ -160,6 +174,20 @@
       if (f.kind === "image") NX.fs.url(f.path).then((u) => { const t = b.querySelector(".d-thumb"); if (t) t.innerHTML = `<img src="${NX.esc(u)}" alt="">`; }).catch(() => {});
     });
   }
+  // an open stack: its files fan out in a card next to the pile
+  function stackOpen(btn, g, list) {
+    let o = document.getElementById("nx-stack"); if (o) { const same = o.dataset.n === g.n; o.remove(); if (same) return; }
+    o = document.createElement("div"); o.id = "nx-stack"; o.dataset.n = g.n;
+    o.innerHTML = `<b>${NX.esc(g.n)}</b><div class="stk-grid">${g.items.map((f, k) => `<button data-k="${k}" title="${NX.esc(f.name)}" style="--k:${Math.min(k, 12)}">${f.kind === "image" ? `<span class="d-thumb">${NX.icon("fimage", 40)}</span>` : NX.icon(f.dir ? "folder" : FICON[f.kind] || "file", 40)}<span>${NX.esc(f.name)}</span></button>`).join("")}</div><button class="btn sm stk-show">Show in File Explorer</button>`;
+    document.getElementById("desktop").appendChild(o);
+    const r = btn.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
+    o.style.left = Math.min(innerWidth - w - 10, r.right + 8) + "px"; o.style.top = Math.max(10, Math.min(innerHeight - h - 70, r.top - 10)) + "px";
+    o.querySelectorAll("[data-k]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); o.remove(); NX.openFile(g.items[+b.dataset.k], list); }));
+    o.querySelector(".stk-show").onclick = () => { o.remove(); NX.open("files", { place: "Desktop" }); };
+    g.items.forEach((f, k) => { if (f.kind === "image") NX.fs.url(f.path).then((u) => { const t = o.querySelector(`[data-k="${k}"] .d-thumb`); if (t) t.innerHTML = `<img src="${NX.esc(u)}" alt="">`; }).catch(() => {}); });
+  }
+  document.addEventListener("pointerdown", (e) => { const o = document.getElementById("nx-stack"); if (o && !e.target.closest("#nx-stack, .dstack")) o.remove(); });
+  document.addEventListener("nx:prefs", (e) => { if (e.detail === "stacks") { const o = document.getElementById("nx-stack"); if (o) o.remove(); deskFiles(); } });
   document.addEventListener("nx:icons", deskFiles);
   document.addEventListener("nx:files", () => { if (NX.me) deskFiles(); });
   NX.desktopNew = async (folder) => {

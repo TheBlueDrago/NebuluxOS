@@ -436,6 +436,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(!!zr && await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return Math.abs(r.x - A.width * 2 / 3) < 3 && Math.abs(r.width - A.width / 3) < 3; }), "dragging a window to the top shows the snap bar, and dropping it on a zone snaps it there");
     await p.evaluate(() => NX.closeAll());
   }
+  // desktop Stacks
+  await p.evaluate(async () => { NX.closeAll(); const d = await NX.folder("Desktop"); for (const n of ["Stack a.txt", "Stack b.txt"]) await NX.fs.write(d + "/" + n, "x"); NX.filesChanged(); NX.setPref("stacks", true); }); await wait(900);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#icons .dstack")].some((x) => /Documents/.test(x.textContent))), "Use stacks piles the desktop's files by kind");
+  await p.evaluate(() => [...document.querySelectorAll("#icons .dstack")].find((x) => /Documents/.test(x.textContent)).click()); await wait(500);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#nx-stack .stk-grid button")].filter((b) => /Stack [ab].txt/.test(b.textContent)).length === 2), "and a stack opens to show its files");
+  await p.evaluate(async () => { NX.setPref("stacks", false); const d = await NX.folder("Desktop"); await NX.fs.remove([d + "/Stack a.txt", d + "/Stack b.txt"], true).catch(() => {}); NX.filesChanged(); }); await wait(500);
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
