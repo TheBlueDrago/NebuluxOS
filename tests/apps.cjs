@@ -301,6 +301,17 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.screenTimeTick(30));
   ok(await p.evaluate(() => (NX.screenTime().weather || 0) >= 3000 && /Weather/.test(document.querySelector("#s-st").textContent) && /\d+ min/.test(document.querySelector("#s-st").textContent)), "Settings > System shows screen time for each app today");
   await p.evaluate(() => document.querySelector("#s-st").scrollIntoView()); await shot("screentime");
+  // Reminders
+  await p.evaluate(() => { NX.closeAll(); NX.setData("todos", []); NX.open("reminders"); }); await wait(500);
+  await p.evaluate(() => { const f = document.querySelector(".win[data-app=reminders] .rm-add"); f.t.value = "Feed the cat"; const d = new Date(Date.now() - 60000); f.d.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); f.requestSubmit(); }); await wait(300);
+  ok(await p.evaluate(() => /Feed the cat/.test(document.querySelector(".win[data-app=reminders] .rm-list").textContent) && /1 to do/.test(document.querySelector(".win[data-app=reminders] .rm-head").textContent)), "Reminders adds something to do");
+  await p.evaluate(() => NX.todosTick()); await wait(300);
+  ok(await p.evaluate(() => /Reminder: Feed the cat/.test((document.querySelector("#nx-alarm") || {}).textContent || "") && NX.data("todos", [])[0].rang), "and rings when it's due");
+  await p.evaluate(() => document.querySelectorAll("#nx-alarm [data-al=off]").forEach((b) => b.click()));
+  await shot("reminders");
+  await p.evaluate(() => { const c = document.querySelector(".win[data-app=reminders] .rm-it input"); c.checked = true; c.dispatchEvent(new Event("change")); }); await wait(500);
+  ok(await p.evaluate(() => NX.data("todos", [])[0].done && /All done/.test(document.querySelector(".win[data-app=reminders] .rm-head").textContent)), "and checks it off");
+  await p.evaluate(() => { NX.setData("todos", []); NX.closeAll(); });
   // Calendar app
   await p.evaluate(() => { NX.closeAll(); NX.setData("events", []); NX.open("calendar"); }); await wait(600);
   await p.evaluate(() => { const f = document.querySelector(".win[data-app=calendar] .ca-add"); f.n.value = "Dentist"; f.t.value = "15:30"; f.querySelectorAll("[name=c]")[3].checked = true; f.requestSubmit(); }); await wait(300);

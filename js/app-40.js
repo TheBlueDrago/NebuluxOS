@@ -138,6 +138,35 @@
       draw();
     } };
 
+  // ---------- Reminders: things to do, with a day and time if you like; it rings when one is due (also with the app closed) ----------
+  const todos = () => NX.data("todos", []), saveTodos = (L) => { NX.setData("todos", L); document.dispatchEvent(new CustomEvent("nx:todos")); };
+  NX.todosTick = (now) => {
+    if (!NX.me) return; const d = now || new Date(), stamp = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "T" + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    let ch = false; const L = todos(); for (const t of L) if (!t.done && !t.rang && t.due && t.due <= stamp) { t.rang = 1; ch = true; if (NX.alarms && NX.alarms.ring) NX.alarms.ring({ name: "Reminder: " + t.text, snooze: false }, d); }
+    if (ch) saveTodos(L);
+  };
+  setInterval(() => NX.todosTick(), 15000);
+  NX.apps.reminders = { name: "Reminders", icon: "reminders", builtIn: true, category: "Productivity", w: 560, h: 620, minW: 340, minH: 420, desc: "Things to do, with reminders when they're due.",
+    open(body) {
+      body.classList.add("rm"); let showDone = false;
+      const draw = () => {
+        const L = todos(), open = L.filter((t) => !t.done), done = L.filter((t) => t.done), now = (() => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })();
+        const when = (t) => { if (!t.due) return ""; const d = new Date(t.due), today = new Date().toDateString() === d.toDateString(); return (today ? "Today" : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })) + (t.due.length > 10 ? ", " + NX.fmtTime(d) : ""); };
+        const item = (t) => `<div class="rm-it ${t.done ? "done" : ""} ${!t.done && t.due && t.due < now ? "late" : ""}" data-id="${t.id}"><label class="rm-ck"><input type="checkbox" ${t.done ? "checked" : ""} aria-label="Done"><i></i></label><span><b>${NX.esc(t.text)}</b>${t.due ? `<small>${NX.esc(when(t))}</small>` : ""}</span><button class="rm-del" aria-label="Delete" title="Delete">${NX.icon("close", 12)}</button></div>`;
+        body.innerHTML = `<div class="rm-head"><h2>Reminders</h2><span>${open.length ? open.length + " to do" : "All done"}</span></div>
+          <form class="rm-add"><input name="t" maxlength="120" placeholder="Add a reminder" aria-label="Add a reminder" required><input name="d" type="datetime-local" aria-label="When (optional)"><button class="btn primary" type="submit">Add</button></form>
+          <div class="rm-list">${open.length ? open.sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999")).map(item).join("") : `<p class="rm-none">Nothing to do. Add something above.</p>`}</div>
+          ${done.length ? `<button class="rm-show" type="button">${showDone ? "Hide" : "Show"} ${done.length} done</button>${showDone ? `<div class="rm-list">${done.map(item).join("")}</div><button class="btn sm rm-clear" type="button">Clear done</button>` : ""}` : ""}`;
+        const f = $(".rm-add", body); f.onsubmit = (e) => { e.preventDefault(); const L2 = todos(); L2.push({ id: NX.uid(), text: f.t.value.trim().slice(0, 120), due: f.d.value || "", done: false }); saveTodos(L2); draw(); const n = $(".rm-add [name=t]", body); if (n) n.focus(); };
+        body.querySelectorAll(".rm-it").forEach((el) => { const id = el.dataset.id;
+          el.querySelector("input").onchange = (e) => { saveTodos(todos().map((t) => (t.id === id ? Object.assign({}, t, { done: e.target.checked }) : t))); setTimeout(draw, e.target.checked ? 250 : 0); };
+          el.querySelector(".rm-del").onclick = () => { saveTodos(todos().filter((t) => t.id !== id)); draw(); }; });
+        const sh = $(".rm-show", body); if (sh) sh.onclick = () => { showDone = !showDone; draw(); };
+        const cl = $(".rm-clear", body); if (cl) cl.onclick = () => { saveTodos(todos().filter((t) => !t.done)); draw(); };
+      };
+      draw();
+    } };
+
   // ---------- Screen time: how long each app was in front today (counted every 30 seconds, kept for 7 days, only on this computer) ----------
   let stBuf = {}, stN = 0;
   const dayKey = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };

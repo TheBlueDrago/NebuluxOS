@@ -6,7 +6,7 @@
     ["Quick Search", "Press Nebulux + Space for one search box in the middle of the screen: apps, settings, your files, apps from the Store, sums like 12*12, conversions like 5 km in miles, and the weather."],
     ["Stage", "Settings > Personalization > Stage keeps only the window you're using out. Your other windows wait as cards on the left, one click away."],
     ["Desktop widgets", "Put a clock, the weather, what's next in your calendar and the battery right on your wallpaper."],
-    ["Calendar", "A new Calendar app with the whole month, colored events and reminders."],
+    ["Calendar and Reminders", "Two new apps: Calendar shows the whole month with colored events, and Reminders keeps your to-do list and rings when something is due."],
     ["Peek", "Select a file in File Explorer and press Space to see it right away: pictures, videos, music, text and PDFs. Press Space again to close it."],
     ["App Grid", "Nebulux + G shows every app, big, on the whole screen. Type to find one, or use the arrow keys."],
     ["Hot corners", "Push the pointer into a corner of the screen to show the desktop, open Task View, the App Grid, Quick Search, Start, a new sticky note, or lock."],
