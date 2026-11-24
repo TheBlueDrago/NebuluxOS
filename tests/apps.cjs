@@ -471,6 +471,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector("#cal [data-cf=stop]").click()); await wait(200);
   ok(await p.evaluate(() => !NX.focusSession.on()), "and Stop ends it");
   await p.evaluate(() => NX.shell.closeFlyouts());
+  // File Explorer: Gallery shows the pictures from Pictures, Desktop and Downloads
+  await p.evaluate(async () => { NX.closeAll(); const cv = document.createElement("canvas"); cv.width = 40; cv.height = 30; cv.getContext("2d").fillRect(0, 0, 40, 30); const bl = await new Promise((r) => cv.toBlob(r, "image/png")); await NX.fs.upload(await NX.folder("Downloads"), "Gallery test.png", bl); NX.open("files"); }); await wait(800);
+  await p.evaluate(() => document.querySelector('.win[data-app=files] [data-go="::gallery"]').click()); await wait(900);
+  ok(await p.evaluate(() => { const w = document.querySelector(".win[data-app=files]"); return !!w.querySelector(".fx-gal") && [...w.querySelectorAll(".fx-item")].some((b) => /Gallery test.png/.test(b.textContent)) && /Gallery/.test(w.querySelector(".wt-name").textContent); }), "File Explorer's Gallery shows pictures from Downloads too");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

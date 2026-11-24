@@ -506,3 +506,10 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wx-fog{position:absolute;left:-50%;width:200%;height:60%;top:20%;background:linear-gradient(90deg,transparent,#ffffff30,transparent,#ffffff26,transparent);animation:wxFog 20s linear infinite}.wx-fog.b{top:55%;animation-duration:30s;animation-direction:reverse}
 @keyframes wxFog{to{transform:translateX(25%)}}
 .noanim .wx-sky *{animation:none!important}
+
+/* ---------- File Explorer: Gallery ---------- */
+.fx-list.grid.fx-gal{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:8px}
+.fx-gal .fx-item{padding:6px!important}
+.fx-gal .fx-thumb{width:100%;height:110px;border-radius:10px;background:var(--card)}
+.fx-gal .fx-thumb img{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover}
+.fx-gal .fx-n{font-size:11.5px;color:var(--sub)}
