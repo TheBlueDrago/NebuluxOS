@@ -167,3 +167,13 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 @keyframes osdin{from{transform:translateX(-50%) translateY(16px) scale(.94);opacity:0}}
 .osd-bar{height:8px;border-radius:4px;background:#ffffff1f}.osd-bar i{border-radius:4px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#fff));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 60%,transparent);transition:width .15s var(--ease-out)}
 [data-theme=light] .osd-bar{background:#1b123a1a}
+
+/* ---------- Corners and Glass (Settings > Personalization) ---------- */
+[data-corners=square]{--r-win:4px;--r-menu:6px}[data-corners=square] .btn,[data-corners=square] .tb-app,[data-corners=square] .s-row,[data-corners=square] .s-card,[data-corners=square] .sm-tile,[data-corners=square] .ctx button,[data-corners=square] .ctx{border-radius:4px}
+[data-corners=square] #desktop.tb-float #taskbar{border-radius:6px}
+[data-corners=xround]{--r-win:22px;--r-menu:24px}[data-corners=xround] .btn{border-radius:14px}[data-corners=xround] .s-row,[data-corners=xround] .s-card{border-radius:18px}[data-corners=xround] #desktop.tb-float #taskbar{border-radius:22px}[data-corners=xround] .ctx{border-radius:20px}
+[data-glass=clear]:not(.nx-lite):not(.hc){--bg:color-mix(in srgb,var(--aura) 14%,#1a1330b3);--bg2:color-mix(in srgb,var(--aura) 16%,#211938c4);--glass:color-mix(in srgb,var(--aura) 18%,#16102899)}
+[data-glass=clear][data-theme=light]:not(.nx-lite):not(.hc){--bg:color-mix(in srgb,var(--aura) 6%,#f7f5fcbf);--bg2:color-mix(in srgb,var(--aura) 7%,#fbfaffcc);--glass:color-mix(in srgb,var(--aura) 8%,#f3f0fba6)}
+[data-glass=solid]{--bg:color-mix(in srgb,var(--aura) 12%,#1a1330);--bg2:color-mix(in srgb,var(--aura) 14%,#211938);--glass:color-mix(in srgb,var(--aura) 16%,#161028)}
+[data-glass=solid][data-theme=light]{--bg:color-mix(in srgb,var(--aura) 5%,#f7f5fc);--bg2:color-mix(in srgb,var(--aura) 6%,#fbfaff);--glass:color-mix(in srgb,var(--aura) 7%,#f3f0fb)}
+[data-glass=solid] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}

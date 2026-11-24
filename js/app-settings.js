@@ -116,6 +116,8 @@
           <h3>Colors</h3>${row("contrast", "Choose your mode", "Dark or light windows and menus, or Auto: light from 7 AM, dark from 7 PM", `<div class="seg"><button data-theme="dark" class="${!p.themeAuto && p.theme === "dark" ? "on" : ""}">Dark</button><button data-theme="light" class="${!p.themeAuto && p.theme === "light" ? "on" : ""}">Light</button><button data-theme="auto" class="${p.themeAuto ? "on" : ""}" title="Light during the day, dark at night">Auto</button></div>`)}
           ${row("brush", "Accent color", "Used for buttons, switches and highlights", `<div class="s-acc"><button data-acc="auto" class="s-acc-auto ${p.accent === "auto" ? "on" : ""}" title="From your background" aria-label="Accent color from your background"></button>${ACCENTS.map((c) => `<button data-acc="${c}" class="${c === p.accent ? "on" : ""}" style="background:${c}" aria-label="Accent ${c}"></button>`).join("")}</div>`)}
           ${row("contrast", "Transparency effects", NX.native ? "See-through, frosted windows and taskbar. Off makes Nebulux OS faster on this computer." : "See-through, frosted windows and taskbar", toggle("transparency", NX.fx()))}
+          ${row("max", "Corners", "How round windows, menus and buttons are", `<div class="seg">${[["square", "Square"], ["round", "Round"], ["xround", "Extra round"]].map(([v, t]) => `<button data-corners="${v}" class="${(p.corners40 || "round") === v ? "on" : ""}">${t}</button>`).join("")}</div>`)}
+          ${row("spark", "Glass", "How much of the background shows through", `<div class="seg">${[["clear", "Clear"], ["frosted", "Frosted"], ["solid", "Solid"]].map(([v, t]) => `<button data-glass="${v}" class="${(p.glass || "frosted") === v ? "on" : ""}">${t}</button>`).join("")}</div>`)}
           <h3>Taskbar</h3>${row("taskbar", "Taskbar alignment", "Where the Start button and apps sit", `<div class="seg"><button data-align="center" class="${p.align === "center" ? "on" : ""}">Center</button><button data-align="left" class="${p.align === "left" ? "on" : ""}">Left</button></div>`)}`;
         if (pg === "apps") {
           const all = Object.entries(NX.apps).filter(([id, a]) => a.builtIn || p.installed.includes(id));
@@ -378,6 +380,8 @@
         body.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = () => { NX.setPref("accent", b.dataset.acc); draw(); }));
         body.querySelectorAll("[data-align]").forEach((b) => (b.onclick = () => { NX.setPref("align", b.dataset.align); draw(); }));
         body.querySelectorAll("[data-uninstall]").forEach((b) => (b.onclick = () => { NX.uninstall(b.dataset.uninstall); draw(); }));
+        body.querySelectorAll("[data-corners]").forEach((b) => (b.onclick = () => { NX.setPref("corners40", b.dataset.corners); draw(); }));
+        body.querySelectorAll("[data-glass]").forEach((b) => (b.onclick = () => { NX.setPref("glass", b.dataset.glass); draw(); }));
         body.querySelectorAll("[data-dwk]").forEach((c) => (c.onchange = () => { NX.setPref("deskWidgets", [...body.querySelectorAll("[data-dwk]:checked")].map((x) => x.dataset.dwk)); }));
         body.querySelectorAll("[data-corner]").forEach((s) => (s.onchange = () => { NX.setPref("corners", Object.assign({}, NX.prefs().corners || {}, { [s.dataset.corner]: s.value })); }));
         const mgo = body.querySelector("[data-magon]"); if (mgo) mgo.onclick = () => NX.magnifier && NX.magnifier.zoom(1);
