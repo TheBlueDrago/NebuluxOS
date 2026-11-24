@@ -25,6 +25,9 @@
       if (/[\d)]/.test(q) && /[-+*/^×÷%!()]|sqrt|sin|cos|tan|log|ln/.test(q) && NX.calcEval) { try { const v = NX.calcEval(q, true); if (isFinite(v)) { const r = String(+v.toPrecision(12)); items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: "= " + r, sub: "Press Enter to copy it", go: () => { navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } }); } } catch (e) { /* not a sum */ } }
       const apps = visible().filter((id) => NX.apps[id].name.toLowerCase().includes(ql)).sort((a, b) => NX.apps[a].name.toLowerCase().indexOf(ql) - NX.apps[b].name.toLowerCase().indexOf(ql)).slice(0, 5);
       apps.forEach((id, k) => items.push({ head: k ? "" : "Apps", icon: NX.icon(NX.apps[id].icon || id, 30), name: NX.apps[id].name, sub: "App", go: () => NX.open(id) }));
+      // apps from the Nebulux Store you don't have yet
+      const vis = new Set(visible()), store = Object.keys(NX.apps).filter((id) => !vis.has(id) && !NX.apps[id].builtIn && NX.apps[id].name.toLowerCase().includes(ql)).slice(0, apps.length ? 2 : 4);
+      store.forEach((id, k) => items.push({ head: k ? "" : "In the Nebulux Store", icon: NX.icon(NX.apps[id].icon || id, 30), name: NX.apps[id].name, sub: "Get it from the Nebulux Store", go: () => NX.open("store", { app: id }) }));
       const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql))).slice(0, 3);
       pages.forEach((pg, k) => items.push({ head: k ? "" : "Settings", icon: NX.icon(pg.icon, 30), name: pg.name, sub: "Settings", go: () => NX.open("settings", { page: pg.id }) }));
       const web = { head: "The web", icon: NX.icon("google", 30), name: "Search Google for “" + q + "”", sub: "Opens Google", go: () => NX.open("google", { q }) };
@@ -146,7 +149,7 @@
   document.addEventListener("nx:key", (e) => { if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); if (e.detail === "zoom-in") NX.magnifier.zoom(1); if (e.detail === "zoom-out") NX.magnifier.zoom(-1); if (e.detail === "zoom-off") NX.magnifier.zoom(0); });
 
   // ---------- hot corners: push the pointer into a corner to do something (Settings > Personalization) ----------
-  NX.cornerActions = { none: ["Nothing", null], desktop: ["Show the desktop", () => NX.showDesktop && NX.showDesktop()], tview: ["Task View", () => NX.taskView && NX.taskView()], grid: ["App Grid", () => NX.appGrid()], search: ["Quick Search", () => NX.quickSearch()], lock: ["Lock", () => NX.shell && NX.shell.lockKeep && NX.shell.lockKeep()], start: ["Start", () => NX.shell && NX.shell.toggleStart && NX.shell.toggleStart()] };
+  NX.cornerActions = { none: ["Nothing", null], desktop: ["Show the desktop", () => NX.showDesktop && NX.showDesktop()], tview: ["Task View", () => NX.taskView && NX.taskView()], grid: ["App Grid", () => NX.appGrid()], search: ["Quick Search", () => NX.quickSearch()], lock: ["Lock", () => NX.shell && NX.shell.lockKeep && NX.shell.lockKeep()], start: ["Start", () => NX.shell && NX.shell.toggleStart && NX.shell.toggleStart()], note: ["New sticky note", () => { const L = NX.data("sticky-notes", []); L.unshift({ id: NX.uid(), t: "", c: "sun", at: Date.now(), pin: true }); NX.setData("sticky-notes", L); if (NX.deskNotes) NX.deskNotes(); setTimeout(() => { const t = document.querySelector("#nx-dnotes .dn-note textarea"); if (t) t.focus(); }, 60); }] };
   let cornerAt = null, cornerT = 0;
   addEventListener("pointermove", (e) => {
     if (!NX.me || e.pointerType !== "mouse") return; const c = NX.prefs().corners || {};

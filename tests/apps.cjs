@@ -182,7 +182,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => !document.querySelector("#nx-qs") && !!document.querySelector(".win[data-app=camera]")), "Enter opens the top result");
   await p.evaluate(() => NX.closeAll()); await p.evaluate(() => NX.quickSearch()); await p.keyboard.type("grocer"); await wait(900);
   ok(await p.evaluate(() => [...document.querySelectorAll("#nx-qs .qs2-it")].some((b) => /Groceries|grocer/i.test(b.textContent))), "and files");
+  await p.evaluate(() => { const i = document.querySelector("#nx-qs input"); i.value = "netfl"; i.dispatchEvent(new Event("input")); }); await wait(400);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#nx-qs .qs2-it")].some((b) => /Netflix/.test(b.textContent) && /Nebulux Store/.test(b.textContent))), "and apps you can get from the Nebulux Store");
   await p.keyboard.press("Escape"); await wait(200);
+  // a hot corner can make a new sticky note
+  await p.evaluate(() => NX.cornerActions.note[1]()); await wait(300);
+  ok(await p.evaluate(() => document.activeElement && document.activeElement.closest && !!document.activeElement.closest("#nx-dnotes")), "a hot corner can start a new sticky note on the desktop");
+  await p.evaluate(() => { NX.setData("sticky-notes", []); NX.deskNotes(); });
   // Peek: Space on a file
   await p.evaluate(() => NX.open("files", { place: "Pictures" })); await wait(900);
   await p.evaluate(() => { const b = document.querySelector(".win[data-app=files] .fx-item"); b.click(); b.focus(); }); await wait(200);
