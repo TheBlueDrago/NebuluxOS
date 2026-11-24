@@ -816,3 +816,24 @@ NX.noteIcon = (text) => {
   addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, true);
   document.addEventListener("pointerdown", (e) => { if (!e.target.closest || !e.target.closest("#nx-assist")) close(); }, true);
 })();
+
+// ---------- the lock screen shows your next event and how many reminders are due (only while you're locked, not after signing out) ----------
+(function () {
+  const key = (x) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+  NX.lockNextSave = () => {
+    if (!NX.me || NX.prefs().lockNext === false) { NX.set("lk-next", null); return; }
+    const d = new Date(), today = key(d), tm = new Date(d.getTime() + 86400000), tomorrow = key(tm), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    const ev = NX.data("events", []).filter((e) => (e.date === today && (!e.time || e.time >= hm)) || e.date === tomorrow).sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")))[0];
+    const now = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16), due = NX.data("todos", []).filter((t) => !t.done && t.due && t.due <= now).length;
+    NX.set("lk-next", ev || due ? { title: ev ? ev.title : "", when: ev ? (ev.date === today ? "Today" : "Tomorrow") + (ev.time ? ", " + NX.fmtTime(new Date(ev.date + "T" + ev.time)) : "") : "", color: ev ? ev.color || "#7c5cff" : "", due } : null);
+  };
+  function tick() {
+    const L = document.getElementById("lock"), d = document.getElementById("lk-date"); if (!L || !d) return;
+    const n = !L.hidden && !NX.me ? NX.get("lk-next", null) : null; let el = document.getElementById("lk-next");
+    if (!n) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement("div"); el.id = "lk-next"; (document.getElementById("lk-wx") || d).after(el); }
+    const html = (n.title ? `<span class="lkn-ev"><i style="background:${NX.esc(n.color)}"></i><b>${NX.esc(n.title)}</b><small>${NX.esc(n.when)}</small></span>` : "") + (n.due ? `<span class="lkn-due">${NX.icon("reminders", 16)}${n.due} reminder${n.due === 1 ? "" : "s"} due</span>` : "");
+    if (el.innerHTML !== html) el.innerHTML = html;
+  }
+  setInterval(tick, 1000);
+})();

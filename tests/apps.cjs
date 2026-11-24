@@ -533,6 +533,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=clock]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return !document.querySelector("#nx-assist") && Math.abs(r.x - A.width / 2) < 3 && Math.abs(r.width - A.width / 2) < 3; }), "and picking one fills the right half");
     await p.evaluate(() => NX.closeAll());
   }
+  // the lock screen shows the next event and reminders due (only while locked)
+  await p.evaluate(() => { NX.closeAll(); const d = new Date(), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); NX.setData("events", [{ id: "lk1", date: k, time: "23:58", title: "Lock test event", color: "#22c55e" }]); NX.setData("todos", [{ id: "lt", text: "Late", done: false, due: "2020-01-01T09:00", rang: 1 }]); NX.shell.lockKeep(); }); await wait(1600); await shot("lock-next");
+  ok(await p.evaluate(() => { const e = document.querySelector("#lk-next"); return !!e && /Lock test event/.test(e.textContent) && /1 reminder due/.test(e.textContent); }), "the lock screen shows your next event and reminders due");
+  await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(400);
+  await p.evaluate(() => { NX.setData("events", []); NX.setData("todos", []); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

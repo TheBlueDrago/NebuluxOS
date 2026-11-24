@@ -580,3 +580,9 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .as-face{display:grid;place-items:center;height:110px;background:color-mix(in srgb,var(--accent) 10%,var(--card2))}
 .as-face{position:relative;overflow:hidden;height:130px}
 .s-hthemes{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));margin-bottom:12px}
+
+/* ---------- lock screen: next event and reminders due ---------- */
+#lk-next{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px auto 0;max-width:90vw}
+#lock.signin #lk-next{display:none}
+#lk-next>span{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:14px;background:#0d082259;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid #ffffff22;color:#fff;font-size:13.5px;text-shadow:none}
+.lkn-ev i{width:8px;height:8px;border-radius:50%;flex:none}.lkn-ev small{opacity:.75}

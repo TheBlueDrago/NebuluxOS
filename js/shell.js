@@ -130,14 +130,14 @@
     NX.unread = 0; const bd = document.getElementById("tb-badge"); if (bd) bd.hidden = true;
     if (!back) setTimeout(() => NX.toast("Welcome, " + u.name + "."), 500);
   }
-  function signOut() { lockedBy = null; closeFlyouts(); NX.closeAll(); setTimeout(lock, 160); }
+  function signOut() { lockedBy = null; NX.set("lk-next", null); closeFlyouts(); NX.closeAll(); setTimeout(lock, 160); }
   // Lock: the lock screen comes up, and your apps stay open behind it
   let lockedBy = null;
   // after the computer sleeps, sign in again (Guest has no password, so it just carries on)
   // startup apps (Settings > Apps): opened once each time someone signs in (not when coming back from the lock screen)
   document.addEventListener("nx:signin", (e) => { if (e.detail && e.detail.back) return; const L = (NX.prefs().startup || []).filter((id) => NX.apps[id] && !NX.wins.has(id)); if (!L.length) return; setTimeout(() => L.forEach((id, i) => setTimeout(() => NX.me && NX.open(id), i * 250)), 1200); });
   document.addEventListener("nx:resumed", () => { if (NX.me && !NX.me.guest && $("#lock").hidden) lockKeep(); });
-  function lockKeep() { if (!NX.me) return; lockedBy = NX.me.id; closeFlyouts(); lock(true); }
+  function lockKeep() { if (!NX.me) return; lockedBy = NX.me.id; if (NX.lockNextSave) NX.lockNextSave(); closeFlyouts(); lock(true); }
   // Sleep: the computer sleeps (on the real OS); press a key or click to wake it, then sign in again
   function sleep() {
     closeFlyouts(); lockKeep();

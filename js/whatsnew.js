@@ -51,6 +51,8 @@
     ["Choose a fit", "For your own background picture: Fill, Fit, Stretch or Center."],
     ["Snap Assist", "Snap a window to one half and your other windows show up in the other half, with a live picture of each. Pick one to fill it."],
     ["Corner snapping", "Drag a window into a corner of the screen to give it a quarter."],
+    ["Your day on the lock screen", "While the computer is locked, the lock screen shows your next event and how many reminders are due. Settings > Personalization > Lock screen details turns it off."],
+    ["Themes on Settings Home", "Settings Home shows the six themes under Personalize your device."],
     ["Recycle Bin on the desktop", "The Recycle Bin sits on your desktop and fills up when something is in it. Right-click it to empty it."],
     ["Select icons with a box", "Drag on an empty part of the desktop to draw a box around icons."],
     ["Toasts you can close", "Click a pop-up message to close it. A thin bar shows how long it stays."],
