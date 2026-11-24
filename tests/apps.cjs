@@ -166,6 +166,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("notepad-tabs");
   await p.evaluate(() => document.querySelector(".win[data-app=notepad] [data-tx='1']").click()); await wait(400);
   ok(await p.evaluate(() => NX.wins.get("notepad").np2.tabs().length === 1), "and a tab closes with its x");
+  // Alt + F4 closes the window you're using
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); NX.open("weather"); }); await wait(500);
+  await p.keyboard.down("Alt"); await p.keyboard.press("F4"); await p.keyboard.up("Alt"); await wait(400);
+  ok(await p.evaluate(() => !NX.wins.has("weather") && NX.wins.has("clock")), "Alt + F4 closes the window you're using");
   // Keep on top (right-click a title bar)
   await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("clock"); }); await wait(600);
   const tbN = await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad] .wt-name").getBoundingClientRect(); return [r.x + 10, r.y + r.height / 2]; });

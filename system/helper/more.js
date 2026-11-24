@@ -717,5 +717,7 @@ module.exports = function more({ api, run, FAKE }) {
     seedFake(); return { ok: true };
   };
 
-  return { rawFile, upload, MEDIA_ROOT: () => real(MEDIA) };
+  // Alt + F4: close the window in front, unless that is Nebulux OS itself (then the OS closes its own top window)
+  const closeActive = async () => { if (FAKE) return false; const id = await activeId(); if (!id) return false; const cls = (await run("xdotool", ["getwindowclassname", String(id)], 3000)).out.trim(); if (!cls || /NebuluxShell/i.test(cls)) return false; await run("wmctrl", ["-i", "-c", "0x" + id.toString(16).padStart(8, "0")], 4000); return true; };
+  return { rawFile, upload, closeActive, MEDIA_ROOT: () => real(MEDIA) };
 };
