@@ -1,5 +1,5 @@
 // Screenshots of the Nebulux OS 4.0 features for the website (Edge on --remote-debugging-port=9333, muted):
-// node site/shots40.cjs   (writes site/public/shots/qsearch.jpg, stage.jpg, widgets.jpg, calendar.jpg)
+// node site/shots40.cjs   (writes site/public/shots/qsearch.jpg, stage.jpg, widgets.jpg, calendar.jpg, themes.jpg, taskview40.jpg)
 const puppeteer = require(process.env.PUPPETEER || "C:/nebulux-orbit/node_modules/puppeteer-core"), path = require("path"), wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const W = 1440, H = 900, URL = "file:///" + path.resolve(__dirname, "../index.html").split(path.sep).join("/") + "?fast";
 const OUT = process.env.SHOTS_OUT || path.join(__dirname, "public", "shots");
@@ -27,5 +27,15 @@ const OUT = process.env.SHOTS_OUT || path.join(__dirname, "public", "shots");
   // Stage
   await p.evaluate(() => { NX.setPref("deskWidgets", []); NX.setPref("stage", true); NX.open("notes"); NX.open("calculator"); NX.open("clock"); NX.open("weather"); }); await wait(600); await shot("stage");
   await p.evaluate(() => { NX.setPref("stage", false); }); await clean();
+  // Themes in Settings > Personalization
+  await p.evaluate(() => NX.open("settings")); await wait(600);
+  await p.evaluate(() => { const w = document.querySelector(".win[data-app=settings]"); [...w.querySelectorAll(".s-nav")].find((x) => /Personal/.test(x.textContent)).click(); }); await wait(500);
+  await p.evaluate(() => { const t = document.querySelector('.win[data-app=settings] [data-look="1"]'); t.click(); }); await wait(500);
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=settings] .s-themes"); t.scrollIntoView({ block: "start" }); }); await shot("themes");
+  await p.evaluate(() => { const t = NX.looks40[0]; NX.setPref("wallpaper", t.wall); NX.setPref("theme", t.theme); NX.setPref("accent", t.accent); NX.setPref("corners40", t.corners); NX.setPref("glass", t.glass); }); await clean();
+  // Task View with live window pictures
+  await p.evaluate(() => { NX.open("calendar"); NX.open("clock"); NX.open("weather"); NX.open("files"); }); await wait(1200);
+  await p.evaluate(() => NX.taskView ? NX.taskView() : document.querySelector("#tb-tview").click()); await wait(900); await shot("taskview40");
+  await p.keyboard.press("Escape"); await clean();
   await c.close(); b.disconnect();
 })().catch((e) => { console.error(e); process.exit(1); });

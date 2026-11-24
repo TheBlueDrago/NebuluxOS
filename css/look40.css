@@ -281,3 +281,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .p-size{flex:none;display:flex;align-items:center;gap:6px}.p-size input{width:90px}
 .p-bar [data-t=save]{flex:none;margin-left:auto}
 .p-wrap{background:repeating-conic-gradient(#0000000a 0 25%,transparent 0 50%) 0 0/16px 16px}
+#taskview:has(.tv-desks){padding-bottom:200px}@media (max-height:620px){#taskview:has(.tv-desks){padding-bottom:170px}}
