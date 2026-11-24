@@ -194,3 +194,12 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .sm-places button{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--sub);transition:background .15s,color .15s,transform .15s var(--ease-spring,ease)}
 .sm-places button:hover{background:var(--hover);color:var(--txt);transform:translateY(-1px)}
 .sm-places svg{filter:grayscale(1) brightness(1.5);opacity:.85}.sm-places button:hover svg{filter:none;opacity:1}[data-theme=light] .sm-places svg{filter:grayscale(1) brightness(.6)}
+
+/* ---------- the clock flyout 4.0: notifications and the calendar float as two separate cards ---------- */
+#cal:not([hidden]){display:flex;flex-direction:column;gap:10px;background:none!important;background-image:none!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:visible;padding:0}
+#cal>.nc,#cal>.cal-card{background:var(--bg2);background-image:radial-gradient(120% 60% at 50% -10%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 70%);backdrop-filter:blur(40px) saturate(1.5);-webkit-backdrop-filter:blur(40px) saturate(1.5);border-radius:var(--r-menu,14px);box-shadow:0 22px 60px #000a,0 0 0 1px #ffffff17,inset 0 1px 0 #ffffff1f}
+#cal>.nc{padding:14px;max-height:34vh;overflow-y:auto;flex:none}
+#cal>.cal-card{overflow-y:auto;min-height:0}
+[data-theme=light] #cal>.nc,[data-theme=light] #cal>.cal-card{box-shadow:0 22px 60px #2b1d5a33,0 0 0 1px #1b123a17,inset 0 1px 0 #fff}
+#cal>.nc{animation:fly40 .26s var(--ease-out)}#cal>.cal-card{animation:fly40 .32s var(--ease-out)}
+.nofx #cal>.nc,.nofx #cal>.cal-card,.nx-lite #cal>.nc,.nx-lite #cal>.cal-card{backdrop-filter:none;-webkit-backdrop-filter:none}
