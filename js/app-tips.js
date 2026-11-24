@@ -7,7 +7,7 @@
     ["Nebulux + E", "File Explorer"], ["Nebulux + L", "Lock the computer"], ["Nebulux + V", "Clipboard history"], ["Nebulux + W", "Widgets"],
     ["Nebulux + Left / Right", "Snap a window to half the screen"], ["Nebulux + Up / Down", "Maximize, or restore and minimize"],
     ["Ctrl + Nebulux + D", "New desktop"], ["Ctrl + Nebulux + Left / Right", "Switch desktops"], ["Ctrl + Nebulux + F4", "Close this desktop"],
-    ["Nebulux + 1 to 9", "Open the apps on the taskbar, in order"], ["Alt + Tab", "Switch windows"], ["Nebulux + Shift + S or Print Screen", "Take a screenshot"], ["Ctrl + Shift + Esc", "Task Manager"],
+    ["Nebulux + 1 to 9", "Open the apps on the taskbar, in order"], ["Alt + Tab", "Switch windows"], ["Print Screen", "Take a screenshot"], ["Nebulux + Shift + S", "Screenshot of part of the screen"], ["Nebulux + Space", "Quick Search"], ["Nebulux + G", "App Grid"], ["Ctrl + Shift + Esc", "Task Manager"],
     ["Ctrl + T / Ctrl + W", "New tab / close tab in File Explorer"],
   ];
   const PAGES = [["welcome", "Welcome"], ["basics", "The basics"], ["keys", "Shortcuts"], ["new", "What's new"], ["more", "Make it yours"]];
