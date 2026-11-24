@@ -125,7 +125,7 @@
       let cur = null, back = [], fwd = [], sel = new Set(), items = [], view = NX.data("fx-view", "grid"), q = "", places = null, drives = [], loading = 0, parentPath = null;
       body.innerHTML = `<div class="fx-tabs" role="tablist" aria-label="Tabs"></div><div class="fx-top"><button class="wv-b" data-n="back" aria-label="Back" title="Back">${NX.icon("back", 16)}</button><button class="wv-b" data-n="fwd" aria-label="Forward" title="Forward">${NX.icon("fwd", 16)}</button><button class="wv-b" data-n="up" aria-label="Up one folder" title="Up">${NX.icon("up", 16)}</button><button class="wv-b" data-n="reload" aria-label="Refresh" title="Refresh">${NX.icon("restart", 16)}</button>
         <div class="fx-crumbs" aria-label="Location"></div><label class="fx-search">${NX.icon("search", 14)}<input placeholder="Search this folder" aria-label="Search this folder" spellcheck="false"></label></div>
-        <div class="fx-tools"></div><div class="fx-main"><nav class="fx-side" aria-label="Places"></nav><section class="fx-list" tabindex="0" aria-label="Files"></section></div><div class="fx-status"></div>`;
+        <div class="fx-tools"></div><div class="fx-main"><nav class="fx-side" aria-label="Places"></nav><section class="fx-list" tabindex="0" aria-label="Files"></section><aside class="fx-pv" aria-label="Preview" hidden></aside></div><div class="fx-status"></div>`;
       const $ = (s) => body.querySelector(s), listEl = $(".fx-list");
       // tabs: each one has its own folder and its own Back and Forward
       let tabs = [{ cur: null, back: [], fwd: [] }], ti = 0;
@@ -197,11 +197,24 @@
       function tools() {
         const one = sel.size === 1, any = sel.size > 0, t = (k, icon, label, on) => `<button class="fx-t" data-t="${k}" ${on === false ? "disabled" : ""} title="${label}">${NX.icon(icon, 16)}<span>${label}</span></button>`;
         $(".fx-tools").innerHTML = isTrash() ? t("restore", "restart", "Restore", any) + t("purge", "trash", "Delete for good", any) + `<span class="fx-sp"></span>` + t("empty", "recycle", "Empty Recycle Bin", items.length > 0)
-          : (isHome() || isTag() || isRecent() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons");
+          : (isHome() || isTag() || isRecent() ? "" : t("newfolder", "newfolder", "New folder") + t("newtext", "ftext", "New text file") + `<i class="fx-div"></i>`) + t("cut", "cut", "Cut", any && !isHome()) + t("copy", "copy", "Copy", any && !isHome()) + t("paste", "paste", "Paste", !!NX.fsClip && !isHome()) + t("rename", "rename", "Rename", one && !isHome()) + t("delete", "trash", "Delete", any && !isHome()) + `<span class="fx-sp"></span>` + (isHome() ? "" : t("sort", "listv", "Sort: " + { name: "Name", date: "Date", type: "Type", size: "Size" }[sort.k])) + t("view", view === "grid" ? "listv" : "grid", view === "grid" ? "Details" : "Icons") + t("preview", "eye", "Preview");
+        { const pb = $(".fx-tools [data-t=preview]"); if (pb) pb.classList.toggle("on", NX.data("fx-pv", false)); }
         $(".fx-tools").querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => act(b.dataset.t)));
         const sb = $(".fx-tools [data-t=sort]"); if (sb) sb.onclick = () => { const r = sb.getBoundingClientRect(); NX.menu(r.left, r.bottom + 4, [["Name", () => setSort("name")], ["Date changed", () => setSort("date")], ["Type", () => setSort("type")], ["Size", () => setSort("size")]].map(([t2, f]) => [t2 + ({ Name: "name", "Date changed": "date", Type: "type", Size: "size" }[t2] === sort.k ? (sort.d > 0 ? "  (up)" : "  (down)") : ""), f])); };
       }
-      function status() { const s = selected(); $(".fx-status").textContent = (loading ? "Loading... " : "") + items.length + (items.length === 1 ? " item" : " items") + (s.length ? `  ·  ${s.length} selected${s.length === 1 && s[0].size != null ? "  ·  " + size(s[0].size) : ""}` : ""); }
+      // the Preview pane (Preview in the toolbar): a big picture or the first lines of a text file, with its size and date
+      let pvKey = null;
+      async function pvDraw() {
+        const pv = $(".fx-pv"); if (!pv) return; const on = NX.data("fx-pv", false); pv.hidden = !on; if (!on) { pvKey = null; return; }
+        const s = selected(), e = s.length === 1 ? s[0] : null, key = e ? (e.path || e.id) + ":" + (e.mtime || "") : "none:" + s.length; if (key === pvKey) return; pvKey = key;
+        if (!e) { pv.innerHTML = `<div class="pv-none">${NX.icon("eye", 40)}<p>${s.length > 1 ? s.length + " items selected" : "Select a file to see it here"}</p></div>`; return; }
+        const k = e.kind || kindOf(e.name, e.dir);
+        pv.innerHTML = `<div class="pv-pic">${NX.icon(e.dir ? (FOLD[e.name] || "folder") : ICON[k] || "file", 96)}</div><b class="pv-n">${NX.esc(e.name)}</b><dl class="pv-dl">${e.dir ? "<dt>Type</dt><dd>Folder</dd>" : `<dt>Type</dt><dd>${{ image: "Picture", video: "Video", audio: "Music", text: "Text", pdf: "PDF" }[k] || "File"}</dd>`}${e.size != null ? `<dt>Size</dt><dd>${size(e.size)}</dd>` : ""}${e.mtime ? `<dt>Changed</dt><dd>${new Date(e.mtime).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</dd>` : ""}</dl><div class="pv-txt" hidden></div><button class="btn sm pv-open">Open</button>`;
+        pv.querySelector(".pv-open").onclick = () => NX.openFile(e, items);
+        if (k === "image" || k === "video") NX.fs.url(e.path).then((u) => { if (pvKey !== key) return; pv.querySelector(".pv-pic").innerHTML = k === "image" ? `<img src="${NX.esc(u)}" alt="">` : `<video src="${NX.esc(u)}" muted preload="metadata"></video>`; }).catch(() => {});
+        if (k === "text") NX.fs.read(e.path).then((t) => { if (pvKey !== key) return; const x = pv.querySelector(".pv-txt"); x.textContent = String(t).slice(0, 1200); x.hidden = !t; }).catch(() => {});
+      }
+      function status() { pvDraw(); const s = selected(); $(".fx-status").textContent = (loading ? "Loading... " : "") + items.length + (items.length === 1 ? " item" : " items") + (s.length ? `  ·  ${s.length} selected${s.length === 1 && s[0].size != null ? "  ·  " + size(s[0].size) : ""}` : ""); }
       // sorting: by name, date, type or size (folders stay first); click a column in Details view, or Sort in Icons view
       let sort = NX.data("fx-sort", { k: "name", d: 1 });
       const ext = (e) => (e.dir ? "" : (e.name.includes(".") ? e.name.split(".").pop().toLowerCase() : ""));
@@ -238,6 +251,7 @@
         const s = selected();
         try {
           if (k === "view") { view = view === "grid" ? "list" : "grid"; NX.setData("fx-view", view); render(); return; }
+          if (k === "preview") { NX.setData("fx-pv", !NX.data("fx-pv", false)); tools(); status(); return; }
           if (k === "newfolder" || k === "newtext") { const name = await NX.ask(body, { title: k === "newfolder" ? "New folder" : "New text file", input: true, value: k === "newfolder" ? "New folder" : "New text file.txt", ok: "Make it" }); if (!name) return; const r = await NX.fs.create(here(), name, k === "newfolder"); await load(); sel = new Set([r.path]); render(); return; }
           if (k === "cut" || k === "copy") { NX.fsClip = { move: k === "cut", paths: s.map((e) => e.path) }; NX.toast((k === "cut" ? "Cut " : "Copied ") + s.length + (s.length === 1 ? " item." : " items.") + " Open a folder and press Paste."); render(); return; }
           if (k === "paste") { if (!NX.fsClip || !here()) return; const c = NX.fsClip; const r = await NX.fs.copy(c.paths, here(), c.move); if (c.move) NX.fsClip = null; await load(); sel = new Set(r.paths); render(); return; }

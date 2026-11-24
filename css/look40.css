@@ -438,3 +438,16 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #icons[data-size=large] .dicon{font-size:13px}
 #icons[data-size=large] .dicon>svg{width:58px;height:58px}
 #icons[data-size=large] .d-thumb img{width:58px;height:58px}
+
+/* ---------- File Explorer: Preview pane ---------- */
+.fx-pv{width:260px;flex:none;border-left:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;background:color-mix(in srgb,var(--card) 60%,transparent)}
+.fx-pv[hidden]{display:none}
+.pv-pic{display:grid;place-items:center;min-height:150px;border-radius:12px;background:var(--card);overflow:hidden}
+.pv-pic img,.pv-pic video{width:100%;max-height:220px;object-fit:contain;display:block}
+.pv-n{font-size:14px;word-break:break-word}
+.pv-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:12.5px}.pv-dl dt{color:var(--sub)}.pv-dl dd{margin:0}
+.pv-txt{font:12px/1.5 Consolas,"Cascadia Mono",monospace;white-space:pre-wrap;word-break:break-word;padding:10px;border-radius:10px;background:var(--card);max-height:240px;overflow:hidden;color:var(--sub)}
+.pv-open{align-self:flex-start}
+.pv-none{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--sub);text-align:center;font-size:13px;opacity:.8}
+.fx-tools [data-t=preview].on{background:color-mix(in srgb,var(--accent) 25%,transparent);color:var(--txt)}
+@media (max-width:700px){.fx-pv{display:none!important}}

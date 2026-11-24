@@ -450,6 +450,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const large = await p.evaluate(() => document.querySelector("#icons .dicon svg").getBoundingClientRect().width);
   ok(small <= 32 && large >= 56 && await p.evaluate(() => document.querySelector("#icons").dataset.size === "large"), "right-click the desktop > View changes the icon size");
   await p.evaluate(() => { NX.setPref("iconSize", "medium"); NX.shell.icons(); });
+  // File Explorer: the Preview pane
+  if (W > 700) {
+    await p.evaluate(() => { NX.closeAll(); NX.setData("fx-pv", false); NX.open("files", { place: "Documents" }); }); await wait(900);
+    await p.evaluate(() => document.querySelector(".win[data-app=files] [data-t=preview]").click()); await wait(200);
+    await p.evaluate(() => { const b = [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((x) => /Welcome/.test(x.textContent)); b.dispatchEvent(new MouseEvent("click", { bubbles: true })); }); await wait(700);
+    ok(await p.evaluate(() => { const pv = document.querySelector(".win[data-app=files] .fx-pv"); return !pv.hidden && /Welcome.txt/.test(pv.textContent) && /Welcome to Nebulux OS/.test(pv.querySelector(".pv-txt").textContent); }), "File Explorer's Preview pane shows the selected file and its first lines");
+    await p.evaluate(() => { NX.setData("fx-pv", false); NX.closeAll(); });
+  }
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
