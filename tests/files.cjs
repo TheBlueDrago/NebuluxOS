@@ -128,7 +128,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => NX.wins.get("notepad") && !NX.wins.get("notepad").min), "and pressing it again brings the windows back");
   await p.keyboard.down("Alt"); await p.keyboard.press("Tab"); await wait(150);
   ok(await p.evaluate(() => !document.querySelector("#switcher").hidden && document.querySelectorAll("#switcher .sw-item").length === NX.wins.size), "Alt + Tab shows your open windows");
-  const target = await p.evaluate(() => document.querySelector("#switcher .sw-item.on span").textContent);
+  const target = await p.evaluate(() => document.querySelector("#switcher .sw-item.on .sw-name span").textContent);
   await p.keyboard.up("Alt"); await wait(250);
   ok(await p.evaluate((t) => document.querySelector("#switcher").hidden && NX.topWin().app.name === t, target), "letting go of Alt switches to it (" + target + ")");
   NX_toasts: {
