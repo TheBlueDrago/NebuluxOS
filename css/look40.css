@@ -297,3 +297,11 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .noanim .toast::after{animation:none;display:none}
 .dbin svg{filter:drop-shadow(0 4px 8px #0006)}
 @media (max-width:760px){body:has(#start:not([hidden])) #toasts{right:14px;bottom:auto;top:14px}}
+
+/* ---------- Settings on phones: wide controls go under the text instead of squeezing it ---------- */
+@media (max-width:560px){
+  .s-row:has(.s-rc > :not(.tg):not(button):not(.btn)){flex-wrap:wrap;row-gap:10px}
+  .s-row:has(.s-rc > :not(.tg):not(button):not(.btn)) .s-rt{flex:1 1 calc(100% - 60px)}
+  .s-row:has(.s-rc > :not(.tg):not(button):not(.btn)) .s-rc{flex-basis:100%;display:flex;justify-content:flex-start;overflow-x:auto}
+  .s-rc .seg{flex-wrap:nowrap}
+}
