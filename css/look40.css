@@ -463,3 +463,15 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .sec-power button{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#fff;background:#ffffff14}.sec-power button:hover{background:#ffffff2a}
 #nx-sec::before{content:"";position:absolute;inset:-40px;background:var(--wall) center/cover;filter:blur(40px) brightness(.45) saturate(1.2);z-index:-1}
 #nx-sec{isolation:isolate}
+
+/* ---------- Focus in the calendar flyout ---------- */
+.cal-focus{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.cf-pm{width:32px;height:32px;border-radius:8px;background:var(--card2);font-size:18px;font-weight:600;display:grid;place-items:center}.cf-pm:hover{background:var(--hover)}
+.cf-min{font-size:13px;color:var(--sub);min-width:64px;text-align:center}.cf-min b{color:var(--txt);font-size:16px}
+.cf-go{margin-left:auto;display:flex;align-items:center;gap:6px}
+.cf-ring{--p:0;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--card2) 0);position:relative;flex:none}
+.cf-ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--bg2)}
+.cf-ring b{position:relative;font-size:12.5px;font-variant-numeric:tabular-nums}
+.cf-t{display:flex;flex-direction:column}.cf-t small{color:var(--sub);font-size:12px}
+.cal-focus [data-cf=stop]{margin-left:auto}
+#cal .cal-g button{aspect-ratio:auto;height:34px;width:34px;justify-self:center}#cal .cal-g{padding:4px 14px 10px;row-gap:1px}#cal .cal-top{padding:12px 18px}#cal .cal-h{padding-top:8px}

@@ -658,3 +658,22 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   document.addEventListener("nx:key", (e) => { if (e.detail === "sec") open(); });
   addEventListener("keydown", (e) => { if (e.ctrlKey && e.altKey && (e.key === "Delete" || e.code === "Delete")) { e.preventDefault(); open(); } }, true);
 })();
+
+// ---------- Focus in the calendar flyout (like Windows 11): pick the minutes, start, and see the time left ----------
+(function () {
+  let t = 0, mins = 25;
+  NX.calFocus = (box) => {
+    if (!box || !NX.focusSession) return; clearInterval(t);
+    const draw = () => {
+      if (!box.isConnected) { clearInterval(t); return; }
+      const F = NX.focusSession;
+      if (F.on()) { const l = F.left(), m = Math.floor(l / 60000), sec = Math.floor((l % 60000) / 1000);
+        box.innerHTML = `<div class="cf-ring" style="--p:${(1 - l / F.len()) * 100}"><b>${m}:${String(sec).padStart(2, "0")}</b></div><div class="cf-t"><b>Focusing</b><small>Do not disturb is on</small></div><button class="btn sm" data-cf="stop">Stop</button>`;
+      } else box.innerHTML = `<button class="cf-pm" data-cf="minus" aria-label="Fewer minutes">-</button><span class="cf-min"><b>${mins}</b> mins</span><button class="cf-pm" data-cf="plus" aria-label="More minutes">+</button><button class="btn sm primary cf-go" data-cf="go">${NX.icon("time", 14)}Focus</button>`;
+      box.querySelectorAll("[data-cf]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const k = b.dataset.cf;
+        if (k === "minus") mins = Math.max(5, mins - 5); if (k === "plus") mins = Math.min(240, mins + 5);
+        if (k === "go") F.start(mins); if (k === "stop") F.finish(false); draw(); }));
+    };
+    draw(); t = setInterval(() => { if (NX.focusSession.on()) draw(); }, 1000);
+  };
+})();

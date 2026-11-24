@@ -464,6 +464,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector("#nx-sec [data-sec=tm]").click()); await wait(600);
   ok(await p.evaluate(() => !document.querySelector("#nx-sec") && !!document.querySelector(".win[data-app=taskmgr]")), "and Task Manager opens from it");
   await p.evaluate(() => NX.closeAll());
+  // Focus in the calendar flyout
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); document.querySelector("#tb-clock").click(); }); await wait(400);
+  await p.evaluate(() => { document.querySelector("#cal [data-cf=plus]").click(); document.querySelector("#cal [data-cf=go]").click(); }); await wait(300);
+  ok(await p.evaluate(() => NX.focusSession.on() && Math.round(NX.focusSession.len() / 60000) === 30 && NX.prefs().dnd === true && /Focusing/.test(document.querySelector("#cal .cal-focus").textContent)), "Focus in the calendar flyout starts a 30-minute session with Do not disturb");
+  await p.evaluate(() => document.querySelector("#cal [data-cf=stop]").click()); await wait(200);
+  ok(await p.evaluate(() => !NX.focusSession.on()), "and Stop ends it");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

@@ -494,7 +494,8 @@
       <div class="cal-g">${["S", "M", "T", "W", "T", "F", "S"].map((x) => `<i>${x}</i>`).join("")}${cells}</div>
       <div class="cal-ev"><b>${calSel === todayKey ? "Today" : selD.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</b>
         ${dayEv.length ? dayEv.map((e) => `<div class="cal-e"><span class="cal-et">${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : "All day"}</span><span class="cal-en">${NX.esc(e.title)}</span><button data-evdel="${e.id}" aria-label="Delete event">${NX.icon("close", 12)}</button></div>`).join("") : `<p class="cal-none">No events</p>`}
-        <form class="cal-add"><input name="t" type="time" aria-label="Time (optional)"><input name="n" maxlength="60" placeholder="Add an event" aria-label="Event name"><button class="btn sm primary" type="submit">Add</button></form></div></div>`;
+        <form class="cal-add"><input name="t" type="time" aria-label="Time (optional)"><input name="n" maxlength="60" placeholder="Add an event" aria-label="Event name"><button class="btn sm primary" type="submit">Add</button></form></div><div class="cal-focus"></div></div>`;
+    if (NX.calFocus) NX.calFocus($("#cal .cal-focus"));
     const ncc = $("#cal .nc-clear"); if (ncc) ncc.onclick = (e) => { e.stopPropagation(); NX.notes.length = 0; calDraw(); };
     $("#cal").querySelectorAll("[data-m]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); calM = new Date(m.getFullYear(), m.getMonth() + +b.dataset.m, 1); calDraw(); }));
     $("#cal").querySelectorAll("[data-day]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); calSel = b.dataset.day; calDraw(); }));
