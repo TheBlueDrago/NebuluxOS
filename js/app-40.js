@@ -509,7 +509,7 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, poke, { capture: true, passive: true }));
   function playing() { return [...document.querySelectorAll("video,audio")].some((m) => !m.paused && !m.ended); }
   function start(kind) {
-    if (el) return; kind = kind || NX.prefs().saver;
+    if (el) return; kind = kind || NX.prefs().scrSaver;
     el = document.createElement("div"); el.id = "nx-saver"; el.setAttribute("aria-hidden", "true");
     el.innerHTML = kind === "clock" ? `<div class="sv-clock"><b></b><span></span></div>` : `<canvas></canvas>`;
     document.body.appendChild(el); requestAnimationFrame(() => el && el.classList.add("on"));
@@ -559,7 +559,7 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   }
   NX.saver = { start, stop, preview: (k) => { last = Date.now(); start(k); if (el) el.dataset.preview = "1"; }, get on() { return !!el; } };
   setInterval(() => {
-    const p = NX.me ? NX.prefs() : null; if (!p || !p.saver || p.saver === "off" || el) return;
+    const p = NX.me ? NX.prefs() : null; if (!p || !p.scrSaver || p.scrSaver === "off" || el) return;
     const lk = document.getElementById("lock"); if (lk && !lk.hidden) return;
     if (Date.now() - last >= (p.saverWait || 5) * 60000 && !playing()) start();
   }, 5000);

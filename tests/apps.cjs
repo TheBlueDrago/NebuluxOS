@@ -414,6 +414,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.saver.preview("clock")); await wait(900); await shot("saver-clock");
   ok(await p.evaluate(() => /\d/.test(document.querySelector("#nx-saver .sv-clock b").textContent)), "the Floating clock screen saver shows the time");
   await p.keyboard.press("Shift"); await wait(600);
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("saver", false); NX.open("settings", { page: "personal" }); }); await wait(700);
+  await p.evaluate(() => { const sel = document.querySelector("[data-saver]"); sel.value = "stars"; sel.dispatchEvent(new Event("change")); }); await wait(300);
+  ok(await p.evaluate(() => NX.prefs().scrSaver === "stars" && NX.prefs().saver === false && !!document.querySelector("[data-saverpv]:not([disabled])")), "picking a screen saver in Settings doesn't touch battery saver");
+  await p.evaluate(() => { NX.setPref("scrSaver", "off"); NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
