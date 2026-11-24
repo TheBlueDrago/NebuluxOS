@@ -282,3 +282,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .p-bar [data-t=save]{flex:none;margin-left:auto}
 .p-wrap{background:repeating-conic-gradient(#0000000a 0 25%,transparent 0 50%) 0 0/16px 16px}
 #taskview:has(.tv-desks){padding-bottom:200px}@media (max-height:620px){#taskview:has(.tv-desks){padding-bottom:170px}}
+
+/* ---------- Settings > Accessibility > Pointer color ---------- */
+.s-pcols{display:flex;gap:6px}.s-pcols button{width:40px;height:36px;border-radius:9px;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);transition:border-color .15s,transform .15s}
+.s-pcols button:hover{transform:translateY(-1px)}.s-pcols button.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}

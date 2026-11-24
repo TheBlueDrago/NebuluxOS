@@ -391,6 +391,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.closeAll(); NX.setData("todos", [{ id: "bd1", text: "Late one", done: false, due: "2020-01-01T09:00", rang: 1 }]); document.dispatchEvent(new CustomEvent("nx:todos")); NX.open("reminders"); }); await wait(600);
   ok(await p.evaluate(() => { const c = document.querySelector('.tb-app[data-app="reminders"] .tb-cnt'); return !!c && c.textContent === "1"; }), "Reminders' taskbar button shows how many are due");
   await p.evaluate(() => { NX.setData("todos", []); document.dispatchEvent(new CustomEvent("nx:todos")); NX.closeAll(); });
+  // Pointer color
+  await p.evaluate(() => NX.setPref("pointerColor", "accent")); await wait(200);
+  ok(await p.evaluate(() => document.documentElement.classList.contains("nx-pc") && /cursor:url/.test(document.getElementById("nx-pointer").textContent) && getComputedStyle(document.body).cursor.includes("url(")), "an accent-colored pointer applies");
+  await p.evaluate(() => NX.setPref("pointerColor", "white")); await wait(200);
+  ok(await p.evaluate(() => !document.getElementById("nx-pointer") && !document.documentElement.classList.contains("nx-pc")), "White brings back the normal pointer");
   // Corners and Glass
   await p.evaluate(() => { NX.setPref("corners40", "square"); NX.setPref("glass", "solid"); }); await wait(200);
   ok(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--r-win").trim() === "4px" && document.documentElement.dataset.glass === "solid"), "Square corners and solid glass apply");

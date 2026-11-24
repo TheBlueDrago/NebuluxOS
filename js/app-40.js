@@ -420,3 +420,23 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   let last = -1; const tick = () => { const n = due(); if (n !== last) { last = n; if (NX.shell && NX.me) NX.shell.taskbar(); } };
   document.addEventListener("nx:todos", () => setTimeout(tick, 30)); setInterval(tick, 30000);
 })();
+
+// ---------- pointer color (Settings > Accessibility): white, black, or the accent color, at normal or large size ----------
+(function () {
+  const svg = (size, body) => "url(\"data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 48 48'>${body}</svg>`) + "\")";
+  function apply() {
+    const p = NX.me ? NX.prefs() : {}, c = p.pointerColor || "white"; let st = document.getElementById("nx-pointer");
+    if (!NX.me || c === "white") { if (st) st.remove(); return; }
+    const fill = c === "black" ? "#111" : c === "accent" ? (p.accent === "auto" && NX.autoAccent ? NX.autoAccent() : p.accent) || "#7c5cff" : c, edge = c === "black" ? "#fff" : "#000";
+    const size = p.bigcursor ? 48 : 26, k = size / 48, h = (x, y) => Math.round(x * k) + " " + Math.round(y * k);
+    const arrow = svg(size, `<path d='M6 3l0 36 9-9 6 14 6-3-6-13 13 0z' fill='${fill}' stroke='${edge}' stroke-width='2.5' stroke-linejoin='round'/>`);
+    const hand = svg(size, `<path d='M17 22V7a3 3 0 016 0v13l1-1a3 3 0 016 0v2a3 3 0 016 0v2a3 3 0 016 0v9c0 8-5 13-13 13h-3c-5 0-8-3-11-7l-6-8a3 3 0 015-4l3 3z' fill='${fill}' stroke='${edge}' stroke-width='2.5' stroke-linejoin='round'/>`);
+    const css = `html.nx-pc,html.nx-pc *{cursor:${arrow} ${h(6, 3)},default!important}html.nx-pc button,html.nx-pc a,html.nx-pc [role=button],html.nx-pc label,html.nx-pc select,html.nx-pc .tb-app,html.nx-pc summary{cursor:${hand} ${h(19, 4)},pointer!important}html.nx-pc input:not([type=checkbox]):not([type=radio]):not([type=range]),html.nx-pc textarea,html.nx-pc [contenteditable=true]{cursor:text!important}`;
+    if (!st) { st = document.createElement("style"); st.id = "nx-pointer"; document.head.appendChild(st); }
+    if (st.textContent !== css) st.textContent = css;
+    document.documentElement.classList.add("nx-pc");
+  }
+  NX.pointerApply = apply;
+  document.addEventListener("nx:prefs", () => setTimeout(apply, 20)); setTimeout(apply, 300);
+  const mo = () => { if (!document.getElementById("nx-pointer")) document.documentElement.classList.remove("nx-pc"); }; document.addEventListener("nx:prefs", () => setTimeout(mo, 40));
+})();
