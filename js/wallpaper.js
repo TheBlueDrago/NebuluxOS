@@ -1,4 +1,4 @@
-// Nebulux OS wallpapers: nebula pictures (soft color clouds, a glowing swirl, stars) in img/wall-0.jpg ... wall-10.jpg.
+// Nebulux OS wallpapers: nebula pictures (soft color clouds, a glowing swirl, stars) in img/wall-0.jpg ... wall-12.jpg.
 // NX.wallpapers is the list; NX.wallpaperURL(i, w, h) gives a picture for the desktop, lock screen and previews.
 "use strict";
 (function () {
@@ -15,9 +15,11 @@
     { name: "Polar Lights" },
     { name: "Morning Haze", light: true },
     { name: "Nebulux Four" }, // made for 4.0
+    { name: "Aurora Ribbon" },
+    { name: "Pearl Dawn", light: true },
   ];
   // each picture's own color, for the 4.0 Aura glass (worked out once from the pictures)
-  NX.wallAura = ["#494085", "#21617c", "#a35324", "#2e3578", "#6d3360", "#cdc9f5", "#281b4b", "#321d4f", "#0e373c", "#dddaf3", "#231c44"];
+  NX.wallAura = ["#494085", "#21617c", "#a35324", "#2e3578", "#6d3360", "#cdc9f5", "#281b4b", "#321d4f", "#0e373c", "#dddaf3", "#231c44", "#262854", "#f3e0ee"];
   // ready-made pictures (painting them at start-up was slow without graphics acceleration); one picture for every size
   // your own picture (Settings > Personalization > Browse photos) is wallpaper "custom", kept for each person
   const own = () => (NX.me && NX.data ? NX.data("wall-custom", null) : null);

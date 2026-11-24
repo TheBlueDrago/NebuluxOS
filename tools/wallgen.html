@@ -121,6 +121,35 @@ const PAINT = [
     glow(cx, cy, 220, "255,240,255", .4); glow(cx, cy, 70, "255,255,255", .7);
     x.globalCompositeOperation = "source-over"; grain(r, 6);
   },
+  // 11. Aurora Ribbon (4.0): one wide ribbon of color sweeping across a dark sky, lit from inside
+  () => {
+    const r = rng(411);
+    sky([[0, "#04030f"], [.6, "#0b0a24"], [1, "#05040f"]]);
+    stars(260, r, H, .7);
+    const L = document.createElement("canvas"); L.width = W; L.height = H; const g = L.getContext("2d"); g.globalCompositeOperation = "lighter";
+    for (let k = 0; k < 220; k++) {
+      const t = k / 220, off = (t - .5) * 260;
+      const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, "rgba(34,211,238,0)"); gr.addColorStop(.2, `rgba(34,211,238,${.13 + .08 * Math.sin(t * 8) ** 2})`); gr.addColorStop(.5, `rgba(139,108,255,${.17})`); gr.addColorStop(.8, `rgba(244,114,182,${.15})`); gr.addColorStop(1, "rgba(244,114,182,0)");
+      g.strokeStyle = gr; g.lineWidth = 1.2; g.beginPath();
+      for (let X = -40; X <= W + 40; X += 10) { const Y = H * .55 + off * (.6 + .4 * Math.sin(X / W * 3.1 + 1)) - Math.sin(X / W * Math.PI) * 260 + Math.sin(X * .004 + t * 3) * 30; X === -40 ? g.moveTo(X, Y) : g.lineTo(X, Y); }
+      g.stroke();
+    }
+    glow(W * .5, H * .4, 900, "124,92,255", .18);
+    x.globalCompositeOperation = "lighter"; x.filter = "blur(22px)"; x.drawImage(L, 0, 0); x.drawImage(L, 0, 0); x.filter = "none"; x.drawImage(L, 0, 0);
+    x.globalCompositeOperation = "source-over"; grain(r, 6);
+  },
+  // 12. Pearl Dawn (4.0, light): soft pearl light with gentle folds of lilac and peach
+  () => {
+    const r = rng(412);
+    sky([[0, "#f5f3ff"], [.5, "#fdf4ff"], [1, "#fff1eb"]]);
+    glow(W * .25, H * .3, 900, "196,181,253", .5); glow(W * .8, H * .75, 900, "253,186,116", .35); glow(W * .6, H * .2, 700, "249,168,212", .3);
+    for (let k = 0; k < 7; k++) {
+      const y0 = H * (.3 + k * .09), amp = 80 + k * 14;
+      const gr = x.createLinearGradient(0, y0 - amp, 0, y0 + amp * 2); gr.addColorStop(0, "rgba(255,255,255,.55)"); gr.addColorStop(.35, `rgba(${k % 2 ? "196,181,253" : "251,207,232"},.18)`); gr.addColorStop(1, "rgba(255,255,255,0)");
+      x.fillStyle = gr; x.beginPath(); x.moveTo(0, H); for (let X = 0; X <= W; X += 20) x.lineTo(X, y0 + Math.sin(X / W * Math.PI * 1.6 + k) * amp); x.lineTo(W, H); x.closePath(); x.fill();
+    }
+    x.filter = "blur(3px)"; x.drawImage(cv, 0, 0); x.filter = "none"; grain(r, 3);
+  },
 ];
 window.paint = (i) => { x.save(); x.clearRect(0, 0, W, H); PAINT[i](); x.restore(); return cv.toDataURL("image/jpeg", .9); };
 window.count = PAINT.length;
