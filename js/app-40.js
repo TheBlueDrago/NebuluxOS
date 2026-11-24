@@ -192,12 +192,9 @@
 
   // ---------- desktop widgets: a clock, the weather, what's next in your calendar and the battery, right on the wallpaper ----------
   NX.deskWidgetKinds = { clock: "Clock", weather: "Weather", events: "Up next", todos: "Reminders", battery: "Battery" };
-  function deskWidgets() {
-    const on = NX.me ? (NX.prefs().deskWidgets || []).filter((k) => NX.deskWidgetKinds[k]) : [];
-    let box = document.getElementById("nx-dwidgets");
-    if (!on.length) { if (box) box.remove(); return; }
-    if (!box) { box = document.createElement("div"); box.id = "nx-dwidgets"; const ic = document.getElementById("icons"); (ic ? ic.parentNode : document.getElementById("desktop")).insertBefore(box, ic ? ic.nextSibling : null); }
-    const d = new Date(), html = on.map((k) => {
+  // one desktop widget's card (also used by the Widgets panel)
+  NX.dwHTML = (k) => {
+    const d = new Date();
       if (k === "clock") return `<section class="dw dw-clock" data-dw="clock"><b>${NX.esc(NX.fmtTime(d))}</b><span>${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</span></section>`;
       if (k === "weather") { const w = NX.data("wx", null), p = NX.data("wx-place", null); return `<section class="dw dw-wx" data-dw="weather">${w && p && NX.wxInfo ? `${NX.wxInfo.icon(w.code, 46)}<div><b>${w.now}°${w.unit}</b><span>${NX.esc(NX.wxInfo.name(w.code))}</span><small>${NX.esc(p.name)}</small></div>` : `<div><b>Weather</b><small>Pick your city in Widgets or the Weather app.</small></div>`}</section>`; }
       if (k === "events") { const key = (x) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"), today = key(d), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
@@ -207,7 +204,13 @@
         return `<section class="dw dw-ev dw-todo" data-dw="todos"><h4>Reminders</h4>${L.length ? L.map((t) => `<div><i style="background:#fb923c"></i><span><b>${NX.esc(t.text)}</b>${t.due ? `<small>${new Date(t.due).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</small>` : ""}</span></div>`).join("") : `<small>Nothing to do.</small>`}</section>`; }
       if (k === "battery") { const b = NX.batt && NX.batt(); return `<section class="dw dw-bt" data-dw="battery">${b ? `${NX.battIcon(40)}<div><b>${b.percent}%</b><small>${b.charging ? "Charging" : (NX.battLeft && NX.battLeft()) || "On battery"}</small></div>` : `<div><b>Battery</b><small>No battery on this computer.</small></div>`}</section>`; }
       return "";
-    }).join("");
+  };
+  function deskWidgets() {
+    const on = NX.me ? (NX.prefs().deskWidgets || []).filter((k) => NX.deskWidgetKinds[k]) : [];
+    let box = document.getElementById("nx-dwidgets");
+    if (!on.length) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement("div"); box.id = "nx-dwidgets"; const ic = document.getElementById("icons"); (ic ? ic.parentNode : document.getElementById("desktop")).insertBefore(box, ic ? ic.nextSibling : null); }
+    const html = on.map((k) => NX.dwHTML(k)).join("");
     if (box.innerHTML !== html) box.innerHTML = html;
   }
   NX.deskWidgets = deskWidgets;

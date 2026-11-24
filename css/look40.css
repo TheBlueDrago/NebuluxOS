@@ -203,3 +203,14 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 [data-theme=light] #cal>.nc,[data-theme=light] #cal>.cal-card{box-shadow:0 22px 60px #2b1d5a33,0 0 0 1px #1b123a17,inset 0 1px 0 #fff}
 #cal>.nc{animation:fly40 .26s var(--ease-out)}#cal>.cal-card{animation:fly40 .32s var(--ease-out)}
 .nofx #cal>.nc,.nofx #cal>.cal-card,.nx-lite #cal>.nc,.nx-lite #cal>.cal-card{backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* ---------- Widgets panel 4.0: colored headings, a soft tint on each card, Up next and Reminders cards ---------- */
+.wg-card{border-radius:calc(var(--r-menu,14px) - 2px);transition:transform .18s var(--ease-spring,ease),border-color .15s,background .15s;position:relative;overflow:hidden}
+.wg-card:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.wg-card h4{display:flex;align-items:center;gap:8px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--sub);font-weight:600}
+.wg-card h4::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--wgc,var(--accent));box-shadow:0 0 10px var(--wgc,var(--accent))}
+.wg-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--wgc,var(--accent)) 14%,transparent),transparent 70%)}
+.wg-grid>.wg-card:nth-child(2){--wgc:#38bdf8}.wg-notes{--wgc:#facc15}.wg-batt{--wgc:#34d399}.wg-dw[data-dw=events]{--wgc:#a78bfa}.wg-dw[data-dw=todos]{--wgc:#fb923c}.wg-grid>.wg-card:last-child{--wgc:#f472b6}.wg-wx{--wgc:#60a5fa}
+.wg-dw.dw{background:var(--card);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;border:1px solid var(--line);color:var(--txt);padding:14px;cursor:pointer}
+.wg-dw.dw:hover{transform:translateY(-2px)}
+.wg-dw.dw b{font-size:13.5px}.wg-dw.dw h4{opacity:1}
