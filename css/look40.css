@@ -404,7 +404,6 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .qs-editing .qs-t.qs-hid{opacity:.45}
 .qs-editing .qs-t.qs-hid::after{background-color:#22c55e;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12h12M12 6v12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")}
 .noanim .qs-editing .qs-t{animation:none}
-.qs-t[data-k=snip] svg{filter:grayscale(1) brightness(2.2) contrast(.9)}.qs-t.on[data-k=snip] svg{filter:none}[data-theme=light] .qs-t[data-k=snip] svg{filter:grayscale(1) brightness(.5)}
 
 /* ---------- the snap bar at the top of the screen while dragging a window ---------- */
 #nx-snapbar{position:fixed;top:10px;left:50%;z-index:4000;display:flex;gap:10px;padding:8px;border-radius:16px;background:var(--bg2);backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);box-shadow:0 16px 40px #000a,0 0 0 1px #ffffff1c;transform:translate(-50%,-140%);opacity:0;pointer-events:none;transition:transform .25s var(--ease-spring,ease),opacity .2s}
