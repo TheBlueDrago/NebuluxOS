@@ -296,3 +296,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 @keyframes toastbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .noanim .toast::after{animation:none;display:none}
 .dbin svg{filter:drop-shadow(0 4px 8px #0006)}
+@media (max-width:760px){body:has(#start:not([hidden])) #toasts{right:14px;bottom:auto;top:14px}}
