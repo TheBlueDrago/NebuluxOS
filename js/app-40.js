@@ -468,3 +468,23 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
   let lastNote = 0;
   NX.onToast = () => { if (NX.me && NX.prefs().noteSound && Date.now() - lastNote > 2500) { lastNote = Date.now(); NX.sounds.note(); } };
 })();
+
+// ---------- drag on an empty part of the desktop to draw a box and select the icons inside it ----------
+(function () {
+  let start = null, box = null;
+  const BLOCK = ".win, #taskbar, .flyout, .dicon, .dw, #start, #widgets, #taskview, #cal, #qs, button, input, textarea, select, a, [contenteditable], .ctx, #nx-snip, #nx-qs, #oobe, #lock";
+  document.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || e.pointerType === "touch" || !NX.me) return;
+    const d = document.getElementById("desktop"); if (!d || d.hidden || !d.contains(e.target) || e.target.closest(BLOCK)) return;
+    start = { x: e.clientX, y: e.clientY };
+  }, true);
+  document.addEventListener("pointermove", (e) => {
+    if (!start) return;
+    const x = Math.min(start.x, e.clientX), y = Math.min(start.y, e.clientY), w = Math.abs(e.clientX - start.x), h = Math.abs(e.clientY - start.y);
+    if (!box) { if (w < 5 && h < 5) return; box = document.createElement("div"); box.id = "nx-lasso"; document.body.appendChild(box); }
+    Object.assign(box.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px" });
+    document.querySelectorAll("#desktop .dicon").forEach((ic) => { const r = ic.getBoundingClientRect(); ic.classList.toggle("sel", r.right > x && r.left < x + w && r.bottom > y && r.top < y + h); });
+  });
+  const end = () => { start = null; if (box) { box.remove(); box = null; } };
+  document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end); addEventListener("blur", end);
+})();
