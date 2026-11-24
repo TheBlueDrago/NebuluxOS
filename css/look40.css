@@ -519,3 +519,8 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop.tb-labels .tb-app.run{width:auto!important;min-width:44px;padding:0 12px 0 9px;gap:8px;display:flex;align-items:center}
 #desktop.tb-labels .tb-app.run .tb-lbl{display:block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--txt)}
 @media (max-width:760px){#desktop.tb-labels .tb-app.run .tb-lbl{display:none}#desktop.tb-labels .tb-app.run{padding:0;width:44px!important}}
+
+/* ---------- Sticky Notes 4.0: paper that lifts when you point at it; colors show on hover ---------- */
+.stn-note{box-shadow:0 2px 0 #0000001a,0 10px 24px #0000004d;transition:transform .2s var(--ease-spring,ease),box-shadow .2s;border-radius:6px 6px 14px 6px!important}
+.stn-note:hover,.stn-note:focus-within{transform:translateY(-3px) rotate(-.4deg);box-shadow:0 2px 0 #0000001a,0 18px 34px #00000066}
+.stn-cols{opacity:0;transition:opacity .15s}.stn-note:hover .stn-cols,.stn-note:focus-within .stn-cols{opacity:1}
