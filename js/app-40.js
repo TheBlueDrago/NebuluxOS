@@ -297,6 +297,7 @@
   const auraApply = () => {
     const root = document.documentElement, d = document.getElementById("desktop");
     if (d) d.classList.toggle("tb-float", !NX.me || NX.prefs().tbFloat !== false);
+    if (d) d.classList.toggle("tb-labels", !!(NX.me && NX.prefs().tbLabels));
     const p = NX.me ? NX.prefs() : null, w = p ? p.wallpaper : 0, key = String(w) + (w === "custom" ? NX.data("wall-custom", "").length : "");
     if (key === auraFor) return; auraFor = key;
     if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? w : 0]; if (col) root.style.setProperty("--aura", col); if (p && p.accent === "auto") root.style.setProperty("--accent", NX.autoAccent()); return; }

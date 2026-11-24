@@ -476,6 +476,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector('.win[data-app=files] [data-go="::gallery"]').click()); await wait(900);
   ok(await p.evaluate(() => { const w = document.querySelector(".win[data-app=files]"); return !!w.querySelector(".fx-gal") && [...w.querySelectorAll(".fx-item")].some((b) => /Gallery test.png/.test(b.textContent)) && /Gallery/.test(w.querySelector(".wt-name").textContent); }), "File Explorer's Gallery shows pictures from Downloads too");
   await p.evaluate(() => NX.closeAll());
+  // app names on the taskbar
+  if (W > 760) {
+    await p.evaluate(() => { NX.closeAll(); NX.setPref("tbLabels", true); NX.open("clock"); }); await wait(600);
+    ok(await p.evaluate(() => { const l = document.querySelector('.tb-app[data-app="clock"] .tb-lbl'); return !!l && getComputedStyle(l).display !== "none" && l.textContent === "Clock"; }), "Show app names on the taskbar puts the name next to the icon");
+    await p.evaluate(() => { NX.setPref("tbLabels", false); NX.closeAll(); });
+  }
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
