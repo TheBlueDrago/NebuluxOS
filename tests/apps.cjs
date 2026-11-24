@@ -207,6 +207,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const found0 = await p.evaluate(() => NX.pointerFound || 0);
   for (let k = 0; k < 8; k++) { const sw = Math.min(220, W / 2 - 10); await p.mouse.move(k % 2 ? W / 2 + sw : W / 2 - sw, H / 3, { steps: 4 }); }
   ok(await p.evaluate((f) => (NX.pointerFound || 0) > f, found0), "shaking the pointer makes it easy to find");
+  // Calendar app
+  await p.evaluate(() => { NX.closeAll(); NX.setData("events", []); NX.open("calendar"); }); await wait(600);
+  await p.evaluate(() => { const f = document.querySelector(".win[data-app=calendar] .ca-add"); f.n.value = "Dentist"; f.t.value = "15:30"; f.querySelectorAll("[name=c]")[3].checked = true; f.requestSubmit(); }); await wait(300);
+  ok(await p.evaluate(() => { const d = document.querySelector(".win[data-app=calendar] .ca-d.today i"); return !!d && /Dentist/.test(d.textContent) && NX.data("events", []).some((e) => e.title === "Dentist" && e.time === "15:30" && e.color === "#ec4899"); }), "Calendar adds an event, in its color, on today's square");
+  await shot("calendar");
+  await p.evaluate(() => document.querySelector(".win[data-app=calendar] [data-ca='1']").click()); await wait(200);
+  ok(await p.evaluate(() => { const t = new Date(); t.setMonth(t.getMonth() + 1, 1); return document.querySelector(".win[data-app=calendar] .ca-head h2").textContent === t.toLocaleDateString(undefined, { month: "long", year: "numeric" }); }), "and goes to the next month");
+  await p.evaluate(() => { NX.setData("events", []); NX.closeAll(); });
   // Settings > Apps: search your apps
   await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "apps" }); }); await wait(700);
   await p.type(".win[data-app=settings] .s-appq", "camer"); await wait(200);
