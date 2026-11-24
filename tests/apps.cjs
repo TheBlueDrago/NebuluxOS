@@ -524,6 +524,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return Math.abs(r.x - A.width / 2) < 3 && Math.abs(r.width - A.width / 2) < 3 && Math.abs(r.height - A.height / 2) < 3; }), "dragging a window into a corner snaps it to a quarter");
     await p.evaluate(() => NX.closeAll());
   }
+  // Snap Assist
+  if (W > 700) {
+    await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); NX.open("clock"); NX.open("notepad"); }); await wait(700);
+    await p.evaluate(() => NX.snap("notepad", "left")); await wait(400); await shot("snap-assist");
+    ok(await p.evaluate(() => { const o = document.querySelector("#nx-assist.right"); return !!o && o.querySelectorAll(".as-card").length === 2; }), "after snapping a window left, Snap Assist offers the other windows on the right");
+    await p.evaluate(() => document.querySelector('#nx-assist [data-as="clock"]').click()); await wait(500);
+    ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=clock]").getBoundingClientRect(), A = document.querySelector("#windows").getBoundingClientRect(); return !document.querySelector("#nx-assist") && Math.abs(r.x - A.width / 2) < 3 && Math.abs(r.width - A.width / 2) < 3; }), "and picking one fills the right half");
+    await p.evaluate(() => NX.closeAll());
+  }
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

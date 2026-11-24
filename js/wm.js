@@ -49,6 +49,7 @@
     if (w.max) { w.max = false; w.el.classList.remove("maxed"); w.el.querySelector(".wb-max").innerHTML = NX.icon("max", 16); }
     if (!w.snap) { w.rw = w.w; w.rh = w.h; }
     w.snap = where; w.x = where === "left" ? 0 : Math.round(A.w / 2); w.y = 0; w.w = Math.round(A.w / 2); w.h = A.h; place(w); w.onresize && w.onresize();
+    document.dispatchEvent(new CustomEvent("nx:snapped", { detail: { id, side: where } }));
   };
   // snap layouts: a window takes a part of the screen, given as fractions (x, y, width, height)
   NX.snapRect = (id, fx, fy, fw, fh) => {
@@ -120,7 +121,7 @@
           w.rw = w.w; w.rh = w.h;
           if (zone === "max") { w.max = false; NX.toggleMax(id); }
           else if (zone.length === 2) NX.snapRect(id, zone[1] === "l" ? 0 : .5, zone[0] === "t" ? 0 : .5, .5, .5);
-          else { const A3 = area(); w.snap = zone; w.x = zone === "left" ? 0 : Math.round(A3.w / 2); w.y = 0; w.w = Math.round(A3.w / 2); w.h = A3.h; place(w); w.onresize && w.onresize(); }
+          else { const A3 = area(); w.snap = zone; w.x = zone === "left" ? 0 : Math.round(A3.w / 2); w.y = 0; w.w = Math.round(A3.w / 2); w.h = A3.h; place(w); w.onresize && w.onresize(); document.dispatchEvent(new CustomEvent("nx:snapped", { detail: { id, side: zone } })); }
         }
       };
       addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);

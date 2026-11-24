@@ -568,3 +568,14 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop[data-wfit=center]{background:var(--wall) center/auto no-repeat #0b0620}
 #snaphint.tl,#snaphint.bl{right:50%}#snaphint.tr,#snaphint.br{left:50%}
 #snaphint.tl,#snaphint.tr{bottom:calc(50% + var(--tb) / 2 + 4px)}#snaphint.bl,#snaphint.br{top:calc(50% - var(--tb) / 2 + 4px)}
+
+/* ---------- Snap Assist ---------- */
+#nx-assist{position:absolute;top:8px;bottom:8px;z-index:3000;border-radius:14px;padding:18px;background:color-mix(in srgb,var(--bg2) 70%,transparent);backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);box-shadow:inset 0 0 0 1px #ffffff1c;overflow-y:auto;animation:nxfade .2s ease-out}
+#nx-assist.left{left:8px;right:calc(50% + 4px)}#nx-assist.right{right:8px;left:calc(50% + 4px)}
+#nx-assist.out{opacity:0;transition:opacity .18s}
+.as-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.as-card{display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--line);text-align:left;transition:transform .18s var(--ease-spring,ease),border-color .15s,box-shadow .15s}
+.as-card:hover,.as-card:focus-visible{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 14px 30px #0007}
+.as-top{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:12.5px}.as-top b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.as-face{display:grid;place-items:center;height:110px;background:color-mix(in srgb,var(--accent) 10%,var(--card2))}
+.as-face{position:relative;overflow:hidden;height:130px}

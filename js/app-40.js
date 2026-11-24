@@ -787,3 +787,32 @@ NX.noteIcon = (text) => {
     an.onfinish = an.oncancel = () => { el.style.transformOrigin = ""; };
   });
 })();
+
+// ---------- Snap Assist: after a window snaps to one half, pick which window fills the other half ----------
+(function () {
+  // a small live picture of a window (the same way Task View draws them)
+  function winPic(w, face) {
+    if (!w || !face || w.el.querySelector("iframe")) return;
+    const r = { width: w.el.offsetWidth, height: w.el.offsetHeight }; if (!r.width || !r.height) return;
+    const FW = face.clientWidth || 200, FH = face.clientHeight || 110, k = Math.min(FW / r.width, FH / r.height);
+    const cl = w.el.cloneNode(true); cl.removeAttribute("id"); cl.removeAttribute("data-app"); cl.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id")); cl.classList.remove("opening", "closing", "minimized", "offdesk", "maxed");
+    Object.assign(cl.style, { position: "absolute", left: "0", top: "0", width: r.width + "px", height: r.height + "px", transform: "translate(" + Math.round((FW - r.width * k) / 2) + "px," + Math.round((FH - r.height * k) / 2) + "px) scale(" + k + ")", transformOrigin: "0 0", pointerEvents: "none", margin: 0, zIndex: 0, opacity: 1 });
+    cl.setAttribute("aria-hidden", "true"); cl.inert = true; face.innerHTML = ""; face.appendChild(cl);
+  }
+  const close = () => { const o = document.getElementById("nx-assist"); if (o) { o.classList.add("out"); setTimeout(() => o.remove(), 180); } };
+  document.addEventListener("nx:snapped", (e) => {
+    close(); if (innerWidth < 700 || (NX.me && NX.prefs().snapAssist === false)) return;
+    const { id, side } = e.detail || {}; if (side !== "left" && side !== "right") return;
+    const others = [...NX.wins.values()].filter((w) => w.id !== id && !w.min && !w.el.classList.contains("offdesk") && !(w.snap && w.snap !== "zone" && w.snap !== side));
+    if (!others.length) return;
+    const host = document.getElementById("windows"); if (!host) return;
+    const o = document.createElement("div"); o.id = "nx-assist"; o.className = side === "left" ? "right" : "left";
+    o.innerHTML = `<div class="as-grid">${others.map((w) => `<button class="as-card" data-as="${w.id}"><span class="as-top">${NX.icon(w.app.icon || w.id, 18)}<b>${NX.esc(w.el.querySelector(".wt-name") ? w.el.querySelector(".wt-name").textContent : w.app.name)}</b></span><span class="as-face">${NX.icon(w.app.icon || w.id, 56)}</span></button>`).join("")}</div>`;
+    host.appendChild(o);
+    o.querySelectorAll("[data-as]").forEach((b) => winPic(NX.wins.get(b.dataset.as), b.querySelector(".as-face")));
+    o.querySelectorAll("[data-as]").forEach((b) => (b.onclick = (ev) => { ev.stopPropagation(); const oid = b.dataset.as; close(); NX.snapRect(oid, side === "left" ? .5 : 0, 0, .5, 1); const w2 = NX.wins.get(oid); if (w2) w2.snap = side === "left" ? "right" : "left"; }));
+    o.addEventListener("pointerdown", (ev) => { if (ev.target === o) close(); });
+  });
+  addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, true);
+  document.addEventListener("pointerdown", (e) => { if (!e.target.closest || !e.target.closest("#nx-assist")) close(); }, true);
+})();

@@ -49,6 +49,8 @@
     ["Night light strength", "Settings > System > Display has a slider for how warm Night light makes the screen."],
     ["Windows that grow from your click", "A new window grows out of the taskbar button, Start tile or desktop icon you clicked."],
     ["Choose a fit", "For your own background picture: Fill, Fit, Stretch or Center."],
+    ["Snap Assist", "Snap a window to one half and your other windows show up in the other half, with a live picture of each. Pick one to fill it."],
+    ["Corner snapping", "Drag a window into a corner of the screen to give it a quarter."],
     ["Recycle Bin on the desktop", "The Recycle Bin sits on your desktop and fills up when something is in it. Right-click it to empty it."],
     ["Select icons with a box", "Drag on an empty part of the desktop to draw a box around icons."],
     ["Toasts you can close", "Click a pop-up message to close it. A thin bar shows how long it stays."],
