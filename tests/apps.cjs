@@ -23,6 +23,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-tile").click()); await wait(700);
   await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-wall").click()); await wait(1500);
   ok(await p.evaluate(() => NX.prefs().wallpaper === "custom" && !!NX.data("wall-custom", null)), "Photos makes a picture your background");
+  // Favorites
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=fav]").click()); await wait(200);
+  ok(await p.evaluate(() => NX.data("photo-favs", []).length === 1 && document.querySelector(".win[data-app=photos] .ph-fav").classList.contains("on")), "Photos: the heart makes a picture a favorite");
   // and Edit: a look, brighter, saved as a copy
   await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=edit]").click()); await wait(300);
   await p.evaluate(() => { const r = document.querySelector(".ph-ed [data-ed=b]"); r.value = 130; r.dispatchEvent(new Event("input", { bubbles: true })); document.querySelector(".ph-ed [data-look=bw]").click(); });
@@ -30,7 +33,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("photos-edit");
   await p.evaluate(() => document.querySelector(".ph-ed [data-ed2=save]").click()); await wait(1500);
   ok((await p.evaluate(async () => (await NX.fs.list(await NX.folder("Pictures"))).entries.map((e) => e.name))).some((n) => /\(edited\)\.jpg$/.test(n)) && await p.evaluate(() => !document.querySelector(".ph-ed")), "and saves the edited picture as a copy");
-  await p.evaluate(() => { NX.setPref("wallpaper", 0); NX.closeAll(); });
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=all]").click()); await wait(600);
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=favs]").click()); await wait(600);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=photos] .ph-tile").length === 1 && !!document.querySelector(".win[data-app=photos] .ph-tile .ph-heart")), "and Favorites shows only those");
+  await p.evaluate(() => { NX.setData("photo-favs", []); NX.setPref("wallpaper", 0); NX.closeAll(); });
   await shot("camera-after");
   await p.evaluate(() => { NX.closeAll(); NX.open("recorder"); }); await wait(500);
   await p.click(".win[data-app=recorder] .vr-go"); await wait(2500); await shot("recorder-rec"); await p.click(".win[data-app=recorder] .vr-go"); await wait(1500);

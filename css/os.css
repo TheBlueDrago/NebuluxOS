@@ -1181,3 +1181,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border-radius:6px;backgr
 
 /* Magnifier */
 #desktop{transition:transform .12s ease-out}.nx-zoomed body{overflow:hidden}
+
+/* Photos: favorites */
+.ph-fav.on{color:#f43f5e}.ph-favs{display:inline-flex;align-items:center;gap:6px}.ph-favs.on{background:color-mix(in srgb,#f43f5e 25%,var(--card2));color:#fff}
+.ph-tile{position:relative}.ph-heart{position:absolute;right:6px;bottom:6px;color:#f43f5e;filter:drop-shadow(0 1px 3px #000a)}
