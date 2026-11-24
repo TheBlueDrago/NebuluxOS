@@ -199,6 +199,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => !document.querySelector("#nx-qs") && !!document.querySelector(".win[data-app=camera]")), "Enter opens the top result");
   await p.evaluate(() => NX.closeAll()); await p.evaluate(() => NX.quickSearch()); await p.keyboard.type("grocer"); await wait(900);
   ok(await p.evaluate(() => [...document.querySelectorAll("#nx-qs .qs2-it")].some((b) => /Groceries|grocer/i.test(b.textContent))), "and files");
+  ok(await p.evaluate(() => { const a = NX.qsConvert("5 km in miles"), b = NX.qsConvert("212 f to c"), c = NX.qsConvert("2 cups to ml"), d = NX.qsConvert("5 km to kg"); return a.value === 3.1068560 && b.value === 100 && c.value === 473.17647 && d === null; }), "Quick Search converts: 5 km in miles, 212 f to c, 2 cups to ml");
+  await p.evaluate(() => { const i = document.querySelector("#nx-qs input"); i.value = "5 km in miles"; i.dispatchEvent(new Event("input")); }); await wait(300);
+  ok(await p.evaluate(() => /3\.1068/.test(document.querySelector("#nx-qs .qs2-it").textContent)), "and shows the answer first");
   await p.evaluate(() => { const i = document.querySelector("#nx-qs input"); i.value = "netfl"; i.dispatchEvent(new Event("input")); }); await wait(400);
   ok(await p.evaluate(() => [...document.querySelectorAll("#nx-qs .qs2-it")].some((b) => /Netflix/.test(b.textContent) && /Nebulux Store/.test(b.textContent))), "and apps you can get from the Nebulux Store");
   await p.keyboard.press("Escape"); await wait(200);

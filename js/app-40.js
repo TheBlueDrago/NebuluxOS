@@ -8,6 +8,21 @@
 
   // ---------- Quick Search: one box in the middle of the screen for apps, settings, files, sums and the web ----------
   let qsGen = 0;
+  // conversions Quick Search understands, like "5 km in miles" or "100 f to c"
+  const UNITS = {
+    mm: ["l", .001], cm: ["l", .01], m: ["l", 1], meter: ["l", 1], meters: ["l", 1], km: ["l", 1000], kilometers: ["l", 1000], in: ["l", .0254], inch: ["l", .0254], inches: ["l", .0254], ft: ["l", .3048], foot: ["l", .3048], feet: ["l", .3048], yd: ["l", .9144], yards: ["l", .9144], mi: ["l", 1609.344], mile: ["l", 1609.344], miles: ["l", 1609.344],
+    g: ["w", .001], grams: ["w", .001], kg: ["w", 1], kilograms: ["w", 1], oz: ["w", .028349523125], ounces: ["w", .028349523125], lb: ["w", .45359237], lbs: ["w", .45359237], pounds: ["w", .45359237],
+    ml: ["v", .001], l: ["v", 1], liter: ["v", 1], liters: ["v", 1], cup: ["v", .2365882365], cups: ["v", .2365882365], gal: ["v", 3.785411784], gallon: ["v", 3.785411784], gallons: ["v", 3.785411784],
+    kmh: ["s", 1 / 3.6], kph: ["s", 1 / 3.6], mph: ["s", .44704],
+    c: ["t", "C"], celsius: ["t", "C"], f: ["t", "F"], fahrenheit: ["t", "F"], k: ["t", "K"], kelvin: ["t", "K"],
+    sec: ["d", 1], seconds: ["d", 1], min: ["d", 60], minutes: ["d", 60], h: ["d", 3600], hr: ["d", 3600], hours: ["d", 3600], day: ["d", 86400], days: ["d", 86400], week: ["d", 604800], weeks: ["d", 604800],
+  };
+  NX.qsConvert = (q) => {
+    const m = /^\s*(-?[\d.]+)\s*°?\s*([a-z]+)\s+(?:in|to|=|as)\s+°?\s*([a-z]+)\s*$/i.exec(q); if (!m) return null;
+    const v = parseFloat(m[1]), a = UNITS[m[2].toLowerCase()], b = UNITS[m[3].toLowerCase()]; if (!isFinite(v) || !a || !b || a[0] !== b[0]) return null;
+    let r; if (a[0] === "t") { const toC = { C: (x) => x, F: (x) => (x - 32) * 5 / 9, K: (x) => x - 273.15 }, fromC = { C: (x) => x, F: (x) => x * 9 / 5 + 32, K: (x) => x + 273.15 }; r = fromC[b[1]](toC[a[1]](v)); } else r = (v * a[1]) / b[1];
+    return { value: +r.toPrecision(8), text: v + " " + m[2] + " = " + +r.toPrecision(8) + " " + m[3] };
+  };
   NX.quickSearch = () => {
     if (!NX.me) return; let o = $("#nx-qs"); if (o) { o.remove(); return; }
     if (NX.shell) NX.shell.closeFlyouts();
@@ -23,6 +38,8 @@
       if (!q) { paint(); return; }
       // a sum
       if (/[\d)]/.test(q) && /[-+*/^×÷%!()]|sqrt|sin|cos|tan|log|ln/.test(q) && NX.calcEval) { try { const v = NX.calcEval(q, true); if (isFinite(v)) { const r = String(+v.toPrecision(12)); items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: "= " + r, sub: "Press Enter to copy it", go: () => { navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } }); } } catch (e) { /* not a sum */ } }
+      const cv = NX.qsConvert(q); if (cv) items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: cv.text, sub: "Press Enter to copy it", go: () => { const r = String(cv.value); navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } });
+      if (/^weather\b|^forecast\b/i.test(q)) { const w = NX.data("wx", null), p = NX.data("wx-place", null); items.push({ head: "Weather", icon: w && NX.wxInfo ? NX.wxInfo.icon(w.code, 30) : NX.icon("weather", 30), name: w && p && NX.wxInfo ? w.now + "°" + w.unit + ", " + NX.wxInfo.name(w.code) + " in " + p.name : "See the weather", sub: "Opens Weather", go: () => NX.open("weather") }); }
       const apps = visible().filter((id) => NX.apps[id].name.toLowerCase().includes(ql)).sort((a, b) => NX.apps[a].name.toLowerCase().indexOf(ql) - NX.apps[b].name.toLowerCase().indexOf(ql)).slice(0, 5);
       apps.forEach((id, k) => items.push({ head: k ? "" : "Apps", icon: NX.icon(NX.apps[id].icon || id, 30), name: NX.apps[id].name, sub: "App", go: () => NX.open(id) }));
       // apps from the Nebulux Store you don't have yet
