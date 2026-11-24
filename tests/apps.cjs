@@ -311,7 +311,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await shot("reminders");
   await p.evaluate(() => { const c = document.querySelector(".win[data-app=reminders] .rm-it input"); c.checked = true; c.dispatchEvent(new Event("change")); }); await wait(500);
   ok(await p.evaluate(() => NX.data("todos", [])[0].done && /All done/.test(document.querySelector(".win[data-app=reminders] .rm-head").textContent)), "and checks it off");
-  await p.evaluate(() => { NX.setData("todos", []); NX.closeAll(); });
+  await p.evaluate(() => { NX.closeAll(); NX.setData("todos", [{ id: "t1", text: "Return library book", due: "", done: false }]); NX.setPref("deskWidgets", ["todos"]); }); await wait(300);
+  ok(await p.evaluate(() => /Return library book/.test((document.querySelector("#nx-dwidgets .dw-todo") || {}).textContent || "")), "a Reminders desktop widget lists what's left to do");
+  await p.evaluate(() => NX.quickSearch()); await p.keyboard.type("library"); await wait(400);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#nx-qs .qs2-it")].some((b) => /Return library book/.test(b.textContent))), "and Quick Search finds reminders");
+  await p.keyboard.press("Escape");
+  await p.evaluate(() => { NX.setData("todos", []); NX.setPref("deskWidgets", []); NX.closeAll(); });
   // Calendar app
   await p.evaluate(() => { NX.closeAll(); NX.setData("events", []); NX.open("calendar"); }); await wait(600);
   await p.evaluate(() => { const f = document.querySelector(".win[data-app=calendar] .ca-add"); f.n.value = "Dentist"; f.t.value = "15:30"; f.querySelectorAll("[name=c]")[3].checked = true; f.requestSubmit(); }); await wait(300);

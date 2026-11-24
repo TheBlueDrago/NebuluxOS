@@ -47,6 +47,9 @@
       store.forEach((id, k) => items.push({ head: k ? "" : "In the Nebulux Store", icon: NX.icon(NX.apps[id].icon || id, 30), name: NX.apps[id].name, sub: "Get it from the Nebulux Store", go: () => NX.open("store", { app: id }) }));
       const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql))).slice(0, 3);
       pages.forEach((pg, k) => items.push({ head: k ? "" : "Settings", icon: NX.icon(pg.icon, 30), name: pg.name, sub: "Settings", go: () => NX.open("settings", { page: pg.id }) }));
+      const evs = NX.data("events", []).filter((e) => e.title.toLowerCase().includes(ql)).slice(0, 3), tds = NX.data("todos", []).filter((t) => !t.done && t.text.toLowerCase().includes(ql)).slice(0, 3);
+      evs.forEach((e, k) => items.push({ head: k ? "" : "Calendar", icon: NX.icon("calendar", 30), name: e.title, sub: new Date(e.date + "T12:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) + (e.time ? ", " + NX.fmtTime(new Date(e.date + "T" + e.time)) : ""), go: () => NX.open("calendar") }));
+      tds.forEach((t, k) => items.push({ head: k ? "" : "Reminders", icon: NX.icon("reminders", 30), name: t.text, sub: t.due ? new Date(t.due).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Reminder", go: () => NX.open("reminders") }));
       const web = { head: "The web", icon: NX.icon("google", 30), name: "Search Google for “" + q + "”", sub: "Opens Google", go: () => NX.open("google", { q }) };
       items.push(web); paint();
       if (ql.length < 2 || !NX.fs) return;
@@ -188,7 +191,7 @@
   addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; if (mag > 1) magApply(); }, { passive: true });
 
   // ---------- desktop widgets: a clock, the weather, what's next in your calendar and the battery, right on the wallpaper ----------
-  NX.deskWidgetKinds = { clock: "Clock", weather: "Weather", events: "Up next", battery: "Battery" };
+  NX.deskWidgetKinds = { clock: "Clock", weather: "Weather", events: "Up next", todos: "Reminders", battery: "Battery" };
   function deskWidgets() {
     const on = NX.me ? (NX.prefs().deskWidgets || []).filter((k) => NX.deskWidgetKinds[k]) : [];
     let box = document.getElementById("nx-dwidgets");
@@ -200,14 +203,16 @@
       if (k === "events") { const key = (x) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"), today = key(d), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
         const next = NX.data("events", []).filter((e) => e.date > today || (e.date === today && (!e.time || e.time >= hm))).sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || ""))).slice(0, 3);
         return `<section class="dw dw-ev" data-dw="events"><h4>Up next</h4>${next.length ? next.map((e) => `<div><i style="background:${e.color || "#7c5cff"}"></i><span><b>${NX.esc(e.title)}</b><small>${e.date === today ? "Today" : new Date(e.date + "T12:00").toLocaleDateString(undefined, Object.assign({ weekday: "short", month: "short", day: "numeric" }, e.date.slice(0, 4) !== String(d.getFullYear()) ? { year: "numeric" } : {}))}${e.time ? " · " + NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : ""}</small></span></div>`).join("") : `<small>Nothing planned. Add events in Calendar.</small>`}</section>`; }
+      if (k === "todos") { const L = NX.data("todos", []).filter((t) => !t.done).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999")).slice(0, 4);
+        return `<section class="dw dw-ev dw-todo" data-dw="todos"><h4>Reminders</h4>${L.length ? L.map((t) => `<div><i style="background:#fb923c"></i><span><b>${NX.esc(t.text)}</b>${t.due ? `<small>${new Date(t.due).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</small>` : ""}</span></div>`).join("") : `<small>Nothing to do.</small>`}</section>`; }
       if (k === "battery") { const b = NX.batt && NX.batt(); return `<section class="dw dw-bt" data-dw="battery">${b ? `${NX.battIcon(40)}<div><b>${b.percent}%</b><small>${b.charging ? "Charging" : (NX.battLeft && NX.battLeft()) || "On battery"}</small></div>` : `<div><b>Battery</b><small>No battery on this computer.</small></div>`}</section>`; }
       return "";
     }).join("");
     if (box.innerHTML !== html) box.innerHTML = html;
   }
   NX.deskWidgets = deskWidgets;
-  document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : "settings", k === "battery" ? { page: "system" } : undefined); });
-  document.addEventListener("nx:prefs", () => setTimeout(deskWidgets, 30)); setInterval(deskWidgets, 15000); setTimeout(deskWidgets, 1500);
+  document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : k === "todos" ? "reminders" : "settings", k === "battery" ? { page: "system" } : undefined); });
+  document.addEventListener("nx:prefs", () => setTimeout(deskWidgets, 30)); document.addEventListener("nx:todos", () => setTimeout(deskWidgets, 30)); setInterval(deskWidgets, 15000); setTimeout(deskWidgets, 1500);
 
   // ---------- Nebulux + Shift + S: take the screen, then drag over the part you want (Esc keeps all of it) ----------
   NX.snipArea = async () => {
