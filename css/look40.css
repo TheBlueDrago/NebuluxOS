@@ -679,3 +679,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .dw-photo img{display:block;width:100%;height:160px;object-fit:cover}
 .dw-photo>span{position:absolute;left:10px;bottom:8px;right:10px;font-size:12px;color:#fff;text-shadow:0 1px 4px #000a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dw-photo>div{padding:14px 16px}
+.wg-dw.dw-photo{padding:0!important;--wgc:#38bdf8}.wg-dw.dw-photo img{height:150px}
