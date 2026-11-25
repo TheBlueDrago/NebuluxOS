@@ -141,7 +141,7 @@
     night();
   });
   // at start-up (the page loads once each time the computer starts)
-  if (!NX.fast || /[?&]updstart/.test(location.search)) setTimeout(() => { if (NX.native) atStart(); }, NX.fast ? 600 : 4000);
+  setTimeout(() => { if (NX.native && (!NX.fast || /[?&]updstart/.test(location.search))) atStart(); }, /[?&]fast/.test(location.search) ? 600 : 4000);
 
   // Settings > Nebulux Update
   function fillSettings(q$) {

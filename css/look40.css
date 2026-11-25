@@ -594,3 +594,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop[data-wfit=fit] .wall-fade{background-size:contain;background-repeat:no-repeat}
 .wv-app .wv-addr{visibility:hidden;pointer-events:none}.wv-app .wv-bar{justify-content:flex-start}
 .nl-slow{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px;text-align:center}.nl-slow small{color:var(--sub);font-size:12.5px}.nl-slow div{display:flex;gap:6px}#nx-launch .nl-card:has(.nl-slow){pointer-events:auto}
+.upd-more{grid-template-columns:repeat(2,1fr)}

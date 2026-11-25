@@ -23,6 +23,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   await p.evaluate(async () => fetch("/api/fake/reset", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token } }));
   await p.evaluate(async () => fetch("/api/fake/update-reset", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token } }));
+  await p.evaluate(async () => { await fetch("/api/fake/webapps-on", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token, "Content-Type": "application/json" }, body: JSON.stringify({ on: false }) }); NX.webAppOK = false; }); // a run that stopped early may have left it on
   ok(await p.evaluate(() => NX.native === true && NX.webFrames === true), "the helper puts the OS in real-computer mode");
   ok(await p.evaluate(() => document.documentElement.getAttribute("data-nxext") === "1"), "the OS browser extension is running");
   ok(await p.evaluate(async () => (await fetch("/api/info")).status === 403), "system calls without this boot's key are refused");
