@@ -62,9 +62,8 @@ boot() { # BIOS or UEFI
   # the mouse on the real browser: click into Google's search box and type
   click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click
   # apps open as apps (their own window, no web address): YouTube and Nebulux Arcade, each closed with Alt + F4
-  keys alt-f4; sleep 2
-  keys meta_l; sleep 2; typeword "youtube"; sleep 1; keys ret; sleep 25; shot 5c-youtube; keys alt-f4; sleep 2
-  keys meta_l; sleep 2; typeword "nebulux arcade"; sleep 1; keys ret; sleep 25; shot 5d-arcade; keys alt-f4; sleep 2
+  keys meta_l; sleep 2; typeword "youtube"; sleep 1; keys ret; sleep 25; shot 5c-youtube
+  keys meta_l; sleep 2; typeword "nebulux arcade"; sleep 1; keys ret; sleep 25; shot 5d-arcade
   keys meta_l; sleep 2; typeword "settings"; sleep 1; keys ret; sleep 6; shot 6-settings
   keys meta_l; sleep 2; typeword "file explorer"; sleep 1; keys ret; sleep 5; shot 7-files
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1
