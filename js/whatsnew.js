@@ -1,8 +1,11 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "4.0";
+  NX.version = "4.1";
   NX.whatsNew = [
+    ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
+    ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
+    ["No more waiting on a slow app", "If an app takes longer than usual to open, you can try again with one click instead of waiting."],
     ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
     ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],
     ["Corners and glass your way", "Pick square, round or extra round corners, and clear, frosted or solid glass, in Settings > Personalization."],
@@ -171,6 +174,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Sticky notes on your desktop");
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "A whole new look"); // what came before 4.1 goes under Earlier updates
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

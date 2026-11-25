@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 4.0**.
-3. Under **Assets**, click **`Nebulux-OS-4.0.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 4.1**.
+3. Under **Assets**, click **`Nebulux-OS-4.1.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-4.0.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-4.1.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-4.0.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-4.1.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -82,7 +82,7 @@ QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
 Then start Nebulux OS like this (all on one line):
 
 ```powershell
-& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-4.0.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-4.1.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
 ```
 
 ### If it doesn't start
@@ -96,6 +96,7 @@ Then start Nebulux OS like this (all on one line):
 
 ## What's in it
 
+- **New in 4.1:** the update window has Update now, Remind me later and Never, and an update installs by itself the next time the computer starts (or overnight). Apps open like apps, with no web address showing, and a slow app offers Try again.
 - **New in 4.0:**
   - **A whole new look:** glass that takes color from your background, a floating taskbar, twinkling stars over the wallpaper, live window pictures in Task View and Alt + Tab, notifications and the calendar as floating cards, colored Settings icons, folder icons, and a new start-up screen.
   - **Themes** (also the last step of setup), **corners** (square, round, extra round), **glass** (clear, frosted, solid), colored-dot **window buttons**, an **Auto** accent color, a **lock screen picture**, **pointer color**, a sign-in **chime**, and seven new backgrounds.
