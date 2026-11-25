@@ -566,6 +566,21 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.keyboard.type("Hi"); await p.keyboard.press("Enter"); await wait(300);
   ok(await p.evaluate(() => { const c = document.querySelector(".win[data-app=paint] canvas"), d = c.getContext("2d").getImageData(0, 0, Math.min(c.width, 200), Math.min(c.height, 120)).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] < 200 || d[i + 1] < 200 || d[i + 2] < 200) n++; return n > 30; }), "Paint's Text tool writes text on the picture");
   await p.evaluate(() => NX.closeAll());
+  // Start > All apps > Category
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); NX.setPref("allView", "list"); document.querySelector("#tb-start").click(); }); await wait(400);
+  await p.evaluate(() => [...document.querySelectorAll("#start button")].find((x) => /All apps/.test(x.textContent)).click()); await wait(300);
+  await p.evaluate(() => document.querySelector('#start [data-av="cat"]').click()); await wait(300);
+  ok(await p.evaluate(() => { const c = [...document.querySelectorAll("#start .sm-cat")]; return c.length >= 2 && /Nebulux OS/.test(c[0].textContent) && NX.prefs().allView === "cat"; }), "All apps can show apps by category");
+  await p.evaluate(() => document.querySelector("#start .sm-cat .sm-cat-h").click()); await wait(200);
+  ok(await p.evaluate(() => document.querySelector("#start .sm-cat").classList.contains("open")), "and a category opens to show all its apps");
+  await p.evaluate(() => { NX.setPref("allView", "list"); NX.shell.closeFlyouts(); });
+  // Nebulux + Z: snap layouts for the window you're using
+  if (W > 700) {
+    await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(600);
+    await p.evaluate(() => document.dispatchEvent(new CustomEvent("nx:key", { detail: "snapz" }))); await wait(300);
+    ok(await p.evaluate(() => !document.querySelector("#snapfly").hidden && document.querySelectorAll("#snapfly .sf-lay").length >= 4), "Nebulux + Z shows the snap layouts");
+    await p.keyboard.press("Escape"); await p.evaluate(() => { document.querySelector("#snapfly").hidden = true; NX.closeAll(); });
+  }
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

@@ -125,14 +125,21 @@
     const b = e.target.closest && e.target.closest(".wb-max"); if (!b || e.pointerType === "touch") return;
     const win = b.closest(".win"); if (!win || innerWidth < 700) return;
     clearTimeout(hoverT);
-    hoverT = setTimeout(() => {
+    hoverT = setTimeout(() => showFly(b, win), 550);
+  });
+  // the snap layouts under a window's maximize button (also Nebulux + Z for the window you're using)
+  function showFly(b, win) {
+    {
       const s = $("#snapfly"), r = b.getBoundingClientRect(), id = win.dataset.app; fly = id;
       s.innerHTML = layouts().map((L, i) => `<div class="sf-lay">${L.map((z, k) => `<button class="sf-zone" data-l="${i}" data-z="${k}" style="left:${z[0] * 100}%;top:${z[1] * 100}%;width:${z[2] * 100}%;height:${z[3] * 100}%" aria-label="Snap here"></button>`).join("")}</div>`).join("");
       s.hidden = false; const sr = s.getBoundingClientRect();
       s.style.left = Math.max(8, Math.min(innerWidth - sr.width - 8, r.right - sr.width + 20)) + "px"; s.style.top = (r.bottom + 6) + "px";
       s.querySelectorAll(".sf-zone").forEach((z) => (z.onclick = (ev) => { ev.stopPropagation(); const zz = LAYOUTS[+z.dataset.l][+z.dataset.z]; hideFly(); NX.snapRect(id, ...zz); }));
-    }, 550);
-  });
+    }
+  }
+  NX.snapLayoutsKey = () => { const w = NX.topWin && NX.topWin(); if (!w || innerWidth < 700) return; const b = w.el.querySelector(".wb-max"); if (b) { showFly(b, w.el); const z = $("#snapfly .sf-zone"); if (z) z.focus(); } };
+  document.addEventListener("nx:key", (e) => { if (e.detail === "snapz" && NX.me) setTimeout(NX.snapLayoutsKey, 0); }); // after the shell closes its menus for the key
+  addEventListener("keydown", (e) => { if (e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "z" || e.key === "Z")) { e.preventDefault(); NX.snapLayoutsKey(); } }, true);
   document.addEventListener("pointerout", (e) => {
     const from = e.target.closest && (e.target.closest(".wb-max") || e.target.closest("#snapfly")); if (!from) return;
     const to = e.relatedTarget && e.relatedTarget.closest && (e.relatedTarget.closest(".wb-max") || e.relatedTarget.closest("#snapfly"));

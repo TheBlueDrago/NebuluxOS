@@ -338,16 +338,24 @@
     S.querySelectorAll("[data-pw]").forEach((b) => (b.onclick = () => { const k = b.dataset.pw; if (k === "update") { closeFlyouts(); NX.toast("Updating Nebulux OS. Keep the computer on."); NX.update.install().catch((e) => NX.toast(e.message)); return; } if (k === "lock") lockKeep(); else if (k === "out") signOut(); else if (k === "sleep") sleep(); else power(k === "restart" ? "restart" : "off"); }));
   }
   // All apps: every app, A to Z, with letter headings
+  // All apps by category (like Windows 11's newest Start): a card for each kind of app, with its first apps showing
+  function catHTML(list) {
+    const G = new Map(); for (const id of list) { const a = NX.apps[id], c = a.category || (a.builtIn ? "Nebulux OS" : "Other"); if (!G.has(c)) G.set(c, []); G.get(c).push(id); }
+    const order = [...G.keys()].sort((x, y) => (x === "Nebulux OS" ? -1 : y === "Nebulux OS" ? 1 : G.get(y).length - G.get(x).length));
+    return `<div class="sm-cats">${order.map((c) => { const ids = G.get(c); return `<div class="sm-cat"><button class="sm-cat-h"><b>${NX.esc(c)}</b><small>${ids.length}</small></button><div class="sm-cat-g">${ids.map((id, k) => `<button class="sm-cat-a ${k > 3 ? "more" : ""}" data-app="${id}" title="${NX.esc(NX.apps[id].name)}">${NX.icon(NX.apps[id].icon || id, 34)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div></div>`; }).join("")}</div>`;
+  }
   function allAppsDraw(all, me) {
-    const S = $("#start"), list = [...all].sort((a, b) => NX.apps[a].name.localeCompare(NX.apps[b].name));
+    const S = $("#start"), list = [...all].sort((a, b) => NX.apps[a].name.localeCompare(NX.apps[b].name)), view = NX.prefs().allView === "cat" ? "cat" : "list";
     let letter = "", rows = "";
     for (const id of list) { const L = NX.apps[id].name[0].toUpperCase(); if (L !== letter) { letter = L; rows += `<h5 class="sm-letter">${NX.esc(L)}</h5>`; } rows += `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 28)}<span><b>${NX.esc(NX.apps[id].name)}</b></span></button>`; }
     S.innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search"></label>
-      <div class="sm-body"><div class="sm-h"><h4>All apps</h4><button class="sm-all" data-back="1">${NX.icon("back", 12)} Back</button></div><div class="sm-allist">${rows}<button class="sm-res" data-store="1">${NX.icon("store", 28)}<span><b>Get more apps</b><small>Nebulux Store</small></span></button></div></div>
+      <div class="sm-body"><div class="sm-h"><h4>All apps</h4><div class="seg sm-av">${[["cat", "Category"], ["list", "List"]].map(([v, t]) => `<button data-av="${v}" class="${view === v ? "on" : ""}">${t}</button>`).join("")}</div><button class="sm-all" data-back="1">${NX.icon("back", 12)} Back</button></div>${view === "cat" ? catHTML(list) : `<div class="sm-allist">${rows}<button class="sm-res" data-store="1">${NX.icon("store", 28)}<span><b>Get more apps</b><small>Nebulux Store</small></span></button></div>`}</div>
       ${smFoot(me)}`;
     S.querySelectorAll("[data-app]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }));
     $("[data-back]", S).onclick = (e) => { e.stopPropagation(); startDraw(""); };
-    $("[data-store]", S).onclick = () => { closeFlyouts(); NX.open("store"); };
+    const stb = $("[data-store]", S); if (stb) stb.onclick = () => { closeFlyouts(); NX.open("store"); };
+    S.querySelectorAll("[data-av]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); NX.setPref("allView", b.dataset.av); allAppsDraw(all, me); }));
+    S.querySelectorAll(".sm-cat-h").forEach((h) => (h.onclick = (e) => { e.stopPropagation(); h.parentElement.classList.toggle("open"); }));
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); }; smFootWire(S);
     const si = $(".sm-search input", S); si.oninput = () => { startDraw(si.value); const n = $(".sm-search input"); n.focus(); };
   }

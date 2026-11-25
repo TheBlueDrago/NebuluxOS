@@ -60,11 +60,32 @@
       if (k === "google") {
         // sign in to Google in the real web browser, so Gmail, YouTube and Drive are ready (only when there is one)
         if (!NX.browserOK || !NX.online()) { (back ? i-- : i++); back = false; return draw(); }
-        const f = frame("Sign in with Google", "Sign in to your Google account to use Gmail, YouTube, Drive and more in the web browser. Your Nebulux OS password stays separate.",
-          `<button type="button" class="ob-google">${NX.icon("google", 22)}<span>Sign in with Google</span></button><p class="ob-sub ob-gnote" hidden>The Google sign-in opens in the web browser. When you're done, minimize or close it to come back here.</p>`, { skip: "Skip for now", next: "Next" });
-        f.querySelector(".ob-google").onclick = () => { f.querySelector(".ob-gnote").hidden = false; NX.browserOpen("https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Fmail.google.com%2F"); };
-        f.onsubmit = (e) => { e.preventDefault(); next(); };
-        box.querySelector(".ob-skip").onclick = next;
+        const f = frame("Sign in with Google", "Sign in to your Google account to use Gmail, YouTube, Drive and more. Your Nebulux OS password stays separate.",
+          `<button type="button" class="ob-google">${NX.icon("google", 22)}<span>Sign in with Google</span></button><div class="ob-gwait" hidden><span class="ob-gpulse">${NX.icon("google", 40)}</span><b>Finish signing in in the Google window</b><small>When you're signed in, you'll come back here by yourself.</small><button type="button" class="btn ob-gcancel">Cancel</button></div><p class="ob-sub ob-gnote" hidden></p>`, { skip: "Skip for now", next: "Next" });
+        // watch the Google window: signed in (Gmail opens) goes on to the next step; closing it comes back to this step
+        const stepAt = i, wait = f.querySelector(".ob-gwait"), gbtn = f.querySelector(".ob-google"), note = f.querySelector(".ob-gnote");
+        let poll = 0;
+        const stop = () => { clearInterval(poll); poll = 0; };
+        const idle = (msg) => { stop(); wait.hidden = true; gbtn.hidden = false; note.hidden = !msg; note.textContent = msg || ""; };
+        gbtn.onclick = async () => {
+          gbtn.hidden = true; note.hidden = true; wait.hidden = false;
+          try { await NX.api("POST", "/browser/open", { url: "https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Fmail.google.com%2F" }); } catch (e) { idle(e.message); return; }
+          let seen = true, gone = 0; // the window is up once open answers; closed = two checks in a row without it
+          poll = setInterval(async () => {
+            if (i !== stepAt || box.hidden) { stop(); return; }
+            let r; try { r = await NX.api("GET", "/browser/signin"); } catch (e) { return; }
+            gone = r.running ? 0 : gone + 1;
+            const t = (r.titles || []).join(" | ");
+            if (r.running && /Gmail|Inbox|@/.test(t) && !/Sign in|Google Accounts|Couldn't sign you in/i.test(t)) {
+              stop(); st.google = true; NX.api("POST", "/browser/close").catch(() => {});
+              wait.innerHTML = `<span class="ob-gdone">${NX.icon("check", 34)}</span><b>You're signed in to Google</b>`; setTimeout(() => { if (i === stepAt) next(); }, 1200);
+            } else if (seen && gone >= 2) idle("The Google window was closed before you signed in. Try again, or skip it for now.");
+          }, 1000);
+        };
+        f.querySelector(".ob-gcancel").onclick = () => { NX.api("POST", "/browser/close").catch(() => {}); idle(""); };
+        f.onsubmit = (e) => { e.preventDefault(); stop(); next(); };
+        box.querySelector(".ob-skip").onclick = () => { stop(); next(); };
+        const bk = box.querySelector(".ob-back"); if (bk) { const b0 = bk.onclick; bk.onclick = () => { stop(); b0(); }; }
       }
       if (k === "name" && first && NX.native && NX.persistent === false && !back) {
         // this USB doesn't keep changes, so setup would come back at every start: offer a quick guest start too

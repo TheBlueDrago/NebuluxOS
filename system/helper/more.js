@@ -322,7 +322,23 @@ module.exports = function more({ api, run, FAKE }) {
   let web = null; const WEBDIR = path.join(HOME, ".config", "nebulux-web");
   const browserOK = () => !FAKE && fs.existsSync("/usr/bin/chromium") && !!process.env.DISPLAY && fs.existsSync("/usr/bin/openbox");
   const webWins = async () => (await run("xdotool", ["search", "--class", "NebuluxWeb"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
-  api["GET /browser"] = async () => ({ available: browserOK(), running: !!(web && web.exitCode == null) });
+  // the made-up browser for tests (NX_FAKE): on when a test asks, with a window title the test can change
+  let fakeWeb = { on: false, running: false, title: "" };
+  if (FAKE) api["POST /fake/browser"] = async (b) => { b = b || {}; if ("on" in b) fakeWeb.on = !!b.on; if ("running" in b) fakeWeb.running = !!b.running; if ("title" in b) fakeWeb.title = String(b.title); return fakeWeb; };
+  api["GET /browser"] = async () => FAKE ? { available: fakeWeb.on, running: fakeWeb.running } : ({ available: browserOK(), running: !!(web && web.exitCode == null) });
+  // setup's Google sign-in: is the browser still open, and what do its windows say (Gmail opens once you're signed in)
+  api["GET /browser/signin"] = async () => {
+    if (FAKE) return { running: fakeWeb.running, titles: fakeWeb.running ? [fakeWeb.title] : [] };
+    const running = !!(web && web.exitCode == null); if (!running) return { running, titles: [] };
+    const ids = (await run("xdotool", ["search", "--onlyvisible", "--class", "NebuluxWeb"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
+    const titles = []; for (const id of ids.slice(0, 8)) { const t = (await run("xdotool", ["getwindowname", id], 3000)).out.trim(); if (t) titles.push(t.slice(0, 200)); }
+    return { running: running && ids.length > 0, titles };
+  };
+  api["POST /browser/close"] = async () => {
+    if (FAKE) { fakeWeb.running = false; return { ok: true }; }
+    for (const id of await webWins()) await run("wmctrl", ["-i", "-c", "0x" + (+id).toString(16)], 3000);
+    await shellFocus(); return { ok: true };
+  };
 
   // ---------- apps from the Store that are websites (Netflix, Poki, YouTube, Google...) open as their own apps ----------
   // Each one is its own window (no tabs, no address bar) with the Nebulux title bar, its own place on the taskbar
@@ -363,6 +379,7 @@ module.exports = function more({ api, run, FAKE }) {
   };
   api["POST /browser/open"] = async (b) => {
     const url = String(b.url || ""); if (!/^https?:\/\/[^\s]{1,2000}$/i.test(url)) throw new Error("That web address doesn't look right.");
+    if (FAKE && fakeWeb.on) { fakeWeb.running = true; fakeWeb.title = /accounts\.google/.test(url) ? "Sign in - Google Accounts" : "Google"; return { ok: true }; }
     if (!browserOK()) throw new Error("The web browser isn't available here.");
     const flags = (process.env.NX_BROWSER_FLAGS || "").split(" ").filter(Boolean);
     const sc = readScale(); if (sc !== "1") flags.push("--force-device-scale-factor=" + sc); // the same display scale as Nebulux OS
