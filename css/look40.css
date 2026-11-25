@@ -634,3 +634,14 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .sm-cat-a span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sm-cat-a:hover{background:var(--hover)}
 .sm-cat:not(.open) .sm-cat-a.more{display:none}
+
+/* ---------- the desktop Weather widget in the sky's colors ---------- */
+.dw-wx[data-sky]{color:#fff;border:1px solid #ffffff26}
+.dw-wx[data-sky=clear][data-day="1"]{background:linear-gradient(160deg,#2f7be6d9,#7cc0ffd9)}
+.dw-wx[data-sky=cloud][data-day="1"]{background:linear-gradient(160deg,#4a6584d9,#93a9c2d9)}
+.dw-wx[data-sky=rain]{background:linear-gradient(160deg,#2b3a52e6,#56698ae6)}
+.dw-wx[data-sky=storm]{background:linear-gradient(160deg,#181c2ee6,#3d4466e6)}
+.dw-wx[data-sky=snow]{background:linear-gradient(160deg,#5f7494d9,#b4c2d6d9)}
+.dw-wx[data-sky=fog]{background:linear-gradient(160deg,#5d6676d9,#a2a9b5d9)}
+.dw-wx[data-day="0"][data-sky=clear],.dw-wx[data-day="0"][data-sky=cloud]{background:linear-gradient(160deg,#0b1030e6,#2d2a63e6)}
+[data-theme=light] .dw-wx[data-sky]{color:#fff}
