@@ -27,15 +27,17 @@
           ${card("store", "Apps and games", "Get real apps like Spotify, Discord, Steam and VLC, and lots of web apps, from the Nebulux Store.", "Open the Nebulux Store", "store")}
           ${card("google", "The web", "Google, YouTube and every website open in a full web browser with tabs.", "Open Google", "google")}
           ${card("wifi", "Wi-Fi and Bluetooth", "Click the Wi-Fi or battery icons on the right of the taskbar for quick settings.", "Open quick settings", "qs")}
-          ${card("sticky", "Sticky Notes", "Quick colored notes that save as you type. They show up in Widgets too.", "Open Sticky Notes", "notes")}</div>`;
+          ${card("sticky", "Sticky Notes", "Quick colored notes that save as you type. They show up in Widgets too.", "Open Sticky Notes", "notes")}
+          ${card("search", "Quick Search", "Nebulux + Space finds apps, files and settings, works out sums, money and the time in other cities, and defines words.", "Try it", "qsearch")}
+          ${card("max", "Snap windows", "Drag a window to the top of the screen, or into a corner, to snap it. Then pick what fills the rest.", "", "")}</div>`;
         if (pg === "keys") return `<h2>Shortcuts</h2><p class="gs-sub">The Nebulux key is the key with the logo, between Ctrl and Alt.</p><div class="gs-keys">${KEYS.map(([k, t]) => `<div><span>${k.split(" ").map((x) => (x === "+" || x === "/" || x === "or" ? `<i>${x}</i>` : `<kbd>${NX.esc(x)}</kbd>`)).join(" ")}</span><small>${NX.esc(t)}</small></div>`).join("")}</div><p class="gs-sub" style="margin-top:14px">See them all any time with <b>Nebulux + /</b>.</p><button class="btn primary" type="button" onclick="NX.shortcuts && NX.shortcuts()">See every shortcut</button>`;
         if (pg === "new") return `<h2>What's new in ${NX.esc(NX.version)}</h2><div class="gs-new">${NX.whatsNew.map((w) => `<div><b>${NX.esc(w[0])}</b><p>${NX.esc(w[1])}</p></div>`).join("")}</div>`;
         return `<h2>Make it yours</h2><div class="gs-grid">
-          ${card("contrast", "Your look", "Pick a wallpaper, dark or light, and an accent color.", "Personalize", "personal")}
+          ${card("brush", "Themes", "One click sets your background, colors, corners and glass. Or pick each one yourself.", "Personalize", "personal")}
           ${card("moon", "Night light", "Warmer colors in the evening, on a schedule if you like.", "Display settings", "system")}
           ${card("mouse", "Mouse speed", "From Slower to Faster.", "Mouse settings", "devices")}
           ${card("user", "Accounts", "Add people who share this computer, each with a password.", "Accounts", "accounts")}
-          ${card("restart", "Updates", "Nebulux OS updates itself. Later, Remind me or Never: you choose.", "Nebulux Update", "update")}
+          ${card("restart", "Updates", "Update now, Remind me later or Never. An update you don't skip installs by itself the next time the computer starts.", "Nebulux Update", "update")}
           ${card("taskbar", "Your taskbar", "Search for an app and press Pin to taskbar, or right-click it on the desktop.", "Open Start", "start")}</div>`;
       };
       const draw = () => {
@@ -47,6 +49,7 @@
           const g = b.dataset.go;
           if (g === "start") { NX.shell.toggleStart(true); return; }
           if (g === "qs") { NX.shell.openWifi(); return; }
+          if (g === "qsearch") { if (NX.quickSearch) NX.quickSearch(); return; }
           if (["personal", "system", "devices", "accounts", "update"].includes(g)) { go("settings", { page: g }); return; }
           go(g);
         }));
