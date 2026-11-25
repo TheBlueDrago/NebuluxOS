@@ -128,14 +128,14 @@
       let m = new Date(); m = new Date(m.getFullYear(), m.getMonth(), 1); let sel = key(new Date());
       const COLS = ["#7c5cff", "#22c55e", "#f97316", "#ec4899", "#0ea5e9"];
       const draw = () => {
-        const ev = NX.data("events", []), today = key(new Date()), first = new Date(m), start = new Date(first); start.setDate(1 - first.getDay());
+        const ev = NX.calEvents ? NX.calEvents() : NX.data("events", []), today = key(new Date()), first = new Date(m), start = new Date(first); start.setDate(1 - first.getDay());
         let cells = ""; for (let k = 0; k < 42; k++) { const d = new Date(start); d.setDate(start.getDate() + k); const kk = key(d), es = ev.filter((e) => e.date === kk).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
           cells += `<button class="ca-d ${d.getMonth() !== m.getMonth() ? "out" : ""} ${kk === today ? "today" : ""} ${kk === sel ? "sel" : ""}" data-day="${kk}" aria-label="${d.toDateString()}${es.length ? ", " + es.length + " events" : ""}"><span class="ca-n">${d.getDate()}</span>${es.slice(0, 3).map((e) => `<i style="--c:${e.color || COLS[0]}" title="${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) + " " : ""}${NX.esc(e.title)}">${NX.esc(e.title)}</i>`).join("")}${es.length > 3 ? `<small>+${es.length - 3} more</small>` : ""}</button>`; }
         const sd = new Date(sel + "T12:00"), list = ev.filter((e) => e.date === sel).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
         body.innerHTML = `<div class="ca-main"><div class="ca-head"><h2>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h2><span class="ca-sp"></span><button class="btn" data-ca="today">Today</button><button class="btn" data-ca="-1" aria-label="Last month">${NX.icon("back", 14)}</button><button class="btn" data-ca="1" aria-label="Next month">${NX.icon("fwd", 14)}</button></div>
           <div class="ca-wd">${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((x) => `<span>${x}</span>`).join("")}</div><div class="ca-grid">${cells}</div></div>
           <aside class="ca-side"><h3>${sel === today ? "Today" : sd.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</h3>
-          <div class="ca-list">${list.length ? list.map((e) => `<div class="ca-e" style="--c:${e.color || COLS[0]}"><span><b>${NX.esc(e.title)}</b><small>${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : "All day"}</small></span><button class="btn sm" data-del="${e.id}" aria-label="Delete ${NX.esc(e.title)}">${NX.icon("trash", 12)}</button></div>`).join("") : `<p class="ca-none">Nothing planned.</p>`}</div>
+          <div class="ca-list">${list.length ? list.map((e) => `<div class="ca-e" style="--c:${e.color || COLS[0]}"><span><b>${NX.esc(e.title)}</b><small>${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : "All day"}</small></span>${e.holiday ? "" : `<button class="btn sm" data-del="${e.id}" aria-label="Delete ${NX.esc(e.title)}">${NX.icon("trash", 12)}</button>`}</div>`).join("") : `<p class="ca-none">Nothing planned.</p>`}</div>
           <form class="ca-add"><input name="n" maxlength="60" placeholder="Add an event" aria-label="Event name" required><input name="t" type="time" aria-label="Time (optional)"><div class="ca-cols">${COLS.map((c, k) => `<label><input type="radio" name="c" value="${c}" ${k ? "" : "checked"}><i style="background:${c}" aria-label="Color ${c}"></i></label>`).join("")}</div><button class="btn primary" type="submit">Add</button><p class="ca-tip">You get a reminder when an event with a time starts.</p></form></aside>`;
         body.querySelectorAll("[data-day]").forEach((b) => (b.onclick = () => { sel = b.dataset.day; const d = new Date(sel + "T12:00"); if (d.getMonth() !== m.getMonth()) m = new Date(d.getFullYear(), d.getMonth(), 1); draw(); }));
         body.querySelectorAll("[data-ca]").forEach((b) => (b.onclick = () => { const a = b.dataset.ca; if (a === "today") { const t = new Date(); m = new Date(t.getFullYear(), t.getMonth(), 1); sel = key(t); } else m = new Date(m.getFullYear(), m.getMonth() + +a, 1); draw(); }));
@@ -853,4 +853,20 @@ NX.noteIcon = (text) => {
     if (!el) { el = document.createElement("div"); el.id = "lk-pic"; L.appendChild(el); }
     const html = `<b>${NX.esc(w.name)}</b><small>A Nebulux OS background</small>`; if (el.innerHTML !== html) el.innerHTML = html;
   }, 1000);
+})();
+
+// ---------- holidays in the calendar (Calendar app and the clock flyout), for the United States region ----------
+(function () {
+  const z = (n) => String(n).padStart(2, "0"), k = (y, m, d) => y + "-" + z(m + 1) + "-" + z(d);
+  const nth = (y, m, wd, n) => { const d = new Date(y, m, 1); const off = (wd - d.getDay() + 7) % 7; return 1 + off + (n - 1) * 7; };
+  const last = (y, m, wd) => { const d = new Date(y, m + 1, 0); return d.getDate() - ((d.getDay() - wd + 7) % 7); };
+  const easter = (y) => { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), kk = c % 4, l = (32 + 2 * e + 2 * i - h - kk) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return [mo - 1, da]; };
+  const cache = {};
+  NX.holidays = (y) => {
+    if (cache[y]) return cache[y]; const [em, ed] = easter(y);
+    const L = [[0, 1, "New Year's Day"], [0, nth(y, 0, 1, 3), "Martin Luther King Jr. Day"], [1, 14, "Valentine's Day"], [1, nth(y, 1, 1, 3), "Presidents' Day"], [2, 17, "St. Patrick's Day"], [em, ed, "Easter"], [4, nth(y, 4, 0, 2), "Mother's Day"], [4, last(y, 4, 1), "Memorial Day"], [5, 19, "Juneteenth"], [5, nth(y, 5, 0, 3), "Father's Day"], [6, 4, "Independence Day"], [8, nth(y, 8, 1, 1), "Labor Day"], [9, 31, "Halloween"], [10, 11, "Veterans Day"], [10, nth(y, 10, 4, 4), "Thanksgiving"], [11, 24, "Christmas Eve"], [11, 25, "Christmas Day"], [11, 31, "New Year's Eve"]];
+    return (cache[y] = L.map(([m, d, t]) => ({ id: "hol-" + k(y, m, d), date: k(y, m, d), time: "", title: t, color: "#ef4444", holiday: true })));
+  };
+  const usRegion = () => { const r = NX.me && NX.prefs().region; return r ? r === "US" : /-US$/i.test(navigator.language || ""); };
+  NX.calEvents = () => { const mine = NX.data("events", []); if (!NX.me || NX.prefs().holidays === false || !usRegion()) return mine; const y = new Date().getFullYear(); return [...mine, ...NX.holidays(y - 1), ...NX.holidays(y), ...NX.holidays(y + 1)]; };
 })();

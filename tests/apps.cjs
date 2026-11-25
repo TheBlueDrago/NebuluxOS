@@ -584,6 +584,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     ok(await p.evaluate(() => !document.querySelector("#snapfly").hidden && document.querySelectorAll("#snapfly .sf-lay").length >= 4), "Nebulux + Z shows the snap layouts");
     await p.keyboard.press("Escape"); await p.evaluate(() => { document.querySelector("#snapfly").hidden = true; NX.closeAll(); });
   }
+  // holidays in the calendar (US region)
+  ok(await p.evaluate(() => { NX.setPref("region", "US"); const h = NX.holidays(2026); return h.find((x) => x.title === "Thanksgiving").date === "2026-11-26" && h.find((x) => x.title === "Easter").date === "2026-04-05" && h.find((x) => x.title === "Memorial Day").date === "2026-05-25" && NX.calEvents().some((e) => e.holiday); }), "the calendar knows the holidays (Thanksgiving 2026 is Nov 26)");
+  await p.evaluate(() => { NX.setPref("holidays", false); });
+  ok(await p.evaluate(() => !NX.calEvents().some((e) => e.holiday)), "and they can be turned off");
+  await p.evaluate(() => { NX.setPref("holidays", true); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
