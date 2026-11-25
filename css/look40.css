@@ -655,3 +655,9 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wn-pop .nx-pcard>.nx-ph::after{content:"";position:absolute;right:-60px;top:-80px;width:240px;height:240px;border-radius:50%;background:#ec4899;filter:blur(50px);opacity:.45;pointer-events:none}
 .ca-add select{width:100%}
 .rm-add{display:grid!important;grid-template-columns:1fr auto auto;gap:8px}.rm-add>*{min-width:0}.rm-add [name=t]{grid-column:1/-1}@media (max-width:560px){.rm-add{grid-template-columns:1fr 1fr}.rm-add [name=d]{grid-column:1/-1}}
+
+/* ---------- File Explorer Home: Recent files under the folders ---------- */
+.fx-homerec{grid-column:1/-1;display:flex;flex-direction:column;gap:2px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.fx-homerec h4{margin:0 0 6px 4px;font-size:13px}
+.fx-hr{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;text-align:left}
+.fx-hr:hover{background:var(--hover)}.fx-hr span{display:flex;flex-direction:column;min-width:0}.fx-hr b{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fx-hr small{color:var(--sub);font-size:11.5px}
