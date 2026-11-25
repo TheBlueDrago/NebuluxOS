@@ -57,6 +57,19 @@
       tds.forEach((t, k) => items.push({ head: k ? "" : "Reminders", icon: NX.icon("reminders", 30), name: t.text, sub: t.due ? new Date(t.due).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Reminder", go: () => NX.open("reminders") }));
       const web = { head: "The web", icon: NX.icon("google", 30), name: "Search Google for “" + q + "”", sub: "Opens Google", go: () => NX.open("google", { q }) };
       items.push(web); paint();
+      // money: "20 usd in eur", "$15 to euros" (daily rates, looked up only when you type a currency)
+      const CUR = { usd: "USD", dollar: "USD", dollars: "USD", "$": "USD", eur: "EUR", euro: "EUR", euros: "EUR", gbp: "GBP", pound: "GBP", pounds: "GBP", jpy: "JPY", yen: "JPY", cad: "CAD", aud: "AUD", mxn: "MXN", pesos: "MXN", inr: "INR", rupees: "INR", cny: "CNY", yuan: "CNY", krw: "KRW", won: "KRW", chf: "CHF", brl: "BRL", php: "PHP" };
+      const mm = /^(\$)?\s*([\d.,]+)\s*([a-z$]+)?\s+(?:in|to)\s+([a-z]+)$/i.exec(q);
+      const from = mm && (CUR[(mm[3] || mm[1] || "").toLowerCase()]), to = mm && CUR[mm[4].toLowerCase()], amt = mm && parseFloat(mm[2].replace(/,/g, ""));
+      if (from && to && from !== to && isFinite(amt) && NX.netOK && NX.netOK()) {
+        const rates = NX.data("fx-rates", null), fresh = rates && rates.base === from && Date.now() - rates.at < 6 * 3600000;
+        (fresh ? Promise.resolve(rates) : fetch("https://open.er-api.com/v6/latest/" + from).then((r) => r.json()).then((j) => { if (j.result !== "success") throw 0; const v = { base: from, at: Date.now(), r: j.rates }; NX.setData("fx-rates", v); return v; })).then((v) => {
+          const rate = v.r[to]; if (!rate || gen !== qsGen || !document.body.contains(o)) return;
+          const out = amt * rate, txt = out.toLocaleString(undefined, { style: "currency", currency: to });
+          items.unshift({ head: "Money", icon: NX.icon("calculator", 30), name: amt.toLocaleString(undefined, { style: "currency", currency: from }) + " = " + txt, sub: "Today's rate. Press Enter to copy it.", go: () => { navigator.clipboard && navigator.clipboard.writeText(txt).catch(() => {}); NX.toast("Copied " + txt + "."); } });
+          at = 0; paint();
+        }).catch(() => {});
+      }
       // "define a word": its meaning from a free dictionary (only looked up when you type "define")
       const dm = /^define\s+([a-z][a-z' -]{1,40})$/i.exec(q);
       if (dm && NX.netOK && NX.netOK()) {
