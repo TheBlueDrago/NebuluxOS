@@ -680,3 +680,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .dw-photo>span{position:absolute;left:10px;bottom:8px;right:10px;font-size:12px;color:#fff;text-shadow:0 1px 4px #000a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dw-photo>div{padding:14px 16px}
 .wg-dw.dw-photo{padding:0!important;--wgc:#38bdf8}.wg-dw.dw-photo img{height:150px}
+.dw-wc{display:flex;gap:14px;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff22;width:100%}.dw-wc i{font-style:normal;display:flex;flex-direction:column;font-size:13px;font-weight:600}.dw-wc em{font-style:normal;font-size:11px;font-weight:400;opacity:.7}
