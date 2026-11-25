@@ -165,7 +165,7 @@
       let u;
       try { u = await NX.addUser(st.name, st.pass); } catch (e) { i = steps.indexOf("name"); draw(); err(e.message); return; }
       NX.me = u;
-      NX.setPref("theme", st.theme); if (st.corners) NX.setPref("corners40", st.corners); if (st.glass) NX.setPref("glass", st.glass); NX.setPref("accent", st.accent); NX.setPref("wallpaper", st.wall); NX.setPref("region", st.region); NX.setPref("keyboard", st.kb); NX.setPref("tips", st.tips); NX.setPref("location", st.location);
+      NX.setPref("theme", st.theme); if (st.google) NX.setPref("googleSignedIn", true); if (st.corners) NX.setPref("corners40", st.corners); if (st.glass) NX.setPref("glass", st.glass); NX.setPref("accent", st.accent); NX.setPref("wallpaper", st.wall); NX.setPref("region", st.region); NX.setPref("keyboard", st.kb); NX.setPref("tips", st.tips); NX.setPref("location", st.location);
       NX.me = null;
       const say = [["Hi", 1400], ["This might take a few minutes", 1700], ["Getting things ready", 1500], ["Don't turn off your computer", 1300]];
       const fast = NX.fast;

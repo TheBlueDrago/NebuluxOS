@@ -136,6 +136,7 @@
         if (pg === "accounts") {
           const others = NX.users().filter((u) => u.id !== me.id);
           return `<div class="s-acct">${NX.avatar(me, "av big")}<div><b>${NX.esc(me.name)}</b><small>Local account on this PC</small></div><span class="s-picbtns"><label class="btn"><input type="file" accept="image/*" id="s-picfile" hidden>${me.pic ? "Change picture" : "Add a picture"}</label>${me.pic ? `<button class="btn" id="s-picrm">Remove</button>` : ""}</span></div>
+            ${NX.native ? `<h3>Google</h3>${row("google", p.googleSignedIn ? "Signed in to Google" : "Google account", p.googleSignedIn ? "Gmail, YouTube and Drive use your Google account in the web browser" : "Sign in to use Gmail, YouTube, Drive and more", `<button class="btn" id="s-goog">${p.googleSignedIn ? "Open Gmail" : "Sign in"}</button>`)}` : ""}
             <h3>Your info</h3><div class="s-card"><label class="fld"><span>Your name</span><input id="s-name" maxlength="24" value="${NX.esc(me.name)}"></label><button class="btn primary" id="s-rename">Save name</button><p class="s-msg" id="s-namemsg"></p></div>
             <h3>Sign-in options</h3><div class="s-card"><label class="fld"><span>Current password</span><input id="s-old" type="password" maxlength="64" autocomplete="current-password"></label><label class="fld"><span>New password</span><input id="s-new" type="password" maxlength="64" autocomplete="new-password"></label><label class="fld"><span>New password again</span><input id="s-new2" type="password" maxlength="64" autocomplete="new-password"></label><button class="btn primary" id="s-pw">Change password</button><p class="s-msg" id="s-pwmsg"></p></div>
             <h3>Other users</h3><div class="s-card">${others.length ? others.map((u) => `<div class="s-user">${NX.avatar(u, "av")}<b>${NX.esc(u.name)}</b><button class="btn" data-rmuser="${u.id}">Remove</button></div>`).join("") : `<p class="s-note">No other accounts on this PC.</p>`}
@@ -395,6 +396,7 @@
         const svp = body.querySelector("[data-saverpv]"); if (svp) svp.onclick = () => NX.saver && NX.saver.preview(NX.prefs().scrSaver);
         body.querySelectorAll("button[data-tbsearch]").forEach((b) => (b.onclick = () => { NX.setPref("tbSearch", b.dataset.tbsearch); draw(); }));
         body.querySelectorAll("button[data-wfit]").forEach((b) => (b.onclick = () => { NX.setPref("wallFit", b.dataset.wfit); draw(); }));
+        const gg = body.querySelector("#s-goog"); if (gg) gg.onclick = () => { if (NX.prefs().googleSignedIn) NX.open("gmail"); else { NX.browserOpen ? NX.browserOpen("https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Fmail.google.com%2F") : NX.open("google"); } };
         body.querySelectorAll("[data-corners]").forEach((b) => (b.onclick = () => { NX.setPref("corners40", b.dataset.corners); draw(); }));
         body.querySelectorAll("[data-glass]").forEach((b) => (b.onclick = () => { NX.setPref("glass", b.dataset.glass); draw(); }));
         body.querySelectorAll("[data-dwk]").forEach((c) => (c.onchange = () => { NX.setPref("deskWidgets", [...body.querySelectorAll("[data-dwk]:checked")].map((x) => x.dataset.dwk)); }));
