@@ -370,7 +370,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.goto(OS + "?fast&upd&nopersist", { waitUntil: "load" }); await wait(1200);
   await p.evaluate(() => document.querySelector("#lk-panel .lk-guest").click());
   ok(await until(() => p.evaluate(() => !!document.querySelector(".upd-pop")), 9000), "after sign-in, an update reminder pops up");
-  ok(/Nebulux OS 3.2 is ready/.test(await txt()) && await p.evaluate(() => ["Later", "Remind me", "Never"].every((t) => [...document.querySelectorAll(".upd-pop button")].some((b) => b.textContent === t))), "it offers Later, Remind me and Never");
+  ok(/Nebulux OS 3.2 is ready/.test(await txt()) && await p.evaluate(() => ["Update now", "Remind me later", "Never"].every((t) => [...document.querySelectorAll(".upd-pop button")].some((b) => b.textContent === t)) && document.querySelectorAll(".upd-pop button").length === 3), "it offers Update now, Remind me later and Never");
   await p.evaluate(() => document.querySelector(".upd-pop [data-u=remind]").click()); await wait(200);
   await p.evaluate(() => { document.querySelector("#tb-start").click(); }); await wait(300); await p.evaluate(() => document.querySelector("#start .sm-pwb").click()); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#start [data-pw=update]") && /Update and restart/.test(document.querySelector("#start [data-pw=update]").textContent)), "Start's power menu offers Update and restart when an update is ready");
@@ -383,12 +383,19 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => NX.get("upd-skip") === "3.2" && !document.querySelector(".upd-pop")), "Never skips that update");
   await p.evaluate(() => { NX.set("upd-skip", null); NX.update.consider(); });
   ok(await until(() => p.evaluate(() => !!document.querySelector(".upd-pop")), 6000), "the reminder is back when it isn't skipped");
-  await p.evaluate(() => document.querySelector(".upd-pop [data-u=later]").click()); await wait(200);
-  ok(await p.evaluate(() => NX.get("upd-later") === "3.2" && !document.querySelector(".upd-pop")), "Later saves it for tonight");
+  await p.evaluate(() => document.querySelector(".upd-pop [data-u=remind]").click()); await wait(200);
   await p.evaluate(() => NX.open("settings", { page: "update" }));
-  ok(await until(() => p.evaluate(() => /3.2 is ready. It installs tonight/.test((document.querySelector("#s-updnow") || {}).textContent || ""))), "Settings > Nebulux Update says it installs tonight");
+  ok(await until(() => p.evaluate(() => /3.2 is ready. It installs by itself the next time the computer starts/.test((document.querySelector("#s-updnow") || {}).textContent || ""))), "Settings > Nebulux Update says it installs by itself at the next start");
   await p.evaluate(() => document.querySelector("#s-updgo").click());
-  ok(await until(() => p.evaluate(() => /up to date/.test((document.querySelector("#s-updnow") || {}).textContent || "") && !NX.get("upd-later")), 8000), "Update now installs it");
+  ok(await until(() => p.evaluate(() => /up to date/.test((document.querySelector("#s-updnow") || {}).textContent || "")), 8000), "Update now installs it");
+  // an update nobody answered installs by itself when the computer starts, before anyone signs in
+  await p.evaluate(async () => fetch("/api/fake/update-reset", { method: "POST", headers: { "x-nx": window.NX_NATIVE.token } }));
+  await p.evaluate(() => { NX.set("upd-skip", null); NX.set("upd-remind", 0); });
+  await p.goto(OS + "?fast&updstart&nopersist", { waitUntil: "load" });
+  ok(await until(() => p.evaluate(() => /Updating to Nebulux OS 3.2/.test(document.querySelector("#off") ? document.querySelector("#off").innerText : "")), 8000), "an update installs by itself when the computer starts");
+  ok(await until(async () => (await p.evaluate(async () => (await (await fetch("/api/update", { headers: { "x-nx": window.NX_NATIVE.token } })).json()).available)) === false, 10000), "and the computer is up to date afterwards");
+  await p.goto(OS + "?fast&nopersist", { waitUntil: "load" }); await wait(1200);
+  await p.evaluate(() => document.querySelector("#lk-panel .lk-guest").click()); await wait(800);
   await p.evaluate(() => NX.close("settings")); await wait(300);
   await p.evaluate(() => { NX.set("seen-whatsnew-" + NX.me.id, "3.0"); NX.update.whatsNew(); });
   ok(await p.evaluate(() => document.querySelectorAll(".wn-pop .wn-item").length === NX.whatsNew.length && (/^\d+\.0$/.test(NX.version) ? document.querySelector(".wn-pop .wn-ver").textContent === NX.version : document.querySelector(".wn-pop").innerText.includes("What's new in Nebulux OS " + NX.version)) && document.querySelector(".wn-pop").innerText.includes(NX.version)), "after an update, What's new lists everything added");

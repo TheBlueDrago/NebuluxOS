@@ -76,7 +76,13 @@
     box.appendChild(card);
     const t0 = Date.now(), close = () => { if (!launching.has(id)) return; clearInterval(launching.get(id)); launching.delete(id); card.classList.add("out"); setTimeout(() => card.remove(), 260); };
     launching.set(id, setInterval(async () => {
-      if (Date.now() - t0 > 45000) return close();
+      if (Date.now() - t0 > 90000) return close();
+      // taking a long time: offer to start it again instead of leaving you waiting
+      if (Date.now() - t0 > 20000 && !card.querySelector(".nl-slow")) {
+        card.insertAdjacentHTML("beforeend", `<div class="nl-slow"><small>${NX.esc(a.name)} is taking longer than usual.</small><div><button class="btn sm primary" data-nl="retry">Try again</button><button class="btn sm" data-nl="wait">Keep waiting</button></div></div>`);
+        card.querySelector("[data-nl=retry]").onclick = () => { close(); NX.webOpened.delete(id); NX.api("POST", "/native/close", { wm }).catch(() => {}).finally(() => setTimeout(() => NX.open(id), 800)); };
+        card.querySelector("[data-nl=wait]").onclick = () => { const sl = card.querySelector(".nl-slow"); if (sl) sl.innerHTML = "<small>Still opening...</small>"; };
+      }
       try { const r = await NX.api("POST", "/native/running", { apps: { [id]: wm } }); if ((r.running || []).includes(id)) { close(); nativeRunning(); } } catch (e) { /* try again next second */ }
     }, 1000));
     return close;

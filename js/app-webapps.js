@@ -106,7 +106,7 @@
     NX.webApps.push(id);
     // its own logo, shipped in img/logos (system/get-logos.sh): the real app's icon when there is one, otherwise the website's own icon on a white tile
     const logo = (ALSO[id] ? "|f:" : "|w:") + id;
-    NX.apps[id] = { name, url, category, rating, publisher, webapp: true, size: "Web app", desc, icon: "brand:" + cols + ":" + text + ":" + fg + logo };
+    NX.apps[id] = { name, url, category, rating, publisher, webapp: true, size: "Online app", desc, icon: "brand:" + cols + ":" + text + ":" + fg + logo };
     if (ALSO[id]) NX.apps[id].native = { flatpak: ALSO[id][0], wm: ALSO[id][1] };
   }
   for (const [id, name, category, cols, text, fg, publisher, rating, desc, flatpak, wm] of NATIVE)

@@ -592,3 +592,5 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wall-fade{position:absolute;inset:0;background:center/cover;z-index:0;pointer-events:none;opacity:1;transition:opacity .7s ease}
 .wall-fade.go{opacity:0}
 #desktop[data-wfit=fit] .wall-fade{background-size:contain;background-repeat:no-repeat}
+.wv-app .wv-addr{visibility:hidden;pointer-events:none}.wv-app .wv-bar{justify-content:flex-start}
+.nl-slow{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px;text-align:center}.nl-slow small{color:var(--sub);font-size:12.5px}.nl-slow div{display:flex;gap:6px}#nx-launch .nl-card:has(.nl-slow){pointer-events:auto}

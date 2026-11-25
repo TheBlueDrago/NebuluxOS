@@ -26,6 +26,8 @@
   NX.webView = (body, win, opts) => {
     const home = opts.home || opts.url || HOME;
     body.classList.add("webapp");
+    // an app (YouTube, Netflix, Spotify...) looks like an app: no web address showing; only Google, the web browser, has the address bar
+    if (win.app && win.app.url && win.id !== "google") body.classList.add("wv-app");
     body.innerHTML = `<div class="wv-bar"><button class="wv-b" data-w="back" aria-label="Back" title="Back">${NX.icon("back", 16)}</button><button class="wv-b" data-w="forward" aria-label="Forward" title="Forward">${NX.icon("fwd", 16)}</button><button class="wv-b" data-w="reload" aria-label="Reload" title="Reload">${NX.icon("restart", 16)}</button><button class="wv-b" data-w="home" aria-label="Home" title="Home">${NX.icon("home", 16)}</button>
       <form class="wv-addr">${NX.icon("lock", 14)}<input name="u" placeholder="Search Google or type a web address" aria-label="Search Google or type a web address" autocomplete="off" spellcheck="false"></form></div><div class="wv-load"><i></i></div>
       <div class="wv-view"><iframe class="webview" title="${NX.esc(win.app.name)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-presentation allow-storage-access-by-user-activation" allow="fullscreen; autoplay; clipboard-read; clipboard-write; camera; microphone; geolocation; encrypted-media; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="wv-off" hidden></div></div>`;

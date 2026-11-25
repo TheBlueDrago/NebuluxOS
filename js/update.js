@@ -1,8 +1,10 @@
 // Nebulux Update: Nebulux OS updates itself, and says what's new after an update.
-// It checks for an update after you sign in and every few hours. When there is one, it reminds you, then asks:
-//   Later      installs it tonight (between 2 and 4 in the morning, if the computer is on)
-//   Remind me  asks again in 30 minutes
-//   Never      skips that update; Settings > Nebulux Update can still install it any time
+// It checks for an update after you sign in and every few hours. When there is one, it asks:
+//   Update now        installs it right away
+//   Remind me later   asks again in 30 minutes
+//   Never             skips that update; Settings > Nebulux Update can still install it any time
+// Unless it was skipped, an update also installs by itself when the computer isn't being used: the next time the
+// computer starts (before anyone signs in), or between 2 and 4 in the morning if it was left on.
 // The choice is for the whole computer, not each account. After an update, everyone sees What's new once.
 "use strict";
 (function () {
@@ -58,8 +60,8 @@
         ${u.needsIso ? `<p class="nx-pnote">This version also changes the core of Nebulux OS (its kernel and drivers). The update brings the new screens and apps; for everything, download the new Nebulux OS from nebuluxos.thebluedragonstriker.workers.dev and write it to your USB again.</p>` : ""}
         ${NX.persistent === false ? `<p class="nx-pnote">This USB doesn't save changes, so the update lasts until the computer restarts.</p>` : ""}
         <div class="upd-prog" hidden><div class="upd-bar"><i></i></div><small>Getting ready...</small></div>
-        <div class="upd-acts"><button class="btn primary upd-go" data-u="now">${NX.icon("download", 16)}Update now</button><div class="upd-more"><button class="btn" data-u="later">Later</button><button class="btn" data-u="remind">Remind me</button><button class="btn" data-u="never">Never</button></div></div>
-        <small class="upd-foot">Later installs it tonight. Remind me asks again in 30 minutes. Never skips it, until you update from Settings.</small>
+        <div class="upd-acts"><button class="btn primary upd-go" data-u="now">${NX.icon("download", 16)}Update now</button><div class="upd-more"><button class="btn" data-u="remind">Remind me later</button><button class="btn" data-u="never">Never</button></div></div>
+        <small class="upd-foot">Remind me later asks again in 30 minutes. If you don't update, it installs by itself the next time the computer starts. Never skips this update.</small>
       </div></div>`;
     document.body.appendChild(d);
     const close = () => { d.classList.add("out"); setTimeout(() => d.remove(), 220); asked = false; };
@@ -72,7 +74,6 @@
         catch (e) { d.classList.remove("working"); pg.classList.add("failed"); msg.textContent = e.message || "The update didn't install."; acts.hidden = false; b.lastChild.textContent = "Try again"; }
         return;
       }
-      if (k === "later") { NX.set("upd-later", u.latest); NX.toast("Nebulux OS " + u.latest + " installs tonight."); night(); }
       if (k === "remind") { NX.set("upd-remind", Date.now() + REMIND); NX.toast("You'll be reminded in 30 minutes."); clearTimeout(remindT); remindT = setTimeout(consider, REMIND + 500); }
       if (k === "never") { NX.set("upd-skip", u.latest); NX.toast("Skipped. Settings > Nebulux Update can still install it."); }
       d.remove(); asked = false;
@@ -80,16 +81,20 @@
     const f = d.querySelector("[data-u=now]"); if (f) f.focus({ preventScroll: true });
   }
 
-  // tonight: installs between 2 and 4 in the morning
+  // left on overnight: installs between 2 and 4 in the morning, when nobody has touched the computer for 20 minutes
+  let lastUse = Date.now(); ["pointerdown", "keydown", "pointermove"].forEach((t) => addEventListener(t, () => (lastUse = Date.now()), { capture: true, passive: true }));
   function night() {
     clearInterval(nightT);
     nightT = setInterval(async () => {
-      const later = NX.get("upd-later", null); if (!later) { clearInterval(nightT); return; }
-      const h = new Date().getHours(); if (h < 2 || h >= 4) return;
-      clearInterval(nightT);
-      const u = await check(); if (!u || !u.available || u.latest !== later) { NX.set("upd-later", null); return; }
-      install().catch(() => night());
+      const h = new Date().getHours(); if (h < 2 || h >= 4 || Date.now() - lastUse < 20 * 60000) return;
+      const u = await check(); if (!u || !u.available || NX.get("upd-skip", null) === u.latest) return;
+      clearInterval(nightT); install().catch(() => night());
     }, 60000);
+  }
+  // the computer just started: install a waiting update before anyone signs in (shown as the Updating screen)
+  async function atStart() {
+    const u = await check(); if (!u || !u.available || u.configured === false || NX.get("upd-skip", null) === u.latest || NX.me) return;
+    installing(u.latest); install().catch(() => { const o = $("#off"); if (o) { o.hidden = true; o.innerHTML = ""; } });
   }
 
   // after sign-in and every few hours: is there an update, and what did the person choose before?
@@ -97,7 +102,6 @@
     if (!NX.me) return;
     const u = await check(); if (!u || !u.available) return;
     if (NX.get("upd-skip", null) === u.latest) return; // Never
-    if (NX.get("upd-later", null) === u.latest) { night(); return; } // Later: tonight
     const r = NX.get("upd-remind", 0); if (r > Date.now()) { clearTimeout(remindT); remindT = setTimeout(consider, r - Date.now() + 500); return; }
     NX.toast("A Nebulux OS update is ready: " + u.latest + ".");
     setTimeout(() => NX.me && ask(u), 3500);
@@ -134,8 +138,10 @@
     if (!NX.native || !auto) return;
     setTimeout(consider, NX.fast ? 1500 : 8000);
     clearInterval(every); every = setInterval(consider, HOURS * 3600000);
-    if (NX.get("upd-later", null)) night();
+    night();
   });
+  // at start-up (the page loads once each time the computer starts)
+  if (!NX.fast || /[?&]updstart/.test(location.search)) setTimeout(() => { if (NX.native) atStart(); }, NX.fast ? 600 : 4000);
 
   // Settings > Nebulux Update
   function fillSettings(q$) {
@@ -147,8 +153,8 @@
       else if (u.configured === false) { now.textContent = "This copy of Nebulux OS doesn't get updates."; c.innerHTML = ""; }
       else if (!u.available) { now.textContent = "You're up to date. Last checked just now."; c.innerHTML = `<button class="btn" id="s-updcheck">Check for updates</button>`; }
       else {
-        const sk = NX.get("upd-skip", null) === u.latest, lt = NX.get("upd-later", null) === u.latest;
-        now.textContent = "Nebulux OS " + u.latest + " is ready" + (lt ? ". It installs tonight." : sk ? ". You skipped it." : ".");
+        const sk = NX.get("upd-skip", null) === u.latest;
+        now.textContent = "Nebulux OS " + u.latest + " is ready" + (sk ? ". You skipped it." : ". It installs by itself the next time the computer starts.");
         c.innerHTML = `<button class="btn primary" id="s-updgo">Update now</button>`;
         if (box) box.innerHTML = (u.notes || []).length ? `<h3>In ${NX.esc(u.latest)}</h3><div class="s-card">${u.notes.map((n) => `<p class="s-note">${NX.esc(n)}</p>`).join("")}</div>` : "";
       }

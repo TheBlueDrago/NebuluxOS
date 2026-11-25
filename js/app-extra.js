@@ -429,6 +429,6 @@
 
   // ---------- web apps (a new tab in a browser; their own window on the real OS) ----------
   A.youtube = { name: "YouTube", icon: "youtube", builtIn: true, url: "https://www.youtube.com/", desc: "Watch videos on YouTube." };
-  A.nebuluxai = { name: "Nebulux AI", icon: "ai", category: "Web", rating: "4.8", size: "Web app", url: "https://nebuluxai.com", desc: "Chat with AI, make games and websites on nebuluxai.com." };
-  A.arcade = { name: "Nebulux Arcade", icon: "arcade", category: "Web", rating: "4.7", size: "Web app", url: "https://nebuluxai.com/arcade", desc: "Play Nebula Royale, Nebula Brawl and dozens of free games." };
+  A.nebuluxai = { name: "Nebulux AI", icon: "ai", category: "Web", rating: "4.8", size: "Online app", url: "https://nebuluxai.com", desc: "Chat with AI, make games and websites on nebuluxai.com." };
+  A.arcade = { name: "Nebulux Arcade", icon: "arcade", category: "Web", rating: "4.7", size: "Online app", url: "https://nebuluxai.com/arcade", desc: "Play Nebula Royale, Nebula Brawl and dozens of free games." };
 })();
