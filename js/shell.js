@@ -307,7 +307,7 @@
     $("#start").innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search" value="${NX.esc(q || "")}"></label>
       <div class="sm-body ${q ? "sm-searching" : ""}">${q ? `<div class="sm-split"><div class="sm-left"><h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div></div><aside class="sm-detail" aria-label="Details"></aside></div>` :
       `<div class="sm-h"><h4>Pinned</h4><button class="sm-all" data-allapps="1">All apps ${NX.icon("chevron", 12)}</button></div><div class="sm-grid">${list.map((id) => `<button class="sm-tile" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 36)}<span>${NX.esc(NX.apps[id].name)}</span></button>`).join("")}</div>
-      <div class="sm-h"><h4>Recommended</h4></div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
+      <div class="sm-h"><h4>Recommended</h4>${NX.prefs().showrecent !== false && NX.data("recent-files", []).length ? `<button class="sm-all" data-recmore="1">More ${NX.icon("chevron", 11)}</button>` : ""}</div><div class="sm-rec">${recHTML(rec)}</div>`}</div>
       ${smFoot(me)}`;
     const S = $("#start"), si = $(".sm-search input", S);
     si.oninput = () => { const pos = si.selectionStart; startDraw(si.value); const n = $(".sm-search input"); n.focus(); n.setSelectionRange(pos, pos); };
@@ -321,6 +321,7 @@
     S.querySelectorAll("[data-rfile]").forEach((b) => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; if (f && f.kind === "image" && NX.fs && NX.fs.url) NX.fs.url(f.path).then((u) => { const i = b.querySelector("svg"); if (i) i.outerHTML = `<img class="sm-thumb" src="${NX.esc(u)}" alt="">`; }).catch(() => {}); });
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     smFootWire(S);
+    const rm = $("[data-recmore]", S); if (rm) rm.onclick = (e) => { e.stopPropagation(); closeFlyouts(); NX.open("files", { path: "::recent" }); };
   }
   // Recommended: recently opened files first (like Windows 11), then recently used apps
   const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "Just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : new Date(t).toLocaleDateString(); };
