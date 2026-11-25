@@ -57,6 +57,15 @@
       tds.forEach((t, k) => items.push({ head: k ? "" : "Reminders", icon: NX.icon("reminders", 30), name: t.text, sub: t.due ? new Date(t.due).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Reminder", go: () => NX.open("reminders") }));
       const web = { head: "The web", icon: NX.icon("google", 30), name: "Search Google for “" + q + "”", sub: "Opens Google", go: () => NX.open("google", { q }) };
       items.push(web); paint();
+      // "time in Tokyo": the time in another city, from the computer's own list of time zones (no internet needed)
+      const tm = /^(?:what\s+)?time\s+(?:is\s+it\s+)?in\s+([a-z .'-]{2,40})\??$/i.exec(q);
+      if (tm && Intl.supportedValuesOf) {
+        const city = tm[1].trim().toLowerCase().replace(/\s+/g, "_");
+        const zone = Intl.supportedValuesOf("timeZone").find((z) => z.toLowerCase().split("/").pop() === city);
+        if (zone) { const now = new Date(), nice = zone.split("/").pop().replace(/_/g, " ");
+          const t = now.toLocaleTimeString([], { timeZone: zone, hour: "numeric", minute: "2-digit", hour12: !NX.prefs().clock24 }), day = now.toLocaleDateString([], { timeZone: zone, weekday: "long" });
+          items.unshift({ head: "Time", icon: NX.icon("clock", 30), name: t + " in " + nice, sub: day + ". Press Enter to add it to your world clocks.", go: () => { const L = NX.data("world-clocks", []); if (!L.includes(zone)) NX.setData("world-clocks", [...L, zone].slice(-8)); NX.toast(nice + " is in your world clocks."); } }); at = 0; paint(); }
+      }
       // money: "20 usd in eur", "$15 to euros" (daily rates, looked up only when you type a currency)
       const CUR = { usd: "USD", dollar: "USD", dollars: "USD", "$": "USD", eur: "EUR", euro: "EUR", euros: "EUR", gbp: "GBP", pound: "GBP", pounds: "GBP", jpy: "JPY", yen: "JPY", cad: "CAD", aud: "AUD", mxn: "MXN", pesos: "MXN", inr: "INR", rupees: "INR", cny: "CNY", yuan: "CNY", krw: "KRW", won: "KRW", chf: "CHF", brl: "BRL", php: "PHP" };
       const mm = /^(\$)?\s*([\d.,]+)\s*([a-z$]+)?\s+(?:in|to)\s+([a-z]+)$/i.exec(q);

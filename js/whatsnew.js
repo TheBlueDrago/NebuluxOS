@@ -28,6 +28,7 @@
     ["World clocks on your desktop", "The Clock widget shows the cities you added in the Clock app, like London and Tokyo."],
     ["Define any word", "Type define and a word in Quick Search (Nebulux + Space) to see what it means."],
     ["Money in Quick Search", "Type something like 20 usd in eur in Quick Search to change money into another currency at today's rate."],
+    ["What time is it there?", "Type time in and a city, like time in Tokyo, in Quick Search. Press Enter to add it to your world clocks."],
     ["No more waiting on a slow app", "If an app takes longer than usual to open, you can try again with one click instead of waiting."],
     ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
     ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],

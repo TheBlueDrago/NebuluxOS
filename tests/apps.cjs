@@ -621,6 +621,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.closeAll(); NX.quickSearch(); const i = document.querySelector("#nx-qs input"); i.value = "define nebula"; i.dispatchEvent(new Event("input")); }); await wait(2500);
   ok(await p.evaluate(() => { const r = document.querySelector("#nx-qs .qs2-res"); return !!r && /Search Google/.test(r.textContent); }), "Quick Search handles define a word");
   await p.keyboard.press("Escape");
+  // Quick Search: time in a city
+  await p.evaluate(() => { NX.closeAll(); NX.quickSearch(); const i = document.querySelector("#nx-qs input"); i.value = "time in tokyo"; i.dispatchEvent(new Event("input")); }); await wait(400);
+  ok(await p.evaluate(() => /in Tokyo/.test(document.querySelector("#nx-qs .qs2-res").textContent)), "Quick Search tells the time in a city");
+  await p.keyboard.press("Escape");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
