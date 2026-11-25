@@ -649,3 +649,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #lk-pic b{font-size:14px;font-weight:600}#lk-pic small{font-size:11.5px;opacity:.8}
 #lock.signin #lk-pic{display:none}
 @media (max-width:560px){#lk-pic{display:none}}
+/* What's new for a smaller version (like 4.1): a colored band across the top */
+.wn-pop .nx-pcard>.nx-ph{position:relative;overflow:hidden;margin:0 0 6px;padding:24px 26px;border-radius:22px 22px 0 0;background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 45%,#130b2e),#0d0822 80%);color:#fff;border-bottom:1px solid #ffffff14}
+.wn-pop .nx-pcard>.nx-ph b{font-size:20px}.wn-pop .nx-pcard>.nx-ph small{color:#d9d2f5}
+.wn-pop .nx-pcard>.nx-ph::after{content:"";position:absolute;right:-60px;top:-80px;width:240px;height:240px;border-radius:50%;background:#ec4899;filter:blur(50px);opacity:.45;pointer-events:none}
