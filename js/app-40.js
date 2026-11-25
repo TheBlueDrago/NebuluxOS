@@ -870,3 +870,10 @@ NX.noteIcon = (text) => {
   const usRegion = () => { const r = NX.me && NX.prefs().region; return r ? r === "US" : /-US$/i.test(navigator.language || ""); };
   NX.calEvents = () => { const mine = NX.data("events", []); if (!NX.me || NX.prefs().holidays === false || !usRegion()) return mine; const y = new Date().getFullYear(); return [...mine, ...NX.holidays(y - 1), ...NX.holidays(y), ...NX.holidays(y + 1)]; };
 })();
+
+// ---------- on a holiday, the sign-in greeting says so ----------
+NX.holidayGreeting = () => {
+  const G = { Thanksgiving: "Happy Thanksgiving", Halloween: "Happy Halloween", "Christmas Day": "Merry Christmas", "New Year's Day": "Happy New Year", Easter: "Happy Easter", "Independence Day": "Happy Fourth of July", "Valentine's Day": "Happy Valentine's Day", "Mother's Day": "Happy Mother's Day", "Father's Day": "Happy Father's Day", "St. Patrick's Day": "Happy St. Patrick's Day" };
+  const d = new Date(), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const h = (NX.calEvents ? NX.calEvents() : []).find((e) => e.holiday && e.date === k && G[e.title]); return h ? G[h.title] : "";
+};

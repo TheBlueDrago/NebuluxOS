@@ -15,7 +15,7 @@
     ["A friendlier hello", "Signing in greets you with Good morning, Good afternoon or Good evening."],
     ["Weather in color", "The Weather widget on your desktop takes the sky's colors: blue on a sunny day, gray when it's cloudy, deep blue at night."],
     ["Know your lock screen", "The lock screen names its background picture in the corner."],
-    ["Holidays in the calendar", "Calendar and the clock show holidays like Thanksgiving, Halloween and Christmas (United States). Settings > Time & language turns them off."],
+    ["Holidays in the calendar", "Calendar and the clock show holidays like Thanksgiving, Halloween and Christmas (United States). Settings > Time & language turns them off. On a holiday, signing in greets you with it, like Happy Thanksgiving."],
     ["No more waiting on a slow app", "If an app takes longer than usual to open, you can try again with one click instead of waiting."],
     ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
     ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],

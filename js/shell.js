@@ -136,7 +136,7 @@
     { const D = $("#desktop"); D.classList.remove("nx-arrive"); void D.offsetWidth; D.classList.add("nx-arrive"); setTimeout(() => D.classList.remove("nx-arrive"), 900); }
     document.dispatchEvent(new CustomEvent("nx:signin", { detail: { back } }));
     NX.unread = 0; const bd = document.getElementById("tb-badge"); if (bd) bd.hidden = true;
-    if (!back) setTimeout(() => { const h = new Date().getHours(); NX.toast((h < 5 ? "Welcome back" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + ", " + u.name + "."); }, 500); // a greeting for the time of day
+    if (!back) setTimeout(() => { const h = new Date().getHours(); const hol = NX.holidayGreeting ? NX.holidayGreeting() : ""; NX.toast((hol || (h < 5 ? "Welcome back" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening")) + ", " + u.name + "."); }, 500); // a greeting for the time of day
   }
   function signOut() { lockedBy = null; NX.set("lk-next", null); closeFlyouts(); NX.closeAll(); setTimeout(lock, 160); }
   // Lock: the lock screen comes up, and your apps stay open behind it
