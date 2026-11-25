@@ -352,7 +352,11 @@ module.exports = function more({ api, run, FAKE }) {
     const drm = !!b.drm && await hasChrome();
     let p;
     if (drm) { fs.mkdirSync(CHROMEDIR, { recursive: true }); p = spawn("flatpak", ["run", "com.google.Chrome", "--user-data-dir=" + path.join(CHROMEDIR, b.id), ...common], { detached: true, stdio: "ignore" }); }
-    else { fs.mkdirSync(APPDIR, { recursive: true }); p = spawn("chromium", ["--user-data-dir=" + path.join(APPDIR, b.id), "--password-store=basic", "--disable-component-update", ...common], { detached: true, stdio: "ignore" }); }
+    else {
+      // the app-window add-on keeps the app's own links inside its window (no browser windows with an address bar)
+      const appExt = path.resolve(__dirname, "..", "app-ext"), ext = fs.existsSync(path.join(appExt, "manifest.json")) ? ["--load-extension=" + appExt] : [];
+      fs.mkdirSync(APPDIR, { recursive: true }); p = spawn("chromium", ["--user-data-dir=" + path.join(APPDIR, b.id), "--password-store=basic", "--disable-component-update", ...ext, ...common], { detached: true, stdio: "ignore" });
+    }
     p.on("error", () => {}); p.unref();
     for (let k = 0; k < 30; k++) { await new Promise((ok) => setTimeout(ok, 300)); const w = mineOf(await windows(), wm); if (w.length) { await run("wmctrl", ["-i", "-a", w[w.length - 1].id], 4000); break; } }
     return { ok: true, engine: drm ? "chrome" : "chromium" };

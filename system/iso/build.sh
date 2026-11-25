@@ -51,6 +51,7 @@ mkdir -p config/includes.chroot/opt/nebulux/www config/includes.chroot/opt/nebul
 cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" "$REPO/img" config/includes.chroot/opt/nebulux/www/
 cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" config/includes.chroot/opt/nebulux/helper/
 cp -a "$REPO/system/browser-ext/." config/includes.chroot/opt/nebulux/ext/
+mkdir -p config/includes.chroot/opt/nebulux/app-ext; cp -a "$REPO/system/app-ext/." config/includes.chroot/opt/nebulux/app-ext/
 echo "$VERSION" > config/includes.chroot/opt/nebulux/VERSION
 # where Nebulux OS looks for its own updates (an https link to update.json; empty turns updates off). The Nebulux OS
 # website serves the newest release's update.json and bundle (site/src/worker.js), so this address never has to change.
