@@ -493,7 +493,7 @@
   function eventsTick(now) {
     if (!NX.me) return; const d = now || new Date(), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
     const L = NX.data("events", []); let ch = false;
-    for (const e of L) if (e.date === k && e.time === hm && !e.told) { e.told = "1"; ch = true; NX.toast("Now: " + e.title); if (NX.beep) NX.beep(); }
+    for (const e of L) { const today = e.repeat && NX.occursOn ? NX.occursOn(e, k) : e.date === k; if (today && e.time === hm && (e.repeat ? e.toldOn !== k : !e.told)) { if (e.repeat) e.toldOn = k; else e.told = "1"; ch = true; NX.toast("Now: " + e.title); if (NX.beep) NX.beep(); } }
     if (ch) NX.setData("events", L);
   }
   setInterval(() => eventsTick(), 15000);

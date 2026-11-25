@@ -135,13 +135,13 @@
         body.innerHTML = `<div class="ca-main"><div class="ca-head"><h2>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h2><span class="ca-sp"></span><button class="btn" data-ca="today">Today</button><button class="btn" data-ca="-1" aria-label="Last month">${NX.icon("back", 14)}</button><button class="btn" data-ca="1" aria-label="Next month">${NX.icon("fwd", 14)}</button></div>
           <div class="ca-wd">${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((x) => `<span>${x}</span>`).join("")}</div><div class="ca-grid">${cells}</div></div>
           <aside class="ca-side"><h3>${sel === today ? "Today" : sd.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</h3>
-          <div class="ca-list">${list.length ? list.map((e) => `<div class="ca-e" style="--c:${e.color || COLS[0]}"><span><b>${NX.esc(e.title)}</b><small>${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : "All day"}</small></span>${e.holiday ? "" : `<button class="btn sm" data-del="${e.id}" aria-label="Delete ${NX.esc(e.title)}">${NX.icon("trash", 12)}</button>`}</div>`).join("") : `<p class="ca-none">Nothing planned.</p>`}</div>
-          <form class="ca-add"><input name="n" maxlength="60" placeholder="Add an event" aria-label="Event name" required><input name="t" type="time" aria-label="Time (optional)"><div class="ca-cols">${COLS.map((c, k) => `<label><input type="radio" name="c" value="${c}" ${k ? "" : "checked"}><i style="background:${c}" aria-label="Color ${c}"></i></label>`).join("")}</div><button class="btn primary" type="submit">Add</button><p class="ca-tip">You get a reminder when an event with a time starts.</p></form></aside>`;
+          <div class="ca-list">${list.length ? list.map((e) => `<div class="ca-e" style="--c:${e.color || COLS[0]}"><span><b>${NX.esc(e.title)}</b><small>${e.time ? NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : "All day"}${e.repeat ? " · " + ({ week: "Every week", month: "Every month", year: "Every year" }[e.repeat] || "") : ""}</small></span>${e.holiday ? "" : `<button class="btn sm" data-del="${e.id}" aria-label="Delete ${NX.esc(e.title)}">${NX.icon("trash", 12)}</button>`}</div>`).join("") : `<p class="ca-none">Nothing planned.</p>`}</div>
+          <form class="ca-add"><input name="n" maxlength="60" placeholder="Add an event" aria-label="Event name" required><input name="t" type="time" aria-label="Time (optional)"><select name="r" class="s-sel" aria-label="Repeat"><option value="">Doesn't repeat</option><option value="week">Every week</option><option value="month">Every month</option><option value="year">Every year</option></select><div class="ca-cols">${COLS.map((c, k) => `<label><input type="radio" name="c" value="${c}" ${k ? "" : "checked"}><i style="background:${c}" aria-label="Color ${c}"></i></label>`).join("")}</div><button class="btn primary" type="submit">Add</button><p class="ca-tip">You get a reminder when an event with a time starts.</p></form></aside>`;
         body.querySelectorAll("[data-day]").forEach((b) => (b.onclick = () => { sel = b.dataset.day; const d = new Date(sel + "T12:00"); if (d.getMonth() !== m.getMonth()) m = new Date(d.getFullYear(), d.getMonth(), 1); draw(); }));
         body.querySelectorAll("[data-ca]").forEach((b) => (b.onclick = () => { const a = b.dataset.ca; if (a === "today") { const t = new Date(); m = new Date(t.getFullYear(), t.getMonth(), 1); sel = key(t); } else m = new Date(m.getFullYear(), m.getMonth() + +a, 1); draw(); }));
         body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { NX.setData("events", NX.data("events", []).filter((x) => x.id !== b.dataset.del)); draw(); }));
         const f = $(".ca-add", body); f.onsubmit = (e) => { e.preventDefault(); const L = NX.data("events", []); if (L.length >= 300) { NX.toast("That's a lot of events. Delete some old ones first."); return; }
-          L.push({ id: NX.uid(), date: sel, time: /^\d\d:\d\d$/.test(f.t.value) ? f.t.value : "", title: f.n.value.trim().slice(0, 60), told: "", color: (f.querySelector("[name=c]:checked") || {}).value || COLS[0] }); NX.setData("events", L); draw(); const n2 = $(".ca-add [name=n]", body); if (n2) n2.focus(); };
+          L.push({ id: NX.uid(), date: sel, time: /^\d\d:\d\d$/.test(f.t.value) ? f.t.value : "", title: f.n.value.trim().slice(0, 60), told: "", repeat: ["week", "month", "year"].includes(f.r.value) ? f.r.value : "", color: (f.querySelector("[name=c]:checked") || {}).value || COLS[0] }); NX.setData("events", L); draw(); const n2 = $(".ca-add [name=n]", body); if (n2) n2.focus(); };
       };
       draw();
     } };
@@ -871,7 +871,30 @@ NX.noteIcon = (text) => {
     return (cache[y] = L.map(([m, d, t]) => ({ id: "hol-" + k(y, m, d), date: k(y, m, d), time: "", title: t, color: "#ef4444", holiday: true })));
   };
   const usRegion = () => { const r = NX.me && NX.prefs().region; return r ? r === "US" : /-US$/i.test(navigator.language || ""); };
-  NX.calEvents = () => { const mine = NX.data("events", []); if (!NX.me || NX.prefs().holidays === false || !usRegion()) return mine; const y = new Date().getFullYear(); return [...mine, ...NX.holidays(y - 1), ...NX.holidays(y), ...NX.holidays(y + 1)]; };
+  // repeating events: every week, month or year from their first day (shown from a year back to a year ahead)
+  NX.occursOn = (e, day) => {
+    if (!e.repeat || day < e.date) return e.date === day;
+    const a = new Date(e.date + "T12:00"), b = new Date(day + "T12:00");
+    if (e.repeat === "week") return Math.round((b - a) / 86400000) % 7 === 0;
+    if (e.repeat === "month") return a.getDate() === b.getDate();
+    if (e.repeat === "year") return a.getDate() === b.getDate() && a.getMonth() === b.getMonth();
+    return false;
+  };
+  const expand = (L) => {
+    const out = []; const now = new Date(), from = new Date(now.getTime() - 400 * 86400000), to = new Date(now.getTime() + 400 * 86400000);
+    for (const e of L) {
+      out.push(e); if (!e.repeat) continue;
+      const b0 = new Date(e.date + "T12:00"); let n = 0;
+      while (n++ < 400) {
+        // counted from the first day each time, so the 31st doesn't drift in shorter months (those months are skipped)
+        const d = e.repeat === "week" ? new Date(b0.getFullYear(), b0.getMonth(), b0.getDate() + 7 * n, 12) : e.repeat === "month" ? new Date(b0.getFullYear(), b0.getMonth() + n, b0.getDate(), 12) : new Date(b0.getFullYear() + n, b0.getMonth(), b0.getDate(), 12);
+        if (d > to) break; const kk = k(d.getFullYear(), d.getMonth(), d.getDate());
+        if (d >= from && NX.occursOn(e, kk)) out.push(Object.assign({}, e, { date: kk, occ: true }));
+      }
+    }
+    return out;
+  };
+  NX.calEvents = () => { const mine = expand(NX.data("events", [])); if (!NX.me || NX.prefs().holidays === false || !usRegion()) return mine; const y = new Date().getFullYear(); return [...mine, ...NX.holidays(y - 1), ...NX.holidays(y), ...NX.holidays(y + 1)]; };
 })();
 
 // ---------- on a holiday, the sign-in greeting says so ----------

@@ -653,3 +653,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wn-pop .nx-pcard>.nx-ph{position:relative;overflow:hidden;margin:0 0 6px;padding:24px 26px;border-radius:22px 22px 0 0;background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 45%,#130b2e),#0d0822 80%);color:#fff;border-bottom:1px solid #ffffff14}
 .wn-pop .nx-pcard>.nx-ph b{font-size:20px}.wn-pop .nx-pcard>.nx-ph small{color:#d9d2f5}
 .wn-pop .nx-pcard>.nx-ph::after{content:"";position:absolute;right:-60px;top:-80px;width:240px;height:240px;border-radius:50%;background:#ec4899;filter:blur(50px);opacity:.45;pointer-events:none}
+.ca-add select{width:100%}

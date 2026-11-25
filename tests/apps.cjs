@@ -590,6 +590,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => !NX.calEvents().some((e) => e.holiday)), "and they can be turned off");
   await p.evaluate(() => { NX.setPref("holidays", true); });
   ok(await p.evaluate(() => { const D = Date; const fake = new D("2026-11-26T10:00:00"); window.Date = class extends D { constructor(...a) { return a.length ? new D(...a) : new D(fake); } static now() { return fake.getTime(); } }; const g = NX.holidayGreeting(); window.Date = D; return g === "Happy Thanksgiving"; }), "on Thanksgiving the greeting says Happy Thanksgiving");
+  // repeating events
+  ok(await p.evaluate(() => { const d = new Date(), k = (x) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); NX.setData("events", [{ id: "rp", date: k(d), time: "", title: "Practice", repeat: "week" }, { id: "m31", date: "2026-01-31", time: "", title: "Month end", repeat: "month" }]); const all = NX.calEvents(), w2 = new Date(d); w2.setDate(d.getDate() + 14); return all.some((e) => e.title === "Practice" && e.date === k(w2)) && all.filter((e) => e.title === "Month end").every((e) => e.date.endsWith("-31")) && NX.occursOn({ date: "2026-01-31", repeat: "year" }, "2027-01-31"); }), "repeating events show every week, month and year");
+  await p.evaluate(() => NX.setData("events", []));
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
