@@ -910,3 +910,18 @@ NX.holidayGreeting = () => {
   const d = new Date(), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   const h = (NX.calEvents ? NX.calEvents() : []).find((e) => e.holiday && e.date === k && G[e.title]); return h ? G[h.title] : "";
 };
+
+// ---------- Do not disturb on a schedule (quiet hours): on at dndFrom, off at dndTo, every day ----------
+(function () {
+  const inHours = (from, to, hm) => (from <= to ? hm >= from && hm < to : hm >= from || hm < to);
+  let was = null;
+  NX.dndTick = (now) => {
+    if (!NX.me) return; const p = NX.prefs(); if (!p.dndSched) { was = null; return; }
+    const d = now || new Date(), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    const on = inHours(p.dndFrom || "22:00", p.dndTo || "07:00", hm);
+    // only at the edges of the quiet hours, so turning it on or off by hand in between still works
+    if (on !== was) { was = on; if (!!p.dnd !== on) NX.setPref("dnd", on); }
+  };
+  setInterval(() => NX.dndTick(), 30000); document.addEventListener("nx:signin", () => { was = null; setTimeout(() => NX.dndTick(), 1500); });
+  document.addEventListener("nx:prefs", (e) => { if (/^dnd(Sched|From|To)$/.test(e.detail || "")) { was = null; NX.dndTick(); } });
+})();

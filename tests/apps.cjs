@@ -595,6 +595,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.setData("events", []));
   // repeating reminders move on to the next time when checked off
   ok(await p.evaluate(() => { const t = { due: "2020-01-06T09:00", repeat: "week" }, n = NX.nextDue(t), d = new Date(n); return n.endsWith("T09:00") && d > new Date() && d.getDay() === 1; }), "a weekly reminder checked off moves to next week, same day and time");
+  // Do not disturb on a schedule, and the hours boxes save
+  ok(await p.evaluate(() => { NX.setPref("dnd", false); NX.setPref("dndFrom", "22:00"); NX.setPref("dndTo", "07:00"); NX.setPref("dndSched", true); NX.dndTick(new Date("2026-11-25T23:30:00")); const a = NX.prefs().dnd === true; NX.dndTick(new Date("2026-11-26T08:00:00")); const b = NX.prefs().dnd === false; NX.setPref("dndSched", false); return a && b; }), "Do not disturb comes on in quiet hours and goes off after");
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("nightSched", true); NX.open("settings", { page: "system" }); }); await wait(600);
+  await p.evaluate(() => { const i = document.querySelector('.win[data-app=settings] [data-time="nightFrom"]'); i.value = "20:15"; i.dispatchEvent(new Event("change")); }); await wait(200);
+  ok(await p.evaluate(() => NX.prefs().nightFrom === "20:15"), "changing the night light hours saves them");
+  await p.evaluate(() => { NX.setPref("nightSched", false); NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

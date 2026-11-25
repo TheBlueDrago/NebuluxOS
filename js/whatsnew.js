@@ -19,6 +19,8 @@
     ["Repeating events", "In Calendar, an event can repeat every week, month or year, and its reminder rings each time."],
     ["Repeating reminders", "A reminder can repeat every day, week or month. Check it off and it moves on to its next time."],
     ["Recent files on Home", "File Explorer's Home shows the files you opened lately under your folders."],
+    ["Quiet hours", "Do not disturb can turn itself on and off at set times, like every night from 10 PM to 7 AM."],
+    ["Night light hours fixed", "Changing the hours for Night light on a schedule now saves them."],
     ["No more waiting on a slow app", "If an app takes longer than usual to open, you can try again with one click instead of waiting."],
     ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
     ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],
