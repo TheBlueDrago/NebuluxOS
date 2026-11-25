@@ -645,3 +645,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .dw-wx[data-sky=fog]{background:linear-gradient(160deg,#5d6676d9,#a2a9b5d9)}
 .dw-wx[data-day="0"][data-sky=clear],.dw-wx[data-day="0"][data-sky=cloud]{background:linear-gradient(160deg,#0b1030e6,#2d2a63e6)}
 [data-theme=light] .dw-wx[data-sky]{color:#fff}
+#lk-pic{position:absolute;left:26px;bottom:24px;display:flex;flex-direction:column;gap:2px;color:#fff;text-shadow:0 1px 6px #0009;pointer-events:none;opacity:.85}
+#lk-pic b{font-size:14px;font-weight:600}#lk-pic small{font-size:11.5px;opacity:.8}
+#lock.signin #lk-pic{display:none}
+@media (max-width:560px){#lk-pic{display:none}}

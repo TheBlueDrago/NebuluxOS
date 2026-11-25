@@ -843,3 +843,14 @@ NX.noteIcon = (text) => {
   }
   setInterval(tick, 1000);
 })();
+
+// ---------- the lock screen names its background picture, bottom left (like Windows Spotlight) ----------
+(function () {
+  setInterval(() => {
+    const L = document.getElementById("lock"); if (!L) return; let el = document.getElementById("lk-pic");
+    const lw = NX.get("lock-wall", 0), w = typeof lw === "number" && NX.wallpapers && NX.wallpapers[lw];
+    if (L.hidden || NX.me || !w) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement("div"); el.id = "lk-pic"; L.appendChild(el); }
+    const html = `<b>${NX.esc(w.name)}</b><small>A Nebulux OS background</small>`; if (el.innerHTML !== html) el.innerHTML = html;
+  }, 1000);
+})();
