@@ -603,6 +603,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const i = document.querySelector('.win[data-app=settings] [data-time="nightFrom"]'); i.value = "20:15"; i.dispatchEvent(new Event("change")); }); await wait(200);
   ok(await p.evaluate(() => NX.prefs().nightFrom === "20:15"), "changing the night light hours saves them");
   await p.evaluate(() => { NX.setPref("nightSched", false); NX.closeAll(); });
+  // clipboard history search
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("cliphist", true); NX.setData("clip-history", []); ["one apple", "two pears", "three plums", "four kiwis", "five grapes"].forEach((t) => NX.clip.add(t)); NX.clip.toggle(); }); await wait(300);
+  await p.type("#clip .cl-find input", "plum"); await wait(200);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#clip .cl-item")].filter((el) => !el.hidden).map((el) => el.querySelector(".cl-t").textContent).join() === "three plums"), "clipboard history can be searched");
+  await p.evaluate(() => { NX.clip.close(); NX.setData("clip-history", []); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

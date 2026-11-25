@@ -57,7 +57,7 @@
   function draw() {
     const P = $("#clip"), L = list();
     const when = (t) => { const s = Math.round((Date.now() - t) / 1000); return s < 60 ? "Just now" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + " h ago" : new Date(t).toLocaleDateString(); };
-    P.innerHTML = `<div class="cl-head"><b>Clipboard</b>${L.some((x) => !x.pin) ? `<button class="cl-clear">Clear all</button>` : ""}</div>` +
+    P.innerHTML = `<div class="cl-head"><b>Clipboard</b>${L.some((x) => !x.pin) ? `<button class="cl-clear">Clear all</button>` : ""}</div>${on() && L.length > 4 ? `<label class="cl-find">${NX.icon("search", 14)}<input placeholder="Search what you copied" aria-label="Search the clipboard history"></label>` : ""}` +
       (!on() ? `<p class="cl-empty">Clipboard history is off. Turn it on to keep the things you copy.</p><div class="cl-onwrap"><button class="btn primary cl-on">Turn on</button></div>` :
       L.length ? `<div class="cl-list">${L.map((x, i) => `<div class="cl-item ${x.pin ? "pin" : ""}" data-i="${i}" role="button" tabindex="0"><div class="cl-t">${NX.esc(x.t.length > 400 ? x.t.slice(0, 400) + "..." : x.t)}</div><div class="cl-meta"><span>${x.pin ? "Pinned" : when(x.at)}</span><span class="cl-acts"><button data-pin="${i}" aria-label="${x.pin ? "Unpin" : "Pin"}" title="${x.pin ? "Unpin" : "Pin"}">${NX.icon("pin", 14)}</button><button data-del="${i}" aria-label="Delete" title="Delete">${NX.icon("trash", 14)}</button></span></div></div>`).join("")}</div>` :
       `<p class="cl-empty">Copy something, and it shows up here. Nebulux + V opens this any time.</p>`);
@@ -68,6 +68,7 @@
     });
     P.querySelectorAll("[data-pin]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const L2 = list(), x = L2[+b.dataset.pin]; if (!x) return; x.pin = !x.pin; save(L2.sort((a, c) => (c.pin - a.pin) || (c.at - a.at))); draw(); }));
     P.querySelectorAll("[data-del]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const L2 = list(); L2.splice(+b.dataset.del, 1); save(L2); draw(); }));
+    const fq = $(".cl-find input", P); if (fq) { fq.oninput = () => { const q = fq.value.trim().toLowerCase(); P.querySelectorAll(".cl-item").forEach((el) => (el.hidden = !!q && !el.querySelector(".cl-t").textContent.toLowerCase().includes(q))); }; fq.onkeydown = (e) => { if (e.key === "Enter") { const v = [...P.querySelectorAll(".cl-item")].find((el) => !el.hidden); if (v) v.click(); } if (e.key === "Escape") close(); }; }
     const c = $(".cl-clear", P); if (c) c.onclick = (e) => { e.stopPropagation(); save(list().filter((x) => x.pin)); draw(); };
     const o = $(".cl-on", P); if (o) o.onclick = (e) => { e.stopPropagation(); NX.setPref("cliphist", true); draw(); };
   }

@@ -22,6 +22,7 @@
     ["Quiet hours", "Do not disturb can turn itself on and off at set times, like every night from 10 PM to 7 AM."],
     ["Night light hours fixed", "Changing the hours for Night light on a schedule now saves them."],
     ["Notifications while locked", "The lock screen shows how many notifications are waiting, without showing what they say."],
+    ["Search your clipboard", "Clipboard history (Nebulux + V) has a search box once it holds a few things."],
     ["No more waiting on a slow app", "If an app takes longer than usual to open, you can try again with one click instead of waiting."],
     ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
     ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],
