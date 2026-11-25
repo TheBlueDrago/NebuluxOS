@@ -608,6 +608,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.type("#clip .cl-find input", "plum"); await wait(200);
   ok(await p.evaluate(() => [...document.querySelectorAll("#clip .cl-item")].filter((el) => !el.hidden).map((el) => el.querySelector(".cl-t").textContent).join() === "three plums"), "clipboard history can be searched");
   await p.evaluate(() => { NX.clip.close(); NX.setData("clip-history", []); });
+  // Calculator > Dates
+  await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
+  ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=date]").click(); const set = (q, v) => { const i = document.querySelector(q); i.value = v; i.dispatchEvent(new Event("input")); }; set(".cd-a", "2026-11-25"); set(".cd-b", "2026-12-25"); set(".cd-c", "2026-01-30"); set(".cd-n", "30"); return /30 days/.test(document.querySelector(".cd-diff").textContent) && /March 1, 2026/.test(document.querySelector(".cd-sum").textContent); }), "Calculator's Dates counts the days between dates and adds days to a date");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
