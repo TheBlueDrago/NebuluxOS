@@ -57,6 +57,17 @@
       tds.forEach((t, k) => items.push({ head: k ? "" : "Reminders", icon: NX.icon("reminders", 30), name: t.text, sub: t.due ? new Date(t.due).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Reminder", go: () => NX.open("reminders") }));
       const web = { head: "The web", icon: NX.icon("google", 30), name: "Search Google for “" + q + "”", sub: "Opens Google", go: () => NX.open("google", { q }) };
       items.push(web); paint();
+      // "define a word": its meaning from a free dictionary (only looked up when you type "define")
+      const dm = /^define\s+([a-z][a-z' -]{1,40})$/i.exec(q);
+      if (dm && NX.netOK && NX.netOK()) {
+        const word = dm[1].trim();
+        fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word)).then((r) => (r.ok ? r.json() : null)).then((j) => {
+          const m = j && j[0] && j[0].meanings && j[0].meanings[0], def = m && m.definitions && m.definitions[0] && m.definitions[0].definition;
+          if (!def || gen !== qsGen || !document.body.contains(o)) return;
+          items.unshift({ head: "Dictionary", icon: NX.icon("info", 30), name: word + (m.partOfSpeech ? " (" + m.partOfSpeech + ")" : ""), sub: def.length > 160 ? def.slice(0, 157) + "..." : def, go: () => { navigator.clipboard && navigator.clipboard.writeText(def).catch(() => {}); NX.toast("The meaning is copied."); } });
+          at = 0; paint();
+        }).catch(() => {});
+      }
       if (ql.length < 2 || !NX.fs) return;
       let found = []; try { const pl = await NX.fs.places(); for (const f of pl.folders) { const r = await NX.fs.list(f.path).catch(() => null); if (r) found.push(...r.entries.filter((e) => e.name.toLowerCase().includes(ql)).map((e) => Object.assign({ where: f.name }, e))); if (found.length > 12) break; } } catch (e) { return; }
       if (gen !== qsGen || !found.length || !document.body.contains(o)) return;

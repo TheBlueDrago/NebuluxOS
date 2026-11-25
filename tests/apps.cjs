@@ -617,6 +617,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.deskWidgets && NX.deskWidgets()); await wait(300);
   ok(await p.evaluate(() => { const w = document.querySelector("#nx-dwidgets .dw-photo"); return !!w && (!!w.querySelector("img") || /Photos/.test(w.textContent)); }), "the Photos widget shows a picture from Pictures");
   await p.evaluate(() => NX.setPref("deskWidgets", []));
+  // Quick Search: define a word (needs the internet; the test only checks it doesn't break without an answer)
+  await p.evaluate(() => { NX.closeAll(); NX.quickSearch(); const i = document.querySelector("#nx-qs input"); i.value = "define nebula"; i.dispatchEvent(new Event("input")); }); await wait(2500);
+  ok(await p.evaluate(() => { const r = document.querySelector("#nx-qs .qs2-res"); return !!r && /Search Google/.test(r.textContent); }), "Quick Search handles define a word");
+  await p.keyboard.press("Escape");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
