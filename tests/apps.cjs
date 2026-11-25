@@ -124,6 +124,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.setData("mp-shuffle", false); NX.setData("mp-repeat", "off"); const b = [...document.querySelectorAll(".win[data-app=media] .mp-item")].find((x) => /Recording/.test(x.textContent)); b && b.click(); }); await wait(1200);
   ok(await p.evaluate(() => { const a = document.querySelector(".win[data-app=media] .mp-music"); return !!a && a.querySelectorAll(".mp-bars i").length === 28 && (a.classList.contains("playing") || document.querySelector(".win[data-app=media] video, .win[data-app=media] audio").paused); }), "a song shows dancing bars while it plays");
   await shot("media-song");
+  await p.evaluate(() => { const m = document.querySelector(".win[data-app=media] video, .win[data-app=media] audio"); m.muted = true; m.play().catch(() => {}); document.querySelector(".win[data-app=media] .mp-stage").focus(); }); await wait(300);
+  await p.keyboard.press("Space"); await wait(300);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=media] video, .win[data-app=media] audio").paused), "Space pauses Media Player");
   await p.evaluate(() => { const m = document.querySelector(".win[data-app=media] video, .win[data-app=media] audio"); if (m) { m.loop = true; m.muted = true; m.play().catch(() => {}); } NX.shell.lockKeep(); }); await wait(1600); await shot("lock-np");
   await p.waitForFunction(() => { const n = document.querySelector("#lk-np"); return !!n && /Recording/.test(n.textContent); }, { timeout: 4000 }).catch(() => {});
   ok(await p.evaluate(() => { const n = document.querySelector("#lk-np"); return !!n && /Recording/.test(n.textContent); }), "the lock screen shows what's playing");

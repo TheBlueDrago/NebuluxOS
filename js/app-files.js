@@ -480,6 +480,16 @@
       ctl();
       const start = (o) => { if (o.path) { list = o.list && o.list.length ? o.list : [{ name: NX.fs.base(o.path), path: o.path, kind: kindOf(o.path, false) }]; i = Math.max(0, list.findIndex((x) => x.path === o.path)); play(); } else library(); };
       win.onopts = start; win.onclose = () => { const m = st.querySelector("video,audio"); if (m) { m.pause(); m.removeAttribute("src"); m.load(); } };
+      st.tabIndex = -1; body.addEventListener("pointerdown", () => setTimeout(() => { if (!win.el.contains(document.activeElement)) st.focus({ preventScroll: true }); }, 0));
+      // keys, like other players: Space plays or pauses, Left and Right skip 10 seconds, Up and Down change the volume, F for full screen
+      win.el.addEventListener("keydown", (e) => {
+        const m = st.querySelector("video,audio"); if (!m || e.target.closest("input, textarea, button")) return;
+        if (e.key === " " || e.key === "k") { e.preventDefault(); if (m.paused) m.play().catch(() => {}); else m.pause(); }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); m.currentTime = Math.max(0, m.currentTime - 10); }
+        else if (e.key === "ArrowRight") { e.preventDefault(); m.currentTime = Math.min(m.duration || 1e9, m.currentTime + 10); }
+        else if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); m.volume = Math.max(0, Math.min(1, m.volume + (e.key === "ArrowUp" ? 0.1 : -0.1))); }
+        else if ((e.key === "f" || e.key === "F") && m.tagName === "VIDEO") { e.preventDefault(); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else m.requestFullscreen().catch(() => {}); }
+      });
       start(opts);
     } };
 

@@ -11,6 +11,8 @@
     ["All apps by category", "Start > All apps can show your apps in groups, like Games, Music and Social. Pick Category or List at the top."],
     ["Nebulux + Z", "Shows the snap layouts for the window you're using."],
     ["More like this", "Each app's page in the Nebulux Store shows similar apps at the bottom."],
+    ["Media Player keys", "Space plays and pauses, Left and Right skip 10 seconds, Up and Down change the volume, and F makes a video full screen."],
+    ["A friendlier hello", "Signing in greets you with Good morning, Good afternoon or Good evening."],
     ["No more waiting on a slow app", "If an app takes longer than usual to open, you can try again with one click instead of waiting."],
     ["A whole new look", "Glass that takes a little color from your background, a taskbar that floats above the bottom of the screen, stars that slowly twinkle over your wallpaper, and springier menus and windows."],
     ["Themes", "Settings > Personalization > Themes sets your background, dark or light mode, accent color, corners and glass in one click: Nebulux, Aurora, Ember, Polar, Pearl or Daybreak."],
