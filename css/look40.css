@@ -654,3 +654,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wn-pop .nx-pcard>.nx-ph b{font-size:20px}.wn-pop .nx-pcard>.nx-ph small{color:#d9d2f5}
 .wn-pop .nx-pcard>.nx-ph::after{content:"";position:absolute;right:-60px;top:-80px;width:240px;height:240px;border-radius:50%;background:#ec4899;filter:blur(50px);opacity:.45;pointer-events:none}
 .ca-add select{width:100%}
+.rm-add{display:grid!important;grid-template-columns:1fr auto auto;gap:8px}.rm-add>*{min-width:0}.rm-add [name=t]{grid-column:1/-1}@media (max-width:560px){.rm-add{grid-template-columns:1fr 1fr}.rm-add [name=d]{grid-column:1/-1}}

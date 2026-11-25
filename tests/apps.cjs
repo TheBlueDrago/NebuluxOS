@@ -593,6 +593,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // repeating events
   ok(await p.evaluate(() => { const d = new Date(), k = (x) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); NX.setData("events", [{ id: "rp", date: k(d), time: "", title: "Practice", repeat: "week" }, { id: "m31", date: "2026-01-31", time: "", title: "Month end", repeat: "month" }]); const all = NX.calEvents(), w2 = new Date(d); w2.setDate(d.getDate() + 14); return all.some((e) => e.title === "Practice" && e.date === k(w2)) && all.filter((e) => e.title === "Month end").every((e) => e.date.endsWith("-31")) && NX.occursOn({ date: "2026-01-31", repeat: "year" }, "2027-01-31"); }), "repeating events show every week, month and year");
   await p.evaluate(() => NX.setData("events", []));
+  // repeating reminders move on to the next time when checked off
+  ok(await p.evaluate(() => { const t = { due: "2020-01-06T09:00", repeat: "week" }, n = NX.nextDue(t), d = new Date(n); return n.endsWith("T09:00") && d > new Date() && d.getDay() === 1; }), "a weekly reminder checked off moves to next week, same day and time");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
