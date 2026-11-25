@@ -203,7 +203,10 @@
   addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; if (mag > 1) magApply(); }, { passive: true });
 
   // ---------- desktop widgets: a clock, the weather, what's next in your calendar and the battery, right on the wallpaper ----------
-  NX.deskWidgetKinds = { clock: "Clock", weather: "Weather", events: "Up next", todos: "Reminders", battery: "Battery" };
+  NX.deskWidgetKinds = { clock: "Clock", weather: "Weather", events: "Up next", todos: "Reminders", photo: "Photos", battery: "Battery" };
+  // the Photos widget: your newest picture in Pictures (looked up once a minute, so the widget doesn't blink)
+  let dwPhoto = null, dwPhotoAt = 0;
+  const dwPhotoLoad = async () => { if (Date.now() - dwPhotoAt < 60000) return; dwPhotoAt = Date.now(); try { const e = ((await NX.fs.list(await NX.folder("Pictures"))).entries || []).filter((x) => x.kind === "image").sort((a, b) => (b.mtime || 0) - (a.mtime || 0))[0]; const was = dwPhoto && dwPhoto.path; dwPhoto = e ? { path: e.path, name: e.name, url: await NX.fs.url(e.path) } : null; if ((dwPhoto && dwPhoto.path) !== was && NX.deskWidgets) NX.deskWidgets(); } catch (er) { /* none */ } };
   // one desktop widget's card (also used by the Widgets panel)
   NX.dwHTML = (k) => {
     const d = new Date();
@@ -218,6 +221,7 @@
         return `<section class="dw dw-ev" data-dw="events"><h4>Up next</h4>${next.length ? next.map((e) => `<div><i style="background:${e.color || "#7c5cff"}"></i><span><b>${NX.esc(e.title)}</b><small>${e.date === today ? "Today" : new Date(e.date + "T12:00").toLocaleDateString(undefined, Object.assign({ weekday: "short", month: "short", day: "numeric" }, e.date.slice(0, 4) !== String(d.getFullYear()) ? { year: "numeric" } : {}))}${e.time ? " · " + NX.esc(NX.fmtTime(new Date(e.date + "T" + e.time))) : ""}</small></span></div>`).join("") : `<small>Nothing planned. Add events in Calendar.</small>`}</section>`; }
       if (k === "todos") { const L = NX.data("todos", []).filter((t) => !t.done).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999")).slice(0, 4);
         return `<section class="dw dw-ev dw-todo" data-dw="todos"><h4>Reminders</h4>${L.length ? L.map((t) => `<div><i style="background:#fb923c"></i><span><b>${NX.esc(t.text)}</b>${t.due ? `<small>${new Date(t.due).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</small>` : ""}</span></div>`).join("") : `<small>Nothing to do.</small>`}</section>`; }
+      if (k === "photo") { dwPhotoLoad(); return `<section class="dw dw-photo" data-dw="photo">${dwPhoto ? `<img src="${NX.esc(dwPhoto.url)}" alt=""><span>${NX.esc(dwPhoto.name.replace(/\.[a-z0-9]{2,5}$/i, ""))}</span>` : `<div><b>Photos</b><small>Pictures you save show up here.</small></div>`}</section>`; }
       if (k === "battery") { const b = NX.batt && NX.batt(); return `<section class="dw dw-bt" data-dw="battery">${b ? `${NX.battIcon(40)}<div><b>${b.percent}%</b><small>${b.charging ? "Charging" : (NX.battLeft && NX.battLeft()) || "On battery"}</small></div>` : `<div><b>Battery</b><small>No battery on this computer.</small></div>`}</section>`; }
       return "";
   };
@@ -230,7 +234,7 @@
     if (box.innerHTML !== html) box.innerHTML = html;
   }
   NX.deskWidgets = deskWidgets;
-  document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : k === "todos" ? "reminders" : "settings", k === "battery" ? { page: "system" } : undefined); });
+  document.addEventListener("click", (e) => { const w = e.target.closest && e.target.closest("#nx-dwidgets [data-dw]"); if (!w) return; const k = w.dataset.dw; NX.open(k === "clock" ? "clock" : k === "weather" ? "weather" : k === "events" ? "calendar" : k === "todos" ? "reminders" : k === "photo" ? "photos" : "settings", k === "battery" ? { page: "system" } : undefined); });
   document.addEventListener("nx:prefs", () => setTimeout(deskWidgets, 30)); document.addEventListener("nx:todos", () => setTimeout(deskWidgets, 30)); setInterval(deskWidgets, 15000); setTimeout(deskWidgets, 1500);
 
   // ---------- Nebulux + Shift + S: take the screen, then drag over the part you want (Esc keeps all of it) ----------

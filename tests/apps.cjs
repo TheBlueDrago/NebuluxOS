@@ -612,6 +612,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=date]").click(); const set = (q, v) => { const i = document.querySelector(q); i.value = v; i.dispatchEvent(new Event("input")); }; set(".cd-a", "2026-11-25"); set(".cd-b", "2026-12-25"); set(".cd-c", "2026-01-30"); set(".cd-n", "30"); return /30 days/.test(document.querySelector(".cd-diff").textContent) && /March 1, 2026/.test(document.querySelector(".cd-sum").textContent); }), "Calculator's Dates counts the days between dates and adds days to a date");
   await p.evaluate(() => NX.closeAll());
+  // the Photos desktop widget
+  await p.evaluate(async () => { NX.closeAll(); const cv = document.createElement("canvas"); cv.width = 60; cv.height = 40; cv.getContext("2d").fillRect(0, 0, 60, 40); await NX.fs.upload(await NX.folder("Pictures"), "Widget pic.png", await new Promise((r) => cv.toBlob(r, "image/png"))); NX.setPref("deskWidgets", ["photo"]); }); await wait(1500);
+  await p.evaluate(() => NX.deskWidgets && NX.deskWidgets()); await wait(300);
+  ok(await p.evaluate(() => { const w = document.querySelector("#nx-dwidgets .dw-photo"); return !!w && (!!w.querySelector("img") || /Photos/.test(w.textContent)); }), "the Photos widget shows a picture from Pictures");
+  await p.evaluate(() => NX.setPref("deskWidgets", []));
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
