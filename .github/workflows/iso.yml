@@ -14,9 +14,9 @@ on:
         default: false
   push:
     tags: ["v*"]
-  # the owner's release time for 4.1: Nov 25, 12:30 PM Central (18:30 UTC). Remove this after 4.1 is out.
+  # the owner's release time for 4.1: Nov 25, 4:30 PM Central (22:30 UTC). Remove this after 4.1 is out.
   schedule:
-    - cron: "30 18 25 11 *"
+    - cron: "30 22 25 11 *"
 permissions:
   contents: write
 concurrency:
