@@ -539,6 +539,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // the lock screen shows the next event and reminders due (only while locked)
   await p.evaluate(() => { NX.closeAll(); const d = new Date(), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); NX.setData("events", [{ id: "lk1", date: k, time: "23:58", title: "Lock test event", color: "#22c55e" }]); NX.setData("todos", [{ id: "lt", text: "Late", done: false, due: "2020-01-01T09:00", rang: 1 }]); NX.shell.lockKeep(); }); await wait(1600); await shot("lock-next");
   ok(await p.evaluate(() => { const e = document.querySelector("#lk-next"); return !!e && /Lock test event/.test(e.textContent) && /1 reminder due/.test(e.textContent); }), "the lock screen shows your next event and reminders due");
+  await p.evaluate(() => NX.toast("Locked test note")); await wait(1300);
+  ok(await p.evaluate(() => { const n = document.querySelector("#lk-status .lk-notes"); return !!n && +n.textContent.replace("+", "") >= 1 && !/Locked test note/.test(document.querySelector("#lock").innerText); }), "the lock screen shows how many notifications are waiting, not what they say");
   await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(400);
   await p.evaluate(() => { NX.setData("events", []); NX.setData("todos", []); });
   // desktop: Sort by name

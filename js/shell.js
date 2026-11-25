@@ -66,7 +66,8 @@
   // the lock screen's corner: the network and the battery, like the taskbar
   function lkStatus() {
     const el = $("#lk-status"); if (!el) return; const b = batt(), net = NX.netOK ? NX.netOK() : true;
-    const html = `<span title="${net ? "Connected" : "Not connected"}">${NX.icon(net ? "wifi" : "wifioff", 18)}</span>${b ? `<span class="lk-batt" title="${battText()}">${NX.battIcon(22)}<small>${b.percent}%</small></span>` : ""}`;
+    const nn = $("#lock") && $("#lock").className === "locked" && lockedBy ? NX.unread || 0 : 0; // only while someone locked it, and only how many
+    const html = `${nn ? `<span class="lk-notes" title="${nn} new notification${nn === 1 ? "" : "s"}">${NX.icon("bell", 18)}<small>${nn > 9 ? "9+" : nn}</small></span>` : ""}<span title="${net ? "Connected" : "Not connected"}">${NX.icon(net ? "wifi" : "wifioff", 18)}</span>${b ? `<span class="lk-batt" title="${battText()}">${NX.battIcon(22)}<small>${b.percent}%</small></span>` : ""}`;
     if (el.innerHTML !== html) el.innerHTML = html;
   }
   // the lock screen's weather: the last forecast Widgets got (up to 3 hours old)
