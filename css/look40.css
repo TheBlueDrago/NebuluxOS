@@ -694,3 +694,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #desktop.accent-bars .win.active .titlebar{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 [data-theme=light] #desktop.accent-bars #taskbar{background-color:color-mix(in srgb,var(--accent) 22%,var(--glass))}
 [data-theme=light] #desktop.accent-bars .win.active .titlebar{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.s-spech{display:flex;align-items:center;justify-content:space-between}

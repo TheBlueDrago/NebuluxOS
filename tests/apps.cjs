@@ -658,6 +658,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const ta = document.querySelector(".win[data-app=notepad] textarea"); ta.value = ""; ta.focus(); }); await p.keyboard.press("F5"); await wait(200);
   ok(await p.evaluate(() => /\d{4}|\d{1,2}\/\d{1,2}/.test(document.querySelector(".win[data-app=notepad] textarea").value)), "F5 in Notepad puts in the date and time");
   await p.evaluate(() => { document.querySelector(".win[data-app=notepad] textarea").value = ""; NX.closeAll(); });
+  // Settings > About: Copy the device details
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("cliphist", true); NX.setData("clip-history", []); NX.open("settings", { page: "about" }); }); await wait(600);
+  await p.evaluate(() => document.querySelector("#s-speccopy").click()); await wait(200);
+  ok(await p.evaluate(() => /^Nebulux OS 4\.2[\s\S]*Device name: Nebulux PC/.test((NX.clip.list()[0] || {}).t || "")), "About's Copy copies the device details");
+  await p.evaluate(() => { NX.setData("clip-history", []); NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
