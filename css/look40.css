@@ -688,3 +688,9 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #nx-rec i{width:10px;height:10px;border-radius:50%;background:#ef4444;animation:recBlink 1s ease-in-out infinite}
 @keyframes recBlink{50%{opacity:.3}}
 #nx-rec b{font-variant-numeric:tabular-nums;font-size:13px;min-width:34px}
+
+/* ---------- accent color on title bars and the taskbar ---------- */
+#desktop.accent-bars #taskbar{background-color:color-mix(in srgb,var(--accent) 34%,var(--glass))}
+#desktop.accent-bars .win.active .titlebar{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+[data-theme=light] #desktop.accent-bars #taskbar{background-color:color-mix(in srgb,var(--accent) 22%,var(--glass))}
+[data-theme=light] #desktop.accent-bars .win.active .titlebar{background:color-mix(in srgb,var(--accent) 18%,transparent)}

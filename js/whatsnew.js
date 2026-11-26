@@ -10,6 +10,8 @@
     ["Undo a delete", "Pressed Delete by mistake in File Explorer? Ctrl + Z puts it back."],
     ["Typing in Start after an app", "Opening Start with the Nebulux key while an app or website is in front now lets you type in Start's search right away."],
     ["Storage Sense", "Settings > System can empty things that have been in the Recycle Bin for more than 30 days by itself."],
+    ["Accent color everywhere", "Settings > Personalization can tint the taskbar and the window you're using with your accent color."],
+    ["Copy as path", "Right-click a file in File Explorer and pick Copy as path."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
