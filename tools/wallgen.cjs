@@ -5,8 +5,9 @@ const puppeteer = require(process.env.PUPPETEER || "C:/nebulux-orbit/node_module
   const b = await puppeteer.connect({ browserURL: "http://127.0.0.1:9333", protocolTimeout: 300000 }); const c = await b.createBrowserContext(), p = await c.newPage();
   const errs = []; p.on("pageerror", (e) => errs.push(e.message));
   await p.goto("file:///" + path.join(__dirname, "wallgen.html").split(path.sep).join("/"), { waitUntil: "load" });
-  const n = await p.evaluate(() => window.count);
+  const n = await p.evaluate(() => window.count), only = process.argv[2] != null ? +process.argv[2] : null; // node tools/wallgen.cjs 13 saves only wall-13
   for (let i = 0; i < n; i++) {
+    if (only != null && 6 + i !== only) continue;
     const url = await p.evaluate((i) => window.paint(i), i), out = path.join(__dirname, "..", "img", "wall-" + (6 + i) + ".jpg");
     fs.writeFileSync(out, Buffer.from(url.split(",")[1], "base64")); console.log("saved", path.basename(out), (fs.statSync(out).size / 1024).toFixed(0) + " KB");
   }

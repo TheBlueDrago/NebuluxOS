@@ -21,7 +21,7 @@ module.exports = async function setup(p, name, pw, ok, hooks) {
   if (/Sign in with Google/.test(await step())) await next();
   if (ok) ok(/privacy settings/.test(await step()), "then privacy settings");
   await next();
-  if (ok) ok(/Pick your look/.test(await step()) && await p.evaluate(() => document.querySelectorAll("#oobe [data-look]").length >= 7 && document.querySelector("#oobe [data-look=\"0\"]").classList.contains("on")), "then your look: Classic and the six themes");
+  if (ok) ok(/Pick your look/.test(await step()) && await p.evaluate(() => document.querySelectorAll("#oobe [data-look]").length >= 7 && document.querySelector("#oobe [data-look=\"0\"]").classList.contains("on")), "then your look: Horizon (the new default), the six themes and Classic");
   await next();
   await p.waitForFunction(() => !document.querySelector("#desktop").hidden && document.querySelector("#oobe").hidden, { timeout: 15000 });
   await wait(400);

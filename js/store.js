@@ -89,7 +89,7 @@ window.NX = window.NX || {};
   NX.removeUser = (id) => { saveUsers(NX.users().filter((u) => u.id !== id)); NX.del("prefs:" + id); NX.del("data:" + id); };
 
   // ---- per-user preferences and app data ----
-  const DEF = { theme: "dark", accent: "#7c5cff", wallpaper: 0, align: "center", clock24: false, brightness: 100, volume: 60, night: false,
+  const DEF = { theme: "dark", accent: "#7c5cff", wallpaper: 13, align: "center", clock24: false, brightness: 100, volume: 60, night: false,
     installed: [], pinned: ["files", "settings", "google", "youtube", "store"], desktop: ["files", "settings", "google", "youtube", "store"], recent: [], wifi: true, bt: true, airplane: false, mouse: 5, saver: false, saverAuto: true };
   NX.prefs = () => Object.assign({}, DEF, NX.me ? NX.get("prefs:" + NX.me.id, {}) : {});
   NX.setPref = (k, v) => { if (!NX.me) return; const p = NX.get("prefs:" + NX.me.id, {}); p[k] = v; NX.set("prefs:" + NX.me.id, p); document.dispatchEvent(new CustomEvent("nx:prefs", { detail: k })); };

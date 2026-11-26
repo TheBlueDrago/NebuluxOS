@@ -39,8 +39,8 @@
     const cf = NX.me ? p.colorFilter || "none" : "none"; root.classList.toggle("cf-gray", cf === "gray"); root.classList.toggle("cf-invert", cf === "invert"); root.classList.toggle("bigcursor", !!(NX.me && p.bigcursor)); root.classList.toggle("hc", !!(NX.me && p.contrast)); if (NX.pointerApply) NX.pointerApply(); root.dataset.wbtn = NX.me ? p.wbtn || "plain" : "plain"; root.dataset.corners = NX.me ? p.corners40 || "round" : "round"; root.dataset.glass = NX.me ? p.glass || "frosted" : "frosted"; root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
     // the lock screen picture (Settings > Personalization): saved for this computer so it shows before anyone signs in
     if (NX.me) NX.set("lock-show", p.lockPic === "show" ? 1 : 0);
-    if (NX.me && p.lockPic !== "show") { const lp = p.lockPic == null || p.lockPic === "match" ? (typeof p.wallpaper === "number" ? p.wallpaper : 0) : +p.lockPic; if (NX.get("lock-wall", 0) !== lp) NX.set("lock-wall", lp); }
-    const lw = NX.get("lock-wall", 0), wall = NX.wallpaperURL(NX.me ? p.wallpaper : (typeof lw === "number" && NX.wallpapers[lw] ? lw : 0), innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
+    if (NX.me && p.lockPic !== "show") { const lp = p.lockPic == null || p.lockPic === "match" ? (typeof p.wallpaper === "number" ? p.wallpaper : NX.defaultWall) : +p.lockPic; if (NX.get("lock-wall", 0) !== lp) NX.set("lock-wall", lp); }
+    const lw = NX.get("lock-wall", NX.defaultWall), wall = NX.wallpaperURL(NX.me ? p.wallpaper : (typeof lw === "number" && NX.wallpapers[lw] ? lw : NX.defaultWall), innerWidth * Math.min(2, devicePixelRatio || 1), innerHeight * Math.min(2, devicePixelRatio || 1));
     if (wall !== lastWall) {
       // a new background fades in over the old one (not when signing in, and not with animations off)
       const D = $("#desktop"), was = lastWall;

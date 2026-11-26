@@ -906,7 +906,7 @@ NX.noteIcon = (text) => {
 (function () {
   setInterval(() => {
     const L = document.getElementById("lock"); if (!L) return; let el = document.getElementById("lk-pic");
-    const lw = NX.get("lock-wall", 0), w = typeof lw === "number" && NX.wallpapers && NX.wallpapers[lw];
+    const lw = NX.get("lock-wall", NX.defaultWall), w = typeof lw === "number" && NX.wallpapers && NX.wallpapers[lw];
     if (L.hidden || NX.me || !w) { if (el) el.remove(); return; }
     if (!el) { el = document.createElement("div"); el.id = "lk-pic"; L.appendChild(el); }
     const html = `<b>${NX.esc(w.name)}</b><small>A Nebulux OS background</small>`; if (el.innerHTML !== html) el.innerHTML = html;
