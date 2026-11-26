@@ -1020,3 +1020,16 @@ NX.holidayGreeting = () => {
   document.addEventListener("nx:signin", () => setTimeout(() => NX.storageSense(), 6000));
   setInterval(() => NX.storageSense(), 6 * 3600000);
 })();
+
+// ---------- battery level over the last 24 hours (Settings > System > Power & battery), kept on this computer ----------
+(function () {
+  const log = () => { const b = NX.batt && NX.batt(); if (!b || !b.present && b.percent == null) return; const L = NX.get("batt-log", []).filter((x) => Date.now() - x.t < 86400000); const last = L[L.length - 1]; if (last && Date.now() - last.t < 9 * 60000) return; L.push({ t: Date.now(), p: b.percent, c: !!b.charging }); NX.set("batt-log", L.slice(-200)); };
+  setInterval(log, 60000); setTimeout(log, 5000);
+  NX.battChart = () => {
+    const L = NX.get("batt-log", []).filter((x) => Date.now() - x.t < 86400000); if (L.length < 2) return `<p class="s-note s-bnote">A chart of your battery over the last 24 hours shows here once Nebulux OS has been on for a while.</p>`;
+    const W = 600, H = 120, t0 = Date.now() - 86400000, x = (t) => ((t - t0) / 86400000) * W, y = (p) => H - 6 - (p / 100) * (H - 12);
+    const d = L.map((q, k) => (k ? "L" : "M") + x(q.t).toFixed(1) + " " + y(q.p).toFixed(1)).join(" ");
+    const charge = L.map((q, k) => (q.c ? `<rect x="${x(q.t).toFixed(1)}" y="0" width="${Math.max(2, x((L[k + 1] || { t: Date.now() }).t) - x(q.t)).toFixed(1)}" height="${H}" fill="#22c55e26"/>` : "")).join("");
+    return `<div class="s-card s-bchart"><div class="s-bch"><b>Battery level</b><small>Last 24 hours</small></div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Battery level over the last 24 hours"><defs><linearGradient id="bcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".45"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>${[25, 50, 75].map((p) => `<line x1="0" x2="${W}" y1="${y(p)}" y2="${y(p)}" class="tm-gl"/>`).join("")}${charge}<path d="${d} L${x(L[L.length - 1].t).toFixed(1)} ${H} L${x(L[0].t).toFixed(1)} ${H} Z" fill="url(#bcg)"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><div class="s-bax"><span>24 hours ago</span><span>12 hours ago</span><span>Now</span></div></div>`;
+  };
+})();

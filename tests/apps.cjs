@@ -666,6 +666,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector("#s-speccopy").click()); await wait(200);
   ok(await p.evaluate(() => /^Nebulux OS 4\.2[\s\S]*Device name: Nebulux PC/.test((NX.clip.list()[0] || {}).t || "")), "About's Copy copies the device details");
   await p.evaluate(() => { NX.setData("clip-history", []); NX.closeAll(); });
+  // battery chart
+  ok(await p.evaluate(() => { const n = Date.now(); NX.set("batt-log", [{ t: n - 7200000, p: 80, c: false }, { t: n - 3600000, p: 60, c: true }]); return /<svg/.test(NX.battChart()) && /#22c55e/.test(NX.battChart()); }), "the battery chart draws the last 24 hours, with charging times");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
