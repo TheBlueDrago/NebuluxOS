@@ -35,7 +35,10 @@
   NX.close = (id) => {
     const w = wins.get(id); if (!w) return;
     try { w.onclose && w.onclose(); } catch (e) { console.error(e); }
-    w.el.classList.add("closing"); wins.delete(id);
+    const wasActive = w.el.classList.contains("active");
+    w.el.classList.add("closing"); w.el.classList.remove("active"); wins.delete(id);
+    // like Windows: the window behind takes over, so the keyboard (Ctrl + W again, typing) goes to it
+    if (wasActive) { const next = NX.topWin(); if (next) NX.focus(next.id); }
     setTimeout(() => w.el.remove(), 140); NX.shell && NX.shell.taskbar();
   };
   NX.closeAll = () => { for (const id of [...wins.keys()]) NX.close(id); };

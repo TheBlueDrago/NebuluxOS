@@ -556,6 +556,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(async () => { for (let k = 0; k < 3; k++) { await NX.topWin().tabs.close(); } }); await wait(300);
   await p.keyboard.down("Control"); await p.keyboard.press("w"); await p.keyboard.up("Control"); await wait(400);
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=notepad]") || document.querySelector(".win[data-app=notepad]").classList.contains("closing")), "Ctrl + W with one tab closes the window");
+  await p.evaluate(() => { NX.open("calculator"); NX.open("clock"); }); await wait(500);
+  await p.keyboard.down("Control"); await p.keyboard.press("w"); await p.keyboard.up("Control"); await wait(300);
+  ok(await p.evaluate(() => !NX.wins.has("clock") && NX.wins.get("calculator").el.classList.contains("active")), "after Ctrl + W the window behind takes over");
+  await p.keyboard.down("Control"); await p.keyboard.press("w"); await p.keyboard.up("Control"); await wait(300);
+  ok(await p.evaluate(() => !NX.wins.has("calculator")), "so Ctrl + W again closes that one too");
   await p.keyboard.down("Control"); await p.keyboard.press("Slash"); await p.keyboard.up("Control"); await wait(300);
   ok(await p.evaluate(() => !!document.querySelector(".nx-keys") && /Keyboard shortcuts/.test(document.querySelector(".nx-keys").textContent)), "Ctrl + / lists the keyboard shortcuts");
   await p.keyboard.press("Escape"); await wait(200);
