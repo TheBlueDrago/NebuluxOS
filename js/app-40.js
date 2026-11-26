@@ -92,9 +92,17 @@
       }
       if (ql.length < 2 || !NX.fs) return;
       let found = []; try { const pl = await NX.fs.places(); for (const f of pl.folders) { const r = await NX.fs.list(f.path).catch(() => null); if (r) found.push(...r.entries.filter((e) => e.name.toLowerCase().includes(ql)).map((e) => Object.assign({ where: f.name }, e))); if (found.length > 12) break; } } catch (e) { return; }
-      if (gen !== qsGen || !found.length || !document.body.contains(o)) return;
-      const fi = found.slice(0, 5).map((e, k) => ({ head: k ? "" : "Files", icon: NX.icon(FI[e.kind] || "file", 30), name: e.name, sub: e.where, go: () => (e.dir ? NX.open("files", { path: e.path }) : NX.openFile(e)) }));
-      items.splice(items.indexOf(web), 0, ...fi); paint();
+      if (gen !== qsGen || !document.body.contains(o)) return;
+      if (found.length) { const fi = found.slice(0, 5).map((e, k) => ({ head: k ? "" : "Files", icon: NX.icon(FI[e.kind] || "file", 30), name: e.name, sub: e.where, go: () => (e.dir ? NX.open("files", { path: e.path }) : NX.openFile(e)) }));
+        items.splice(items.indexOf(web), 0, ...fi); paint(); }
+      // words inside your text files (3 letters or more)
+      if (ql.length >= 3 && NX.fs.searchText) {
+        const hits = await NX.fs.searchText(q).catch(() => []);
+        if (gen !== qsGen || !hits.length || !document.body.contains(o)) return;
+        const seen = new Set(found.map((e) => e.path));
+        const ci = hits.filter((h) => !seen.has(h.path)).slice(0, 4).map((h, k) => ({ head: k ? "" : "Inside your files", icon: NX.icon("ftext", 30), name: h.name, sub: "..." + h.snippet + "...", go: () => NX.openFile({ name: h.name, path: h.path, kind: "text" }) }));
+        if (ci.length) { items.splice(items.indexOf(web), 0, ...ci); paint(); }
+      }
     };
     inp.oninput = run; run();
     inp.onkeydown = (e) => {

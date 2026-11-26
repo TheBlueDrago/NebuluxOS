@@ -422,6 +422,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(() => p.evaluate(async () => !document.querySelector("#nx-rec") && (await NX.fs.list(await NX.folder("Videos"))).entries.some((e) => /^Screen recording/.test(e.name))), 8000), "Stop saves the recording in Videos");
   await p.evaluate(() => NX.closeAll());
 
+  // words inside text files, from the helper
+  ok(await p.evaluate(async () => { await NX.fs.write((await NX.folder("Documents")) + "/Words.txt", "the purple giraffe dances"); const h = await NX.fs.searchText("giraffe"); return h.some((x) => /Words.txt$/.test(x.name) && /giraffe/.test(x.snippet)); }), "the helper finds words inside text files");
+
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

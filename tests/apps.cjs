@@ -674,6 +674,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(2600);
   ok(await p.evaluate(() => NX.wins.has("clock") && NX.wins.has("calculator")), "with Reopen my apps on, the apps come back after signing in");
   await p.evaluate(() => { NX.setPref("reopenApps", false); NX.closeAll(); });
+  // Quick Search finds words inside text files
+  await p.evaluate(async () => { NX.closeAll(); await NX.fs.write((await NX.folder("Documents")) + "/Trip.txt", "Packing list: sunscreen, hiking boots and a zebra hat"); NX.quickSearch(); const i = document.querySelector("#nx-qs input"); i.value = "zebra hat"; i.dispatchEvent(new Event("input")); }); await wait(1200);
+  ok(await p.evaluate(() => { const r = document.querySelector("#nx-qs .qs2-res").textContent; return /Inside your files/i.test(r) && /Trip.txt/.test(r); }), "Quick Search finds words inside your text files");
+  await p.keyboard.press("Escape");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

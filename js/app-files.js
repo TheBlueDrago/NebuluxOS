@@ -33,6 +33,8 @@
     return {
       async places() { map(); return { home: "/", folders: FOLDERS.map((f) => ({ name: f, path: "/" + f })), sep: "/" }; },
       async list(p) { const m = map(); need(m, p, true); return { path: p, name: p === "/" ? "Home" : base(p), parent: parent(p), entries: kids(m, p).map((k) => ent(m, k)).sort((a, b) => (b.dir - a.dir) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })) }; },
+      // words inside text files: up to 10 files, with a bit of text around the word
+      async searchText(q) { const m = map(), ql = String(q).toLowerCase(), out = []; for (const [k, n] of Object.entries(m)) { if (n.d || n.t == null || k.split("/").some((x) => x.startsWith("."))) continue; const i = n.t.toLowerCase().indexOf(ql); if (i >= 0) out.push({ name: base(k), path: k, snippet: n.t.slice(Math.max(0, i - 30), i + ql.length + 40).replace(/\s+/g, " ").trim() }); if (out.length >= 10) break; } return out; },
       async read(p) { const m = map(), n = need(m, p, false); if (n.t == null) throw new Error("That isn't a text file."); return n.t; },
       async write(p, text) { const m = map(); need(m, parent(p), true); if (m[p] && m[p].d) throw new Error("There's a folder with that name."); m[p] = { t: String(text), m: now() }; save(m); return { path: p }; },
       async create(dir, name, folder) { if (!okName(name)) throw new Error(NAME_ERR); const m = map(); need(m, dir, true); const p = uniq(m, dir, name); m[p] = folder ? { d: 1, m: now() } : { t: "", m: now() }; save(m); return { path: p, name: base(p) }; },
@@ -74,6 +76,7 @@
       async places() { pl = pl || await NX.api("GET", "/files/places"); return pl; },
       list: (p) => NX.api("POST", "/files/list", { path: p }),
       read: async (p) => (await NX.api("POST", "/files/read", { path: p })).text,
+      searchText: async (q) => (await NX.api("POST", "/files/search-text", { q })).hits || [],
       write: (p, text) => NX.api("POST", "/files/write", { path: p, text }),
       create: (dir, name, folder) => NX.api("POST", "/files/new", { dir, name, folder: !!folder }),
       rename: (p, name) => NX.api("POST", "/files/rename", { path: p, name }),

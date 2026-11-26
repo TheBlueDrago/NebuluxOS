@@ -123,6 +123,21 @@ module.exports = function more({ api, run, FAKE }) {
     }
     return { paths: out };
   };
+  // words inside text files in your folders (Quick Search): small text files only, hidden folders skipped, at most 10 hits
+  api["POST /files/search-text"] = async (b) => {
+    const q = String((b && b.q) || "").toLowerCase().slice(0, 100); if (q.length < 3) return { hits: [] };
+    const hits = [], root = real(HOME); let seen = 0;
+    const walk = (dir, depth) => {
+      if (hits.length >= 10 || seen > 3000 || depth > 6) return; let list; try { list = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+      for (const d of list) {
+        if (hits.length >= 10 || seen > 3000) return; if (d.name.startsWith(".")) continue; const p = path.join(dir, d.name);
+        if (d.isDirectory()) { walk(p, depth + 1); continue; } if (!d.isFile() || !KINDS.text.test(d.name)) continue; seen++;
+        let t; try { if (fs.statSync(p).size > 1e6) continue; t = fs.readFileSync(p, "utf8"); } catch (e) { continue; }
+        const i = t.toLowerCase().indexOf(q); if (i >= 0) hits.push({ name: d.name, path: p, snippet: t.slice(Math.max(0, i - 30), i + q.length + 40).replace(/\s+/g, " ").trim() });
+      }
+    };
+    walk(root, 0); return { hits };
+  };
   api["POST /files/info"] = async (b) => { const p = safe(b.path); const e = entry(path.dirname(p), path.basename(p)); return Object.assign(e, { free: diskFree(p) }); };
   function diskFree(p) { try { const s = fs.statfsSync(p); return { free: s.bavail * s.bsize, total: s.blocks * s.bsize }; } catch (e) { return null; } }
 
