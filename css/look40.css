@@ -711,3 +711,6 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .sm-tile.drop{outline:2px dashed var(--accent);outline-offset:-2px}.sm-tile.dragging{opacity:.4}
 .sd-card{width:min(400px,calc(100vw - 32px))}.sd-sel{width:100%}
 #nx-sd select{width:100%;margin:6px 0 4px}
+
+/* Settings > Accessibility > Text size */
+.win-body{zoom:var(--appzoom,1)}

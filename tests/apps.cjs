@@ -689,6 +689,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => { const o = document.querySelector("#nx-sd"); return !!o && /Shut down Nebulux OS/.test(o.textContent) && o.querySelectorAll("option").length === 5; }), "Alt + F4 with nothing open shows the Shut down box");
   await p.keyboard.press("Escape"); await wait(150);
   ok(await p.evaluate(() => !document.querySelector("#nx-sd")), "and Esc closes it");
+  // Settings > Accessibility > Text size
+  ok(await p.evaluate(async () => { NX.open("settings", { page: "access" }); await new Promise((r) => setTimeout(r, 400)); const b = document.querySelector("[data-tsz='125']"); if (!b) return false; b.click(); await new Promise((r) => setTimeout(r, 200)); const z = getComputedStyle(document.querySelector(".win-body")).zoom; const on = document.querySelector("[data-tsz='125']").classList.contains("on"); NX.setPref("textSize", 100); return on && +z === 1.25 && getComputedStyle(document.documentElement).getPropertyValue("--appzoom").trim() === "1"; }), "Text size makes app windows bigger and goes back");
   // alarm sounds (the test browser is muted)
   ok(await p.evaluate(() => { let n = 0; const o = NX.sounds.play; NX.sounds.play = () => n++; NX.setPref("alarmTone", "chime"); NX.alarmTone(); NX.setPref("alarmTone", "bells"); NX.alarmTone(); NX.sounds.play = o; NX.setPref("alarmTone", "beep"); return n === 2; }), "alarms can ring with Chime or Bells");
   // Peek and Shake
