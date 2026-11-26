@@ -394,9 +394,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { const c = document.querySelector(".win[data-app=settings] [data-cfsel]"); c.value = "none"; c.dispatchEvent(new Event("change")); }); await wait(200);
   ok(await p.evaluate(() => !document.documentElement.classList.contains("cf-gray") && !document.documentElement.classList.contains("cf-deutan")), "and back");
   // Find my pointer: press and let go of Ctrl
-  await p.evaluate(() => NX.setPref("findPointer", true)); await p.mouse.move(400, 300);
+  await p.evaluate(() => NX.setPref("findPointer", true)); await p.mouse.move(200, 300);
   await p.keyboard.down("Control"); await p.keyboard.up("Control"); await wait(100);
-  ok(await p.evaluate(() => { const r = document.querySelector(".nx-findptr"); return !!r && r.style.left === "400px" && r.style.top === "300px"; }), "Find my pointer shows rings at the pointer when Ctrl is pressed alone");
+  ok(await p.evaluate(() => { const r = document.querySelector(".nx-findptr"); return !!r && r.style.left === "200px" && r.style.top === "300px"; }), "Find my pointer shows rings at the pointer when Ctrl is pressed alone");
   await wait(1200); await p.keyboard.down("Control"); await p.keyboard.press("c"); await p.keyboard.up("Control"); await wait(100);
   ok(await p.evaluate(() => !document.querySelector(".nx-findptr")), "but not for Ctrl + C");
   await p.evaluate(() => NX.setPref("findPointer", false));
