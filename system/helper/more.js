@@ -474,7 +474,13 @@ module.exports = function more({ api, run, FAKE }) {
     return { ok: true };
   };
   // the keyboard goes back to Nebulux OS when the browser steps aside (otherwise typing in Start went nowhere)
-  const shellFocus = async () => { const s2 = (await run("xdotool", ["search", "--class", "NebuluxShell"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x)); for (const id of s2) { await run("xdotool", ["windowactivate", "--sync", id], 4000); await run("xdotool", ["windowfocus", id], 3000); } };
+  // (only the visible window: Chromium also makes hidden windows with the same name, and focusing one of those last
+  // left the keyboard nowhere)
+  const shellFocus = async () => {
+    const ids = async (vis) => (await run("xdotool", ["search", ...(vis ? ["--onlyvisible"] : []), "--class", "NebuluxShell"], 4000)).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
+    let s2 = await ids(true); if (!s2.length) s2 = await ids(false);
+    for (const id of s2) { await run("xdotool", ["windowactivate", "--sync", id], 4000); await run("xdotool", ["windowfocus", id], 3000); }
+  };
   api["POST /browser/show"] = async () => { const w = await webWins(); for (const id of w) { await run("xdotool", ["windowactivate", id], 4000); await run("xdotool", ["windowraise", id], 3000); } return { shown: w.length }; };
   api["POST /browser/hide"] = async () => { if (!(web && web.exitCode == null)) return { hidden: 0 }; const w = await webWins(); for (const id of w) await run("xdotool", ["windowminimize", id], 4000); await shellFocus(); return { hidden: w.length }; };
   api["POST /browser/toggle"] = async () => {
