@@ -724,6 +724,28 @@ module.exports = function more({ api, run, FAKE }) {
     return { path: p, name: path.basename(p) };
   };
 
+  // ---------- screen recording (Snipping Tool > Record): GStreamer films the screen into Videos as a .webm ----------
+  let rec = null, fakeRec = null;
+  const recName = () => { const d = new Date(), pad = (n) => String(n).padStart(2, "0"); return `Screen recording ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.webm`; };
+  const gstOK = () => FAKE || (fs.existsSync("/usr/bin/gst-launch-1.0") && !!process.env.DISPLAY);
+  api["GET /screenrec"] = async () => ({ available: gstOK(), recording: FAKE ? !!fakeRec : !!(rec && rec.p.exitCode == null), since: FAKE ? fakeRec && fakeRec.at : rec && rec.at });
+  api["POST /screenrec/start"] = async () => {
+    if (!gstOK()) throw new Error("Screen recording needs the newest Nebulux OS USB.");
+    const out = unique(path.join(real(HOME), "Videos"), recName());
+    if (FAKE) { fakeRec = { out, at: Date.now() }; return { ok: true }; }
+    if (rec && rec.p.exitCode == null) return { ok: true };
+    const p = spawn("gst-launch-1.0", ["-e", "ximagesrc", "use-damage=false", "!", "video/x-raw,framerate=15/1", "!", "videoconvert", "!", "vp8enc", "deadline=1", "cpu-used=8", "threads=2", "!", "webmmux", "!", "filesink", "location=" + out], { stdio: "ignore" });
+    p.on("error", () => {}); rec = { p, out, at: Date.now() };
+    return { ok: true };
+  };
+  api["POST /screenrec/stop"] = async () => {
+    if (FAKE) { if (!fakeRec) throw new Error("Nothing is being recorded."); const o = fakeRec.out; fs.writeFileSync(o, Buffer.from("1a45dfa3", "hex")); fakeRec = null; return { path: o, name: path.basename(o) }; }
+    if (!rec) throw new Error("Nothing is being recorded."); const { p, out } = rec; rec = null;
+    if (p.exitCode == null) { p.kill("SIGINT"); await new Promise((ok) => { const t = setTimeout(() => { try { p.kill("SIGKILL"); } catch (e) { /* gone */ } ok(); }, 8000); p.on("exit", () => { clearTimeout(t); ok(); }); }); }
+    if (!fs.existsSync(out)) throw new Error("The recording couldn't be saved.");
+    return { path: out, name: path.basename(out) };
+  };
+
   function seedFake() {
     const w = (p, s) => { const f = path.join(HOME, p); if (!fs.existsSync(f)) fs.writeFileSync(f, s); };
     w("Documents/Welcome.txt", "Welcome to Nebulux OS.\n");

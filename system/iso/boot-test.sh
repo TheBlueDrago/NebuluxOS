@@ -58,6 +58,9 @@ boot() { # BIOS or UEFI
   click 52 145; sleep 6; shot 4b-click
   click 430 776; sleep 2; shot 4c-start-click; keys esc; sleep 1
   if grep -aq "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log"; then echo "ok   ($MODE): a mouse click opens Settings from the desktop"; else echo "FAIL ($MODE): a mouse click on the desktop didn't open Settings"; FAILS=$((FAILS + 1)); grep -a "NEBULUX-X" "$SHOTS/$MODE-serial.log" | head -45; fi
+  # screen recording (a note, not a failure): the helper films 2 seconds of the screen in the virtual computer
+  RS=$(grep -ao "NEBULUX-DIAG screenrec=[0-9]*" "$SHOTS/$MODE-serial.log" | tail -1 | cut -d= -f2)
+  if [ "${RS:-0}" -gt 1000 ]; then echo "ok   ($MODE): screen recording works ($RS bytes in 2 seconds)"; else echo "note ($MODE): screen recording didn't make a file (${RS:-no answer})"; fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   # the mouse on the real browser: click into Google's search box and type
   click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click

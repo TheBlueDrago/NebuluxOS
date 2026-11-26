@@ -978,3 +978,30 @@ NX.holidayGreeting = () => {
     if (++t >= 9) { t = 0; NX.lockShowNext(); }
   }, 10000);
 })();
+
+// ---------- screen recording: a red pill shows the time and Stop while the screen is being filmed ----------
+(function () {
+  let pill = null, t = 0, t0 = 0;
+  const fmt = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  const show = () => {
+    if (pill) return; pill = document.createElement("div"); pill.id = "nx-rec";
+    pill.innerHTML = `<i></i><b>0:00</b><button class="btn sm" data-stop>Stop</button>`; document.body.appendChild(pill);
+    pill.querySelector("[data-stop]").onclick = () => NX.screenRec.stop();
+    t = setInterval(() => { if (pill) pill.querySelector("b").textContent = fmt(Date.now() - t0); }, 500);
+  };
+  const hide = () => { clearInterval(t); if (pill) pill.remove(); pill = null; };
+  NX.screenRec = {
+    async start() {
+      try { if (NX.shell) NX.shell.closeFlyouts(); NX.minimize && NX.wins.has("snip") && NX.minimize("snip"); for (let k = 3; k > 0; k--) { NX.toast("Recording in " + k + "..."); await new Promise((r) => setTimeout(r, 1000)); }
+        await NX.api("POST", "/screenrec/start"); t0 = Date.now(); show(); }
+      catch (e) { NX.toast(e.message); }
+    },
+    async stop() {
+      hide();
+      try { const r = await NX.api("POST", "/screenrec/stop"); NX.toast("Screen recording saved in Videos."); NX.filesChanged && NX.filesChanged(); return r; }
+      catch (e) { NX.toast(e.message); }
+    },
+  };
+  // still recording after the page reloads: bring the pill back
+  document.addEventListener("nx:signin", () => { if (NX.native) NX.api("GET", "/screenrec").then((r) => { if (r.recording) { t0 = r.since || Date.now(); show(); } }).catch(() => {}); });
+})();

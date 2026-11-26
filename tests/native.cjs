@@ -413,6 +413,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(async () => { const b = NX.data("backup-last", {}); const l = await NX.fs.list(b.path); const names = l.entries.map((e) => e.name); return ["Documents", "Pictures"].every((n) => names.includes(n)); }), "and the backup has Documents and Pictures in it");
   await p.evaluate(() => NX.closeAll());
 
+  // screen recording from Snipping Tool
+  await p.evaluate(() => { NX.closeAll(); NX.open("snip"); });
+  ok(await until(() => p.evaluate(() => !!document.querySelector(".win[data-app=snip] [data-rec]")), 6000), "Snipping Tool has Record screen");
+  await p.evaluate(() => document.querySelector(".win[data-app=snip] [data-rec]").click());
+  ok(await until(() => p.evaluate(() => !!document.querySelector("#nx-rec")), 8000), "recording shows the red pill with Stop");
+  await p.evaluate(() => document.querySelector("#nx-rec [data-stop]").click());
+  ok(await until(() => p.evaluate(async () => !document.querySelector("#nx-rec") && (await NX.fs.list(await NX.folder("Videos"))).entries.some((e) => /^Screen recording/.test(e.name))), 8000), "Stop saves the recording in Videos");
+  await p.evaluate(() => NX.closeAll());
+
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

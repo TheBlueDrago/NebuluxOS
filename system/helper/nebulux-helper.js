@@ -294,6 +294,12 @@ const api = {
     if (b.stage) { if (!FAKE) fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT " + String(b.stage).replace(/[^a-z-]/g, "").slice(0, 20) + " at " + os.uptime().toFixed(1) + "s\n", () => {}); return { ok: true }; }
     const line = "NEBULUX-DIAG " + (b.open ? "open=" + String(b.open).replace(/[^a-z0-9-]/gi, "").slice(0, 20) : ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ")) + "\n";
     if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
+    // in the boot test's virtual computer only: film the screen for 2 seconds to show screen recording works
+    if (!FAKE && !b.open && fs.existsSync("/usr/bin/gst-launch-1.0") && /QEMU/i.test((() => { try { return fs.readFileSync("/sys/class/dmi/id/sys_vendor", "utf8"); } catch (e) { return ""; } })())) {
+      const out = "/tmp/nx-rec-test.webm"; try { fs.rmSync(out, { force: true }); } catch (e) { /* none */ }
+      const p = require("child_process").spawn("gst-launch-1.0", ["-e", "ximagesrc", "use-damage=false", "num-buffers=30", "!", "video/x-raw,framerate=15/1", "!", "videoconvert", "!", "vp8enc", "deadline=1", "cpu-used=8", "!", "webmmux", "!", "filesink", "location=" + out], { stdio: "ignore" });
+      p.on("error", () => {}); p.on("exit", () => { let n = 0; try { n = fs.statSync(out).size; } catch (e) { /* none */ } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG screenrec=" + n + "\n", () => {}); });
+    }
     if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);
       const lines = tree.out.split("\n").filter((l) => /0x[0-9a-f]+/.test(l)).slice(0, 40).map((l) => "NEBULUX-X " + l.trim()).join("\n");

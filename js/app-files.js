@@ -574,6 +574,8 @@
       win.snipDraw = draw;
       body.innerHTML = `<div class="sn-bar"><button class="btn primary" data-s="0">${NX.icon("camera", 16)}New screenshot</button><label class="sn-delay">Wait <select aria-label="Wait before taking it"><option value="0">no time</option><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label></div><div class="sn-view"><p class="sn-tip">Tip: press <b>Nebulux + Shift + S</b> or <b>Print Screen</b> any time. Screenshots go in Pictures${NX.native ? " > Screenshots" : ""}.</p></div>`;
       const v = body.querySelector(".sn-view"), btn = body.querySelector("[data-s]");
+      // Record: film the screen into Videos (on the Nebulux OS USB with screen recording)
+      if (NX.native) NX.api("GET", "/screenrec").then((r) => { if (!r.available || body.querySelector(".sn-rec")) return; btn.insertAdjacentHTML("afterend", `<button class="btn sn-rec" data-rec>${NX.icon("recorder", 16)}Record screen</button>`); body.querySelector("[data-rec]").onclick = () => NX.screenRec && NX.screenRec.start(); }).catch(() => {});
       btn.onclick = async () => {
         const wait = +body.querySelector("select").value; btn.disabled = true;
         for (let s = wait; s > 0; s--) { btn.textContent = "Taking it in " + s + "..."; await new Promise((ok) => setTimeout(ok, 1000)); }
