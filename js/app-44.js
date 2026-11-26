@@ -101,6 +101,7 @@
     if (on === undefined) on = !el;
     if (!on) { if (el) { el.remove(); el = null; } return; }
     if (el) return;
+    shift = caps = sym = false; // it always opens on the letters
     el = document.createElement("div"); el.className = "nx-osk"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "On-screen keyboard");
     // pressing a key never takes the typing away from the text box
     el.addEventListener("pointerdown", (e) => { e.preventDefault(); const b = e.target.closest("[data-k]"); if (b) { b.classList.add("down"); setTimeout(() => b.classList.remove("down"), 120); key(b.dataset.k); } });
@@ -112,4 +113,21 @@
   NX.oskTouchOn = () => { const v = NX.prefs().oskTouch; return v == null ? !!NX.native : !!v; };
   document.addEventListener("nx:key", (e) => { if (e.detail === "osk") NX.osk(); });
   addEventListener("keydown", (e) => { if (e.metaKey && e.ctrlKey && !e.altKey && (e.key === "o" || e.key === "O")) { e.preventDefault(); NX.osk(); } }, true);
+})();
+
+// ---------- Accessibility on the sign-in screen (like Windows): Narrator and the on-screen keyboard before anyone signs in ----------
+(function () {
+  const corner = document.querySelector("#lock .lk-corner"), power = document.getElementById("lk-power"); if (!corner || !power) return;
+  const b = document.createElement("button"); b.id = "lk-access"; b.setAttribute("aria-label", "Accessibility"); b.title = "Accessibility";
+  b.innerHTML = NX.icon("access", 20);
+  const m = document.createElement("div"); m.id = "lk-amenu"; m.className = "lk-pmenu"; m.hidden = true;
+  const draw = () => { const on = !!NX.get("lock-narrator", false); m.innerHTML = `<button data-la="narrator" role="menuitemcheckbox" aria-checked="${on}">Narrator: ${on ? "On" : "Off"}</button><button data-la="osk">On-screen keyboard</button>`; };
+  b.onclick = (e) => { e.stopPropagation(); draw(); m.hidden = !m.hidden; const pm = document.getElementById("lk-pmenu"); if (pm) pm.hidden = true; };
+  m.addEventListener("click", (e) => {
+    e.stopPropagation(); const k = e.target.closest("[data-la]"); if (!k) return; m.hidden = true;
+    if (k.dataset.la === "narrator") { const on = !NX.get("lock-narrator", false); NX.set("lock-narrator", on); if (NX.narrator) { NX.narrator.speak(on ? "Narrator is on. Type your password, then press Enter." : "Narrator is off."); } }
+    if (k.dataset.la === "osk") { const i = document.querySelector("#lock input"); if (i) i.focus(); NX.osk && NX.osk(true); }
+  });
+  corner.insertBefore(b, power); corner.appendChild(m);
+  document.addEventListener("click", () => { m.hidden = true; });
 })();

@@ -79,7 +79,7 @@
   // or Ctrl + Nebulux + Enter). On the USB it speaks through speech-dispatcher and eSpeak NG (in the 4.4 USB and newer). ----------
   const SS = window.speechSynthesis;
   if (SS && SS.getVoices) SS.getVoices(); // starts loading the voices
-  const N = NX.narrator = { last: "", said: [], on: () => !!(NX.me && NX.prefs().narrator) };
+  const N = NX.narrator = { last: "", said: [], on: () => (NX.me ? !!NX.prefs().narrator : !!(NX.get && NX.get("lock-narrator", false))) }; // before sign-in: the sign-in screen switch
   const clean = (t) => String(t || "").replace(/\s+/g, " ").trim().slice(0, 220);
   N.speak = (text, now) => {
     text = clean(text); if (!text) return; N.last = text; N.said = [...N.said, text].slice(-12);

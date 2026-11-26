@@ -638,6 +638,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.closeAll());
   // double-click a ZIP file: Extract all?
   ok(await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); const f = await NX.fs.create("/Documents", "Packed", true); await NX.fs.write(f.path + "/p.txt", "packed"); const z = await NX.fs.zip([f.path]); await NX.fs.remove([f.path], true); NX.closeAll(); NX.open("files", { place: "Documents" }); await w(700); const it = [...document.querySelectorAll(".fx-item")].find((x) => x.dataset.k === z.path); if (!it) return "no item"; it.dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); await w(300); const form = document.querySelector(".nx-ask-card"); if (!form || !/Extract all/.test(form.textContent)) return "no ask"; form.requestSubmit(); await w(800); const t = await NX.fs.read("/Documents/Packed/p.txt").catch(() => null); await NX.fs.remove(["/Documents/Packed", z.path], true); NX.closeAll(); return t === "packed" || "text " + t; }).then((r) => r === true || (console.log(r), false)), "double-clicking a ZIP file asks, then extracts it");
+  // the sign-in screen's Accessibility button: sign in with only the on-screen keyboard
+  await p.evaluate(() => NX.shell.signOut()); await wait(1200);
+  await p.evaluate(() => document.querySelector("#lk-access").click()); await wait(150);
+  ok(await p.evaluate(() => !document.querySelector("#lk-amenu").hidden && /Narrator/.test(document.querySelector("#lk-amenu").textContent)), "the sign-in screen has Accessibility: Narrator and the on-screen keyboard");
+  await p.evaluate(() => document.querySelector('#lk-amenu [data-la="osk"]').click()); await wait(200);
+  for (const k of [..."nebula1", "enter"]) { await p.click('.nx-osk [data-k="' + k + '"]'); await wait(40); }
+  await wait(1200);
+  ok(await p.evaluate(() => !document.querySelector("#desktop").hidden && NX.me && NX.me.name === "Ada"), "typing the password on the on-screen keyboard signs in");
+  await p.evaluate(() => NX.osk && NX.osk(false));
   ok(errs.length === 0, "no page errors " + errs.join(" | "));
   await c.close(); b.disconnect();
   console.log(failed ? failed + " failed" : "all passed"); process.exit(failed ? 1 : 0);

@@ -813,3 +813,8 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 .ok-row button.on{background:color-mix(in srgb,var(--accent) 35%,var(--card));border-color:var(--accent)}
 .ok-row .ok-w2{flex:1.6 1 0;font-size:13.5px}.ok-row .ok-w1{flex:.8 1 0}.ok-row .ok-space{flex:6 1 0;font-size:13px;color:var(--sub)}
 @media (max-width:600px){.ok-row{gap:3px}.ok-row button{height:42px;font-size:15px;border-radius:7px}.nx-osk{padding:6px}}
+
+/* the sign-in screen: Accessibility next to Power */
+#lk-access{width:44px;height:44px;border-radius:8px;display:grid;place-items:center;background:#ffffff14;margin-right:8px}#lk-access:hover{background:#ffffff2b}
+#lk-amenu{right:52px}
+#lk-amenu{min-width:200px}
