@@ -668,6 +668,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.setData("clip-history", []); NX.closeAll(); });
   // battery chart
   ok(await p.evaluate(() => { const n = Date.now(); NX.set("batt-log", [{ t: n - 7200000, p: 80, c: false }, { t: n - 3600000, p: 60, c: true }]); return /<svg/.test(NX.battChart()) && /#22c55e/.test(NX.battChart()); }), "the battery chart draws the last 24 hours, with charging times");
+  // reopen my apps after signing out and in again
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("reopenApps", true); NX.open("clock"); NX.open("calculator"); }); await wait(600);
+  await p.evaluate(() => NX.shell.signOut()); await wait(1200);
+  await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(2600);
+  ok(await p.evaluate(() => NX.wins.has("clock") && NX.wins.has("calculator")), "with Reopen my apps on, the apps come back after signing in");
+  await p.evaluate(() => { NX.setPref("reopenApps", false); NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

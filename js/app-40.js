@@ -1033,3 +1033,18 @@ NX.holidayGreeting = () => {
     return `<div class="s-card s-bchart"><div class="s-bch"><b>Battery level</b><small>Last 24 hours</small></div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Battery level over the last 24 hours"><defs><linearGradient id="bcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".45"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>${[25, 50, 75].map((p) => `<line x1="0" x2="${W}" y1="${y(p)}" y2="${y(p)}" class="tm-gl"/>`).join("")}${charge}<path d="${d} L${x(L[L.length - 1].t).toFixed(1)} ${H} L${x(L[0].t).toFixed(1)} ${H} Z" fill="url(#bcg)"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><div class="s-bax"><span>24 hours ago</span><span>12 hours ago</span><span>Now</span></div></div>`;
   };
 })();
+
+// ---------- reopen my apps when I sign in (Settings > Apps): the built-in apps that were open come back ----------
+(function () {
+  const save = () => { if (!NX.me || !NX.prefs().reopenApps) return; const ids = [...NX.wins.values()].filter((w) => !w.el.classList.contains("closing")).map((w) => w.id).filter((id) => NX.apps[id] && !NX.apps[id].url && !NX.apps[id].browser && id !== "settings"); NX.setData("open-apps", ids.slice(0, 8)); };
+  NX.reopenSave = save;
+  setInterval(save, 20000); addEventListener("beforeunload", save); addEventListener("pagehide", save);
+  document.addEventListener("nx:winopen", () => setTimeout(save, 500));
+  // signing out closes everything: remember the apps first
+  const close0 = NX.closeAll; if (close0) NX.closeAll = (...a) => { if (NX.me && NX.wins.size) save(); return close0(...a); };
+  document.addEventListener("nx:signin", (e) => {
+    if (e.detail && e.detail.back) return; if (!NX.prefs().reopenApps) return;
+    const L = NX.data("open-apps", []).filter((id) => NX.apps[id] && !NX.wins.has(id)); if (!L.length) return;
+    setTimeout(() => L.forEach((id, k) => setTimeout(() => NX.open(id), k * 250)), 1200);
+  });
+})();
