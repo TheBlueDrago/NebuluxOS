@@ -43,6 +43,7 @@
       let closedNotes = [];
       win.tabs = { count: () => tabs.length, add: () => newTab(), close: () => closeTab(ti), go: (i) => loadTab(i), step: (d) => loadTab((ti + d + tabs.length) % tabs.length),
         reopen: async () => { const c = closedNotes.pop(); if (!c) { NX.toast("There's no closed note to bring back."); return; } await flush(); const id = newId(); tabs.push(c.file ? { id, file: c.file } : { id }); if (!c.file) NX.setData("np-text-" + id, c.text); await loadTab(tabs.length - 1); } };
+      win.save = async () => { if (file) { await flush(); NX.toast("Saved " + NX.fs.base(file) + "."); } else body.querySelector(".np-bar [data-a=save]").click(); };
       win.np2 = { tabs: () => tabs.map((x, k) => ({ file: x.file || null, name: tabName(x, k), on: k === ti })), newTab, closeTab, loadTab };
       const count = () => { const v = ta.value; cnt.textContent = (v.trim() ? v.trim().split(/\s+/).length : 0) + " words · " + v.length + " characters"; };
       const verKey = () => (file ? "f:" + file : "n:" + (tabs[ti] ? tabs[ti].id : 1));
@@ -308,6 +309,7 @@
       };
       win.onopts = (o) => { if (o && o.path) loadPic(o.path); };
       if (opts && opts.path) setTimeout(() => loadPic(opts.path), 150);
+      win.save = () => { const b = body.querySelector("[data-t=save]"); if (b) b.click(); };
       win.paintTest = { fillAt: (x, y) => { snap(); fillAt(x, y); }, pixel: (x, y) => Array.from(g.getImageData(x, y, 1, 1).data.slice(0, 3)), setTool: (t) => (tool = t), setCol: (c) => (col = c) };
       cv.onpointerdown = (e) => { cv.setPointerCapture(e.pointerId); snap(); last = pos(e);
         if (tool === "fill") { fillAt(last[0], last[1]); return; }

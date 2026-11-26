@@ -212,8 +212,8 @@
       const tabSave = () => { tabs[ti] = { cur, back, fwd }; };
       function tabTo(i) { if (i === ti || !tabs[i]) return; tabSave(); ti = i; ({ cur, back, fwd } = tabs[i]); sel.clear(); q = ""; $(".fx-search input").value = ""; load(); }
       function tabNew(p) { if (tabs.length >= 12) { NX.toast("That's a lot of tabs. Close one first."); return; } tabSave(); tabs.push({ cur: null, back: [], fwd: [] }); ti = tabs.length - 1; cur = null; back = []; fwd = []; go(p || HOME, true); }
-      // for the keyboard shortcuts (js/keys.js): Ctrl + T, W, Tab, 1 to 9, Shift + T
-      let closedTabs = [];
+      // for the keyboard shortcuts (js/keys.js): Ctrl + T, W, Tab, 1 to 9, Shift + T; F5 refreshes
+      let closedTabs = []; win.refresh = () => load();
       function tabClose(i) {
         if (tabs.length > 1) { tabSave(); const t0 = tabs[i]; if (t0 && t0.cur) closedTabs = [...closedTabs, t0.cur].slice(-10); }
         if (tabs.length === 1) { NX.close(win.id); return; }

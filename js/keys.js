@@ -275,4 +275,21 @@
     }
     if (best) { e.preventDefault(); best.focus(); best.scrollIntoView && best.scrollIntoView({ block: "nearest" }); }
   });
+
+  // ---------- keep the browser's own page keys away from Nebulux OS: the screen is a browser window underneath, and
+  // F5 or Ctrl + R would reload it (closing every app), Ctrl + P would print it, Alt + Left or the mouse's back button
+  // would go "back". This listener is added last, so apps (like Notepad's F5) still get their keys first. ----------
+  const guard = (e) => {
+    if (e.defaultPrevented) return;
+    const key = e.key, low = key.toLowerCase(), c = e.ctrlKey && !e.metaKey && !e.altKey, t = e.target, ed = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+    if (key === "F5" || (c && low === "r")) { e.preventDefault(); const w = active(); if (w && w.refresh) w.refresh(); return; }
+    if (key === "F11" || key === "F7" || key === "BrowserBack" || key === "BrowserForward" || key === "BrowserRefresh" || (e.altKey && !e.ctrlKey && (key === "ArrowLeft" || key === "ArrowRight" || key === "Home"))) { e.preventDefault(); return; }
+    if (c && low === "s") { e.preventDefault(); const w = active(); if (w && w.save) w.save(); return; } // Ctrl + S saves in Notepad and Paint
+    if (c && ["p", "o", "j", "h", "d", "e", "k", "l"].includes(low)) { e.preventDefault(); return; }
+    if (c && low === "u" && !ed) { e.preventDefault(); return; }
+  };
+  addEventListener("load", () => addEventListener("keydown", guard));
+  // "back" (the mouse's back button, Alt + Left) stays on Nebulux OS
+  try { history.pushState({ nx: 1 }, "", location.href); addEventListener("popstate", () => history.pushState({ nx: 1 }, "", location.href)); } catch (e) { /* file: pages in tests */ }
+  addEventListener("mouseup", (e) => { if (e.button === 3 || e.button === 4) e.preventDefault(); }, true);
 })();
