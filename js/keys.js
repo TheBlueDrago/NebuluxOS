@@ -310,4 +310,37 @@
   const winKey = (k) => { if (!NX.me) return; if (k === "minall") NX.minAll(); if (k === "restoreall") NX.restoreAll(); if (k === "home") { const w = active(); if (w && NX.shakeWin) NX.shakeWin(w.id); } };
   document.addEventListener("nx:key", (e) => winKey(e.detail));
   addEventListener("keydown", (e) => { if (!e.metaKey || e.ctrlKey || e.altKey) return; if (/^m$/i.test(e.key)) { e.preventDefault(); winKey(e.shiftKey ? "restoreall" : "minall"); } else if (e.key === "Home" && !e.shiftKey) { e.preventDefault(); winKey("home"); } }, true);
+  // ---------- Alt + Space: the window menu (Restore, Minimize, Maximize, Move, Size, Close), like Windows.
+  // Move and Size use the arrow keys (Shift for small steps); Enter keeps it, Esc puts it back ----------
+  NX.kbMove = (id, mode) => {
+    const w = NX.wins && NX.wins.get(id); if (!w || w.max) return;
+    const start = { x: w.x, y: w.y, w: w.w, h: w.h }, el = w.el;
+    const apply = () => { el.style.left = w.x + "px"; el.style.top = w.y + "px"; el.style.width = w.w + "px"; el.style.height = w.h + "px"; w.onresize && w.onresize(); };
+    el.classList.add("kbmove"); NX.toast(mode === "move" ? "Move the window with the arrow keys, then press Enter." : "Size the window with the arrow keys, then press Enter.");
+    const key = (e) => {
+      const d = e.shiftKey ? 2 : 24, k = e.key;
+      if (/^Arrow/.test(k)) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        const dx = k === "ArrowLeft" ? -d : k === "ArrowRight" ? d : 0, dy = k === "ArrowUp" ? -d : k === "ArrowDown" ? d : 0;
+        if (mode === "move") { w.x = Math.max(-w.w + 120, Math.min(innerWidth - 120, w.x + dx)); w.y = Math.max(0, Math.min(innerHeight - 90, w.y + dy)); }
+        else { w.w = Math.max(w.minW || 320, Math.min(innerWidth, w.w + dx)); w.h = Math.max(w.minH || 240, Math.min(innerHeight, w.h + dy)); }
+        apply(); return;
+      }
+      if (k === "Enter" || k === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); if (k === "Escape") { Object.assign(w, start); apply(); } done(); }
+    };
+    const done = () => { removeEventListener("keydown", key, true); removeEventListener("pointerdown", done, true); el.classList.remove("kbmove"); };
+    addEventListener("keydown", key, true); setTimeout(() => addEventListener("pointerdown", done, true), 0);
+  };
+  addEventListener("keydown", (e) => {
+    if (!e.altKey || e.ctrlKey || e.metaKey || e.code !== "Space" || !NX.me) return;
+    const w = active(); if (!w || !w.sysMenu) return; e.preventDefault(); e.stopPropagation();
+    const r = w.el.getBoundingClientRect(); w.sysMenu(r.left + 8, r.top + 34);
+  }, true);
+  // ---------- the Menu key or Shift + F10 opens the right-click menu for what the keyboard is on, like Windows ----------
+  addEventListener("keydown", (e) => {
+    if (!NX.me || !(e.key === "ContextMenu" || (e.shiftKey && e.key === "F10"))) return;
+    const a = document.activeElement; if (!a || a === document.body || (a.closest && a.closest("#ctx"))) return;
+    e.preventDefault(); const r = a.getBoundingClientRect();
+    a.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.left + Math.min(24, r.width / 2), clientY: r.top + Math.min(r.height, 28), button: 2 }));
+  }, true);
 })();

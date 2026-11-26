@@ -97,14 +97,16 @@
     const tb = el.querySelector(".titlebar");
     tb.addEventListener("dblclick", (e) => { if (!e.target.closest(".wb")) NX.toggleMax(id); });
     // right-click the title bar: minimize, maximize, keep this window above the others, close
-    tb.addEventListener("contextmenu", (e) => {
-      if (!NX.menu) return; e.preventDefault(); e.stopPropagation();
-      NX.menu(e.clientX, e.clientY, [[w.max ? "Restore" : "Maximize", () => NX.toggleMax(id)], ["Minimize", () => NX.minimize(id)],
+    // (Alt + Space opens it too, at the top left of the window, with Move and Size for the arrow keys)
+    w.sysMenu = (x, y) => {
+      NX.menu(x, y, [[w.max ? "Restore" : "Maximize", () => NX.toggleMax(id)], ["Minimize", () => NX.minimize(id)],
+        ...(w.max ? [] : [["Move", () => NX.kbMove && NX.kbMove(id, "move")], ["Size", () => NX.kbMove && NX.kbMove(id, "size")]]),
         [w.onTop ? "Stop keeping on top" : "Keep on top", () => { w.onTop = !w.onTop; el.classList.toggle("ontop", w.onTop); NX.toast(w.onTop ? app.name + " stays above other windows." : app.name + " is a normal window again."); }],
         // move it to another desktop (or a new one)
         ...(NX.desks ? [["", null], ...NX.desks.list().filter((d) => !d.current).map((d) => ["Move to " + d.name, () => { NX.desks.move(id, d.id); NX.toast(app.name + " moved to " + d.name + "."); }, "display"]), ["Move to a new desktop", () => { const d = NX.desks.add(true); if (d) { NX.desks.move(id, d.id); NX.toast(app.name + " moved to a new desktop."); } }, "plus"], ["", null]] : []),
         ["Close", () => NX.close(id)]]);
-    });
+    };
+    tb.addEventListener("contextmenu", (e) => { if (!NX.menu) return; e.preventDefault(); e.stopPropagation(); w.sysMenu(e.clientX, e.clientY); });
     // drag
     tb.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || e.target.closest(".wb")) return;

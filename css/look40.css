@@ -870,3 +870,4 @@ html[data-ct] .btn{border:2px solid var(--ct-tx)!important;color:var(--ct-tx)}
 html[data-ct] :focus-visible{outline:3px solid var(--ct-ln)!important;outline-offset:2px}
 html[data-ct] .tg input:checked+i{background:var(--ct-hl)!important;border-color:var(--ct-hl)!important}
 html[data-ct] #nx-living{display:none!important}html[data-ct] .dicon{color:var(--ct-tx)!important;text-shadow:none!important}html[data-ct] .dicon:hover,html[data-ct] .dicon.sel{background:transparent!important;border:2px solid var(--ct-hl)!important}
+.win.kbmove{outline:3px dashed var(--accent);outline-offset:-3px}

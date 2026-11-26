@@ -211,8 +211,21 @@
   function menu(x, y, items) {
     closeFlyouts(); const m = $("#ctx"); m.innerHTML = items.map(([t, fn, ic], i) => fn === null ? (t ? `<div class="ctx-h">${NX.esc(t)}</div>` : `<i class="ctx-sep"></i>`) : `<button data-i="${i}">${ic ? NX.icon(ic, 16) : micon(t)}<span>${NX.esc(t)}</span></button>`).join(""); m.hidden = false;
     const r = m.getBoundingClientRect(); m.style.left = Math.min(x, innerWidth - r.width - 6) + "px"; m.style.top = Math.min(y, innerHeight - r.height - 6) + "px";
-    m.querySelectorAll("button").forEach((b) => (b.onclick = () => { m.hidden = true; items[+b.dataset.i][1](); }));
+    m.querySelectorAll("button").forEach((b) => (b.onclick = () => { m.hidden = true; menuBack(); items[+b.dataset.i][1](); }));
+    // the keyboard (4.4): the first item is ready, Up and Down (and Home, End) move, Enter picks, Esc closes and goes back
+    m.setAttribute("role", "menu"); m.querySelectorAll("button").forEach((b) => b.setAttribute("role", "menuitem"));
+    menuFrom = document.activeElement && document.activeElement !== document.body && !m.contains(document.activeElement) ? document.activeElement : menuFrom;
+    const first = m.querySelector("button"); if (first) first.focus({ preventScroll: true });
   }
+  let menuFrom = null; const menuBack = () => { const f = menuFrom; menuFrom = null; if (f && f.isConnected) try { f.focus({ preventScroll: true }); } catch (e) { /* gone */ } };
+  addEventListener("keydown", (e) => {
+    const m = document.getElementById("ctx"); if (!m || m.hidden) return;
+    const L = [...m.querySelectorAll("button")], i = L.indexOf(document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); const n = L.length; if (n) L[((i < 0 ? (e.key === "ArrowDown" ? -1 : 0) : i) + (e.key === "ArrowDown" ? 1 : -1) + n) % n].focus(); }
+    else if (e.key === "Home" || e.key === "End") { e.preventDefault(); e.stopPropagation(); (e.key === "Home" ? L[0] : L[L.length - 1]).focus(); }
+    else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); m.hidden = true; menuBack(); }
+    else if (e.key === "Tab") { e.preventDefault(); }
+  }, true);
 
   // ---------- taskbar ----------
   function taskbar() {

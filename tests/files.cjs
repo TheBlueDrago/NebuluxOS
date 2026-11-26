@@ -692,6 +692,20 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.focus(".win[data-app=notepad] textarea"); await p.keyboard.type("omw and addr, done"); await wait(100);
   ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "On my way! and 12 Main Street, done"), "typing a code and a space or comma puts in its phrase");
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); NX.setData("text-repl", null); }); await wait(500); await p.evaluate(() => NX.closeAll());
+  // Alt + Space: the window menu, all by keyboard; Move with the arrow keys
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(500);
+  const x0 = await p.evaluate(() => NX.wins.get("clock").x);
+  await p.keyboard.down("Alt"); await p.keyboard.press("Space"); await p.keyboard.up("Alt"); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector("#ctx").hidden && document.activeElement.closest("#ctx") && /Move/.test(document.querySelector("#ctx").textContent)), "Alt + Space opens the window menu, ready for the keyboard");
+  for (let k = 0; k < 6; k++) { if (await p.evaluate(() => /^Move$/.test(document.activeElement.textContent.trim()))) break; await p.keyboard.press("ArrowDown"); }
+  await p.keyboard.press("Enter"); await wait(100); await p.keyboard.press("ArrowRight"); await p.keyboard.press("ArrowRight"); await p.keyboard.press("Enter"); await wait(100);
+  ok(await p.evaluate((x0) => NX.wins.get("clock").x === x0 + 48 && !NX.wins.get("clock").el.classList.contains("kbmove"), x0), "Move moves the window with the arrow keys");
+  await p.evaluate(() => { NX.closeAll(); NX.open("files", { place: "Documents" }); }); await wait(700);
+  await p.evaluate(() => document.querySelector(".win[data-app=files] .fx-item").focus()); await p.keyboard.press("ContextMenu"); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector("#ctx").hidden && /Open/.test(document.querySelector("#ctx").textContent)), "the Menu key opens a file's right-click menu");
+  await p.keyboard.press("Escape"); await wait(100);
+  ok(await p.evaluate(() => document.querySelector("#ctx").hidden && !!document.activeElement.closest(".fx-item")), "and Esc closes it and goes back to the file");
+  await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
