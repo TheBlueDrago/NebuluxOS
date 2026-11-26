@@ -91,7 +91,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(/Google/.test(gt), "the page inside is Google itself (" + gt + ")");
   ok(await until(() => p.evaluate(() => /google\.com/.test(document.querySelector(".win[data-app=google] .wv-addr input").value))), "the address bar shows where it is");
   await shot("google");
-  await p.click(".win[data-app=google] .wv-addr input"); await p.keyboard.type("nebulux os"); await p.keyboard.press("Enter");
+  // (wait for the page to finish loading first: the address bar fills in again when it does)
+  await wait(2000); await p.click(".win[data-app=google] .wv-addr input"); await p.keyboard.down("Control"); await p.keyboard.press("a"); await p.keyboard.up("Control"); await p.keyboard.type("nebulux os"); await p.keyboard.press("Enter");
   // (Google may show an automated test browser its "unusual traffic" page instead of results; that still counts)
   const SEARCHED = /google\.com\/(search\?q=nebulux|sorry\/.*nebulux)/;
   ok(await until(async () => p.frames().some((f) => SEARCHED.test(f.url())), 15000), "typing in the address bar searches Google in the window");
