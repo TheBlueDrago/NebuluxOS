@@ -11,7 +11,6 @@
     ["Bold focus outline", "Settings > Accessibility can draw a thick, bright outline around whatever the keyboard is on."],
     ["Flash the screen for alerts", "Settings > Accessibility > Hearing flashes the screen when an alarm, timer or alert sound plays."],
     ["The next window takes over", "Close a window and the one behind it is ready for your keyboard, like Windows."],
-    ["Fixes", "Ctrl + W can no longer close the whole Nebulux OS screen on the USB."],
     ["Lock screen slideshow", "Settings > Personalization > Lock screen picture > Slideshow moves through all the backgrounds while the computer is locked."],
     ["Record your screen", "Snipping Tool has Record screen: it films the whole screen into your Videos folder, with a red pill to stop it. Needs the new 4.2 USB."],
     ["ZIP files", "Right-click files in File Explorer to Compress to ZIP file, or right-click a ZIP file to Extract all."],
@@ -39,7 +38,7 @@
     ["Alt + F4 to shut down", "With no window open, Alt + F4 asks what the computer should do: Shut down, Restart, Sleep, Sign out or Lock."],
     ["Alarm sounds", "Pick Beep, Chime or Bells for your alarms in Settings > System > Sound, and play it to hear it first."],
     ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
-    ["Fixes", "Small fixes all around Nebulux OS."],
+    ["Fixes", "Ctrl + W can no longer close the whole Nebulux OS screen on the USB, and small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
     ["Sign in with Google during setup", "Setup watches the Google window: once you're signed in it brings you back on the next step, and if you close the window it brings you back to the same step."],
@@ -235,6 +234,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Lock screen slideshow"); // what came before 4.4 goes under Earlier updates
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Updates on your terms"); // what came before 4.4 (4.1 and older) goes under Earlier updates; 4.2 was never released on its own
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();

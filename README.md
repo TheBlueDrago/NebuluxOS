@@ -13,10 +13,10 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 ## Part 1: Download Nebulux OS
 
 1. Open this repo on GitHub: **TheBlueDrago/NebuluxOS**. The repo is private, so you have to be signed in to GitHub.
-2. On the right side, click **Releases**, then the newest release, **Nebulux OS 4.2**.
-3. Under **Assets**, click **`Nebulux-OS-4.2.iso`** to download it. It's about 1.5 GB.
+2. On the right side, click **Releases**, then the newest release, **Nebulux OS 4.4**.
+3. Under **Assets**, click **`Nebulux-OS-4.4.iso`** to download it. It's about 1.5 GB.
 4. *(Optional)* To check that the download isn't damaged, open PowerShell in your Downloads folder and run
-   `Get-FileHash .\Nebulux-OS-4.2.iso`. The number it shows should match the `SHA-256` on the release page.
+   `Get-FileHash .\Nebulux-OS-4.4.iso`. The number it shows should match the `SHA-256` on the release page.
 
 ## Part 2: Put it on your USB
 
@@ -27,7 +27,7 @@ It runs on the computer itself, not inside Windows. It never touches the compute
 2. **Get Rufus.** It's a free, well-known USB tool. Download it only from its official site, **rufus.ie** (the "Rufus Portable" one is fine).
 3. **Open Rufus** and choose these settings:
    - **Device:** your USB stick. Check the name and size, because whatever you pick here gets erased.
-   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-4.2.iso`.
+   - **Boot selection:** click **SELECT** and pick `Nebulux-OS-4.4.iso`.
    - **Persistent partition size:** slide it to about **4 GB** or more. This makes Nebulux OS **remember your accounts, settings, Wi-Fi passwords and notes** between restarts. Without it, Nebulux OS starts fresh every time.
    - **Partition scheme:** **GPT** for most computers from 2013 or later. Pick **MBR** for older ones.
    - Leave everything else as it is.
@@ -82,7 +82,7 @@ QEMU on Windows is very slow unless it uses Windows' own speed-up. Do this once:
 Then start Nebulux OS like this (all on one line):
 
 ```powershell
-& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-4.2.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
+& "C:\Program Files\qemu\qemu-system-x86_64.exe" -accel whpx,kernel-irqchip=off -m 4096 -smp 4 -cdrom "$env:USERPROFILE\Downloads\Nebulux-OS-4.4.iso" -boot d -vga std -device qemu-xhci -device usb-tablet -nic user,model=virtio-net-pci
 ```
 
 ### If it doesn't start
@@ -96,8 +96,7 @@ Then start Nebulux OS like this (all on one line):
 
 ## What's in it
 
-- **New in 4.4:** Ctrl + W closes a tab or window (and can no longer close the whole OS screen), Ctrl + T, N, Shift + T, Tab and 1 to 9 for tabs, Ctrl + Plus, Minus and 0 to zoom a window, Ctrl + / for every shortcut; a bold focus outline and screen flashes for alerts in Accessibility; the Nebulux Horizon background and a new Settings icon.
-- **New in 4.2:** a Programmer mode in Calculator; ZIP files (Compress and Extract all) in File Explorer; Text size in Accessibility; alarm sounds; record your screen from Snipping Tool; Quick Search finds words inside your text files; reopen your apps when you sign in; a lock screen slideshow; move a window to another desktop; drag Start's pinned apps into your own order; Coming up in Calendar; a battery chart and a 7-day Screen time chart; a temperature line in Weather; playback speed in Media Player; Delete in Photos; Ctrl + Z to undo a delete, and Copy as path, in File Explorer; Storage Sense; accent color on title bars and the taskbar; Notepad asks the file name and F5 adds the date and time; Copy on Settings > About. Fixes: typing in Start works right after using an app, and a web search opens even when Google is already open.
+- **New in 4.4:** Ctrl + W closes a tab or window (and can no longer close the whole OS screen), Ctrl + T, N, Shift + T, Tab and 1 to 9 for tabs, Ctrl + Plus, Minus and 0 to zoom a window, Ctrl + / for every shortcut; a bold focus outline and screen flashes for alerts in Accessibility; the Nebulux Horizon background and a new Settings icon. Also: a Programmer mode in Calculator; ZIP files (Compress and Extract all) in File Explorer; Text size in Accessibility; alarm sounds; record your screen from Snipping Tool; Quick Search finds words inside your text files; reopen your apps when you sign in; a lock screen slideshow; move a window to another desktop; drag Start's pinned apps into your own order; Coming up in Calendar; a battery chart and a 7-day Screen time chart; a temperature line in Weather; playback speed in Media Player; Delete in Photos; Ctrl + Z to undo a delete, and Copy as path, in File Explorer; Storage Sense; accent color on title bars and the taskbar; Notepad asks the file name and F5 adds the date and time; Copy on Settings > About. Fixes: typing in Start works right after using an app, and a web search opens even when Google is already open.
 - **New in 4.1:** the update window has Update now, Remind me later and Never, and an update installs by itself the next time the computer starts (or overnight). Apps open like apps, with no web address, and their links stay inside the app. Setup's Sign in with Google brings you back by itself, and setup is livelier. Also: repeating events and reminders, holidays in the calendar, quiet hours, Quick Search answers for money, time in other cities and word meanings, All apps by category, Nebulux + Z, Calculator Dates, a Photos widget, world clocks on the desktop, clipboard search, Media Player keys, and the lock screen shows your next event and waiting notifications.
 - **New in 4.0:**
   - **A whole new look:** glass that takes color from your background, a floating taskbar, twinkling stars over the wallpaper, live window pictures in Task View and Alt + Tab, notifications and the calendar as floating cards, colored Settings icons, folder icons, and a new start-up screen.
