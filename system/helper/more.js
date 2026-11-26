@@ -372,21 +372,23 @@ module.exports = function more({ api, run, FAKE }) {
   // Task Manager > Processes: the busiest programs, and End task for your own (never Nebulux OS's own parts)
   const PNAMES = { chromium: "Web engine", "chromium-browse": "Web engine", node: "Nebulux OS system helper", Xorg: "Display server", openbox: "Window manager", pipewire: "Sound", "pipewire-pulse": "Sound", wireplumber: "Sound devices", NetworkManager: "Network", "speech-dispatch": "Narrator voices", bash: "Command shell", systemd: "System", dbus: "System messages", "dbus-daemon": "System messages", flatpak: "App manager", "gst-launch-1.0": "Screen recorder" };
   // the screen itself, the helper, the display, sound, and every browser helper process (one of them could be the screen's)
-  const coreProc = (cmd) => /class=NebuluxShell|--type=|crashpad|nebulux-helper\.js|\bXorg\b|\bopenbox\b|nebulux-session|\bpipewire\b|wireplumber|speech-dispatcher/.test(cmd);
+  // (Chromium rewrites its processes' command lines, so every Chromium process counts as the screen's unless it is
+  // clearly a web app window, which belongs to you)
+  const coreProc = (cmd, comm) => (/^chrom/i.test(comm || "") && !/nebulux-web|NebuluxWeb|nebulux-chrome/.test(cmd)) || /class=NebuluxShell|--type=|crashpad|nebulux-helper\.js|\bXorg\b|\bopenbox\b|nebulux-session|\bpipewire\b|wireplumber|speech-dispatcher/.test(cmd);
   const procList = async () => {
     if (FAKE) return [{ pid: 101, name: "Web engine", cmd: "chromium --class=NebuluxShell", cpu: 7.5, mem: 380e6, mine: true, core: true }, { pid: 202, name: "VLC", cmd: "vlc", cpu: 3.1, mem: 120e6, mine: true, core: false }, { pid: 303, name: "System", cmd: "systemd", cpu: 0.1, mem: 12e6, mine: false, core: true }];
     const me = os.userInfo().username, r = await run("ps", ["-ww", "-eo", "pid=,user=,pcpu=,rss=,comm=,args=", "--sort=-pcpu"], 6000);
-    return (r.out || "").split("\n").map((l) => /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s*(.*)$/.exec(l)).filter(Boolean).map((m) => ({ pid: +m[1], name: PNAMES[m[5]] || m[5], cmd: m[6].slice(0, 160), cpu: +m[3], mem: +m[4] * 1024, mine: m[2] === me, core: coreProc(m[6]) || +m[1] === process.pid }));
+    return (r.out || "").split("\n").map((l) => /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s*(.*)$/.exec(l)).filter(Boolean).map((m) => ({ pid: +m[1], name: PNAMES[m[5]] || m[5], cmd: m[6].slice(0, 160), cpu: +m[3], mem: +m[4] * 1024, mine: m[2] === me, comm: m[5], core: coreProc(m[6], m[5]) || +m[1] === process.pid }));
   };
   // the 40 busiest for Task Manager; every one is checked when something is ended
-  api["GET /processes"] = async () => { const all = await procList(); return { processes: all.slice(0, 40), total: all.length, shell: all.some((x) => x.core && /class=NebuluxShell/.test(x.cmd)) }; };
+  api["GET /processes"] = async () => { const all = await procList(); return { processes: all.slice(0, 40), total: all.length, shell: all.some((x) => x.core && /^chrom/i.test(x.comm || "")) || FAKE }; };
   api["POST /processes/end"] = async (b) => {
     const pid = +b.pid, p = (await procList()).find((x) => x.pid === pid);
     if (!p) throw new Error("That program isn't running any more.");
     if (!p.mine) throw new Error("That program belongs to the system, so it keeps running.");
     // (and the full command line straight from the system, in case the list was cut short)
     let full = ""; if (!FAKE) { try { full = fs.readFileSync("/proc/" + pid + "/cmdline", "utf8").split("\0").join(" "); } catch (e) { /* gone */ } }
-    if (p.core || coreProc(full)) throw new Error("That's part of Nebulux OS, so it keeps running.");
+    if (p.core || coreProc(full, p.comm)) throw new Error("That's part of Nebulux OS, so it keeps running.");
     if (!FAKE) { try { process.kill(pid, "SIGTERM"); } catch (e) { throw new Error("That program couldn't be ended."); } }
     return { ok: true };
   };
