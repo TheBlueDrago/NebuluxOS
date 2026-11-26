@@ -365,7 +365,7 @@
     if (d) { const P = NX.me ? NX.prefs() : {}; d.dataset.tbsearch = P.tbSearch || "box"; d.classList.toggle("tb-notv", P.tbTaskView === false); d.classList.toggle("tb-nowg", P.tbWidgets === false); }
     const p = NX.me ? NX.prefs() : null, w = p ? p.wallpaper : 0, key = String(w) + (w === "custom" ? NX.data("wall-custom", "").length : "");
     if (key === auraFor) return; auraFor = key;
-    if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? w : 0]; if (col) root.style.setProperty("--aura", col); if (p && p.accent === "auto") root.style.setProperty("--accent", NX.autoAccent()); return; }
+    if (w !== "custom") { const col = (NX.wallAura || [])[typeof w === "number" ? (NX.wallpapers[w] && NX.wallpapers[w].dynamic ? NX.wallNow() : w) : 0]; if (col) root.style.setProperty("--aura", col); if (p && p.accent === "auto") root.style.setProperty("--accent", NX.autoAccent()); return; }
     const src = NX.data("wall-custom", null); if (!src || !/^data:image\//.test(src)) return; // your own picture is kept as a data: picture, which can be read
     const img = new Image();
     img.onload = () => { try {

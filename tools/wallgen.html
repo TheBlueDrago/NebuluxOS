@@ -14,6 +14,59 @@ function glow(X, Y, R, col, a) { const g = x.createRadialGradient(X, Y, 0, X, Y,
 function stars(n, r, maxY = H, bright = 1) { for (let i = 0; i < n; i++) { const sx = r() * W, sy = r() * maxY, s = r() * 1.6 + .3, a = (.25 + r() * .75) * bright; x.fillStyle = `rgba(255,255,255,${a})`; x.beginPath(); x.arc(sx, sy, s, 0, 7); x.fill(); if (s > 1.5 && r() > .6) { glow(sx, sy, 10, "200,190,255", .35 * a); } } }
 function grain(r, amt) { const d = x.getImageData(0, 0, W, H), p = d.data; for (let i = 0; i < p.length; i += 4) { const n = (r() - .5) * amt; p[i] += n; p[i + 1] += n; p[i + 2] += n; } x.putImageData(d, 0, 0); }
 
+// Nebulux Horizon (4.4): the edge of a giant planet under a violet nebula, its air glowing in Nebulux colors.
+// One picture for each time of day (13 sunrise, 14 day, 15 dusk, 16 night): the dynamic background switches between them.
+const HZ = {
+  rise: { sky: [[0, "#03020b"], [.45, "#080520"], [1, "#0c0726"]], neb: 1, stars: 520, starB: .9, air: ["56,189,248", "167,139,250", "236,72,153", "99,102,241"], airA: 1, body: ["#1b1446", "#0a0720", "#05040f"], rim: "167,139,250", line: ["255,255,255", "240,171,252", "186,230,253"], sun: { a: .19, up: 0, cols: ["167,139,250", "240,171,252", "255,240,255"], size: 1 }, vig: .45 },
+  day: { sky: [[0, "#060c2c"], [.5, "#102463"], [1, "#1d3f99"]], neb: .5, stars: 160, starB: .55, air: ["125,211,252", "147,197,253", "196,181,253", "56,189,248"], airA: 1.5, body: ["#2a3f8f", "#13235a", "#070d2a"], rim: "147,197,253", line: ["255,255,255", "186,230,253", "224,242,254"], sun: { a: .08, up: 230, cols: ["191,219,254", "224,242,254", "255,255,255"], size: 1.25 }, vig: .3 },
+  dusk: { sky: [[0, "#0a0413"], [.5, "#2a0b2e"], [1, "#4a1430"]], neb: .85, stars: 360, starB: .8, air: ["251,146,60", "244,114,182", "217,70,239", "249,115,22"], airA: 1.2, body: ["#3a1236", "#1a0820", "#08030c"], rim: "251,146,60", line: ["255,237,213", "251,191,36", "244,114,182"], sun: { a: -.24, up: -14, cols: ["249,115,22", "251,146,60", "255,237,213"], size: .9 }, vig: .45 },
+  night: { sky: [[0, "#020108"], [.5, "#050314"], [1, "#07051a"]], neb: 1.15, stars: 760, starB: 1, air: ["79,70,229", "99,102,241", "124,58,237", "56,189,248"], airA: .45, body: ["#0d0b26", "#06051a", "#030208"], rim: "99,102,241", line: ["165,180,252", "129,140,248", "125,211,252"], sun: null, vig: .55 },
+};
+function horizon(T) {
+  const r = rng(4313);
+  sky(T.sky);
+  // the nebula: many soft clouds along a band from top left to the middle right
+  const N = document.createElement("canvas"); N.width = W; N.height = H; const n = N.getContext("2d"); n.globalCompositeOperation = "lighter";
+  const cloud = (X, Y, R, col, a) => { const g = n.createRadialGradient(X, Y, 0, X, Y, R); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); n.fillStyle = g; n.fillRect(X - R, Y - R, R * 2, R * 2); };
+  const COLS = ["124,92,255", "168,85,247", "236,72,153", "56,189,248", "99,102,241"];
+  for (let k = 0; k < 420; k++) {
+    const t = r(), bx = W * (.05 + t * .95), by = H * (.12 + t * .32) + (r() - .5) * H * .32 * (1 - Math.abs(t - .5));
+    cloud(bx, by, 40 + r() ** 2 * 260, COLS[(r() * COLS.length) | 0], (.025 + r() * .05) * T.neb);
+  }
+  for (let k = 0; k < 60; k++) cloud(W * r(), H * r() * .7, 300 + r() * 400, COLS[(r() * COLS.length) | 0], .02 * T.neb);
+  // fine wisps, so the nebula has texture and isn't only soft blobs
+  const F = document.createElement("canvas"); F.width = W; F.height = H; const fq = F.getContext("2d"); fq.globalCompositeOperation = "lighter";
+  for (let k = 0; k < 1400; k++) { const t = r(), X = W * (.02 + t * .98), Y = H * (.12 + t * .32) + (r() - .5) * H * .28 * (1 - Math.abs(t - .5)), RR = 6 + r() ** 2 * 40, g = fq.createRadialGradient(X, Y, 0, X, Y, RR), c = COLS[(r() * COLS.length) | 0]; g.addColorStop(0, `rgba(${c},${(.05 + r() * .06) * T.neb})`); g.addColorStop(1, `rgba(${c},0)`); fq.fillStyle = g; fq.fillRect(X - RR, Y - RR, RR * 2, RR * 2); }
+  x.filter = "blur(18px)"; x.drawImage(N, 0, 0); x.filter = "blur(2px)"; x.globalAlpha = .45; x.globalCompositeOperation = "lighter"; x.drawImage(N, 0, 0); x.globalAlpha = .9; x.filter = "blur(1.5px)"; x.drawImage(F, 0, 0); x.globalAlpha = 1; x.filter = "none"; x.globalCompositeOperation = "source-over";
+  // dark dust lanes through the nebula
+  for (let k = 0; k < 16; k++) { const t = r(), X = W * t, Y = H * (.15 + t * .3) + (r() - .5) * 120, R = 140 + r() * 220; const g = x.createRadialGradient(X, Y, 0, X, Y, R); g.addColorStop(0, "rgba(3,2,11,.2)"); g.addColorStop(1, "rgba(3,2,11,0)"); x.fillStyle = g; x.fillRect(X - R, Y - R, R * 2, R * 2); }
+  stars(T.stars, r, H * .8, T.starB);
+  for (let k = 0; k < 14; k++) { const sx = r() * W, sy = r() * H * .65; glow(sx, sy, 12, "220,210,255", .45 * T.starB); x.fillStyle = `rgba(255,255,255,${T.starB})`; x.beginPath(); x.arc(sx, sy, 1.8, 0, 7); x.fill(); }
+  // the planet: a huge dark ball whose top edge lights up
+  const PX = W * .42, PY = H * 2.35, PR = W * 1.02, [a1, a2, a3, a4] = T.air, A = T.airA;
+  const halo = (w, a, blur) => { a *= A; x.save(); x.filter = `blur(${blur}px)`; x.globalCompositeOperation = "lighter"; const cg = x.createConicGradient(-Math.PI / 2, PX, PY); cg.addColorStop(0, `rgba(${a1},${a})`); cg.addColorStop(.06, `rgba(${a2},${a})`); cg.addColorStop(.12, `rgba(${a3},${a * .7})`); cg.addColorStop(.2, `rgba(${a3},0)`); cg.addColorStop(.8, `rgba(${a1},0)`); cg.addColorStop(.92, `rgba(${a4},${a * .8})`); cg.addColorStop(1, `rgba(${a1},${a})`); x.strokeStyle = cg; x.lineWidth = w; x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.stroke(); x.restore(); };
+  halo(260, .16, 60); halo(90, .35, 26); halo(26, .6, 8);
+  const body = x.createRadialGradient(PX + PR * .25, PY - PR * .9, PR * .2, PX, PY, PR); body.addColorStop(0, T.body[0]); body.addColorStop(.7, T.body[1]); body.addColorStop(1, T.body[2]);
+  x.fillStyle = body; x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.fill();
+  // faint cloud bands on the planet, and the lit rim
+  x.save(); x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.clip(); x.globalCompositeOperation = "lighter";
+  for (let k = 0; k < 9; k++) { const rr = PR - 30 - k * 34 - r() * 20; x.strokeStyle = `rgba(${k % 2 ? a2 : a1},${.05 - k * .004})`; x.lineWidth = 10 + r() * 18; x.filter = "blur(10px)"; x.beginPath(); x.arc(PX, PY, rr, 0, 7); x.stroke(); }
+  x.filter = "blur(24px)"; const rim = x.createLinearGradient(0, PY - PR, 0, PY - PR + 260); rim.addColorStop(0, `rgba(${T.rim},${.55 * Math.min(1, A)})`); rim.addColorStop(1, `rgba(${T.rim},0)`); x.fillStyle = rim; x.fillRect(0, PY - PR, W, 260);
+  x.restore();
+  const [l1, l2, l3] = T.line;
+  x.save(); x.globalCompositeOperation = "lighter"; x.lineWidth = 2.2; const lc = x.createConicGradient(-Math.PI / 2, PX, PY); lc.addColorStop(0, `rgba(${l1},.95)`); lc.addColorStop(.1, `rgba(${l2},.8)`); lc.addColorStop(.17, `rgba(${l2},0)`); lc.addColorStop(.85, `rgba(${l3},0)`); lc.addColorStop(.95, `rgba(${l3},.85)`); lc.addColorStop(1, `rgba(${l1},.95)`); x.strokeStyle = lc; x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.stroke(); x.restore();
+  // the star: rising, high, setting, or (at night) below the edge
+  if (T.sun) {
+    const S = T.sun, sa = -Math.PI / 2 + S.a, SX = PX + Math.cos(sa) * (PR + S.up), SY = PY + Math.sin(sa) * (PR + S.up), [s1, s2, s3] = S.cols, z = S.size;
+    x.globalCompositeOperation = "lighter"; glow(SX, SY, 620 * z, s1, .22); glow(SX, SY, 260 * z, s2, .35); glow(SX, SY, 90 * z, s3, .8); glow(SX, SY, 26 * z, "255,255,255", 1);
+    x.save(); x.translate(SX, SY); x.rotate(-.12); const fl = x.createLinearGradient(-900, 0, 900, 0); fl.addColorStop(0, `rgba(${s1},0)`); fl.addColorStop(.5, `rgba(${s3},.5)`); fl.addColorStop(1, `rgba(${s1},0)`); x.fillStyle = fl; x.filter = "blur(3px)"; x.fillRect(-900, -1.5, 1800, 3); x.restore();
+    x.globalCompositeOperation = "source-over";
+  }
+  // a gentle vignette and film grain
+  const v = x.createRadialGradient(W / 2, H * .45, H * .3, W / 2, H / 2, W * .75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, `rgba(0,0,0,${T.vig})`); x.fillStyle = v; x.fillRect(0, 0, W, H);
+  grain(r, 5);
+}
+
 const PAINT = [
   // 6. Silk Waves: ribbons of light flowing across a deep violet night
   () => {
@@ -150,48 +203,11 @@ const PAINT = [
     }
     x.filter = "blur(3px)"; x.drawImage(cv, 0, 0); x.filter = "none"; grain(r, 3);
   },
-  // 13. Nebulux Horizon (4.3): the edge of a giant planet at sunrise, under a violet nebula, its air glowing in Nebulux colors
-  () => {
-    const r = rng(4313);
-    sky([[0, "#03020b"], [.45, "#080520"], [1, "#0c0726"]]);
-    // the nebula: many soft clouds along a band from top left to the middle right
-    const N = document.createElement("canvas"); N.width = W; N.height = H; const n = N.getContext("2d"); n.globalCompositeOperation = "lighter";
-    const cloud = (X, Y, R, col, a) => { const g = n.createRadialGradient(X, Y, 0, X, Y, R); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); n.fillStyle = g; n.fillRect(X - R, Y - R, R * 2, R * 2); };
-    const COLS = ["124,92,255", "168,85,247", "236,72,153", "56,189,248", "99,102,241"];
-    for (let k = 0; k < 420; k++) {
-      const t = r(), bx = W * (.05 + t * .95), by = H * (.12 + t * .32) + (r() - .5) * H * .32 * (1 - Math.abs(t - .5));
-      cloud(bx, by, 40 + r() ** 2 * 260, COLS[(r() * COLS.length) | 0], .025 + r() * .05);
-    }
-    for (let k = 0; k < 60; k++) cloud(W * r(), H * r() * .7, 300 + r() * 400, COLS[(r() * COLS.length) | 0], .02);
-    // fine wisps, so the nebula has texture and isn't only soft blobs
-    const F = document.createElement("canvas"); F.width = W; F.height = H; const fq = F.getContext("2d"); fq.globalCompositeOperation = "lighter";
-    for (let k = 0; k < 1400; k++) { const t = r(), X = W * (.02 + t * .98), Y = H * (.12 + t * .32) + (r() - .5) * H * .28 * (1 - Math.abs(t - .5)), RR = 6 + r() ** 2 * 40, g = fq.createRadialGradient(X, Y, 0, X, Y, RR), c = COLS[(r() * COLS.length) | 0]; g.addColorStop(0, `rgba(${c},${.05 + r() * .06})`); g.addColorStop(1, `rgba(${c},0)`); fq.fillStyle = g; fq.fillRect(X - RR, Y - RR, RR * 2, RR * 2); }
-    x.filter = "blur(18px)"; x.drawImage(N, 0, 0); x.filter = "blur(2px)"; x.globalAlpha = .45; x.globalCompositeOperation = "lighter"; x.drawImage(N, 0, 0); x.globalAlpha = .9; x.filter = "blur(1.5px)"; x.drawImage(F, 0, 0); x.globalAlpha = 1; x.filter = "none"; x.globalCompositeOperation = "source-over";
-    // dark dust lanes through the nebula
-    for (let k = 0; k < 16; k++) { const t = r(), X = W * t, Y = H * (.15 + t * .3) + (r() - .5) * 120, R = 140 + r() * 220; const g = x.createRadialGradient(X, Y, 0, X, Y, R); g.addColorStop(0, "rgba(3,2,11,.2)"); g.addColorStop(1, "rgba(3,2,11,0)"); x.fillStyle = g; x.fillRect(X - R, Y - R, R * 2, R * 2); }
-    stars(520, r, H * .8, .9);
-    for (let k = 0; k < 14; k++) { const sx = r() * W, sy = r() * H * .65; glow(sx, sy, 12, "220,210,255", .45); x.fillStyle = "#fff"; x.beginPath(); x.arc(sx, sy, 1.8, 0, 7); x.fill(); }
-    // the planet: a huge dark ball whose top edge lights up
-    const PX = W * .42, PY = H * 2.35, PR = W * 1.02;
-    const halo = (w, a, blur) => { x.save(); x.filter = `blur(${blur}px)`; x.globalCompositeOperation = "lighter"; const cg = x.createConicGradient(-Math.PI / 2, PX, PY); cg.addColorStop(0, `rgba(56,189,248,${a})`); cg.addColorStop(.06, `rgba(167,139,250,${a})`); cg.addColorStop(.12, `rgba(236,72,153,${a * .7})`); cg.addColorStop(.2, `rgba(236,72,153,0)`); cg.addColorStop(.8, `rgba(56,189,248,0)`); cg.addColorStop(.92, `rgba(99,102,241,${a * .8})`); cg.addColorStop(1, `rgba(56,189,248,${a})`); x.strokeStyle = cg; x.lineWidth = w; x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.stroke(); x.restore(); };
-    halo(260, .16, 60); halo(90, .35, 26); halo(26, .6, 8);
-    const body = x.createRadialGradient(PX + PR * .25, PY - PR * .9, PR * .2, PX, PY, PR); body.addColorStop(0, "#1b1446"); body.addColorStop(.7, "#0a0720"); body.addColorStop(1, "#05040f");
-    x.fillStyle = body; x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.fill();
-    // faint cloud bands on the planet, and the lit rim
-    x.save(); x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.clip(); x.globalCompositeOperation = "lighter";
-    for (let k = 0; k < 9; k++) { const rr = PR - 30 - k * 34 - r() * 20; x.strokeStyle = `rgba(${k % 2 ? "124,92,255" : "56,189,248"},${.05 - k * .004})`; x.lineWidth = 10 + r() * 18; x.filter = "blur(10px)"; x.beginPath(); x.arc(PX, PY, rr, 0, 7); x.stroke(); }
-    x.filter = "blur(24px)"; const rim = x.createLinearGradient(0, PY - PR, 0, PY - PR + 260); rim.addColorStop(0, "rgba(167,139,250,.55)"); rim.addColorStop(1, "rgba(167,139,250,0)"); x.fillStyle = rim; x.fillRect(0, PY - PR, W, 260);
-    x.restore();
-    x.save(); x.globalCompositeOperation = "lighter"; x.lineWidth = 2.2; const lc = x.createConicGradient(-Math.PI / 2, PX, PY); lc.addColorStop(0, "rgba(255,255,255,.95)"); lc.addColorStop(.1, "rgba(240,171,252,.8)"); lc.addColorStop(.17, "rgba(240,171,252,0)"); lc.addColorStop(.85, "rgba(125,211,252,0)"); lc.addColorStop(.95, "rgba(186,230,253,.85)"); lc.addColorStop(1, "rgba(255,255,255,.95)"); x.strokeStyle = lc; x.beginPath(); x.arc(PX, PY, PR, 0, 7); x.stroke(); x.restore();
-    // sunrise: the star just coming over the edge, with a soft flare across the sky
-    const sa = -Math.PI / 2 + .19, SX = PX + Math.cos(sa) * PR, SY = PY + Math.sin(sa) * PR;
-    x.globalCompositeOperation = "lighter"; glow(SX, SY, 620, "167,139,250", .22); glow(SX, SY, 260, "240,171,252", .35); glow(SX, SY, 90, "255,240,255", .8); glow(SX, SY, 26, "255,255,255", 1);
-    x.save(); x.translate(SX, SY); x.rotate(-.12); const fl = x.createLinearGradient(-900, 0, 900, 0); fl.addColorStop(0, "rgba(167,139,250,0)"); fl.addColorStop(.5, "rgba(255,240,255,.5)"); fl.addColorStop(1, "rgba(167,139,250,0)"); x.fillStyle = fl; x.filter = "blur(3px)"; x.fillRect(-900, -1.5, 1800, 3); x.restore();
-    x.globalCompositeOperation = "source-over";
-    // a gentle vignette and film grain
-    const v = x.createRadialGradient(W / 2, H * .45, H * .3, W / 2, H / 2, W * .75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.45)"); x.fillStyle = v; x.fillRect(0, 0, W, H);
-    grain(r, 5);
-  },
+  // 13 to 16. Nebulux Horizon (4.4): sunrise, day, dusk and night (horizon() and HZ above)
+  () => horizon(HZ.rise),
+  () => horizon(HZ.day),
+  () => horizon(HZ.dusk),
+  () => horizon(HZ.night),
 ];
 window.paint = (i) => { x.save(); x.clearRect(0, 0, W, H); PAINT[i](); x.restore(); return cv.toDataURL("image/jpeg", .9); };
 window.count = PAINT.length;

@@ -667,7 +667,7 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // Settings > About: Copy the device details
   await p.evaluate(() => { NX.closeAll(); NX.setPref("cliphist", true); NX.setData("clip-history", []); NX.open("settings", { page: "about" }); }); await wait(600);
   await p.evaluate(() => document.querySelector("#s-speccopy").click()); await wait(200);
-  ok(await p.evaluate(() => /^Nebulux OS 4\.2[\s\S]*Device name: Nebulux PC/.test((NX.clip.list()[0] || {}).t || "")), "About's Copy copies the device details");
+  ok(await p.evaluate(() => ((NX.clip.list()[0] || {}).t || "").startsWith("Nebulux OS " + NX.version) && /Device name: Nebulux PC/.test((NX.clip.list()[0] || {}).t || "")), "About's Copy copies the device details");
   await p.evaluate(() => { NX.setData("clip-history", []); NX.closeAll(); });
   // battery chart
   ok(await p.evaluate(() => { const n = Date.now(); NX.set("batt-log", [{ t: n - 7200000, p: 80, c: false }, { t: n - 3600000, p: 60, c: true }]); return /<svg/.test(NX.battChart()) && /#22c55e/.test(NX.battChart()); }), "the battery chart draws the last 24 hours, with charging times");

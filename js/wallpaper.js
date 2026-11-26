@@ -1,4 +1,4 @@
-// Nebulux OS wallpapers: nebula pictures (soft color clouds, a glowing swirl, stars) in img/wall-0.jpg ... wall-13.jpg (13, Nebulux Horizon, is the default).
+// Nebulux OS wallpapers: nebula pictures (soft color clouds, a glowing swirl, stars) in img/wall-0.jpg ... wall-16.jpg; 17, Horizon Dynamic, shows 13 to 16 by the time of day and is the default.
 // NX.wallpapers is the list; NX.wallpaperURL(i, w, h) gives a picture for the desktop, lock screen and previews.
 "use strict";
 (function () {
@@ -17,14 +17,22 @@
     { name: "Nebulux Four" }, // made for 4.0
     { name: "Aurora Ribbon" },
     { name: "Pearl Dawn", light: true },
-    { name: "Nebulux Horizon" }, // made for 4.3: the default
+    { name: "Nebulux Horizon" }, // 4.4: sunrise
+    { name: "Horizon Day" },
+    { name: "Horizon Dusk" },
+    { name: "Horizon Night" },
+    { name: "Horizon Dynamic", dynamic: true }, // 4.4: changes with the time of day, the default
   ];
-  NX.defaultWall = 13;
+  // the dynamic background: sunrise 5 to 8 in the morning, day until 5 in the evening, dusk until 8, then night
+  NX.wallNow = () => { const h = new Date().getHours(); return h >= 5 && h < 8 ? 13 : h >= 8 && h < 17 ? 14 : h >= 17 && h < 20 ? 15 : 16; };
+  NX.defaultWall = 17;
+  let lastPick = NX.wallNow();
+  setInterval(() => { const n = NX.wallNow(); if (n === lastPick) return; lastPick = n; document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "wallpaper-time" })); }, 60000);
   // each picture's own color, for the 4.0 Aura glass (worked out once from the pictures)
-  NX.wallAura = ["#494085", "#21617c", "#a35324", "#2e3578", "#6d3360", "#cdc9f5", "#281b4b", "#321d4f", "#0e373c", "#dddaf3", "#231c44", "#262854", "#f3e0ee", "#2b2163"];
+  NX.wallAura = ["#494085", "#21617c", "#a35324", "#2e3578", "#6d3360", "#cdc9f5", "#281b4b", "#321d4f", "#0e373c", "#dddaf3", "#231c44", "#262854", "#f3e0ee", "#2b2163", "#1b2f6b", "#4a1a35", "#151236"];
   // ready-made pictures (painting them at start-up was slow without graphics acceleration); one picture for every size
   // your own picture (Settings > Personalization > Browse photos) is wallpaper "custom", kept for each person
   const own = () => (NX.me && NX.data ? NX.data("wall-custom", null) : null);
   NX.wallpaperURL = (i, ...r) => (i === "custom" ? own() || builtIn(NX.defaultWall) : builtIn(i, ...r));
-  const builtIn = (i) => { i = ((i | 0) % NX.wallpapers.length + NX.wallpapers.length) % NX.wallpapers.length; return new URL("img/wall-" + i + ".jpg", location.href).href; }; // a full address: CSS would read a short one from the css folder
+  const builtIn = (i) => { i = ((i | 0) % NX.wallpapers.length + NX.wallpapers.length) % NX.wallpapers.length; if (NX.wallpapers[i].dynamic) i = NX.wallNow(); return new URL("img/wall-" + i + ".jpg", location.href).href; }; // a full address: CSS would read a short one from the css folder
 })();
