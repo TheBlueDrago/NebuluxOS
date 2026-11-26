@@ -625,6 +625,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { NX.closeAll(); NX.quickSearch(); const i = document.querySelector("#nx-qs input"); i.value = "time in tokyo"; i.dispatchEvent(new Event("input")); }); await wait(400);
   ok(await p.evaluate(() => /in Tokyo/.test(document.querySelector("#nx-qs .qs2-res").textContent)), "Quick Search tells the time in a city");
   await p.keyboard.press("Escape");
+  // lock screen slideshow
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("lockPic", "show"); NX.shell.lockKeep(); }); await wait(800);
+  const lw0 = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--wall"));
+  await p.evaluate(() => NX.lockShowNext()); await wait(400);
+  ok(await p.evaluate((w) => getComputedStyle(document.documentElement).getPropertyValue("--wall") !== w, lw0), "the lock screen slideshow moves to the next background");
+  await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(400);
+  await p.evaluate(() => NX.setPref("lockPic", "match"));
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

@@ -963,3 +963,18 @@ NX.holidayGreeting = () => {
   setInterval(() => NX.dndTick(), 30000); document.addEventListener("nx:signin", () => { was = null; setTimeout(() => NX.dndTick(), 1500); });
   document.addEventListener("nx:prefs", (e) => { if (/^dnd(Sched|From|To)$/.test(e.detail || "")) { was = null; NX.dndTick(); } });
 })();
+
+// ---------- lock screen slideshow: while locked, the lock screen moves through the backgrounds every 90 seconds ----------
+(function () {
+  let t = 0;
+  NX.lockShowNext = () => {
+    const n = (NX.wallpapers || []).length; if (!n) return;
+    NX.set("lock-wall", ((+NX.get("lock-wall", 0) || 0) + 1) % n);
+    document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "lockshow" }));
+  };
+  setInterval(() => {
+    const L = document.getElementById("lock");
+    if (!L || L.hidden || NX.me || !NX.get("lock-show", 0)) { t = 0; return; }
+    if (++t >= 9) { t = 0; NX.lockShowNext(); }
+  }, 10000);
+})();

@@ -3,6 +3,7 @@
 (function () {
   NX.version = "4.2";
   NX.whatsNew = [
+    ["Lock screen slideshow", "Settings > Personalization > Lock screen picture > Slideshow moves through all the backgrounds while the computer is locked."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
