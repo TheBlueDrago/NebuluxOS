@@ -562,9 +562,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Control"); await p.keyboard.press("w"); await p.keyboard.up("Control"); await wait(300);
   ok(await p.evaluate(() => !NX.wins.has("calculator")), "so Ctrl + W again closes that one too");
   await p.keyboard.down("Control"); await p.keyboard.press("Slash"); await p.keyboard.up("Control"); await wait(300);
-  ok(await p.evaluate(() => !!document.querySelector(".nx-keys") && /Keyboard shortcuts/.test(document.querySelector(".nx-keys").textContent)), "Ctrl + / lists the keyboard shortcuts");
+  ok(await p.evaluate(() => !!document.querySelector("#nx-keys") && /Keyboard shortcuts/.test(document.querySelector("#nx-keys").textContent)), "Ctrl + / lists the keyboard shortcuts");
   await p.keyboard.press("Escape"); await wait(200);
-  ok(await p.evaluate(() => !document.querySelector(".nx-keys")), "and Esc closes the list");
+  ok(await p.evaluate(() => !document.querySelector("#nx-keys")), "and Esc closes the list");
   ok(await p.evaluate(() => { NX.setPref("flashAlerts", true); NX.alarmTone(); const on = !!document.querySelector(".nx-flash"); NX.setPref("flashAlerts", false); return on; }), "Flash the screen for alerts flashes when an alarm sounds");
   await p.evaluate(() => NX.closeAll());
   // double-click a ZIP file: Extract all?

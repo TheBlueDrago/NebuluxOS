@@ -20,22 +20,8 @@
     NX.toast(w.app && w.app.name ? w.app.name + " at " + Math.round(z * 100) + "%" : Math.round(z * 100) + "%");
   };
 
-  // Ctrl + / : every shortcut in one place
-  const LIST = [
-    ["Windows and apps", [["Ctrl + W", "Close the tab, or the window"], ["Ctrl + T", "New tab (Notepad, File Explorer)"], ["Ctrl + N", "New tab or note"], ["Ctrl + Shift + T", "Bring back the tab you closed"], ["Ctrl + Tab", "Next tab (add Shift to go back)"], ["Ctrl + 1 to 9", "Go to a tab"], ["Alt + F4", "Close the window, or shut down from the desktop"], ["Alt + Tab", "Switch between windows"], ["Nebulux + Arrow keys", "Snap a window to a side, or maximize it"], ["Nebulux + Z", "Snap layouts"], ["Nebulux + D", "Show the desktop"]]],
-    ["Seeing better", [["Ctrl + Plus / Minus", "Zoom the window you're in"], ["Ctrl + 0", "Zoom back to 100%"], ["Ctrl + mouse wheel", "Zoom the window under the pointer"], ["Nebulux + Plus / Minus", "Magnifier"], ["Nebulux + Esc", "Stop the Magnifier"]]],
-    ["Nebulux OS", [["Nebulux", "Open Start"], ["Nebulux + E", "File Explorer"], ["Nebulux + L", "Lock"], ["Nebulux + V", "Clipboard history"], ["Nebulux + W", "Widgets"], ["Nebulux + Shift + S", "Screenshot"], ["Ctrl + Shift + Esc", "Task Manager"], ["Ctrl + Alt + Delete", "Lock, switch user, sign out"], ["Ctrl + /", "This list"]]],
-    ["Typing", [["Ctrl + C, X, V", "Copy, cut, paste"], ["Ctrl + Z", "Undo (File Explorer: put back what you deleted)"], ["Ctrl + F", "Find (Notepad)"], ["Ctrl + H", "Replace (Notepad)"], ["Ctrl + G", "Go to line (Notepad)"], ["F5", "Date and time (Notepad)"], ["F2", "Rename (File Explorer)"], ["Space", "Quick look at a file (File Explorer)"]]],
-  ];
-  NX.shortcutsSheet = () => {
-    const old = document.querySelector(".nx-keys"); if (old) { old.remove(); return; }
-    const d = document.createElement("div"); d.className = "nx-keys"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Keyboard shortcuts");
-    d.innerHTML = `<div class="nk-card"><div class="nk-head"><b>Keyboard shortcuts</b><button class="wb nk-x" aria-label="Close" title="Close (Esc)">${NX.icon("close", 14)}</button></div><div class="nk-cols">${LIST.map(([h, rows]) => `<section><h4>${NX.esc(h)}</h4>${rows.map(([k, t]) => `<div class="nk-row"><span class="nk-k">${k.split(" + ").map((x) => `<kbd>${NX.esc(x)}</kbd>`).join("<i>+</i>")}</span><span class="nk-t">${NX.esc(t)}</span></div>`).join("")}</section>`).join("")}</div></div>`;
-    const close = () => { d.remove(); removeEventListener("keydown", esc, true); };
-    const esc = (e) => { if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); close(); } };
-    d.onclick = (e) => { if (e.target === d || e.target.closest(".nk-x")) close(); };
-    addEventListener("keydown", esc, true); document.body.appendChild(d); d.querySelector(".nk-x").focus();
-  };
+  // Ctrl + / : the shortcut guide (the same one as Nebulux + /, in app-more.js)
+  NX.shortcutsSheet = () => NX.shortcuts && NX.shortcuts();
 
   // first: keep the browser's own keys (close tab, new tab, page zoom) away from the browser
   addEventListener("keydown", (e) => { if (isBrowserKey(e)) e.preventDefault(); }, true);
