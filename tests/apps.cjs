@@ -651,6 +651,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.keyboard.down("Control"); await p.keyboard.press("KeyZ"); await p.keyboard.up("Control"); await wait(900);
   ok(gone && await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].some((x) => /Undo me/.test(x.textContent))), "Ctrl + Z in File Explorer puts back a deleted file");
   await p.evaluate(() => NX.closeAll());
+  // Storage Sense empties old things from the Recycle Bin
+  ok(await p.evaluate(async () => { await NX.fs.emptyTrash(); const d = await NX.folder("Documents"); await NX.fs.write(d + "/Old.txt", "x"); await NX.fs.remove([d + "/Old.txt"]); NX.setPref("storageSense", true); const kept = await NX.storageSense(); const gone = await NX.storageSense(Date.now() + 31 * 86400000); const left = (await NX.fs.trash()).entries.length; NX.setPref("storageSense", false); return kept === 0 && gone === 1 && left === 0; }), "Storage Sense empties Recycle Bin items older than 30 days, and keeps newer ones");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

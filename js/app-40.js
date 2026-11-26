@@ -1005,3 +1005,17 @@ NX.holidayGreeting = () => {
   // still recording after the page reloads: bring the pill back
   document.addEventListener("nx:signin", () => { if (NX.native) NX.api("GET", "/screenrec").then((r) => { if (r.recording) { t0 = r.since || Date.now(); show(); } }).catch(() => {}); });
 })();
+
+// ---------- Storage Sense: empties Recycle Bin items older than 30 days by itself (Settings > System > Storage) ----------
+(function () {
+  NX.trashPurge = async (ids) => { if (!ids.length) return; if (NX.native) await NX.api("POST", "/files/purge", { ids }); else NX.setData("vfs-trash", NX.data("vfs-trash", []).filter((t) => !ids.includes(t.id))); };
+  NX.storageSense = async (now) => {
+    if (!NX.me || !NX.prefs().storageSense || !NX.fs || !NX.fs.trash) return 0;
+    const limit = (now || Date.now()) - 30 * 86400000;
+    const old = ((await NX.fs.trash().catch(() => ({ entries: [] }))).entries || []).filter((e) => { const t = Date.parse(e.deleted); return isFinite(t) && t < limit; }).map((e) => e.id);
+    if (old.length) { await NX.trashPurge(old); if (NX.binCheck) NX.binCheck(); }
+    return old.length;
+  };
+  document.addEventListener("nx:signin", () => setTimeout(() => NX.storageSense(), 6000));
+  setInterval(() => NX.storageSense(), 6 * 3600000);
+})();
