@@ -738,3 +738,5 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .stn-empty.big b{font-size:18px;color:var(--txt)}
 .stn-empty.big p{margin:0;max-width:340px;line-height:1.5}
 .stn-empty.big .btn{margin-top:6px;display:inline-flex;align-items:center;gap:6px}
+/* File Explorer: no ring around the whole file list (the selected file shows where you are) */
+.fx-list:focus,.fx-list:focus-visible{outline:none;box-shadow:none}
