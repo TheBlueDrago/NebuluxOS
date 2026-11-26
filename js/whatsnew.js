@@ -23,6 +23,7 @@
     ["Pick up where you left off", "Settings > Apps > Reopen my apps when I sign in brings back the apps you had open."],
     ["Name your notes", "Saving in Notepad asks what to call the file, starting with its first line."],
     ["Search inside your files", "Quick Search finds the words inside your text files, not just their names, and shows a bit of the text around them."],
+    ["Arrange Start", "Drag the apps in Start's Pinned list to put them in the order you like."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],

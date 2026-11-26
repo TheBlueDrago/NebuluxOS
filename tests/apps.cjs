@@ -678,6 +678,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(async () => { NX.closeAll(); await NX.fs.write((await NX.folder("Documents")) + "/Trip.txt", "Packing list: sunscreen, hiking boots and a zebra hat"); NX.quickSearch(); const i = document.querySelector("#nx-qs input"); i.value = "zebra hat"; i.dispatchEvent(new Event("input")); }); await wait(1200);
   ok(await p.evaluate(() => { const r = document.querySelector("#nx-qs .qs2-res").textContent; return /Inside your files/i.test(r) && /Trip.txt/.test(r); }), "Quick Search finds words inside your text files");
   await p.keyboard.press("Escape");
+  // Start: drag a pinned app to move it
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("startOrder", []); NX.shell.closeFlyouts(); document.querySelector("#tb-start").click(); }); await wait(400);
+  const firstTwo = await p.evaluate(() => { const t = [...document.querySelectorAll("#start .sm-grid .sm-tile")]; const dt = new DataTransfer(); t[3].dispatchEvent(new DragEvent("dragstart", { dataTransfer: dt, bubbles: true })); t[0].dispatchEvent(new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true })); return t[3].dataset.app; }); await wait(300);
+  ok(await p.evaluate((id) => document.querySelector("#start .sm-grid .sm-tile").dataset.app === id && NX.prefs().startOrder[0] === id, firstTwo), "dragging a pinned app in Start moves it");
+  await p.evaluate(() => { NX.setPref("startOrder", []); NX.shell.closeFlyouts(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

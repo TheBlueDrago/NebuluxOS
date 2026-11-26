@@ -708,3 +708,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .ca-up{display:flex;flex-direction:column;gap:4px}
 .ca-upi{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:9px;text-align:left}.ca-upi:hover{background:var(--hover)}
 .ca-upi i{width:4px;align-self:stretch;border-radius:2px;background:var(--c)}.ca-upi span{display:flex;flex-direction:column;min-width:0}.ca-upi b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ca-upi small{color:var(--sub);font-size:11.5px}
+.sm-tile.drop{outline:2px dashed var(--accent);outline-offset:-2px}.sm-tile.dragging{opacity:.4}

@@ -303,7 +303,9 @@
   function startDraw(q, view) {
     const p = NX.prefs(), all = visibleApps(), me = NX.me;
     if (view === "all" && !q) return allAppsDraw(all, me);
-    const list = q ? all.filter((id) => NX.apps[id].name.toLowerCase().includes(q.toLowerCase())) : all;
+    // your own order for the pinned apps (drag a tile onto another to move it there)
+    const ord = p.startOrder || [], rank = (id) => { const i = ord.indexOf(id); return i < 0 ? 1000 + all.indexOf(id) : i; };
+    const list = q ? all.filter((id) => NX.apps[id].name.toLowerCase().includes(q.toLowerCase())) : [...all].sort((a, b) => rank(a) - rank(b));
     const rec = p.recent.filter((id) => all.includes(id)).slice(0, 4);
     $("#start").innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search" value="${NX.esc(q || "")}"></label>
       <div class="sm-body ${q ? "sm-searching" : ""}">${q ? `<div class="sm-split"><div class="sm-left"><h4>Best match</h4><div class="sm-results">${list.map((id) => `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 32)}<span><b>${NX.esc(NX.apps[id].name)}</b><small>App</small></span></button>`).join("")}<button class="sm-res" data-web="1">${NX.icon("google", 32)}<span><b>${NX.esc(q)}</b><small>Search the web with Google</small></span></button></div></div><aside class="sm-detail" aria-label="Details"></aside></div>` :
@@ -322,6 +324,12 @@
     S.querySelectorAll("[data-rfile]").forEach((b) => { const f = NX.data("recent-files", [])[+b.dataset.rfile]; if (f && f.kind === "image" && NX.fs && NX.fs.url) NX.fs.url(f.path).then((u) => { const i = b.querySelector("svg"); if (i) i.outerHTML = `<img class="sm-thumb" src="${NX.esc(u)}" alt="">`; }).catch(() => {}); });
     $("[data-me]", S).onclick = () => { closeFlyouts(); NX.open("settings", { page: "accounts" }); };
     smFootWire(S);
+    S.querySelectorAll(".sm-grid .sm-tile[data-app]").forEach((t) => { t.draggable = true;
+      t.ondragstart = (e) => { e.dataTransfer.setData("text/nx-pin", t.dataset.app); e.dataTransfer.effectAllowed = "move"; t.classList.add("dragging"); };
+      t.ondragend = () => t.classList.remove("dragging");
+      t.ondragover = (e) => { e.preventDefault(); t.classList.add("drop"); }; t.ondragleave = () => t.classList.remove("drop");
+      t.ondrop = (e) => { e.preventDefault(); t.classList.remove("drop"); const from = e.dataTransfer.getData("text/nx-pin"); if (!from || from === t.dataset.app) return; const cur = [...S.querySelectorAll(".sm-grid .sm-tile[data-app]")].map((x) => x.dataset.app).filter((x) => x !== from); cur.splice(cur.indexOf(t.dataset.app), 0, from); NX.setPref("startOrder", cur); startDraw(""); };
+    });
     const rm = $("[data-recmore]", S); if (rm) rm.onclick = (e) => { e.stopPropagation(); closeFlyouts(); NX.open("files", { path: "::recent" }); };
   }
   // Recommended: recently opened files first (like Windows 11), then recently used apps
