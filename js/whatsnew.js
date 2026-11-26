@@ -6,6 +6,7 @@
     ["Nebulux Horizon", "A new background that follows the time of day: the glowing edge of a planet under a violet nebula, at sunrise, in daylight, at dusk and at night. New accounts start with Horizon Dynamic; each time of day is also its own background in Settings > Personalization."],
     ["New icons", "Settings has a glossy gear with a glowing nebula in the middle, Task Manager a glowing live chart, and Get Started a bright star."],
     ["Narrator", "A screen reader: it reads out loud what the keyboard or mouse is on, windows that open and messages. Turn it on in Settings > Accessibility or with Ctrl + Nebulux + Enter; Ctrl stops the talking. Its voice comes with the 4.4 USB."],
+    ["Symbols", "Nebulux + . opens Symbols: ©, °, ™, currency, math, arrows, Greek and accented letters, typed right where you are typing."],
     ["The taskbar from the keyboard", "Nebulux + T goes to the apps on the taskbar and Nebulux + B to the icons on the right; the arrow keys move along and Enter opens."],
     ["Every switch works with the keyboard", "Tab reaches every switch in Settings, and each one says which setting it is."],
     ["Ctrl + W and friends", "Ctrl + W closes the tab or the window, Ctrl + T and Ctrl + N open a tab, Ctrl + Shift + T brings back the tab you closed, and Ctrl + Tab or Ctrl + 1 to 9 move between tabs, in Notepad and File Explorer."],

@@ -588,6 +588,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Meta"); await p.keyboard.press("b"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => document.activeElement.id === "tb-qs"), "Nebulux + B goes to the icons on the right");
   await p.keyboard.press("Escape"); await p.evaluate(() => NX.closeAll());
+  // Symbols (Nebulux + .): click one and it's typed where you were typing
+  await p.evaluate(() => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); }); await wait(500);
+  await p.focus(".win[data-app=notepad] textarea"); await p.keyboard.type("20");
+  await p.keyboard.down("Meta"); await p.keyboard.press("Period"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => !!document.querySelector(".nx-sym [data-c]")), "Nebulux + . opens Symbols");
+  await p.click('.nx-sym [data-c="°"]'); await p.keyboard.type("C"); await wait(200);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "20°C"), "clicking a symbol types it where you were typing");
+  ok(await p.evaluate(() => NX.data("sym-recent", [])[0] === "°"), "and it's kept under Recent");
+  await p.keyboard.press("Escape"); await p.evaluate(() => { const d = document.querySelector(".nx-sym"); if (d) d.remove(); document.querySelector(".win[data-app=notepad] textarea").value = ""; document.querySelector(".win[data-app=notepad] textarea").dispatchEvent(new Event("input")); }); await wait(500); await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

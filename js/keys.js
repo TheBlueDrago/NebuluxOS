@@ -145,4 +145,45 @@
     if (to != null) { e.preventDefault(); L[Math.max(0, Math.min(L.length - 1, to))].focus(); }
     else if (e.key === "Escape") { a.blur(); }
   });
+  // ---------- Symbols (Nebulux + .): special characters for whatever you're typing in, like Windows' symbol panel
+  // (symbols only: Nebulux OS doesn't use emojis) ----------
+  const SYM = [
+    ["Popular", "© ® ™ ° • … – — ¶ § † ‡ ‰ € £ ¥ ¢ ½ ¼ ¾ × ÷ ± ≈ ≠ ≤ ≥ ∞ √ π µ ← → ↑ ↓ ✓ ✗ ★ ☆"],
+    ["Punctuation", "« » ‹ › “ ” ‘ ’ „ ‚ ¡ ¿ · ¦ ‖ ′ ″ ‴ ※ ⁂ ⁎ ⁑ ⸮"],
+    ["Currency", "$ € £ ¥ ¢ ₹ ₩ ₽ ₺ ₴ ₦ ₱ ₫ ₪ ₡ ₲ ₵ ₸ ₿ ¤"],
+    ["Math", "+ − × ÷ = ≠ ≈ ≡ < > ≤ ≥ ± ∓ √ ∛ ∜ ∞ ∑ ∏ ∫ ∂ ∆ ∇ ∈ ∉ ∩ ∪ ⊂ ⊃ ⊆ ⊇ ∀ ∃ ∅ ∝ ∠ ⊥ ∥ ° ′ ″ ¹ ² ³ ⁴ ½ ⅓ ⅔ ¼ ¾ ⅛ π"],
+    ["Arrows", "← → ↑ ↓ ↔ ↕ ↖ ↗ ↘ ↙ ⇐ ⇒ ⇑ ⇓ ⇔ ⇕ ↩ ↪ ↺ ↻ ➔ ➜ ➝ ➞ ➟ ➠ ⟵ ⟶ ⟷"],
+    ["Letters", "á à â ä ã å æ ç é è ê ë í ì î ï ñ ó ò ô ö õ ø œ ß ú ù û ü ý ÿ Á À Â Ä Ã Å Æ Ç É È Ê Ë Í Ì Î Ï Ñ Ó Ò Ô Ö Õ Ø Œ Ú Ù Û Ü Ý"],
+    ["Greek", "α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω Α Β Γ Δ Θ Λ Ξ Π Σ Φ Ψ Ω"],
+    ["Shapes", "■ □ ▪ ▫ ▲ △ ▼ ▽ ◆ ◇ ○ ● ◎ ◐ ◑ ★ ☆ ♠ ♣ ♥ ♦ ♤ ♧ ♡ ♢ ♪ ♫ ✦ ✧ ✱ ✳"],
+  ];
+  let lastEdit = null;
+  const editable = (el) => el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|search|email|url|tel|password|)$/i.test(el.type || "")) || el.isContentEditable);
+  addEventListener("focusin", (e) => { if (editable(e.target) && !e.target.closest(".nx-sym")) lastEdit = e.target; }, true);
+  const put = (ch) => {
+    const t = lastEdit; if (!t || !t.isConnected) { navigator.clipboard && navigator.clipboard.writeText(ch).catch(() => {}); if (NX.clip) NX.clip.add(ch); NX.toast("Copied " + ch + ". Paste it where you're typing."); return; }
+    t.focus();
+    if (t.isContentEditable) { document.execCommand("insertText", false, ch); return; }
+    const a = t.selectionStart != null ? t.selectionStart : t.value.length, b = t.selectionEnd != null ? t.selectionEnd : a;
+    t.setRangeText(ch, a, b, "end"); t.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  NX.symbols = () => {
+    const old = document.querySelector(".nx-sym"); if (old) { old.remove(); return; }
+    if (!NX.me) return;
+    const recent = NX.data("sym-recent", []), groups = recent.length ? [["Recent", recent.join(" ")], ...SYM] : SYM;
+    const d = document.createElement("div"); d.className = "nx-sym"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Symbols");
+    let g = 0;
+    const draw = () => {
+      d.innerHTML = `<div class="sy-head"><b>Symbols</b><button class="wb sy-x" aria-label="Close" title="Close (Esc)">${NX.icon("close", 12)}</button></div><div class="sy-tabs" role="tablist">${groups.map(([n], i) => `<button role="tab" aria-selected="${i === g}" class="${i === g ? "on" : ""}" data-g="${i}">${NX.esc(n)}</button>`).join("")}</div><div class="sy-grid">${groups[g][1].split(" ").filter(Boolean).map((c) => `<button data-c="${NX.esc(c)}" aria-label="${NX.esc(c)}" title="${NX.esc(c)}">${NX.esc(c)}</button>`).join("")}</div><small class="sy-tip">Click a symbol to type it. Nebulux + . opens this any time.</small>`;
+      d.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { g = +b.dataset.g; draw(); }));
+      d.querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => { const c = b.dataset.c; put(c); NX.setData("sym-recent", [c, ...NX.data("sym-recent", []).filter((x) => x !== c)].slice(0, 24)); }));
+      d.querySelector(".sy-x").onclick = () => d.remove();
+    };
+    draw(); document.body.appendChild(d);
+    // keep the place you were typing in (clicking the panel would otherwise take the focus away)
+    d.addEventListener("mousedown", (e) => { if (e.target.closest("[data-c]")) e.preventDefault(); });
+    d.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); d.remove(); if (lastEdit) lastEdit.focus(); } });
+  };
+  addEventListener("keydown", (e) => { if (e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "." || e.key === ";")) { e.preventDefault(); NX.symbols(); } }, true);
+  document.addEventListener("nx:key", (e) => { if (e.detail === "symbols") NX.symbols(); });
 })();
