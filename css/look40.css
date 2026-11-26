@@ -700,3 +700,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .s-bchart{display:flex;flex-direction:column;gap:6px}.s-bch{display:flex;align-items:baseline;gap:8px}.s-bch small{color:var(--sub)}
 .s-bchart svg{width:100%;height:120px;border-radius:10px;background:linear-gradient(#0000001f,#0000000a)}
 .s-bax{display:flex;justify-content:space-between;font-size:11px;color:var(--sub)}
+.s-stweek{display:flex;align-items:flex-end;gap:8px;height:110px;margin:10px 0 12px;padding:8px 4px 0;border-bottom:1px solid var(--line)}
+.s-stday{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.s-stday i{display:block;width:70%;max-width:34px;border-radius:6px 6px 2px 2px;background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.s-stday.on i{background:var(--accent)}.s-stday span{font-size:11px;color:var(--sub);padding-bottom:4px}
