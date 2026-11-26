@@ -19,6 +19,7 @@
     ["Playback speed", "Media Player plays slower or faster, from 0.5x to 2x."],
     ["Battery chart", "Settings > System shows your battery level over the last 24 hours, with the times it was charging."],
     ["Your week in Screen time", "Screen time shows a bar for each of the last 7 days."],
+    ["Coming up in Calendar", "Calendar lists your next events and holidays under the day you picked. Click one to jump to it."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],

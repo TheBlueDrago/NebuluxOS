@@ -704,3 +704,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .s-stday{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
 .s-stday i{display:block;width:70%;max-width:34px;border-radius:6px 6px 2px 2px;background:color-mix(in srgb,var(--accent) 45%,transparent)}
 .s-stday.on i{background:var(--accent)}.s-stday span{font-size:11px;color:var(--sub);padding-bottom:4px}
+.ca-uph{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--sub)}
+.ca-up{display:flex;flex-direction:column;gap:4px}
+.ca-upi{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:9px;text-align:left}.ca-upi:hover{background:var(--hover)}
+.ca-upi i{width:4px;align-self:stretch;border-radius:2px;background:var(--c)}.ca-upi span{display:flex;flex-direction:column;min-width:0}.ca-upi b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ca-upi small{color:var(--sub);font-size:11.5px}
