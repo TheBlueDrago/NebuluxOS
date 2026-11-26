@@ -631,6 +631,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.click('#qs .qs-arow:has([data-qa="stickyKeys"])'); await wait(200);
   ok(await p.evaluate(() => NX.prefs().stickyKeys === true && !document.querySelector("#qs").hidden), "its switches work and the panel stays open");
   await p.evaluate(() => { NX.setPref("stickyKeys", false); NX.shell.closeFlyouts(); }); await wait(200);
+  // Show messages for: a message stays as long as asked
+  await p.evaluate(() => { document.querySelectorAll("#toasts .toast").forEach((t) => t.remove()); NX.setPref("toastSecs", 7); NX.toast("Long message"); }); await wait(4500);
+  ok(await p.evaluate(() => [...document.querySelectorAll("#toasts .toast")].some((t) => /Long message/.test(t.textContent) && !t.classList.contains("out"))), "Show messages for keeps a message up longer");
+  await p.evaluate(() => { NX.setPref("toastSecs", 3.2); document.querySelectorAll("#toasts .toast").forEach((t) => t.remove()); });
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

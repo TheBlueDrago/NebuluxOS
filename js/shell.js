@@ -14,7 +14,11 @@
     const box = $("#toasts"), t = document.createElement("div"); t.className = "toast"; t.innerHTML = `${NX.icon(NX.noteIcon ? NX.noteIcon(text) : "logo", 18)}<span>${NX.esc(text)}</span>`;
     box.appendChild(t); while (box.children.length > 3) box.firstChild.remove();
     t.title = "Click to close"; t.onclick = () => { t.classList.add("out"); setTimeout(() => t.remove(), 350); };
-    setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3600);
+    // how long it stays: Settings > Accessibility > Show messages for (and never while the pointer is on it)
+    const stay = Math.max(3.2, +(NX.me && NX.prefs().toastSecs) || 3.2) * 1000; let gone = 0;
+    const later = (ms) => { clearTimeout(gone); gone = setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 400); }, ms); };
+    t.addEventListener("mouseenter", () => clearTimeout(gone)); t.addEventListener("mouseleave", () => later(1500));
+    later(stay);
   };
   // the internet: this computer's real connection, plus the OS's own Wi-Fi switch and airplane mode
   NX.online = () => navigator.onLine !== false;
