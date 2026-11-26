@@ -131,3 +131,30 @@
   corner.insertBefore(b, power); corner.appendChild(m);
   document.addEventListener("click", () => { m.hidden = true; });
 })();
+
+// ---------- PDF Viewer: PDF files open in their own window (the browser's own PDF reader inside: zoom, find, print) ----------
+(function () {
+  const A = NX.apps;
+  A.pdf = { name: "PDF Viewer", icon: "pdfview", builtIn: true, category: "Productivity", rating: "4.6", size: "1 MB", w: 900, h: 700, minW: 360, minH: 320,
+    desc: "Read PDF files: zoom, search, rotate and print.",
+    open(body, win, opts) {
+      body.classList.add("pdfv"); let url = null;
+      const empty = () => { body.innerHTML = `<div class="pdfv-empty">${NX.icon("pdfview", 72)}<b>Open a PDF</b><p>Double-click a PDF file in File Explorer, or pick one here.</p><button class="btn primary" data-pv="files">Open File Explorer</button></div>`; body.querySelector("[data-pv=files]").onclick = () => NX.open("files", { place: "Documents" }); };
+      const load = async (p) => {
+        if (!p) return empty();
+        const name = NX.fs.base(p); win.el.querySelector(".wt-name").textContent = name + " - PDF Viewer";
+        body.innerHTML = `<div class="pdfv-load">Opening ${NX.esc(name)}...</div>`;
+        try {
+          // the file comes in as bytes and is shown from this page, so the PDF reader works the same on the USB and in a tab
+          const src = NX.native ? NX.rawURL(p) : await NX.fs.url(p);
+          const blob = await (await fetch(src)).blob(); if (!blob.size) throw new Error("empty");
+          if (url) URL.revokeObjectURL(url); url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+          body.innerHTML = `<iframe class="pdfv-frame" title="${NX.esc(name)}" src="${url}"></iframe>`;
+          win.pdf = { path: p, name };
+        } catch (e) { body.innerHTML = `<div class="pdfv-empty">${NX.icon("pdfview", 56)}<b>That PDF couldn't be opened</b><p>It may have been moved, or it isn't a PDF file.</p></div>`; }
+      };
+      win.onopts = (o) => { if (o && o.path) load(o.path); };
+      win.onclose = () => { if (url) URL.revokeObjectURL(url); };
+      load(opts && opts.path);
+    } };
+})();

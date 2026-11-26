@@ -647,6 +647,19 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !NX.prefs().narrator && NX.narrator.last === "Narrator is off."), "Ctrl + Nebulux + Enter turns Narrator off");
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=settings] [data-pg], .win[data-app=settings] button").focus(); return NX.narrator.last === "Narrator is off."; }), "and then it's quiet");
   await p.evaluate(() => NX.closeAll());
+  // PDF files open in PDF Viewer; Open with lists the apps for a file
+  ok(await p.evaluate(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)), NL = String.fromCharCode(10);
+    const pdf = ["%PDF-1.4", "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj", "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj", "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj", "trailer<</Root 1 0 R>>", "%%EOF"].join(NL);
+    const r = await NX.fs.upload("/Documents", "Guide.pdf", new Blob([pdf], { type: "application/pdf" }));
+    NX.closeAll(); NX.openFile({ name: "Guide.pdf", path: r.path, kind: "pdf" }); await w(800);
+    const win = document.querySelector(".win[data-app=pdf]"), fr = win && win.querySelector("iframe.pdfv-frame");
+    const ok1 = !!fr && fr.src.startsWith("blob:") && /Guide.pdf/.test(win.querySelector(".wt-name").textContent);
+    const ow = NX.openWith({ name: "Guide.pdf", path: r.path, kind: "pdf" }).map((x) => x[0]).join(",");
+    const ow2 = NX.openWith({ name: "x.log", path: "/Documents/x.log", kind: "text" }).map((x) => x[0]).join(",");
+    await NX.fs.remove([r.path], true); NX.closeAll();
+    return ok1 && ow === "PDF Viewer,Notepad" && ow2 === "Notepad" ? true : JSON.stringify([ok1, ow, ow2]);
+  }).then((r) => r === true || (console.log(r), false)), "a PDF opens in PDF Viewer, and Open with lists the apps for a file");
   // double-click a ZIP file: Extract all?
   ok(await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); const f = await NX.fs.create("/Documents", "Packed", true); await NX.fs.write(f.path + "/p.txt", "packed"); const z = await NX.fs.zip([f.path]); await NX.fs.remove([f.path], true); NX.closeAll(); NX.open("files", { place: "Documents" }); await w(700); const it = [...document.querySelectorAll(".fx-item")].find((x) => x.dataset.k === z.path); if (!it) return "no item"; it.dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); await w(300); const form = document.querySelector(".nx-ask-card"); if (!form || !/Extract all/.test(form.textContent)) return "no ask"; form.requestSubmit(); await w(800); const t = await NX.fs.read("/Documents/Packed/p.txt").catch(() => null); await NX.fs.remove(["/Documents/Packed", z.path], true); NX.closeAll(); return t === "packed" || "text " + t; }).then((r) => r === true || (console.log(r), false)), "double-clicking a ZIP file asks, then extracts it");
   // the sign-in screen's Accessibility button: sign in with only the on-screen keyboard

@@ -157,6 +157,15 @@
   NX.fsClip = null; // { move, paths }
 
   // open a file in the app that fits it
+  // Open with (right-click a file): the apps that can open it, and Notepad for any file you want to read as text
+  NX.openWith = (e, list) => {
+    const k = e.kind || kindOf(e.name, false), O = [];
+    if (k === "image") O.push(["Photos", () => NX.open("photos", { path: e.path, list: (list || []).filter((x) => x.kind === "image") }), "photos"]);
+    if (k === "video" || k === "audio") O.push(["Media Player", () => NX.open("media", { path: e.path, list: (list || []).filter((x) => x.kind === "video" || x.kind === "audio") }), "media"]);
+    if (k === "pdf" && NX.apps.pdf) O.push(["PDF Viewer", () => NX.open("pdf", { path: e.path }), "pdfview"]);
+    if (k !== "image" && k !== "video" && k !== "audio") O.push(["Notepad", () => NX.open("notepad", { file: e.path }), "notepad"]);
+    return O;
+  };
   NX.openFile = (e, list) => {
     if (e.dir) return NX.open("files", { path: e.path });
     const rf = NX.data("recent-files", []).filter((x) => x.path !== e.path); rf.unshift({ name: e.name, path: e.path, kind: e.kind || kindOf(e.name, false), at: Date.now() }); NX.setData("recent-files", rf.slice(0, 8));
@@ -164,7 +173,8 @@
     if (k === "image") return NX.open("photos", { path: e.path, list: (list || []).filter((x) => x.kind === "image") });
     if (k === "video" || k === "audio") return NX.open("media", { path: e.path, list: (list || []).filter((x) => x.kind === "video" || x.kind === "audio") });
     if (k === "text") return NX.open("notepad", { file: e.path });
-    NX.toast("Nebulux OS can't open " + (k === "pdf" ? "PDF files" : "this kind of file") + " yet.");
+    if (k === "pdf" && NX.apps.pdf) return NX.open("pdf", { path: e.path });
+    NX.toast("Nebulux OS can't open this kind of file yet. Right-click it and pick Open with to try an app.");
   };
 
   // a small question box inside a window (no browser pop-ups)
@@ -376,7 +386,7 @@
         if (b && !sel.has(b.dataset.k)) { sel = new Set([b.dataset.k]); marks(); }
         const s = selected(), M = [];
         if (isTrash()) { if (s.length) M.push(["Restore", () => act("restore")], ["Delete for good", () => act("purge")]); M.push(["Empty Recycle Bin", () => act("empty")]); }
-        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (!isHome() && NX.fs.zip) { M.push(["Compress to ZIP file", () => act("zip")]); if (s.length === 1 && !s[0].dir && /\.zip$/i.test(s[0].name)) M.push(["Extract all", () => act("unzip")]); } if (s.length === 1 && !isTrash()) M.push(["Copy as path", () => { const t = s.map((e) => e.path).join(String.fromCharCode(10)); if (NX.clip) NX.clip.add(t); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {}); if (NX.native) NX.api("POST", "/clip", { text: t }).catch(() => {}); NX.toast("Copied " + (s.length === 1 ? "the path" : s.length + " paths") + "."); }, "copy"]); M.push(["Properties", () => props(s[0])]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
+        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && !s[0].dir && !isTrash()) { const ow = NX.openWith(s[0], items); if (ow.length) M.push(["Open with", () => NX.menu(ev.clientX + 12, ev.clientY + 12, ow.map(([n, go, ic]) => [n, go, ic]))]); } if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (!isHome() && NX.fs.zip) { M.push(["Compress to ZIP file", () => act("zip")]); if (s.length === 1 && !s[0].dir && /\.zip$/i.test(s[0].name)) M.push(["Extract all", () => act("unzip")]); } if (s.length === 1 && !isTrash()) M.push(["Copy as path", () => { const t = s.map((e) => e.path).join(String.fromCharCode(10)); if (NX.clip) NX.clip.add(t); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {}); if (NX.native) NX.api("POST", "/clip", { text: t }).catch(() => {}); NX.toast("Copied " + (s.length === 1 ? "the path" : s.length + " paths") + "."); }, "copy"]); M.push(["Properties", () => props(s[0])]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
         else if (!isHome()) { M.push(["New folder", () => act("newfolder")], ["New text file", () => act("newtext")]); if (NX.fsClip) M.push(["Paste", () => act("paste")]); M.push(["Refresh", () => load()]); }
         if (M.length) NX.menu(ev.clientX, ev.clientY, M);
       });
