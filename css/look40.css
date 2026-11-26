@@ -799,3 +799,7 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 .cpk-dot{width:32px;height:32px;border-radius:50%;background:var(--c);border:2px solid #ffffff30;cursor:pointer;padding:0}
 .cpk-dot.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .cpk-none,.cpk-tip{margin:0;color:var(--sub);font-size:12.5px}.cpk-clear{align-self:flex-start}
+
+/* Sticky Keys: which keys are held */
+.nx-sticky{position:fixed;right:12px;bottom:calc(var(--tb) + 12px);z-index:5600;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--bg2);border:1px solid var(--accent);box-shadow:0 10px 30px #0008;font-size:12.5px;color:var(--sub);pointer-events:none}
+.nx-sticky kbd{font:600 12px/1 var(--font);padding:4px 7px;border-radius:6px;background:var(--accent);color:#fff}

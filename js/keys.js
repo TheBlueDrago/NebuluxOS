@@ -186,4 +186,46 @@
   };
   addEventListener("keydown", (e) => { if (e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "." || e.key === ";")) { e.preventDefault(); NX.symbols(); } }, true);
   document.addEventListener("nx:key", (e) => { if (e.detail === "symbols") NX.symbols(); });
+  // ---------- Sticky Keys (Settings > Accessibility, or press Shift five times): press Ctrl, Alt, Shift or the Nebulux key
+  // on its own, then the next key, and they work as if held together. A pill by the clock shows what's held. ----------
+  const MODS = { Control: "ctrl", Alt: "alt", Shift: "shift", Meta: "meta", OS: "meta" }, held = { ctrl: false, alt: false, shift: false, meta: false };
+  const pill = () => {
+    let el = document.querySelector(".nx-sticky"); const on = NX.me && NX.prefs().stickyKeys, any = Object.values(held).some(Boolean);
+    if (!on || !any) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement("div"); el.className = "nx-sticky"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    el.innerHTML = [["ctrl", "Ctrl"], ["alt", "Alt"], ["shift", "Shift"], ["meta", "Nebulux"]].filter(([k]) => held[k]).map(([, t]) => `<kbd>${t}</kbd>`).join("") + "<span>held</span>";
+  };
+  const release = () => { held.ctrl = held.alt = held.shift = held.meta = false; pill(); };
+  let shifts = [];
+  addEventListener("keydown", (e) => {
+    if (!e.isTrusted || !NX.me) return;
+    const m = MODS[e.key];
+    // Shift five times in a row: offer Sticky Keys
+    if (e.key === "Shift" && !e.repeat && !e.ctrlKey && !e.altKey && !e.metaKey) { const t = Date.now(); shifts = [...shifts.filter((x) => t - x < 3000), t]; if (shifts.length >= 5 && !NX.prefs().stickyKeys) { shifts = []; NX.ask && NX.ask(document.body, { title: "Turn on Sticky Keys?", text: "Sticky Keys let you press Ctrl, Alt, Shift or the Nebulux key, then the next key, instead of holding them together.", ok: "Turn on" }).then((y) => { if (y) { NX.setPref("stickyKeys", true); NX.toast("Sticky Keys are on."); } }); return; } }
+    else if (!m) shifts = [];
+    if (!NX.prefs().stickyKeys) return;
+    // a modifier pressed on its own (only its own flag is down) holds it, or lets go of it if it was held
+    if (m) { const down = [e.ctrlKey, e.altKey, e.shiftKey, e.metaKey].filter(Boolean).length; if (!e.repeat && down <= 1) { held[m] = !held[m]; pill(); } return; }
+    const any = held.ctrl || held.alt || held.shift || held.meta; if (!any) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const mods = { ctrl: held.ctrl || e.ctrlKey, alt: held.alt || e.altKey, shift: held.shift || e.shiftKey, meta: held.meta || e.metaKey }; release();
+    const t = e.target, editable = t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT" || t.isContentEditable);
+    // typing: Shift alone makes a capital letter or the key's other character
+    if (editable && mods.shift && !mods.ctrl && !mods.alt && !mods.meta && e.key.length === 1) {
+      const up = { 1: "!", 2: "@", 3: "#", 4: "$", 5: "%", 6: "^", 7: "&", 8: "*", 9: "(", 0: ")", "-": "_", "=": "+", "[": "{", "]": "}", ";": ":", "'": "\"", ",": "<", ".": ">", "/": "?", "`": "~" }[e.key] || e.key.toUpperCase();
+      if (t.isContentEditable) document.execCommand("insertText", false, up); else { t.setRangeText(up, t.selectionStart, t.selectionEnd, "end"); t.dispatchEvent(new Event("input", { bubbles: true })); }
+      return;
+    }
+    // editing keys the browser keeps for itself: do them here
+    if (editable && mods.ctrl && !mods.alt && !mods.meta) {
+      const k = e.key.toLowerCase(), cmd = { c: "copy", x: "cut", a: "selectAll", z: mods.shift ? "redo" : "undo", y: "redo" }[k];
+      if (cmd) { document.execCommand(cmd); return; }
+      if (k === "v" && navigator.clipboard && navigator.clipboard.readText) { navigator.clipboard.readText().then((s) => { if (t.isContentEditable) document.execCommand("insertText", false, s); else { t.setRangeText(s, t.selectionStart, t.selectionEnd, "end"); t.dispatchEvent(new Event("input", { bubbles: true })); } }).catch(() => {}); return; }
+    }
+    // everything else: the same key again, with the held keys down (Nebulux OS's own shortcuts, like Ctrl + W or Nebulux + E)
+    const ev = new KeyboardEvent("keydown", { key: e.key, code: e.code, ctrlKey: mods.ctrl, altKey: mods.alt, shiftKey: mods.shift, metaKey: mods.meta, bubbles: true, cancelable: true });
+    (t || document.body).dispatchEvent(ev);
+  }, true);
+  document.addEventListener("nx:prefs", (e) => { if (e.detail === "stickyKeys") release(); });
+  NX.sticky = { held, release };
 })();

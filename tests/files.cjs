@@ -597,6 +597,23 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "20°C"), "clicking a symbol types it where you were typing");
   ok(await p.evaluate(() => NX.data("sym-recent", [])[0] === "°"), "and it's kept under Recent");
   await p.keyboard.press("Escape"); await p.evaluate(() => { const d = document.querySelector(".nx-sym"); if (d) d.remove(); document.querySelector(".win[data-app=notepad] textarea").value = ""; document.querySelector(".win[data-app=notepad] textarea").dispatchEvent(new Event("input")); }); await wait(500); await p.evaluate(() => NX.closeAll());
+  // Sticky Keys: Shift five times offers them; then Ctrl, then W closes the window; Shift, then a, types A
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("stickyKeys", false); }); await wait(200);
+  for (let k = 0; k < 5; k++) { await p.keyboard.press("Shift"); await wait(60); }
+  await wait(300);
+  ok(await p.evaluate(() => /Sticky Keys/.test((document.querySelector(".nx-ask-card") || {}).textContent || "")), "pressing Shift five times offers Sticky Keys");
+  await p.evaluate(() => document.querySelector(".nx-ask-card").requestSubmit()); await wait(200);
+  ok(await p.evaluate(() => NX.prefs().stickyKeys === true), "and they turn on");
+  await p.evaluate(() => { NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); }); await wait(500);
+  await p.focus(".win[data-app=notepad] textarea");
+  await p.keyboard.press("Shift"); await wait(80);
+  ok(await p.evaluate(() => /Shift/.test((document.querySelector(".nx-sticky") || {}).textContent || "")), "a pill shows Shift is held");
+  await p.keyboard.press("a"); await p.keyboard.press("b"); await wait(100);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "Ab" && !document.querySelector(".nx-sticky")), "Shift, then a, types a capital A (just once)");
+  await p.evaluate(() => { NX.open("calculator"); }); await wait(400);
+  await p.keyboard.press("Control"); await wait(80); await p.keyboard.press("w"); await wait(300);
+  ok(await p.evaluate(() => !NX.wins.has("calculator") && NX.wins.has("notepad")), "Ctrl, then W, closes the window in front");
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); NX.setPref("stickyKeys", false); }); await wait(500); await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
