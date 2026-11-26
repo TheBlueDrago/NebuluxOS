@@ -50,7 +50,8 @@
         grid.innerHTML = L.length ? L.map((n) => `<div class="stn-note c-${n.c}" data-id="${n.id}">
             <div class="stn-top"><span class="stn-when">${when(n.at)}</span><span class="stn-cols">${COLORS.map(([c, name]) => `<button class="stn-dot c-${c} ${c === n.c ? "on" : ""}" data-c="${c}" aria-label="${name}" title="${name}"></button>`).join("")}</span><button class="stn-pin ${n.pin ? "on" : ""}" aria-label="${n.pin ? "Take off the desktop" : "Pin to the desktop"}" title="${n.pin ? "Take off the desktop" : "Pin to the desktop"}">${NX.icon("pin", 14)}</button><button class="stn-del" aria-label="Delete note" title="Delete">${NX.icon("trash", 14)}</button></div>
             <textarea aria-label="Note" placeholder="Take a note...">${NX.esc(n.t)}</textarea></div>`).join("")
-          : `<div class="stn-empty">${f ? "No notes match." : "No notes yet. Press New note to write one."}</div>`;
+          : (f ? `<div class="stn-empty">No notes match.</div>` : `<div class="stn-empty big">${NX.icon("sticky", 72)}<b>No notes yet</b><p>Jot down ideas, lists and reminders. Pin a note to keep it on your desktop.</p><button class="btn primary" data-a="new2">${NX.icon("plus", 14)}New note</button></div>`);
+        { const n2 = grid.querySelector("[data-a=new2]"); if (n2) n2.onclick = () => body.querySelector("[data-a=new]").click(); }
         grid.querySelectorAll(".stn-note").forEach((el) => {
           const id = el.dataset.id, ta = el.querySelector("textarea");
           ta.oninput = () => { const L2 = now().map((n) => (n.id === id ? Object.assign({}, n, { t: ta.value.slice(0, 20000), at: Date.now() }) : n)); save(L2); syncDesk(id, ta.value); };

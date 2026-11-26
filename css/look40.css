@@ -731,3 +731,10 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .np-posbtn{cursor:pointer;border-radius:6px;padding:1px 6px}.np-posbtn:hover{background:var(--hover,rgba(255,255,255,.08))}
 /* Store rows: the arrows do the scrolling, like the Microsoft Store (no grey bar under the cards) */
 .st-row{scrollbar-width:none}.st-row::-webkit-scrollbar{display:none}
+
+/* Sticky Notes: an empty screen like Photos and Media Player */
+.stn-empty.big{display:flex;flex-direction:column;align-items:center;gap:10px;padding:70px 20px}
+.stn-empty.big svg{filter:drop-shadow(0 14px 30px #0008)}
+.stn-empty.big b{font-size:18px;color:var(--txt)}
+.stn-empty.big p{margin:0;max-width:340px;line-height:1.5}
+.stn-empty.big .btn{margin-top:6px;display:inline-flex;align-items:center;gap:6px}
