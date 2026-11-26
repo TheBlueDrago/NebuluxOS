@@ -9,6 +9,7 @@ const OUT = process.env.SHOTS_OUT || path.join(__dirname, "public", "shots");
   await p.goto(URL, { waitUntil: "load" }); await wait(500);
   await p.evaluate(() => localStorage.clear()); await p.reload({ waitUntil: "load" }); await wait(600);
   await require("../tests/setup.cjs")(p, "Alex", "nebula1");
+  await p.evaluate(() => NX.setPref("wallpaper", 13)); // 4.4: Nebulux Horizon at sunrise, the same in every screenshot
   const shot = async (n) => { await wait(700); await p.screenshot({ path: path.join(OUT, n + ".jpg"), type: "jpeg", quality: +process.env.Q || 86 }); console.log("shot", n); };
   const reset = async () => { await p.evaluate(() => { document.querySelectorAll(".nx-pop").forEach((x) => x.remove()); NX.closeAll(); NX.shell.closeFlyouts(); if (NX.clip) NX.clip.close(); }); await p.mouse.move(700, 450); };
   await p.evaluate(() => { NX.battery = { present: true, percent: 82, charging: false }; document.dispatchEvent(new CustomEvent("nx:prefs", { detail: "battery" })); document.querySelectorAll(".toast,#toasts>*").forEach((x) => x.remove()); });
