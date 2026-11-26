@@ -10,7 +10,7 @@
     ["Nebulux + 1 to 9", "Open the apps on the taskbar, in order"], ["Alt + Tab", "Switch windows"], ["Print Screen", "Take a screenshot"], ["Nebulux + Shift + S", "Screenshot of part of the screen"], ["Nebulux + Space", "Quick Search"], ["Nebulux + G", "App Grid"], ["Ctrl + Shift + Esc", "Task Manager"],
     ["Ctrl + T / Ctrl + W", "New tab / close tab in File Explorer"],
   ];
-  const PAGES = [["welcome", "Welcome"], ["basics", "The basics"], ["keys", "Shortcuts"], ["new", "What's new"], ["more", "Make it yours"]];
+  const PAGES = [["welcome", "Welcome"], ["basics", "The basics"], ["keys", "Shortcuts"], ["new", "What's new"], ["access", "Accessibility"], ["more", "Make it yours"]];
   NX.apps.tips = {
     name: "Get Started", icon: "tips", builtIn: true, category: "Utilities", w: 880, h: 600, minW: 360, minH: 420,
     desc: "A quick tour of Nebulux OS: the basics, every shortcut, and what's new.",
@@ -32,6 +32,13 @@
           ${card("max", "Snap windows", "Drag a window to the top of the screen, or into a corner, to snap it. Then pick what fills the rest.", "", "")}</div>`;
         if (pg === "keys") return `<h2>Shortcuts</h2><p class="gs-sub">The Nebulux key is the key with the logo, between Ctrl and Alt.</p><div class="gs-keys">${KEYS.map(([k, t]) => `<div><span>${k.split(" ").map((x) => (x === "+" || x === "/" || x === "or" ? `<i>${x}</i>` : `<kbd>${NX.esc(x)}</kbd>`)).join(" ")}</span><small>${NX.esc(t)}</small></div>`).join("")}</div><p class="gs-sub" style="margin-top:14px">See them all any time with <b>Nebulux + /</b>.</p><button class="btn primary" type="button" onclick="NX.shortcuts && NX.shortcuts()">See every shortcut</button>`;
         if (pg === "new") return `<h2>What's new in ${NX.esc(NX.version)}</h2><div class="gs-new">${NX.whatsNew.map((w) => `<div><b>${NX.esc(w[0])}</b><p>${NX.esc(w[1])}</p></div>`).join("")}</div>`;
+        if (pg === "access") return `<h2>Accessibility</h2><p class="gs-sub">Ways to see, hear and use Nebulux OS your way. Each one is also in Settings > Accessibility and in Quick Settings.</p><div class="gs-grid">
+          ${card("volume", "Narrator", "Reads out loud what the keyboard or mouse is on. Ctrl + Nebulux + Enter turns it on or off.", NX.prefs().narrator ? "Turn off Narrator" : "Turn on Narrator", "a:narrator")}
+          ${card("keyboard", "On-screen keyboard", "Type with the mouse or a finger. Ctrl + Nebulux + O.", "Show it", "a:osk")}
+          ${card("zoomin", "Text size", "Make the words and buttons in apps bigger, or zoom one window with Ctrl + Plus.", "Text size", "access")}
+          ${card("contrast", "Color filters", "Grayscale, inverted, or colors shifted for red-green or blue-yellow color blindness.", "Color filters", "access")}
+          ${card("keyboard", "Sticky Keys", "Press Ctrl, Alt, Shift or Nebulux, then the next key. Or press Shift five times.", NX.prefs().stickyKeys ? "Turn off Sticky Keys" : "Turn on Sticky Keys", "a:stickyKeys")}
+          ${card("volume", "Mono audio and captions", "Hear everything in either ear, and see captions for videos that come with a subtitle file.", "Hearing settings", "access")}</div>`;
         return `<h2>Make it yours</h2><div class="gs-grid">
           ${card("brush", "Themes", "One click sets your background, colors, corners and glass. Or pick each one yourself.", "Personalize", "personal")}
           ${card("moon", "Night light", "Warmer colors in the evening, on a schedule if you like.", "Display settings", "system")}
@@ -50,6 +57,9 @@
           if (g === "start") { NX.shell.toggleStart(true); return; }
           if (g === "qs") { NX.shell.openWifi(); return; }
           if (g === "qsearch") { if (NX.quickSearch) NX.quickSearch(); return; }
+          if (g === "a:osk") { NX.osk && NX.osk(true); return; }
+          if (g.startsWith("a:")) { const k = g.slice(2); NX.setPref(k, !NX.prefs()[k]); draw(); return; }
+          if (g === "access") { go("settings", { page: "access" }); return; }
           if (["personal", "system", "devices", "accounts", "update"].includes(g)) { go("settings", { page: g }); return; }
           go(g);
         }));
