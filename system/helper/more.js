@@ -330,6 +330,27 @@ module.exports = function more({ api, run, FAKE }) {
     } else await run("pactl", ["set-default-sink", id.slice(5)], 4000);
     return audio();
   };
+  // mono audio (Settings > Accessibility): a sound output that mixes left and right into both ears, made the default
+  let fakeMono = false;
+  const monoMod = async () => { const r = await run("pactl", ["list", "short", "modules"], 4000); const line = (r.out || "").split("\n").find((l) => /module-remap-sink/.test(l) && /sink_name=nx_mono/.test(l)); return line ? line.trim().split(/\s+/)[0] : null; };
+  const moveAll = async (sink) => { const r = await run("pactl", ["list", "short", "sink-inputs"], 4000); for (const l of (r.out || "").split("\n")) { const id = l.trim().split(/\s+/)[0]; if (/^\d+$/.test(id)) await run("pactl", ["move-sink-input", id, sink], 3000); } };
+  api["GET /sound/mono"] = async () => (FAKE ? { on: fakeMono } : { on: !!(await monoMod()) });
+  api["POST /sound/mono"] = async (b) => {
+    if (FAKE) { fakeMono = !!b.on; return { on: fakeMono }; }
+    const id = await monoMod();
+    if (!b.on) {
+      if (!id) return { on: false };
+      const master = ((/master=(\S+)/.exec((await run("pactl", ["list", "short", "modules"], 4000)).out || "") || [])[1]) || "";
+      await run("pactl", ["unload-module", id], 4000); if (master) { await run("pactl", ["set-default-sink", master], 4000); await moveAll(master); }
+      return { on: false };
+    }
+    if (id) return { on: true };
+    const master = (await run("pactl", ["get-default-sink"], 4000)).out.trim(); if (!master || master === "nx_mono") throw new Error("There's no sound output to make mono.");
+    const r = await run("pactl", ["load-module", "module-remap-sink", "sink_name=nx_mono", "master=" + master, "channels=2", "channel_map=mono,mono", "sink_properties=device.description=Mono"], 8000);
+    if (!r.ok) throw new Error("Mono audio couldn't start on this computer.");
+    await run("pactl", ["set-default-sink", "nx_mono"], 4000); await moveAll("nx_mono");
+    return { on: true };
+  };
 
   // ---------- wireless display (Miracast) ----------
   let cast = null, fakeCast = false; const CAST = "/usr/bin/gnome-network-displays";

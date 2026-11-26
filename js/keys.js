@@ -228,4 +228,9 @@
   }, true);
   document.addEventListener("nx:prefs", (e) => { if (e.detail === "stickyKeys") release(); });
   NX.sticky = { held, release };
+
+  // Settings > Accessibility > Mono audio: on the USB the system helper mixes left and right for every app
+  const mono = (on) => { if (!NX.native) { if (on) NX.toast("Mono audio works on the Nebulux OS USB."); return; } NX.api("POST", "/sound/mono", { on: !!on }).then((r) => { if (r && r.on !== !!on) NX.toast("Mono audio couldn't change."); }).catch((e) => NX.toast(e.message)); };
+  document.addEventListener("nx:prefs", (e) => { if (e.detail === "monoAudio" && NX.me) mono(NX.prefs().monoAudio); });
+  document.addEventListener("nx:signin", () => { if (NX.me && NX.native) mono(!!NX.prefs().monoAudio); });
 })();

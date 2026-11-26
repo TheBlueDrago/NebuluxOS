@@ -427,6 +427,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // Compress to ZIP file, then Extract all
   ok(await p.evaluate(async () => { const D = await NX.folder("Documents"), f = await NX.fs.create(D, "Zipme", true); await NX.fs.write(f.path + "/a.txt", "zip me up ".repeat(50)); const sub = await NX.fs.create(f.path, "Inner", true); await NX.fs.write(sub.path + "/b.txt", "inner words"); const z = await NX.fs.zip([f.path]); if (!/Zipme.zip$/.test(z.path)) return "name " + z.path; await NX.fs.remove([f.path], true); const u = await NX.fs.unzip(z.path); const a = await NX.fs.read(u.path + "/a.txt"), b = await NX.fs.read(u.path + "/Inner/b.txt").catch(() => null); await NX.fs.remove([u.path, z.path], true); return u.files === 2 && a === "zip me up ".repeat(50) && b === "inner words" ? true : JSON.stringify([u, a.length, b]); }).then((r) => r === true || (console.log(r), false)), "Compress to ZIP file and Extract all bring the files back");
+  // Mono audio reaches the sound system
+  await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
+  ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");
+  await p.evaluate(() => NX.setPref("monoAudio", false)); await wait(500);
+  ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === false), "and off");
   // power reaches the computer
   await p.click("#tb-start"); await wait(300); await p.click("#start .sm-pwb"); await wait(150); await p.click("#start [data-pw=off]");
   ok(await until(async () => (await fake()).power === "poweroff", 5000), "Shut down turns the computer off");

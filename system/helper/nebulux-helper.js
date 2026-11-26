@@ -299,6 +299,8 @@ const api = {
       const out = "/tmp/nx-rec-test.webm"; try { fs.rmSync(out, { force: true }); } catch (e) { /* none */ }
       const p = require("child_process").spawn("gst-launch-1.0", ["-e", "ximagesrc", "use-damage=false", "num-buffers=30", "!", "video/x-raw,framerate=15/1", "!", "videoconvert", "!", "vp8enc", "deadline=1", "cpu-used=8", "!", "webmmux", "!", "filesink", "location=" + out], { stdio: "ignore" });
       p.on("error", () => {}); p.on("exit", () => { let n = 0; try { n = fs.statSync(out).size; } catch (e) { /* none */ } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG screenrec=" + n + "\n", () => {}); });
+      // and mono audio: on, then off again
+      (async () => { let r = "fail"; try { const on = await api["POST /sound/mono"]({ on: true }); const off = await api["POST /sound/mono"]({ on: false }); r = on.on && !off.on ? "ok" : "fail"; } catch (e) { r = "fail:" + String(e.message).replace(/\s+/g, "-").slice(0, 40); } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG mono=" + r + "\n", () => {}); })();
     }
     if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);

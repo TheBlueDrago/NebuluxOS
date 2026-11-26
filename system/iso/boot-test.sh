@@ -64,6 +64,9 @@ boot() { # BIOS or UEFI
   # Narrator's voices (speech-dispatcher and eSpeak NG): the page reports how many voices it can use
   VO=$(grep -ao "NEBULUX-DIAG ext=[0-9].* voices=-\?[0-9]*" "$SHOTS/$MODE-serial.log" | tail -1 | sed 's/.*voices=//')
   if [ "${VO:-0}" -gt 0 ] 2>/dev/null; then echo "ok   ($MODE): Narrator has $VO voices"; else echo "FAIL ($MODE): Narrator has no voice (${VO:-no answer})"; FAILS=$((FAILS + 1)); fi
+  # mono audio (a note: the virtual computer has no sound card, only the sound system's stand-in)
+  MO=$(grep -ao "NEBULUX-DIAG mono=[^ ]*" "$SHOTS/$MODE-serial.log" | tail -1 | cut -d= -f2)
+  if [ "$MO" = ok ]; then echo "ok   ($MODE): mono audio turns on and off"; else echo "note ($MODE): mono audio didn't switch (${MO:-no answer})"; fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   # the mouse on the real browser: click into Google's search box and type
   click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click
