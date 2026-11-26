@@ -69,7 +69,7 @@
     if (NX.isNative && NX.isNative(id)) { NX.openNative(id); NX.shell && NX.shell.recent(id); return null; }
     if (NX.native && !NX.online() && (app.url || app.browser)) { NX.toast("You're not connected to the internet. Pick a Wi-Fi network first."); NX.shell && NX.shell.openWifi && NX.shell.openWifi(); return null; }
     // on the USB, websites from the Store, YouTube and Google open as their own apps (no browser around them)
-    if (NX.webAppOK && (app.url || app.browser)) { NX.webAppOpen(id, (opts && opts.url) || (opts && opts.q && "https://www.google.com/search?q=" + encodeURIComponent(opts.q)) || app.url || app.browser); NX.shell && NX.shell.recent(id); return null; }
+    if (NX.webAppOK && (app.url || app.browser)) { NX.webAppOpen(id, (opts && opts.url) || (opts && opts.q && "https://www.google.com/search?q=" + encodeURIComponent(opts.q)) || app.url || app.browser, !!(opts && (opts.url || opts.q))); NX.shell && NX.shell.recent(id); return null; }
     if (NX.browserOK && (app.url || app.browser)) { NX.browserOpen((opts && opts.url) || (opts && opts.q && "https://www.google.com/search?q=" + encodeURIComponent(opts.q)) || app.url || app.browser, !!app.webapp && !(opts && (opts.url || opts.q))); NX.shell && NX.shell.recent(id); return null; }
     if (NX.browserHide) NX.browserHide();
     if (app.url && !NX.webFrames) { if (NX.netOK && !NX.netOK()) { NX.toast(app.name + " needs the internet. " + NX.netWhy()); return null; } window.open(app.url, "_blank", "noopener"); NX.shell && NX.shell.recent(id); return null; }

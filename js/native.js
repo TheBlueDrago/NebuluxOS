@@ -106,7 +106,7 @@
   const webState = () => NX.api("GET", "/webapp").then((r) => { NX.webAppOK = !!r.available; NX.drmReady = !!r.drm; }).catch(() => {});
   webState();
   let drmJob = null;
-  NX.webAppOpen = async (id, url) => {
+  NX.webAppOpen = async (id, url, fresh) => { // fresh: a search or a link, so it opens even if the app is already open
     const a = NX.apps[id]; url = url || a.url || a.browser; if (!url) return;
     const drm = DRM.has(id);
     // the movie player (Google's engine) installs once in the background; the app opens right away and doesn't wait for it
@@ -116,7 +116,7 @@
     }
     NX.webOpened.add(id); NX.nativeRunning.add(id); NX.shell && NX.shell.taskbar();
     const close = NX.launchCard(id, webWm(id));
-    try { const r = await NX.api("POST", "/webapp/open", { id, url, drm }); if (r && r.shown && close) close(); } catch (e) { if (close) close(); NX.toast(e.message); }
+    try { const r = await NX.api("POST", "/webapp/open", { id, url, drm, url2: !!fresh }); if (r && r.shown && close) close(); } catch (e) { if (close) close(); NX.toast(e.message); }
     setTimeout(nativeRunning, 1500);
   };
   // shortcuts caught by the window manager (so they work over the web browser too) come in here
