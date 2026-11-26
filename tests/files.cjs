@@ -80,7 +80,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.click(".win[data-app=notepad] [data-a=new]"); await wait(400);
   ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=notepad] .np-tab").length >= 2 && /Untitled/.test(document.querySelector(".win[data-app=notepad] .np-tab.on").textContent)), "New tab opens a new note next to it");
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); }); await p.type(".win[data-app=notepad] textarea", "Party plans\nCake"); await wait(600);
-  await p.click(".win[data-app=notepad] [data-a=save]"); await wait(600);
+  await p.click(".win[data-app=notepad] [data-a=save]"); await wait(400);
+  ok(await p.evaluate(() => (document.querySelector(".win[data-app=notepad] .nx-ask input") || {}).value === "Party plans.txt"), "Save asks for a name, starting with the first line"); await p.keyboard.press("Enter"); await wait(600);
   ok(await p.evaluate(async () => (await NX.fs.read("/Documents/Party plans.txt")) === "Party plans\nCake"), "Notepad's Save to Documents makes a text file named from the first line");
   await p.evaluate(() => NX.close("notepad")); await wait(300);
 

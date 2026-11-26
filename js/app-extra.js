@@ -63,7 +63,10 @@
         if (k === "open") { await flush(); NX.open("files", { place: "Documents" }); NX.toast("Double-click a text file to open it in Notepad."); }
         if (k === "save") {
           const first = (ta.value.split("\n").find((x) => x.trim()) || "Note").trim().replace(/[\\/:*?"<>|\x00-\x1f]/g, "").replace(/^\.+/, "").slice(0, 40).trim() || "Note";
-          try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, first + ".txt", false); file = r.path; await NX.fs.write(file, ta.value); NX.setData(keyOf(tabs[ti]), ""); tabs[ti].file = file; tabsSave(); drawTabs(); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
+          // like Save as: pick the name (it starts with the first line)
+          let nm = await NX.ask(body, { title: "Save in Documents", input: true, value: first + ".txt", ok: "Save" }); if (!nm) return;
+          nm = String(nm).trim().replace(/[\\/:*?"<>|\x00-\x1f]/g, "").replace(/^\.+/, "").slice(0, 80) || first + ".txt"; if (!/\.[a-z0-9]{1,5}$/i.test(nm)) nm += ".txt";
+          try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, nm, false); file = r.path; await NX.fs.write(file, ta.value); NX.setData(keyOf(tabs[ti]), ""); tabs[ti].file = file; tabsSave(); drawTabs(); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
         }
         if (k === "dl") { const url = URL.createObjectURL(new Blob([ta.value], { type: "text/plain" })), l = document.createElement("a"); l.href = url; l.download = file ? NX.fs.base(file) : "note.txt"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
         if (k === "ver") {
