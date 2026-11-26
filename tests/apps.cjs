@@ -348,7 +348,7 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // Calendar app
   await p.evaluate(() => { NX.closeAll(); NX.setData("events", []); NX.open("calendar"); }); await wait(600);
   await p.evaluate(() => { const f = document.querySelector(".win[data-app=calendar] .ca-add"); f.n.value = "Dentist"; f.t.value = "15:30"; f.querySelectorAll("[name=c]")[3].checked = true; f.requestSubmit(); }); await wait(300);
-  ok(await p.evaluate(() => { const d = document.querySelector(".win[data-app=calendar] .ca-d.today i"); return !!d && /Dentist/.test(d.textContent) && NX.data("events", []).some((e) => e.title === "Dentist" && e.time === "15:30" && e.color === "#ec4899"); }), "Calendar adds an event, in its color, on today's square");
+  ok(await p.evaluate(() => { const d = [...document.querySelectorAll(".win[data-app=calendar] .ca-d.today i")].find((x) => /Dentist/.test(x.textContent)); return !!d && NX.data("events", []).some((e) => e.title === "Dentist" && e.time === "15:30" && e.color === "#ec4899"); }), "Calendar adds an event, in its color, on today's square");
   await shot("calendar");
   await p.evaluate(() => document.querySelector(".win[data-app=calendar] [data-ca='1']").click()); await wait(200);
   ok(await p.evaluate(() => { const t = new Date(); t.setMonth(t.getMonth() + 1, 1); return document.querySelector(".win[data-app=calendar] .ca-head h2").textContent === t.toLocaleDateString(undefined, { month: "long", year: "numeric" }); }), "and goes to the next month");
@@ -611,6 +611,9 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.type("#clip .cl-find input", "plum"); await wait(200);
   ok(await p.evaluate(() => [...document.querySelectorAll("#clip .cl-item")].filter((el) => !el.hidden).map((el) => el.querySelector(".cl-t").textContent).join() === "three plums"), "clipboard history can be searched");
   await p.evaluate(() => { NX.clip.close(); NX.setData("clip-history", []); });
+  // Calculator > Programmer
+  await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
+  ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=prog]").click(); const v = (b) => document.querySelector(".pg-in[data-base='" + b + "']"); const set = (b, x) => { v(b).value = x; v(b).dispatchEvent(new Event("input")); }; set(10, "255"); const a = v(16).value === "FF" && v(8).value === "377" && v(2).value === "11111111"; set(16, "1A"); const b = v(10).value === "26"; document.querySelector("[data-pk=shl]").click(); const c = v(10).value === "52"; set(2, "102"); const d = v(2).classList.contains("bad") && v(10).value === "52"; return a && b && c && d && document.querySelector(".c-keys").hidden; }), "Calculator's Programmer mode shows HEX, DEC, OCT and BIN");
   // Calculator > Dates
   await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=date]").click(); const set = (q, v) => { const i = document.querySelector(q); i.value = v; i.dispatchEvent(new Event("input")); }; set(".cd-a", "2026-11-25"); set(".cd-b", "2026-12-25"); set(".cd-c", "2026-01-30"); set(".cd-n", "30"); return /30 days/.test(document.querySelector(".cd-diff").textContent) && /March 1, 2026/.test(document.querySelector(".cd-sum").textContent); }), "Calculator's Dates counts the days between dates and adds days to a date");

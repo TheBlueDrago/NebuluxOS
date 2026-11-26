@@ -714,3 +714,17 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 
 /* Settings > Accessibility > Text size */
 .win-body{zoom:var(--appzoom,1)}
+
+/* Calculator: Programmer */
+.c-prog{display:flex;flex-direction:column;gap:8px;padding:12px;overflow-y:auto}
+.c-prog[hidden]{display:none}
+.pg-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.pg-row b{width:34px;font-size:12px;color:var(--sub)}
+.pg-in{flex:1;min-width:0;background:none;border:0;color:var(--txt);font:600 15px/1.3 ui-monospace,Consolas,monospace;outline:none;word-break:break-all}
+.pg-row:focus-within{border-color:var(--accent)}
+.pg-in.bad{color:#f87171}
+.pg-bits{margin:2px 2px 0;font-size:12px;color:var(--sub)}
+.pg-keys{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pg-in,.pg-in:focus,.pg-in:focus-visible{border:0!important;box-shadow:none!important;outline:none!important;padding:0;border-radius:0}
+.calc .c-mode{max-width:calc(100% - 16px);overflow-x:auto;scrollbar-width:none}
+.calc .c-mode button{padding:5px 8px}

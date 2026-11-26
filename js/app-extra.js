@@ -120,11 +120,11 @@
     const expr = () => { let v = term(); for (;;) { if (peek() === "+") { i++; v += term(); } else if (peek() === "-") { i++; v -= term(); } else return v; } };
     if (!s) return 0; const v = expr(); if (i < s.length) fail(); return v;
   };
-  A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 340, h: 580, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
+  A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 390, h: 580, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
-      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button><button data-m="date">Dates</button></div><div class="c-conv" hidden></div><div class="c-date" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
+      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button><button data-m="date">Dates</button><button data-m="prog">Programmer</button></div><div class="c-conv" hidden></div><div class="c-prog" hidden></div><div class="c-date" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
       let cur = "0", prev = null, op = null, fresh = true, expr = "";
       const val = body.querySelector(".c-val"), ex = body.querySelector(".c-expr");
       const fmt = (n) => { if (!isFinite(n)) return "Can't divide by zero"; const s = Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0) ? n.toExponential(8) : String(+n.toPrecision(15)); return s; };
@@ -220,8 +220,20 @@
         };
         dateEl.querySelectorAll("input,select").forEach((x) => (x.oninput = x.onchange = run)); run();
       };
-      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const m = b.dataset.m, c = m === "conv", sc = m === "sci", dt = m === "date";
-        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; dateEl.hidden = !dt; body.querySelector(".c-disp").hidden = c || sc || dt; body.querySelector(".c-keys").hidden = c || sc || dt; hist.hidden = true;
+      // Programmer: one number in hexadecimal, decimal, octal and binary; type in any of them (whole numbers up to 64 bits)
+      const prog = body.querySelector(".c-prog"), BASES = [["HEX", 16, /^[0-9a-f]*$/i], ["DEC", 10, /^[0-9]*$/], ["OCT", 8, /^[0-7]*$/], ["BIN", 2, /^[01]*$/]], MAX = (1n << 64n) - 1n;
+      let pv = 0n;
+      const parseBig = (s, base) => { let v = 0n; for (const ch of s.toLowerCase()) v = v * BigInt(base) + BigInt(parseInt(ch, base)); return v; };
+      const progDraw = () => {
+        prog.innerHTML = BASES.map(([n, base]) => `<label class="pg-row"><b>${n}</b><input class="pg-in" data-base="${base}" spellcheck="false" autocomplete="off" aria-label="${n}"></label>`).join("") + `<p class="pg-bits"></p><div class="pg-keys">${[["shl", "Shift left"], ["shr", "Shift right"], ["not", "Flip bits"], ["clr", "Clear"]].map(([k, t]) => `<button class="btn sm" data-pk="${k}">${t}</button>`).join("")}</div>`;
+        const fill = (skip) => { prog.querySelectorAll(".pg-in").forEach((i) => { if (i !== skip) { const s = pv.toString(+i.dataset.base); i.value = +i.dataset.base === 16 ? s.toUpperCase() : s; } i.classList.remove("bad"); }); const bits = pv.toString(2).length; prog.querySelector(".pg-bits").textContent = pv ? bits + (bits === 1 ? " bit" : " bits") + ", " + pv.toString(2).split("").filter((x) => x === "1").length + " set to 1" : "Type a number in any row."; };
+        prog.querySelectorAll(".pg-in").forEach((i) => (i.oninput = () => { const base = +i.dataset.base, s = i.value.trim().replace(/[\s_]/g, ""), re = BASES.find((x) => x[1] === base)[2]; if (!re.test(s)) { i.classList.add("bad"); return; } const v = s ? parseBig(s, base) : 0n; if (v > MAX) { i.classList.add("bad"); return; } pv = v; fill(i); }));
+        prog.querySelector(".pg-keys").onclick = (e) => { const b = e.target.closest("[data-pk]"); if (!b) return; const k = b.dataset.pk; pv = k === "shl" ? (pv << 1n) & MAX : k === "shr" ? pv >> 1n : k === "not" ? ~pv & MAX : 0n; fill(null); };
+        fill(null);
+      };
+      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const m = b.dataset.m, c = m === "conv", sc = m === "sci", dt = m === "date", pg = m === "prog";
+        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; dateEl.hidden = !dt; prog.hidden = !pg; body.querySelector(".c-disp").hidden = c || sc || dt || pg; body.querySelector(".c-keys").hidden = c || sc || dt || pg; hist.hidden = true;
+        if (pg && !prog.innerHTML) progDraw(); if (pg) prog.querySelector(".pg-in[data-base='10']").focus();
         if (dt && !dateEl.innerHTML) dateDraw();
         if (c && !conv.innerHTML) convDraw(); if (sc && !sci.innerHTML) sciDraw(); if (sc) sci.querySelector(".sc-in").focus(); };
     } };
