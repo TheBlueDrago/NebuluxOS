@@ -588,6 +588,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Meta"); await p.keyboard.press("b"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => document.activeElement.id === "tb-qs"), "Nebulux + B goes to the icons on the right");
   await p.keyboard.press("Escape"); await p.evaluate(() => NX.closeAll());
+  // Notepad's Read aloud reads the selected words
+  ok(await p.evaluate(async () => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); await new Promise((r) => setTimeout(r, 500)); const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = "Hello world, from Notepad"; t.dispatchEvent(new Event("input")); t.setSelectionRange(0, 11); document.querySelector(".win[data-app=notepad] [data-a=speak]").click(); const said = NX.narrator.read; window.speechSynthesis && speechSynthesis.cancel(); t.value = ""; t.dispatchEvent(new Event("input")); await new Promise((r) => setTimeout(r, 500)); NX.closeAll(); return said === "Hello world"; }), "Notepad's Read aloud reads the selected words");
   // Symbols (Nebulux + .): click one and it's typed where you were typing
   await p.evaluate(() => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); }); await wait(500);
   await p.focus(".win[data-app=notepad] textarea"); await p.keyboard.type("20");
