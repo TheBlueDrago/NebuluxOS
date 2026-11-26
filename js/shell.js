@@ -35,6 +35,7 @@
     root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv)));
     // Settings > Accessibility > Text size: everything inside app windows grows
     root.style.setProperty("--appzoom", NX.me && +p.textSize > 100 ? String(+p.textSize / 100) : "1");
+    root.classList.toggle("bigfocus", !!(NX.me && p.bigfocus));
     const cf = NX.me ? p.colorFilter || "none" : "none"; root.classList.toggle("cf-gray", cf === "gray"); root.classList.toggle("cf-invert", cf === "invert"); root.classList.toggle("bigcursor", !!(NX.me && p.bigcursor)); root.classList.toggle("hc", !!(NX.me && p.contrast)); if (NX.pointerApply) NX.pointerApply(); root.dataset.wbtn = NX.me ? p.wbtn || "plain" : "plain"; root.dataset.corners = NX.me ? p.corners40 || "round" : "round"; root.dataset.glass = NX.me ? p.glass || "frosted" : "frosted"; root.classList.toggle("bigscroll", !!(NX.me && p.bigscroll));
     // the lock screen picture (Settings > Personalization): saved for this computer so it shows before anyone signs in
     if (NX.me) NX.set("lock-show", p.lockPic === "show" ? 1 : 0);

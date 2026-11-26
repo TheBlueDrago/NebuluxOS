@@ -713,7 +713,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 #nx-sd select{width:100%;margin:6px 0 4px}
 
 /* Settings > Accessibility > Text size */
-.win-body{zoom:var(--appzoom,1)}
+.win-body{zoom:calc(var(--appzoom,1) * var(--winzoom,1))}
 
 /* Calculator: Programmer */
 .c-prog{display:flex;flex-direction:column;gap:8px;padding:12px;overflow-y:auto}
@@ -753,3 +753,20 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .wc-none{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;border:1px dashed var(--line);color:var(--sub)}
 .wc-none svg{flex:none;opacity:.8}.wc-none span{display:flex;flex-direction:column;gap:2px}.wc-none b{color:var(--txt);font-size:13.5px;font-weight:600}.wc-none small{font-size:12.5px}
 .cam-again{margin-top:10px}
+
+/* 4.3: Keyboard shortcuts (Ctrl + /) */
+.nx-keys{position:fixed;inset:0;z-index:99990;display:grid;place-items:center;background:#05030c80;backdrop-filter:blur(6px);animation:nkIn .18s ease-out}
+@keyframes nkIn{from{opacity:0}to{opacity:1}}
+.nk-card{width:min(940px,calc(100vw - 32px));max-height:calc(100vh - 80px);overflow:auto;border-radius:18px;background:var(--bg2);border:1px solid var(--line);box-shadow:0 30px 80px #000a;padding:18px 22px 22px}
+.nk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.nk-head b{font-size:20px}
+.nk-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:4px 28px}
+.nk-cols h4{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.nk-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.nk-k{display:flex;align-items:center;gap:3px;flex:none}.nk-k i{font-style:normal;color:var(--sub);font-size:11px}
+.nk-k kbd{font:600 11.5px/1 var(--font);padding:5px 7px;border-radius:6px;background:var(--card2);border:1px solid var(--line);border-bottom-width:2px;color:var(--txt)}
+.nk-t{color:var(--sub);text-align:right}
+@media (max-width:600px){.nk-cols{grid-template-columns:1fr}.nk-row{flex-direction:column;align-items:flex-start;gap:4px}.nk-t{text-align:left}}
+/* Accessibility: bold focus outline, and the screen flash for alerts */
+html.bigfocus :focus-visible{outline:3px solid var(--accent)!important;outline-offset:2px!important;box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 30%,transparent)!important}
+.nx-flash{position:fixed;inset:0;z-index:999999;pointer-events:none;background:#fff;animation:nxFlash .7s ease-out forwards}
+@keyframes nxFlash{0%{opacity:0}15%{opacity:.85}40%{opacity:.2}60%{opacity:.7}100%{opacity:0}}

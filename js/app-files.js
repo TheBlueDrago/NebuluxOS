@@ -202,7 +202,10 @@
       const tabSave = () => { tabs[ti] = { cur, back, fwd }; };
       function tabTo(i) { if (i === ti || !tabs[i]) return; tabSave(); ti = i; ({ cur, back, fwd } = tabs[i]); sel.clear(); q = ""; $(".fx-search input").value = ""; load(); }
       function tabNew(p) { if (tabs.length >= 12) { NX.toast("That's a lot of tabs. Close one first."); return; } tabSave(); tabs.push({ cur: null, back: [], fwd: [] }); ti = tabs.length - 1; cur = null; back = []; fwd = []; go(p || HOME, true); }
+      // for the keyboard shortcuts (js/keys.js): Ctrl + T, W, Tab, 1 to 9, Shift + T
+      let closedTabs = [];
       function tabClose(i) {
+        if (tabs.length > 1) { tabSave(); const t0 = tabs[i]; if (t0 && t0.cur) closedTabs = [...closedTabs, t0.cur].slice(-10); }
         if (tabs.length === 1) { NX.close(win.id); return; }
         tabSave(); tabs.splice(i, 1);
         if (i < ti || ti >= tabs.length) ti = Math.max(0, ti - (i <= ti ? 1 : 0));
@@ -385,9 +388,6 @@
         else if (k === "F2" && sel.size === 1) { ev.preventDefault(); act("rename"); }
         else if (k === "Enter" && sel.size === 1) { ev.preventDefault(); openItem(selected()[0]); }
         else if (k === "Backspace" && !c) { ev.preventDefault(); nav("up"); }
-        else if (c && /^t$/i.test(k)) { ev.preventDefault(); tabNew(); }
-        else if (c && /^w$/i.test(k)) { ev.preventDefault(); tabClose(ti); }
-        else if (c && k === "Tab") { ev.preventDefault(); tabTo((ti + (ev.shiftKey ? tabs.length - 1 : 1)) % tabs.length); }
         else if (c && /^[acxv]$/i.test(k)) { ev.preventDefault(); const l = k.toLowerCase(); if (l === "a") { sel = new Set(items.map((e) => e.path || e.id)); marks(); } else if (!isTrash()) act(l === "c" ? "copy" : l === "x" ? "cut" : "paste"); }
       });
       function nav(k) {
@@ -402,7 +402,10 @@
       const onFs = () => { if (!loading) load(); }; document.addEventListener("nx:files", onFs);
       win.onclose = () => { document.removeEventListener("nx:drives", onDr); document.removeEventListener("nx:files", onFs); };
       win.onopts = (o) => { if (o.path) go(o.path); else if (o.place) NX.folder(o.place).then(go); };
-      win.tabs = { list: () => tabs.map((t, i) => ({ name: tabName(i === ti ? cur : t.cur), on: i === ti })), add: tabNew, to: tabTo, close: tabClose };
+      win.tabs = { list: () => tabs.map((t, i) => ({ name: tabName(i === ti ? cur : t.cur), on: i === ti })), add: (p) => tabNew(p), to: tabTo, close: (i) => tabClose(i == null ? ti : i),
+        // for the keyboard shortcuts (js/keys.js): Ctrl + Tab, 1 to 9, Shift + T
+        count: () => tabs.length, go: (i) => tabTo(i), step: (d) => tabTo((ti + d + tabs.length) % tabs.length),
+        reopen: () => { const p = closedTabs.pop(); if (p) tabNew(p); else NX.toast("There's no closed tab to bring back."); } };
       if (opts.path) go(opts.path, true); else if (opts.place) NX.folder(opts.place).then((p) => go(p, true)).catch(() => go(HOME, true)); else go(HOME, true);
       setTimeout(() => listEl.focus(), 60);
     } };
