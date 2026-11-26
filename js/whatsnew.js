@@ -60,7 +60,7 @@
     ["Alt + F4 to shut down", "With no window open, Alt + F4 asks what the computer should do: Shut down, Restart, Sleep, Sign out or Lock."],
     ["Alarm sounds", "Pick Beep, Chime or Bells for your alarms in Settings > System > Sound, and play it to hear it first."],
     ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
-    ["Ctrl + S saves", "Ctrl + S saves in Notepad and Paint, and F5 refreshes File Explorer."],
+    ["Ctrl + S saves", "Ctrl + S saves in Notepad and Paint. In File Explorer, F5 refreshes and Ctrl + Shift + N makes a new folder."],
     ["Fixes", "Ctrl + W, F5, Ctrl + R, Alt + Left and the mouse back button can no longer close or reload the whole Nebulux OS screen on the USB, and small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],

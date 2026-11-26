@@ -396,6 +396,7 @@
         else if (c && (k === "z" || k === "Z") && NX.fxUndo) { ev.preventDefault(); const ids = NX.fxUndo; NX.fxUndo = null; NX.fs.restore(ids).then(() => { NX.toast("Put back."); NX.filesChanged && NX.filesChanged(); load(); }).catch((er) => NX.toast(er.message)); }
         else if (k === " " && sel.size === 1 && NX.peekFile && !isTrash()) { const e1 = items.find((x) => (x.path || x.id) === [...sel][0]); if (e1 && !e1.dir) { ev.preventDefault(); NX.peekFile(e1, items.filter((x) => !x.dir)); } }
         else if (k === "F2" && sel.size === 1) { ev.preventDefault(); act("rename"); }
+        else if (c && ev.shiftKey && /^n$/i.test(k) && !isHome() && !isTrash()) { ev.preventDefault(); act("newfolder"); } // Ctrl + Shift + N, like Windows
         else if (k === "Enter" && sel.size === 1) { ev.preventDefault(); openItem(selected()[0]); }
         else if (k === "Backspace" && !c) { ev.preventDefault(); nav("up"); }
         else if (c && /^[acxv]$/i.test(k)) { ev.preventDefault(); const l = k.toLowerCase(); if (l === "a") { sel = new Set(items.map((e) => e.path || e.id)); marks(); } else if (!isTrash()) act(l === "c" ? "copy" : l === "x" ? "cut" : "paste"); }
