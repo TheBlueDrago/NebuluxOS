@@ -13,6 +13,7 @@
     ["Ctrl + W and friends", "Ctrl + W closes the tab or the window, Ctrl + T and Ctrl + N open a tab, Ctrl + Shift + T brings back the tab you closed, and Ctrl + Tab or Ctrl + 1 to 9 move between tabs, in Notepad and File Explorer."],
     ["Zoom any window", "Ctrl + Plus and Ctrl + Minus, or Ctrl + the mouse wheel, make one window bigger or smaller. Ctrl + 0 goes back."],
     ["Ctrl + /", "Opens the list of every keyboard shortcut, like Nebulux + /."],
+    ["Accessibility in Quick Settings", "The Accessibility tile in Quick Settings turns on Narrator, Sticky Keys, the bold focus outline or your color filter, and opens the on-screen keyboard or the Magnifier."],
     ["Accessibility before you sign in", "The sign-in screen has an Accessibility button next to Power: turn on Narrator, or type your password on the on-screen keyboard."],
     ["On-screen keyboard", "Type with the mouse or a finger: Ctrl + Nebulux + O, or Settings > Accessibility. On a touchscreen it shows by itself when you tap a text box."],
     ["Sticky Keys", "Press Ctrl, Alt, Shift or Nebulux, then the next key, instead of holding them together. Turn them on in Settings > Accessibility, or press Shift five times."],

@@ -394,7 +394,7 @@
         { const ob = body.querySelector("[data-osk]"); if (ob) ob.onclick = () => NX.osk && NX.osk(true); }
         { const kb = body.querySelector("[data-keys]"); if (kb) kb.onclick = () => NX.shortcutsSheet && NX.shortcutsSheet(); }
         body.querySelectorAll("[data-tsz]").forEach((b) => (b.onclick = () => { NX.setPref("textSize", +b.dataset.tsz); draw(); }));
-        { const cs = body.querySelector("[data-cfsel]"); if (cs) cs.onchange = () => { NX.setPref("colorFilter", cs.value); draw(); }; }
+        { const cs = body.querySelector("[data-cfsel]"); if (cs) cs.onchange = () => { NX.setPref("colorFilter", cs.value); if (cs.value !== "none") NX.setPref("lastColorFilter", cs.value); draw(); }; }
         body.querySelectorAll("[data-cf]").forEach((b) => (b.onclick = () => { NX.setPref("colorFilter", b.dataset.cf); draw(); }));
         body.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = () => { NX.setPref("accent", b.dataset.acc); draw(); }));
         body.querySelectorAll("[data-align]").forEach((b) => (b.onclick = () => { NX.setPref("align", b.dataset.align); draw(); }));

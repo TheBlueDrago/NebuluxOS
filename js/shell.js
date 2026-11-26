@@ -421,7 +421,7 @@
   var qsEdit = false; // Edit mode: tap tiles to show or hide them
   function qsDraw() {
     const p = NX.prefs(), t = (k, icon, label, on, more) => more ? `<div class="qs-t qs-split ${on ? "on" : ""}"><button class="qs-main" data-k="${k}" aria-label="${label}">${NX.icon(icon, 18)}</button><button class="qs-more" data-more="${k}" aria-label="${label} list">${NX.icon("chevron", 12)}</button><span>${label}</span></div>` : `<button class="qs-t ${on ? "on" : ""}" data-k="${k}">${NX.icon(icon, 18)}<span>${label}</span></button>`;
-    const hide = p.qsHide || [], tiles = [["wifi", t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)], ["bt", t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)], ["airplane", t("airplane", "plane", "Airplane mode", p.airplane)], ["night", t("night", "moon", "Night light", p.night)], ["theme", t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")], ["dnd", t("dnd", "bell", "Do not disturb", !!p.dnd)], ...(batt() ? [["saver", t("saver", "leaf", "Battery saver", NX.saverOn())]] : []), ["cast", t("cast", "cast", "Cast", false)], ["snip", t("snip", "shot", "Screenshot", false)], ["bigcursor", t("bigcursor", "mouse", "Large pointer", !!p.bigcursor)]];
+    const hide = p.qsHide || [], tiles = [["wifi", t("wifi", "wifi", "Wi-Fi", p.wifi && !p.airplane, true)], ["bt", t("bt", "bt", "Bluetooth", p.bt && !p.airplane, true)], ["airplane", t("airplane", "plane", "Airplane mode", p.airplane)], ["night", t("night", "moon", "Night light", p.night)], ["theme", t("theme", "contrast", p.theme === "dark" ? "Dark mode" : "Light mode", p.theme === "dark")], ["dnd", t("dnd", "bell", "Do not disturb", !!p.dnd)], ...(batt() ? [["saver", t("saver", "leaf", "Battery saver", NX.saverOn())]] : []), ["cast", t("cast", "cast", "Cast", false)], ["snip", t("snip", "shot", "Screenshot", false)], ["bigcursor", t("bigcursor", "mouse", "Large pointer", !!p.bigcursor)], ["access", t("access", "access", "Accessibility", !!(p.narrator || p.stickyKeys || p.bigfocus || (p.colorFilter && p.colorFilter !== "none")), true)]];
     $("#qs").innerHTML = `<div class="qs-grid ${qsEdit ? "qs-editing" : ""}">${tiles.filter(([k]) => qsEdit || !hide.includes(k)).map(([k, h]) => qsEdit ? h.replace(/class="qs-t/, `class="qs-t ${hide.includes(k) ? "qs-hid" : "qs-shown"}`) : h).join("")}</div>
       <label class="qs-sl">${NX.icon("sun", 18)}<input type="range" min="30" max="100" value="${p.brightness}" data-s="brightness" aria-label="Brightness"></label><label class="qs-sl">${NX.icon("volume", 18)}<input type="range" min="0" max="100" value="${p.volume}" data-s="volume" aria-label="Volume"></label>
       ${NX.nowPlaying && NX.nowPlaying() ? (() => { const n = NX.nowPlaying(); return `<div class="qs-np"><span class="qs-npi">${NX.icon(n.video ? "fvideo" : "faudio", 26)}</span><span class="qs-npt"><b>${NX.esc(n.name)}</b><small>Media Player</small></span><button data-np="play" aria-label="${n.playing ? "Pause" : "Play"}">${n.playing ? '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>' : '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>'}</button><button data-np="next" aria-label="Next">${NX.icon("fwd", 16)}</button></div>`; })() : ""}
@@ -435,6 +435,7 @@
       if (k === "bigcursor") { NX.setPref("bigcursor", !P.bigcursor); qsDraw(); return; }
       if (k === "store") { closeFlyouts(); NX.open("store"); return; }
       if (k === "cast") { qsMore("cast"); return; }
+      if (k === "access") { qsAccess(); return; }
       if (k === "theme") { NX.setPref("themeAuto", false); NX.setPref("theme", P.theme === "dark" ? "light" : "dark"); }
       else if (k === "airplane") { NX.setPref("airplane", !P.airplane); if (!P.airplane) { NX.setPref("wifi", false); NX.setPref("bt", false); } }
       else if (k === "dnd") NX.setPref("dnd", !P.dnd);
@@ -451,6 +452,18 @@
     Q.querySelectorAll("[data-more]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); if (qsEdit) { b.parentElement.querySelector("[data-k]").click(); return; } qsMore(b.dataset.more); }));
   }
   // ---------- the lists inside quick settings: Wi-Fi networks, Bluetooth devices, Cast ----------
+  // Quick Settings > Accessibility (like Windows): the helpers you might need right now, one click each
+  function qsAccess() {
+    const Q = $("#qs"), p = NX.prefs(), sw = (k, on, name) => `<label class="qs-arow"><span>${name}</span><span class="tg"><input type="checkbox" ${on ? "checked" : ""} data-qa="${k}" aria-label="${name}" role="switch"><i></i></span></label>`;
+    Q.innerHTML = `<div class="qs-sub"><div class="qs-subh"><button class="qs-back" aria-label="Back">${NX.icon("back", 16)}</button><b>Accessibility</b></div><div class="qs-list qs-alist">
+      ${sw("narrator", !!p.narrator, "Narrator")}${sw("stickyKeys", !!p.stickyKeys, "Sticky Keys")}${sw("bigfocus", !!p.bigfocus, "Bold focus outline")}${sw("colorFilter", !!(p.colorFilter && p.colorFilter !== "none"), "Color filter")}
+      <button class="qs-arow qs-abtn" data-qb="osk"><span>On-screen keyboard</span>${NX.icon("chevron", 14)}</button><button class="qs-arow qs-abtn" data-qb="mag"><span>Magnifier</span>${NX.icon("chevron", 14)}</button></div>
+      <button class="qs-link" data-go="access">More accessibility settings</button></div>`;
+    $(".qs-back", Q).onclick = (e) => { e.stopPropagation(); qsDraw(); };
+    $(".qs-link", Q).onclick = () => { closeFlyouts(); NX.open("settings", { page: "access" }); };
+    Q.querySelectorAll("[data-qa]").forEach((i) => { i.onclick = (e) => e.stopPropagation(); i.onchange = () => { const k = i.dataset.qa; if (k === "colorFilter") NX.setPref("colorFilter", i.checked ? (NX.prefs().lastColorFilter || "gray") : "none"); else NX.setPref(k, i.checked); }; });
+    Q.querySelectorAll("[data-qb]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); closeFlyouts(); if (b.dataset.qb === "osk") NX.osk && NX.osk(true); else NX.magnifier && NX.magnifier.zoom(1); }));
+  }
   function qsMore(kind) {
     const Q = $("#qs"), p = NX.prefs(), title = { wifi: "Wi-Fi", bt: "Bluetooth", cast: "Cast" }[kind], go = { wifi: "network", bt: "devices", cast: "system" }[kind];
     const on = kind === "cast" ? null : !!(p[kind] && !p.airplane);

@@ -818,3 +818,8 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 #lk-access{width:44px;height:44px;border-radius:8px;display:grid;place-items:center;background:#ffffff14;margin-right:8px}#lk-access:hover{background:#ffffff2b}
 #lk-amenu{right:52px}
 #lk-amenu{min-width:200px}
+
+/* Quick Settings > Accessibility */
+.qs-alist{display:flex;flex-direction:column;gap:2px}
+.qs-arow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;font-size:13.5px;color:var(--txt);background:transparent;border:0;width:100%;text-align:left;cursor:pointer}
+.qs-arow:hover{background:var(--hover,#ffffff12)}

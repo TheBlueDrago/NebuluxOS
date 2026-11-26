@@ -624,6 +624,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.click('.nx-osk [data-k="close"]'); await wait(100);
   ok(await p.evaluate(() => !document.querySelector(".nx-osk")), "and it hides");
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); }); await wait(500); await p.evaluate(() => NX.closeAll());
+  // Quick Settings > Accessibility
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("stickyKeys", false); }); await p.click("#tb-qs"); await wait(300);
+  await p.click("#qs [data-k=access]"); await wait(200);
+  ok(await p.evaluate(() => /Narrator/.test(document.querySelector("#qs").textContent) && !!document.querySelector('#qs [data-qa="stickyKeys"]')), "Quick Settings has an Accessibility panel");
+  await p.click('#qs .qs-arow:has([data-qa="stickyKeys"])'); await wait(200);
+  ok(await p.evaluate(() => NX.prefs().stickyKeys === true && !document.querySelector("#qs").hidden), "its switches work and the panel stays open");
+  await p.evaluate(() => { NX.setPref("stickyKeys", false); NX.shell.closeFlyouts(); }); await wait(200);
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
