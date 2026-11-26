@@ -728,3 +728,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .pg-in,.pg-in:focus,.pg-in:focus-visible{border:0!important;box-shadow:none!important;outline:none!important;padding:0;border-radius:0}
 .calc .c-mode{max-width:calc(100% - 16px);overflow-x:auto;scrollbar-width:none}
 .calc .c-mode button{padding:5px 8px}
+.np-posbtn{cursor:pointer;border-radius:6px;padding:1px 6px}.np-posbtn:hover{background:var(--hover,rgba(255,255,255,.08))}

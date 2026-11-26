@@ -15,6 +15,7 @@
       setWrap(NX.data("np-wrap", true));
       const pos = body.querySelector(".np-pos"), where = () => { const before = ta.value.slice(0, ta.selectionStart).split("\n"); pos.textContent = "Ln " + before.length + ", Col " + (before[before.length - 1].length + 1); };
       ["keyup", "click", "input", "select"].forEach((ev) => ta.addEventListener(ev, where));
+      pos.title = "Go to line (Ctrl + G)"; pos.classList.add("np-posbtn"); pos.onclick = () => goLine();
       const title = () => { win.el.querySelector(".wt-name").textContent = (file ? NX.fs.base(file) : "Notepad"); saveBtn.hidden = !!file; };
       // tabs: each one is a note Notepad keeps for you ("Untitled" until it has a first line) or a text file; they come back next time
       let tabs = (NX.data("np-tabs", null) || [{ id: 1 }]).filter((x) => x && x.id); if (!tabs.length) tabs = [{ id: 1 }];
@@ -88,9 +89,19 @@
       const replaceOne = () => { const q = fi.value; if (!q) return; if (ta.value.slice(ta.selectionStart, ta.selectionEnd).toLowerCase() !== q.toLowerCase() && !findNext()) return; ta.setRangeText(ri.value, ta.selectionStart, ta.selectionEnd, "end"); ta.dispatchEvent(new Event("input")); findNext(); };
       const replaceAll = () => { const q = fi.value; if (!q) return; let n = 0; const low = q.toLowerCase(); let out = "", i = 0, v = ta.value, lv = v.toLowerCase(); for (;;) { const j = lv.indexOf(low, i); if (j < 0) break; out += v.slice(i, j) + ri.value; i = j + q.length; n++; } if (!n) { fmsg.textContent = "Not found"; return; } ta.value = out + v.slice(i); ta.dispatchEvent(new Event("input")); fmsg.textContent = n === 1 ? "Replaced 1" : "Replaced " + n; };
       fb.onsubmit = (e) => { e.preventDefault(); findNext(); };
+      // Go to line (Ctrl + G, or click Ln and Col at the bottom)
+      const goLine = async () => {
+        const lines = ta.value.split("\n"), now = ta.value.slice(0, ta.selectionStart).split("\n").length;
+        const v = await NX.ask(body, { title: "Go to line", text: "Line 1 to " + lines.length, input: true, value: String(now), ok: "Go" }); if (v == null || v === false) { ta.focus(); return; }
+        const n = Math.max(1, Math.min(lines.length, parseInt(v, 10) || 1)); let at = 0; for (let k = 0; k < n - 1; k++) at += lines[k].length + 1;
+        ta.focus(); ta.setSelectionRange(at, at); const lh = parseFloat(getComputedStyle(ta).lineHeight) || 20; ta.scrollTop = Math.max(0, (n - 3) * lh); ta.dispatchEvent(new Event("keyup"));
+      };
+      win.npGoLine = goLine;
       fb.onclick = (e) => { const b = e.target.closest("[data-f]"); if (!b) return; const k = b.dataset.f; if (k === "next") findNext(); if (k === "rep") replaceOne(); if (k === "all") replaceAll(); if (k === "close") { fb.hidden = true; fmsg.textContent = ""; ta.focus(); } };
       fb.onkeydown = (e) => { if (e.key === "Escape") { e.stopPropagation(); fb.hidden = true; ta.focus(); } if (e.key === "Enter") { e.preventDefault(); if (e.target === ri) replaceOne(); else findNext(); } };
       body.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^[fh]$/i.test(e.key)) { e.preventDefault(); findOpen(e.key.toLowerCase() === "h"); } if (e.key === "F3") { e.preventDefault(); findNext(); }
+        // Ctrl + G: Go to line
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^g$/i.test(e.key)) { e.preventDefault(); goLine(); }
         // F5: the date and time where you're typing, like Windows Notepad
         if (e.key === "F5" && e.target === ta) { e.preventDefault(); const d = new Date(); ta.setRangeText(NX.fmtTime(d) + " " + d.toLocaleDateString(), ta.selectionStart, ta.selectionEnd, "end"); ta.dispatchEvent(new Event("input", { bubbles: true })); } });
       win.np = { findOpen, findNext, replaceAll, ta };

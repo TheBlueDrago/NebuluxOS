@@ -29,6 +29,7 @@
     ["Text size", "Settings, Accessibility, Text size makes the words and buttons in Nebulux apps 110, 125 or 150 percent bigger."],
     ["ZIP files", "Right-click files in File Explorer to Compress to ZIP file, or right-click a ZIP file to Extract all."],
     ["Programmer calculator", "Calculator has a Programmer mode: type a number in hexadecimal, decimal, octal or binary and see the other three, and shift or flip its bits."],
+    ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
