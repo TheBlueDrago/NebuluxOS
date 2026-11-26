@@ -653,6 +653,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => NX.closeAll());
   // Storage Sense empties old things from the Recycle Bin
   ok(await p.evaluate(async () => { await NX.fs.emptyTrash(); const d = await NX.folder("Documents"); await NX.fs.write(d + "/Old.txt", "x"); await NX.fs.remove([d + "/Old.txt"]); NX.setPref("storageSense", true); const kept = await NX.storageSense(); const gone = await NX.storageSense(Date.now() + 31 * 86400000); const left = (await NX.fs.trash()).entries.length; NX.setPref("storageSense", false); return kept === 0 && gone === 1 && left === 0; }), "Storage Sense empties Recycle Bin items older than 30 days, and keeps newer ones");
+  // Notepad: F5 puts in the date and time
+  await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); }); await wait(500);
+  await p.evaluate(() => { const ta = document.querySelector(".win[data-app=notepad] textarea"); ta.value = ""; ta.focus(); }); await p.keyboard.press("F5"); await wait(200);
+  ok(await p.evaluate(() => /\d{4}|\d{1,2}\/\d{1,2}/.test(document.querySelector(".win[data-app=notepad] textarea").value)), "F5 in Notepad puts in the date and time");
+  await p.evaluate(() => { document.querySelector(".win[data-app=notepad] textarea").value = ""; NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
