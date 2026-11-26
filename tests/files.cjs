@@ -683,6 +683,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Meta"); await p.keyboard.down("Shift"); await p.keyboard.press("M"); await p.keyboard.up("Shift"); await p.keyboard.up("Meta"); await wait(400);
   ok(await p.evaluate(() => [...NX.wins.values()].every((w) => !w.min)), "and Nebulux + Shift + M brings them back");
   await p.evaluate(() => NX.closeAll());
+  // Text replacements: add one in Settings, then "omw " and "addr," become their phrases while typing
+  await p.evaluate(() => { NX.closeAll(); NX.setData("text-repl", null); NX.open("settings", { page: "devices" }); }); await wait(500);
+  await p.type(".win[data-app=settings] .s-radd [name=k]", "addr"); await p.type(".win[data-app=settings] .s-radd [name=v]", "12 Main Street");
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] .s-radd").requestSubmit()); await wait(200);
+  ok(await p.evaluate(() => NX.textRepl().some(([k, v]) => k === "addr" && v === "12 Main Street") && /12 Main Street/.test(document.querySelector(".win[data-app=settings] .s-repl").textContent)), "Settings adds a text replacement");
+  await p.evaluate(() => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); }); await wait(500);
+  await p.focus(".win[data-app=notepad] textarea"); await p.keyboard.type("omw and addr, done"); await wait(100);
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "On my way! and 12 Main Street, done"), "typing a code and a space or comma puts in its phrase");
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); NX.setData("text-repl", null); }); await wait(500); await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

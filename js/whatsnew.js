@@ -10,6 +10,7 @@
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],
     ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app: edit a picture in Paint, or read any file in Notepad."],
     ["Color Picker", "A new app: pick any color on the screen with Nebulux + Shift + C and copy it as HEX, RGB or HSL. Your recent colors stay in the app."],
+    ["Text replacements", "Settings > Bluetooth & devices > Keyboard: type a short code like omw, then a space, and it becomes the whole phrase (On my way!). Add your own."],
     ["Symbols", "Nebulux + . opens Symbols: ©, °, ™, currency, math, arrows, Greek and accented letters, typed right where you are typing."],
     ["Fold the calendar", "The arrow next to the date in the calendar flyout folds the month away, so more notifications fit."],
     ["Start from the keyboard", "Click Start and just type to search. The arrow keys move between the apps in Start, the tiles in Quick Settings and the icons on the desktop."],

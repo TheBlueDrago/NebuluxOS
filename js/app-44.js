@@ -159,3 +159,18 @@
       load(opts && opts.path);
     } };
 })();
+
+// ---------- Text replacements (Settings > Bluetooth & devices > Keyboard, like macOS): type a short code like "omw",
+// then a space or punctuation, and it becomes the whole phrase ----------
+(function () {
+  NX.textRepl = () => { const L = NX.data("text-repl", null); return Array.isArray(L) ? L : [["omw", "On my way!"]]; };
+  const plain = (t) => t && ((t.tagName === "INPUT" && /^(text|search|email|url|)$/i.test(t.type || "")) || t.tagName === "TEXTAREA") && !t.closest("[data-norepl]");
+  document.addEventListener("input", (e) => {
+    const t = e.target; if (!NX.me || NX.prefs().textRepl === false || !plain(t) || e.inputType !== "insertText" || !e.data || !/^[\s.,!?;:]$/.test(e.data)) return;
+    const end = t.selectionStart; if (end == null || end !== t.selectionEnd) return;
+    const before = t.value.slice(0, end - 1), m = /(^|[\s(])([^\s()]{1,24})$/.exec(before); if (!m) return;
+    const hit = NX.textRepl().find(([k]) => k === m[2]); if (!hit) return;
+    const from = end - 1 - m[2].length; t.setRangeText(hit[1], from, end - 1, "end"); const at = from + hit[1].length + 1; t.setSelectionRange(at, at);
+    t.dispatchEvent(new Event("input", { bubbles: true }));
+  }, true);
+})();
