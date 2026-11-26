@@ -619,6 +619,6 @@
     closeFlyouts(); NX.open("settings", { page: "network" });
     let n = 0; const t = setInterval(() => { const b = document.querySelector(".win[data-app=settings] #s-diag"); if (b) { clearInterval(t); b.scrollIntoView({ block: "center" }); b.click(); } else if (++n > 40) clearInterval(t); }, 100);
   }
-  NX.shell = { troubleshoot, nightTick, nightHours: inHours, openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
+  NX.shell = { sleep, troubleshoot, nightTick, nightHours: inHours, openWifi, closeFlyouts, toggleStart, icons, lockKeep, taskbar, refresh: () => { icons(); taskbar(); if (!$("#start").hidden) startDraw($(".sm-search input") ? $(".sm-search input").value : ""); }, recent: (id) => { if (!NX.me) return; NX.setPref("recent", [id, ...NX.prefs().recent.filter((x) => x !== id)].slice(0, 6)); }, signOut, power, lock };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

@@ -438,7 +438,7 @@
     else if (win && e.key === "Escape" && NX.magnifier.level() > 1) { e.preventDefault(); NX.magnifier.zoom(0); }
     else if (e.key === "Escape" && $("#nx-grid")) $("#nx-grid").remove();
   });
-  const closeTop = () => { const t = NX.topWin && NX.topWin(); if (t) NX.close(t.id); };
+  const closeTop = () => { const t = NX.topWin && NX.topWin(); if (t) NX.close(t.id); else if (NX.shutDownBox) NX.shutDownBox(); }; // nothing open: the Shut down box, like Windows
   addEventListener("keydown", (e) => { if (e.altKey && e.key === "F4" && NX.me) { e.preventDefault(); closeTop(); } });
   document.addEventListener("nx:key", (e) => { if (e.detail === "close") closeTop(); if (e.detail === "search") NX.quickSearch(); if (e.detail === "grid") NX.appGrid(); if (/^zoom-/.test(e.detail) && NX.shell) NX.shell.closeFlyouts(); if (e.detail === "zoom-in") NX.magnifier.zoom(1); if (e.detail === "zoom-out") NX.magnifier.zoom(-1); if (e.detail === "zoom-off") NX.magnifier.zoom(0); });
 
@@ -1056,3 +1056,17 @@ NX.holidayGreeting = () => {
     setTimeout(() => L.forEach((id, k) => setTimeout(() => NX.open(id), k * 250)), 1200);
   });
 })();
+
+// ---------- Alt + F4 on the desktop: "What do you want the computer to do?" ----------
+NX.shutDownBox = () => {
+  if (!NX.me || document.getElementById("nx-sd")) return; if (NX.shell) NX.shell.closeFlyouts();
+  const o = document.createElement("div"); o.id = "nx-sd"; o.className = "nx-pop";
+  const opts = [["off", "Shut down"], ["restart", "Restart"], ["sleep", "Sleep"], ["out", "Sign out"], ["lock", "Lock"]];
+  o.innerHTML = `<form class="nx-pcard sd-card"><div class="nx-ph">${NX.icon("logo", 40)}<div><b>Shut down Nebulux OS</b><small>What do you want the computer to do?</small></div></div><select class="s-sel sd-sel" aria-label="What to do">${opts.map(([k, t]) => `<option value="${k}">${t}</option>`).join("")}</select><div class="nx-pbtns"><button type="button" class="btn" data-sd="cancel">Cancel</button><button class="btn primary" type="submit">OK</button></div></form>`;
+  document.body.appendChild(o);
+  const close = () => o.remove(), sel = o.querySelector("select");
+  o.querySelector("[data-sd=cancel]").onclick = close;
+  o.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  o.querySelector("form").onsubmit = (e) => { e.preventDefault(); const k = sel.value, S = NX.shell || {}; close(); if (k === "off" || k === "restart") S.power && S.power(k); else if (k === "sleep") S.sleep && S.sleep(); else if (k === "out") S.signOut && S.signOut(); else S.lockKeep && S.lockKeep(); };
+  setTimeout(() => sel.focus(), 30);
+};

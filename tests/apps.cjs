@@ -683,6 +683,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   const firstTwo = await p.evaluate(() => { const t = [...document.querySelectorAll("#start .sm-grid .sm-tile")]; const dt = new DataTransfer(); t[3].dispatchEvent(new DragEvent("dragstart", { dataTransfer: dt, bubbles: true })); t[0].dispatchEvent(new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true })); return t[3].dataset.app; }); await wait(300);
   ok(await p.evaluate((id) => document.querySelector("#start .sm-grid .sm-tile").dataset.app === id && NX.prefs().startOrder[0] === id, firstTwo), "dragging a pinned app in Start moves it");
   await p.evaluate(() => { NX.setPref("startOrder", []); NX.shell.closeFlyouts(); });
+  // Alt + F4 on the desktop: the Shut down box
+  await p.evaluate(() => NX.closeAll()); await wait(300);
+  await p.keyboard.down("Alt"); await p.keyboard.press("F4"); await p.keyboard.up("Alt"); await wait(300);
+  ok(await p.evaluate(() => { const o = document.querySelector("#nx-sd"); return !!o && /Shut down Nebulux OS/.test(o.textContent) && o.querySelectorAll("option").length === 5; }), "Alt + F4 with nothing open shows the Shut down box");
+  await p.keyboard.press("Escape"); await wait(150);
+  ok(await p.evaluate(() => !document.querySelector("#nx-sd")), "and Esc closes it");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
