@@ -366,8 +366,6 @@ const server = http.createServer((req, res) => {
     if (req.headers["x-nx-local"] !== LOCALKEY) return send(res, 403, "");
     const k = url.searchParams.get("k") || "";
     if (k === "close") { extra.closeActive().then((done) => { if (!done) pushEvent({ key: "close" }); }).catch(() => pushEvent({ key: "close" })); return send(res, 200, '{"ok":true}'); }
-    // shortcuts that open part of the Nebulux OS screen first give it the keyboard, so typing lands there and not in an app
-    if (/^(start|search|grid|clip|widgets|keys|sec|snapz|files)$/.test(k) && extra.shellFocus) { extra.shellFocus().catch(() => {}).finally(() => pushEvent({ key: k })); return send(res, 200, '{"ok":true}'); }
     if (/^[a-z0-9-]{2,12}$/.test(k)) pushEvent({ key: k });
     return send(res, 200, '{"ok":true}');
   }
