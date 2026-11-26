@@ -67,6 +67,9 @@ boot() { # BIOS or UEFI
   # mono audio (a note: the virtual computer has no sound card, only the sound system's stand-in)
   MO=$(grep -ao "NEBULUX-DIAG mono=[^ ]*" "$SHOTS/$MODE-serial.log" | tail -1 | cut -d= -f2 | tr -d '\r')
   if [ "$MO" = ok ]; then echo "ok   ($MODE): mono audio turns on and off"; else echo "note ($MODE): mono audio didn't switch (${MO:-no answer})"; fi
+  # Task Manager > Processes reads the real programs, and knows which belong to Nebulux OS (the screen above all)
+  PR=$(grep -ao "NEBULUX-DIAG procs=[0-9]* core=[0-9]* shell=[01]" "$SHOTS/$MODE-serial.log" | tail -1)
+  if echo "$PR" | grep -q "shell=1" && [ "$(echo "$PR" | sed 's/.*procs=\([0-9]*\).*/\1/')" -ge 5 ]; then echo "ok   ($MODE): Task Manager sees the processes ($PR)"; else echo "FAIL ($MODE): Task Manager's processes look wrong (${PR:-no answer})"; FAILS=$((FAILS + 1)); fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   # the mouse on the real browser: click into Google's search box and type
   click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click

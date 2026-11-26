@@ -301,6 +301,8 @@ const api = {
       p.on("error", () => {}); p.on("exit", () => { let n = 0; try { n = fs.statSync(out).size; } catch (e) { /* none */ } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG screenrec=" + n + "\n", () => {}); });
       // and mono audio: on, then off again
       (async () => { let r = "fail"; try { const on = await api["POST /sound/mono"]({ on: true }); const off = await api["POST /sound/mono"]({ on: false }); r = on.on && !off.on ? "ok" : "fail"; } catch (e) { r = "fail:" + String(e.message).replace(/\s+/g, "-").slice(0, 40); } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG mono=" + r + "\n", () => {}); })();
+      // and Task Manager's Processes: how many programs it sees, and how many of them are Nebulux OS's own
+      api["GET /processes"]().then((r) => { const L = r.processes || []; fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG procs=" + L.length + " core=" + L.filter((x) => x.core).length + " shell=" + (L.some((x) => /class=NebuluxShell/.test(x.cmd) && x.core) ? 1 : 0) + "\n", () => {}); }).catch(() => fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG procs=0\n", () => {}));
     }
     if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);
