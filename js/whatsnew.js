@@ -16,6 +16,7 @@
     ["Web searches always search", "Searching the web from Start or Quick Search opens your search, even if Google is already open."],
     ["Copy your device details", "Settings > System > About has a Copy button for the device specifications."],
     ["A temperature line", "The Weather app draws the next 24 hours of temperature as a line above the hours."],
+    ["Playback speed", "Media Player plays slower or faster, from 0.5x to 2x."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],

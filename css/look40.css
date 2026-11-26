@@ -696,3 +696,4 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 [data-theme=light] #desktop.accent-bars .win.active .titlebar{background:color-mix(in srgb,var(--accent) 18%,transparent)}
 .s-spech{display:flex;align-items:center;justify-content:space-between}
 .wa-graph-wrap{overflow:hidden;margin:0 0 -4px}.wa-graph{display:block}
+.mp-speed{min-width:34px;font-size:11.5px;font-weight:700;padding:0 6px}
