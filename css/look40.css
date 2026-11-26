@@ -853,3 +853,20 @@ body:has(.nx-osk) .nx-sym{bottom:calc(var(--tb) + 320px);max-height:min(300px,ca
 .s-rr{display:flex;align-items:center;gap:12px;padding:6px 8px;border-radius:8px;background:var(--card2)}
 .s-rr code{min-width:70px;font:600 13px ui-monospace,Consolas,monospace;color:var(--accent)}.s-rr span{flex:1;min-width:0;font-size:13.5px}
 .s-radd{display:flex;gap:8px;margin-top:4px}.s-radd input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font:inherit}.s-radd input[name=k]{flex:.5}
+
+/* Accessibility > Contrast themes (like Windows): solid, strong colors everywhere */
+html[data-ct]{--card:var(--ct-bg);--card2:var(--ct-bg);--glass:var(--ct-bg);--bg:var(--ct-bg);--bg2:var(--ct-bg);--txt:var(--ct-tx);--sub:var(--ct-tx);--line:var(--ct-tx);--hover:var(--ct-hl);--accent:var(--ct-hl)!important;--aura:var(--ct-bg)}
+html[data-ct=aquatic]{--ct-bg:#202020;--ct-tx:#ffffff;--ct-hl:#8ee3f0;--ct-ln:#75e9fc;--ct-btx:#202020}
+html[data-ct=desert]{--ct-bg:#fffaef;--ct-tx:#3d3d3d;--ct-hl:#903909;--ct-ln:#1c5e75;--ct-btx:#fffaef}
+html[data-ct=dusk]{--ct-bg:#2d3236;--ct-tx:#ffffff;--ct-hl:#a1bfde;--ct-ln:#70ebde;--ct-btx:#212d3b}
+html[data-ct=night]{--ct-bg:#000000;--ct-tx:#ffffff;--ct-hl:#d6b4fd;--ct-ln:#ffee32;--ct-btx:#2b2b2b}
+html[data-ct] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important}
+html[data-ct] #wall,html[data-ct] .wall,html[data-ct] #desktop{background:var(--ct-bg)!important}
+html[data-ct] .win,html[data-ct] .flyout,html[data-ct] #taskbar,html[data-ct] #start,html[data-ct] .nx-pop .nx-pcard,html[data-ct] .s-card,html[data-ct] .s-row,html[data-ct] .toast{background:var(--ct-bg)!important;border:2px solid var(--ct-tx)!important;box-shadow:none!important;color:var(--ct-tx)}
+html[data-ct] .titlebar{background:var(--ct-bg)!important}
+html[data-ct] a,html[data-ct] .s-link,html[data-ct] .lk-link{color:var(--ct-ln)!important}
+html[data-ct] .btn.primary,html[data-ct] .on.btn,html[data-ct] .seg .on,html[data-ct] .s-nav.on{background:var(--ct-hl)!important;color:var(--ct-btx)!important;border-color:var(--ct-hl)!important}
+html[data-ct] .btn{border:2px solid var(--ct-tx)!important;color:var(--ct-tx)}
+html[data-ct] :focus-visible{outline:3px solid var(--ct-ln)!important;outline-offset:2px}
+html[data-ct] .tg input:checked+i{background:var(--ct-hl)!important;border-color:var(--ct-hl)!important}
+html[data-ct] #nx-living{display:none!important}html[data-ct] .dicon{color:var(--ct-tx)!important;text-shadow:none!important}html[data-ct] .dicon:hover,html[data-ct] .dicon.sel{background:transparent!important;border:2px solid var(--ct-hl)!important}
