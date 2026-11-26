@@ -48,6 +48,7 @@
     <keybind key="W-Up"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-max</command></action></keybind>
     <keybind key="W-Down"><action name="Execute"><command>/usr/local/bin/nebulux-key snap-down</command></action></keybind>
     <keybind key="Print"><action name="Execute"><command>/usr/local/bin/nebulux-key shot</command></action></keybind>
+    <keybind key="W-S-c"><action name="Execute"><command>/usr/local/bin/nebulux-key color</command></action></keybind>
     <keybind key="W-S-s"><action name="Execute"><command>/usr/local/bin/nebulux-key snip</command></action></keybind>
     <keybind key="W-space"><action name="Execute"><command>/usr/local/bin/nebulux-key search</command></action></keybind>
     <keybind key="W-g"><action name="Execute"><command>/usr/local/bin/nebulux-key grid</command></action></keybind>
