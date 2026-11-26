@@ -233,4 +233,20 @@
   const mono = (on) => { if (!NX.native) { if (on) NX.toast("Mono audio works on the Nebulux OS USB."); return; } NX.api("POST", "/sound/mono", { on: !!on }).then((r) => { if (r && r.on !== !!on) NX.toast("Mono audio couldn't change."); }).catch((e) => NX.toast(e.message)); };
   document.addEventListener("nx:prefs", (e) => { if (e.detail === "monoAudio" && NX.me) mono(NX.prefs().monoAudio); });
   document.addEventListener("nx:signin", () => { if (NX.me && NX.native) mono(!!NX.prefs().monoAudio); });
+
+  // ---------- Hover Text (Settings > Accessibility, like macOS): hold Alt and the words under the pointer show big ----------
+  let hvOn = false, hvEl = null, hvX = 0, hvY = 0;
+  const hvText = (el) => { if (!el || el.closest(".nx-hover")) return ""; const t = el.closest("button, a, label, input, select, textarea, h1, h2, h3, h4, p, li, b, small, span, td, .wt-name") || el; if (t.tagName === "INPUT" || t.tagName === "TEXTAREA") return t.value || t.getAttribute("placeholder") || t.getAttribute("aria-label") || ""; return clean(t.getAttribute("aria-label") || t.innerText || t.textContent || t.getAttribute("title") || "").slice(0, 160); };
+  const hvShow = () => {
+    const el = document.elementFromPoint(hvX, hvY), t = hvText(el);
+    if (!t) { if (hvEl) hvEl.hidden = true; return; }
+    if (!hvEl) { hvEl = document.createElement("div"); hvEl.className = "nx-hover"; hvEl.setAttribute("aria-hidden", "true"); document.body.appendChild(hvEl); }
+    hvEl.hidden = false; hvEl.textContent = t;
+    const w = Math.min(innerWidth - 24, 720), x = Math.max(12, Math.min(innerWidth - w - 12, hvX - w / 2)); hvEl.style.maxWidth = w + "px"; hvEl.style.left = x + "px";
+    hvEl.style.top = (hvY > innerHeight / 2 ? Math.max(12, hvY - hvEl.offsetHeight - 30) : hvY + 30) + "px";
+  };
+  addEventListener("pointermove", (e) => { hvX = e.clientX; hvY = e.clientY; if (hvOn) hvShow(); }, { capture: true, passive: true });
+  addEventListener("keydown", (e) => { if (e.key !== "Alt") { if (hvOn) hvOff(); return; } if (!e.repeat && NX.me && NX.prefs().hoverText) { hvOn = true; hvShow(); } }, true); // another key (like Alt + Tab) hides it
+  const hvOff = () => { hvOn = false; if (hvEl) hvEl.hidden = true; };
+  addEventListener("keyup", (e) => { if (e.key === "Alt") hvOff(); }, true); addEventListener("blur", hvOff);
 })();

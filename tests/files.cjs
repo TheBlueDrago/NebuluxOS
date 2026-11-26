@@ -637,6 +637,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { document.querySelectorAll("#toasts .toast").forEach((t) => t.remove()); NX.setPref("toastSecs", 7); NX.toast("Long message"); }); await wait(4500);
   ok(await p.evaluate(() => [...document.querySelectorAll("#toasts .toast")].some((t) => /Long message/.test(t.textContent) && !t.classList.contains("out"))), "Show messages for keeps a message up longer");
   await p.evaluate(() => { NX.setPref("toastSecs", 3.2); document.querySelectorAll("#toasts .toast").forEach((t) => t.remove()); });
+  // Hover Text: hold Alt over words and they show big
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("hoverText", true); NX.open("calculator"); }); await wait(500);
+  { const b = await p.$(".win[data-app=calculator] [data-k='7']"), r = await b.boundingBox(); await p.mouse.move(r.x + r.width / 2, r.y + r.height / 2); }
+  await p.keyboard.down("Alt"); await wait(150);
+  ok(await p.evaluate(() => { const h = document.querySelector(".nx-hover"); return !!h && !h.hidden && h.textContent === "7"; }), "Hover Text shows the words under the pointer while Alt is held");
+  await p.keyboard.up("Alt"); await wait(100);
+  ok(await p.evaluate(() => document.querySelector(".nx-hover").hidden), "and goes when Alt is let go");
+  await p.evaluate(() => { NX.setPref("hoverText", false); NX.closeAll(); });
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

@@ -26,6 +26,7 @@
     ["Messages that wait for you", "Settings > Accessibility > Show messages for keeps messages up for up to a minute, and a message never goes while the pointer is on it."],
     ["Flash the screen for alerts", "Settings > Accessibility > Hearing flashes the screen when an alarm, timer or alert sound plays."],
     ["Color filters for color blindness", "Settings > Accessibility > Color filters can shift the screen's colors for red-green (deuteranopia or protanopia) or blue-yellow (tritanopia) color blindness."],
+    ["Hover Text", "Turn it on in Settings > Accessibility, then hold Alt to see the words under the pointer in big letters."],
     ["Find my pointer", "Turn it on in Settings > Accessibility, then press and let go of Ctrl to see rings close in on the mouse pointer."],
     ["The next window takes over", "Close a window and the one behind it is ready for your keyboard, like Windows."],
     ["Lock screen slideshow", "Settings > Personalization > Lock screen picture > Slideshow moves through all the backgrounds while the computer is locked."],
