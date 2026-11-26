@@ -62,13 +62,14 @@ while true; do
   START=$(date +%s)
   # display scale (Settings > System > Display): 100 to 200 percent, kept in ~/.config/nebulux-scale
   SCALE=""; S=$(cat "$HOME/.config/nebulux-scale" 2>/dev/null); case "$S" in 1|1.25|1.5|1.75|2) SCALE="--force-device-scale-factor=$S" ;; esac
+  # --app: an app window, so Nebulux OS gets Ctrl + W, T, N and Tab itself (in a normal browser window they close or open browser tabs, and Ctrl + W would close the whole screen)
   chromium --class=NebuluxShell --kiosk --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars $SCALE \
     --disable-session-crashed-bubble --disable-features=Translate,PasswordManagerOnboarding,DisableLoadExtensionCommandLineSwitch,MediaRouter,OptimizationHints,InterestFeedContentSuggestions,CalculateNativeWinOcclusion,HeavyAdIntervention \
     --disable-background-networking --disable-component-update --disable-sync --no-pings --disable-breakpad --disable-domain-reliability --metrics-recording-only --disable-client-side-phishing-detection \
     --password-store=basic --user-data-dir="$P" --load-extension="$EXT" $GPU \
     --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
     --autoplay-policy=no-user-gesture-required \
-    "http://127.0.0.1:7777/" >"$HOME/.nebulux-browser.log" 2>&1 &
+    --app="http://127.0.0.1:7777/" >"$HOME/.nebulux-browser.log" 2>&1 &
   CPID=$!
   # the watchdog: the OS page talks to the helper all the time; if it hasn't within 45 seconds, start over
   ( sleep 45

@@ -69,6 +69,13 @@ boot() { # BIOS or UEFI
   keys meta_l; sleep 2; typeword "nebulux arcade"; sleep 1; keys ret; sleep 25; shot 5d-arcade
   keys meta_l; sleep 2; typeword "settings"; sleep 1; keys ret; sleep 6; shot 6-settings
   keys meta_l; sleep 2; typeword "file explorer"; sleep 1; keys ret; sleep 5; shot 7-files
+  # Ctrl + W closes the window in front (File Explorer, then Settings) and never the whole Nebulux OS screen:
+  # if the screen had closed, the session would start it again and the page would report itself (ext=) once more
+  E0=$(grep -ac "NEBULUX-DIAG ext=" "$SHOTS/$MODE-serial.log"); O0=$(grep -ac "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log")
+  keys ctrl-w; sleep 2; keys ctrl-w; sleep 2; keys ctrl-w; sleep 2; keys ctrl-t; sleep 2; shot 8-ctrlw
+  sleep 12; click 52 145; sleep 6; shot 8b-after-ctrlw
+  E1=$(grep -ac "NEBULUX-DIAG ext=" "$SHOTS/$MODE-serial.log"); O1=$(grep -ac "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log")
+  if [ "$E1" = "$E0" ] && [ "$O1" -gt "$O0" ]; then echo "ok   ($MODE): Ctrl + W closes windows, not Nebulux OS"; else echo "FAIL ($MODE): Ctrl + W closed the Nebulux OS screen (page reports $E0 then $E1, Settings opened $O0 then $O1)"; FAILS=$((FAILS + 1)); fi
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1
   for _ in $(seq 1 30); do kill -0 $QPID 2>/dev/null || break; sleep 2; done
   kill $QPID 2>/dev/null; wait $QPID 2>/dev/null
