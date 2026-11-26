@@ -376,9 +376,10 @@ module.exports = function more({ api, run, FAKE }) {
   const procList = async () => {
     if (FAKE) return [{ pid: 101, name: "Web engine", cmd: "chromium --class=NebuluxShell", cpu: 7.5, mem: 380e6, mine: true, core: true }, { pid: 202, name: "VLC", cmd: "vlc", cpu: 3.1, mem: 120e6, mine: true, core: false }, { pid: 303, name: "System", cmd: "systemd", cpu: 0.1, mem: 12e6, mine: false, core: true }];
     const me = os.userInfo().username, r = await run("ps", ["-eo", "pid=,user=,pcpu=,rss=,comm=,args=", "--sort=-pcpu"], 6000);
-    return (r.out || "").split("\n").map((l) => /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s*(.*)$/.exec(l)).filter(Boolean).slice(0, 40).map((m) => ({ pid: +m[1], name: PNAMES[m[5]] || m[5], cmd: m[6].slice(0, 160), cpu: +m[3], mem: +m[4] * 1024, mine: m[2] === me, core: coreProc(m[6]) || +m[1] === process.pid }));
+    return (r.out || "").split("\n").map((l) => /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s*(.*)$/.exec(l)).filter(Boolean).map((m) => ({ pid: +m[1], name: PNAMES[m[5]] || m[5], cmd: m[6].slice(0, 160), cpu: +m[3], mem: +m[4] * 1024, mine: m[2] === me, core: coreProc(m[6]) || +m[1] === process.pid }));
   };
-  api["GET /processes"] = async () => ({ processes: await procList() });
+  // the 40 busiest for Task Manager; every one is checked when something is ended
+  api["GET /processes"] = async () => { const all = await procList(); return { processes: all.slice(0, 40), total: all.length, shell: all.some((x) => x.core && /class=NebuluxShell/.test(x.cmd)) }; };
   api["POST /processes/end"] = async (b) => {
     const pid = +b.pid, p = (await procList()).find((x) => x.pid === pid);
     if (!p) throw new Error("That program isn't running any more.");
