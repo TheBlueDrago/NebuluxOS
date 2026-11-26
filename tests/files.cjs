@@ -645,6 +645,19 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.up("Alt"); await wait(100);
   ok(await p.evaluate(() => document.querySelector(".nx-hover").hidden), "and goes when Alt is let go");
   await p.evaluate(() => { NX.setPref("hoverText", false); NX.closeAll(); });
+  // Start from the keyboard: typing after clicking Start searches; the arrow keys move between the pinned apps
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); }); await wait(200);
+  await p.click("#tb-start"); await wait(300); await p.keyboard.type("sett"); await wait(300);
+  ok(await p.evaluate(() => document.querySelector("#start .sm-search input").value === "sett"), "typing after clicking Start goes into its search");
+  await p.keyboard.press("Enter"); await wait(600);
+  ok(await p.evaluate(() => NX.wins.has("settings")), "and Enter opens the best match");
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); }); await wait(200);
+  await p.click("#tb-start"); await wait(300); await p.evaluate(() => document.querySelector("#start .sm-tile").focus());
+  const t0 = await p.evaluate(() => document.activeElement.textContent.trim()); await p.keyboard.press("ArrowRight"); await wait(80);
+  const t1 = await p.evaluate(() => document.activeElement.textContent.trim()); await p.keyboard.press("ArrowDown"); await wait(80);
+  const t2 = await p.evaluate(() => document.activeElement.classList.contains("sm-tile") ? document.activeElement.textContent.trim() : "");
+  ok(t0 && t1 && t2 && t1 !== t0 && t2 !== t1, "the arrow keys move between Start's pinned apps");
+  await p.keyboard.press("Escape"); await p.evaluate(() => NX.shell.closeFlyouts());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

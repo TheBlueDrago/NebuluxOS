@@ -249,4 +249,30 @@
   addEventListener("keydown", (e) => { if (e.key !== "Alt") { if (hvOn) hvOff(); return; } if (!e.repeat && NX.me && NX.prefs().hoverText) { hvOn = true; hvShow(); } }, true); // another key (like Alt + Tab) hides it
   const hvOff = () => { hvOn = false; if (hvEl) hvEl.hidden = true; };
   addEventListener("keyup", (e) => { if (e.key === "Alt") hvOff(); }, true); addEventListener("blur", hvOff);
+
+  // ---------- the keyboard in Start, Quick Settings, Symbols and on the desktop icons, like Windows:
+  // the arrow keys move to the nearest item that way; typing while Start is open goes into its search ----------
+  // typing a letter while Start is open (after clicking it) goes into Start's search
+  addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey || !NX.me || e.key.length !== 1 || !e.key.trim()) return;
+    const a = document.activeElement, start = document.getElementById("start"); if (!start || start.hidden || (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable))) return;
+    const q = start.querySelector(".sm-search input"); if (!q) return;
+    e.preventDefault(); e.stopPropagation(); q.focus(); q.setRangeText(e.key, q.selectionStart || 0, q.selectionEnd || 0, "end"); q.dispatchEvent(new Event("input", { bubbles: true }));
+  }, true);
+  const NAV = ["#start", "#qs", ".nx-sym .sy-grid", "#icons"];
+  const navItems = (box) => [...box.querySelectorAll("button, a[href], [tabindex='0']")].filter((b) => !b.disabled && b.offsetParent !== null && !b.closest("[hidden]"));
+  addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey || !NX.me) return;
+    const a = document.activeElement, start = document.getElementById("start");
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!dir || !a || !a.closest) return;
+    if (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable) return;
+    const sel = NAV.find((s) => a.closest(s)); if (!sel) return; const box = a.closest(sel);
+    const r0 = a.getBoundingClientRect(), cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2; let best = null, bestD = Infinity;
+    for (const b of navItems(box)) {
+      if (b === a) continue; const r = b.getBoundingClientRect(), dx = r.left + r.width / 2 - cx, dy = r.top + r.height / 2 - cy;
+      const along = dx * dir[0] + dy * dir[1], across = Math.abs(dx * dir[1] + dy * dir[0]); if (along <= 4) continue;
+      const d = along + across * 2.2; if (d < bestD) { bestD = d; best = b; }
+    }
+    if (best) { e.preventDefault(); best.focus(); best.scrollIntoView && best.scrollIntoView({ block: "nearest" }); }
+  });
 })();
