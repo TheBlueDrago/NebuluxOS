@@ -638,6 +638,11 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Move to a new desktop/.test(b.textContent)).click()); await wait(300);
   ok(await p.evaluate(() => NX.desks.list().length === 2 && NX.wins.get("clock").desk !== NX.desks.current()), "a window can move to a new desktop from its title bar");
   await p.evaluate(() => { const d = NX.desks.list().find((x) => !x.current); NX.closeAll(); if (d) NX.desks.remove(d.id); });
+  // Photos: Delete sends the picture to the Recycle Bin
+  const delPath = await p.evaluate(async () => { NX.closeAll(); const cv = document.createElement("canvas"); cv.width = 40; cv.height = 30; cv.getContext("2d").fillRect(0, 0, 40, 30); const r = await NX.fs.upload(await NX.folder("Pictures"), "Delete me.png", await new Promise((ok) => cv.toBlob(ok, "image/png"))); NX.open("photos", { path: r.path }); return r.path; }); await wait(800);
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=del]").click()); await wait(700);
+  ok(await p.evaluate(async (pth) => !(await NX.fs.list(await NX.folder("Pictures"))).entries.some((e) => e.path === pth) && (await NX.fs.trash()).entries.some((e) => /Delete me/.test(e.name)), delPath), "Photos' Delete sends the picture to the Recycle Bin");
+  await p.evaluate(async () => { await NX.fs.emptyTrash(); NX.closeAll(); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);
