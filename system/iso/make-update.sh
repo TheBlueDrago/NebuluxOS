@@ -8,7 +8,7 @@ V="$1"; URL="$2"; OUT="$3"
 T="$(mktemp -d)"
 mkdir -p "$T/www" "$T/helper" "$T/ext" "$T/wm" "$OUT"
 cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" "$REPO/img" "$T/www/"
-cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" "$T/helper/"
+cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" "$REPO/system/helper/zip.js" "$T/helper/"
 cp -a "$REPO/system/browser-ext/." "$T/ext/"
 mkdir -p "$T/app-ext"; cp -a "$REPO/system/app-ext/." "$T/app-ext/"
 # the window-manager setup (keyboard shortcuts over every app); the helper starts it from here on older USBs

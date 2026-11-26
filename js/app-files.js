@@ -62,10 +62,67 @@
         const u = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(new Error("The file couldn't be read.")); r.readAsDataURL(blob); });
         const m = map(); need(m, dir, true); const p = uniq(m, dir, name); m[p] = { u, s: blob.size, m: now() }; save(m); return { path: p, name: base(p) };
       },
+      // Compress to ZIP file, and Extract all (files kept in the browser are stored as they are, not packed smaller)
+      async zip(paths) {
+        const m = map(), files = [];
+        for (const p of paths) { need(m, p); for (const k of tree(m, p).sort()) { const rel = base(p) + k.slice(p.length); files.push(m[k].d ? { name: rel + "/", data: new Uint8Array(0), mt: m[k].m } : { name: rel, data: await bytesOf(m[k]), mt: m[k].m }); } }
+        const first = base(paths[0]), stem = paths.length === 1 && !m[paths[0]].d ? first.replace(/\.[^.]+$/, "") || first : first;
+        return this.upload(parent(paths[0]), stem + ".zip", zipBlob(files));
+      },
+      async unzip(p) {
+        const m = map(), n = need(m, p, false), items = await unzipBytes(await bytesOf(n));
+        let total = 0; for (const it of items) total += it.data ? it.data.length : 0; if (total > 3 * 1048576) throw new Error("That's too big to extract in the browser (over 3 MB).");
+        const d = uniq(m, parent(p), base(p).replace(/\.zip$/i, "") || "Extracted"); m[d] = { d: 1, m: now() };
+        for (const it of items) {
+          const segs = it.name.split("/"); if (segs.some((x) => !okName(x))) continue; let cur = d;
+          for (let i = 0; i < segs.length - (it.dir ? 0 : 1); i++) { cur = join(cur, segs[i]); if (!m[cur]) m[cur] = { d: 1, m: now() }; }
+          if (it.dir) continue; const nm = segs[segs.length - 1], fp = join(cur, nm);
+          m[fp] = KINDS.text.test(nm) ? { t: new TextDecoder().decode(it.data), m: now() } : { u: await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(new Blob([it.data])); }), s: it.data.length, m: now() };
+        }
+        save(m); return { path: d, name: base(d), files: items.filter((x) => !x.dir).length };
+      },
       async drives() { return []; }, async mount() { throw new Error("USB drives open on the real Nebulux OS."); }, async eject() { return { ok: true }; },
       parent, join, base, sep: "/",
     };
   })();
+
+  // ---------- ZIP files in the browser ----------
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  async function bytesOf(n) { if (n.t != null) return new TextEncoder().encode(n.t); return new Uint8Array(await (await fetch(n.u)).arrayBuffer()); }
+  function zipBlob(files) {
+    const parts = [], cen = []; let off = 0;
+    for (const f of files) {
+      const name = new TextEncoder().encode(f.name), crc = crc32(f.data), d = new Date(f.mt || Date.now()), dir = f.name.endsWith("/");
+      const tm = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dt = ((Math.max(1980, d.getFullYear()) - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+      const h = new DataView(new ArrayBuffer(30)); h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(10, tm, true); h.setUint16(12, dt, true); h.setUint32(14, crc, true); h.setUint32(18, f.data.length, true); h.setUint32(22, f.data.length, true); h.setUint16(26, name.length, true);
+      const c = new DataView(new ArrayBuffer(46)); c.setUint32(0, 0x02014b50, true); c.setUint16(4, 0x031e, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(12, tm, true); c.setUint16(14, dt, true); c.setUint32(16, crc, true); c.setUint32(20, f.data.length, true); c.setUint32(24, f.data.length, true); c.setUint16(28, name.length, true); c.setUint32(38, dir ? 0x41ed0010 : 0x81a40000, true); c.setUint32(42, off, true);
+      parts.push(h, name, f.data); cen.push(c, name); off += 30 + name.length + f.data.length;
+    }
+    const size = cen.reduce((s, x) => s + x.byteLength, 0), e = new DataView(new ArrayBuffer(22)); e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+    return new Blob([...parts, ...cen, e], { type: "application/zip" });
+  }
+  async function unzipBytes(b) {
+    const v = new DataView(b.buffer, b.byteOffset, b.byteLength); let e = -1;
+    for (let i = b.length - 22; i >= Math.max(0, b.length - 65557); i--) if (v.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) throw new Error("That isn't a ZIP file, or it's damaged.");
+    const count = v.getUint16(e + 10, true), out = []; let p = v.getUint32(e + 16, true);
+    for (let k = 0; k < count; k++) {
+      if (v.getUint32(p, true) !== 0x02014b50) throw new Error("That ZIP file is damaged.");
+      const flags = v.getUint16(p + 8, true), method = v.getUint16(p + 10, true), cs = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+      const name = new TextDecoder(flags & 0x0800 ? "utf-8" : "latin1").decode(b.subarray(p + 46, p + 46 + nl)).split("\\").join("/"); p += 46 + nl + xl + cl;
+      if (flags & 1) throw new Error("That ZIP file has a password. Nebulux OS can't open those yet.");
+      const segs = name.split("/").filter((s) => s && s !== "."); if (!segs.length || name.startsWith("/") || segs.includes("..")) continue;
+      if (name.endsWith("/")) { out.push({ name: segs.join("/"), dir: true }); continue; }
+      const ls = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true), body = b.subarray(ls, ls + cs);
+      let data; if (method === 0) data = body; else if (method === 8) data = new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer()); else throw new Error("That ZIP file uses a kind of packing Nebulux OS can't open.");
+      out.push({ name: segs.join("/"), dir: false, data });
+    }
+    // everything in one folder (like a zipped-up folder): unpack its insides, so it isn't a folder inside a folder
+    const tops = new Set(out.map((x) => x.name.split("/")[0])), top = [...tops][0];
+    if (tops.size === 1 && out.some((x) => x.name.startsWith(top + "/"))) return out.filter((x) => x.name !== top).map((x) => ({ ...x, name: x.name.slice(top.length + 1) }));
+    return out;
+  }
 
   // ---------- files on the real computer (through the system helper) ----------
   const R = (function () {
@@ -85,6 +142,8 @@
       restore: (ids) => NX.api("POST", "/files/restore", { ids }),
       emptyTrash: () => NX.api("POST", "/files/empty-trash"),
       copy: (paths, to, move) => NX.api("POST", "/files/copy", { paths, to, move: !!move }),
+      zip: (paths) => NX.api("POST", "/files/zip", { paths }),
+      unzip: (p) => NX.api("POST", "/files/unzip", { path: p }),
       url: async (p) => NX.rawURL(p),
       upload: (dir, name, blob) => NX.apiUpload(dir, name, blob),
       drives: async () => (await NX.api("GET", "/drives")).drives,
@@ -264,6 +323,8 @@
           if (k === "newfolder" || k === "newtext") { const name = await NX.ask(body, { title: k === "newfolder" ? "New folder" : "New text file", input: true, value: k === "newfolder" ? "New folder" : "New text file.txt", ok: "Make it" }); if (!name) return; const r = await NX.fs.create(here(), name, k === "newfolder"); await load(); sel = new Set([r.path]); render(); return; }
           if (k === "cut" || k === "copy") { NX.fsClip = { move: k === "cut", paths: s.map((e) => e.path) }; NX.toast((k === "cut" ? "Cut " : "Copied ") + s.length + (s.length === 1 ? " item." : " items.") + " Open a folder and press Paste."); render(); return; }
           if (k === "paste") { if (!NX.fsClip || !here()) return; const c = NX.fsClip; const r = await NX.fs.copy(c.paths, here(), c.move); if (c.move) NX.fsClip = null; await load(); sel = new Set(r.paths); render(); return; }
+          if (k === "zip") { NX.toast("Making the ZIP file..."); const r = await NX.fs.zip(s.map((e) => e.path)); await load(); sel = new Set([r.path]); render(); NX.toast("Made " + r.name + "."); return; }
+          if (k === "unzip") { const r = await NX.fs.unzip(s[0].path); await load(); sel = new Set([r.path]); render(); NX.toast("Extracted " + r.files + (r.files === 1 ? " file" : " files") + " into " + r.name + "."); return; }
           if (k === "rename") { const e = s[0]; const name = await NX.ask(body, { title: "Rename", input: true, value: e.name, ok: "Rename" }); if (!name || name === e.name) return; const r = await NX.fs.rename(e.path, name); await load(); sel = new Set([r.path]); render(); return; }
           if (k === "delete") {
             const onDrive = drives.some((d) => d.mount && cur.startsWith(d.mount));
@@ -312,7 +373,7 @@
         if (b && !sel.has(b.dataset.k)) { sel = new Set([b.dataset.k]); marks(); }
         const s = selected(), M = [];
         if (isTrash()) { if (s.length) M.push(["Restore", () => act("restore")], ["Delete for good", () => act("purge")]); M.push(["Empty Recycle Bin", () => act("empty")]); }
-        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (s.length === 1 && !isTrash()) M.push(["Copy as path", () => { const t = s.map((e) => e.path).join(String.fromCharCode(10)); if (NX.clip) NX.clip.add(t); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {}); if (NX.native) NX.api("POST", "/clip", { text: t }).catch(() => {}); NX.toast("Copied " + (s.length === 1 ? "the path" : s.length + " paths") + "."); }, "copy"]); M.push(["Properties", () => props(s[0])]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
+        else if (s.length) { if (s.length === 1) M.push(["Open", () => openItem(s[0])]); if (s.length === 1 && s[0].dir) { M.push(["Open in new tab", () => tabNew(s[0].path)]); const pinned = NX.data("fx-pins", []).some((x) => x.path === s[0].path); M.push([pinned ? "Unpin from Quick access" : "Pin to Quick access", () => pinFolder(s[0], !pinned)]); } if (!isHome()) M.push(["Cut", () => act("cut")], ["Copy", () => act("copy")]); if (s.length === 1 && !isHome()) M.push(["Rename", () => act("rename")]); if (!isHome()) M.push(["Delete", () => act("delete")]); if (!isHome() && NX.fs.zip) { M.push(["Compress to ZIP file", () => act("zip")]); if (s.length === 1 && !s[0].dir && /\.zip$/i.test(s[0].name)) M.push(["Extract all", () => act("unzip")]); } if (s.length === 1 && !isTrash()) M.push(["Copy as path", () => { const t = s.map((e) => e.path).join(String.fromCharCode(10)); if (NX.clip) NX.clip.add(t); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {}); if (NX.native) NX.api("POST", "/clip", { text: t }).catch(() => {}); NX.toast("Copied " + (s.length === 1 ? "the path" : s.length + " paths") + "."); }, "copy"]); M.push(["Properties", () => props(s[0])]); if (!isTrash()) M.push(["Tag with a color", () => NX.menu(ev.clientX + 12, ev.clientY + 12, [...Object.entries(TAGS).map(([c, [n]]) => [n, () => setTag(s, c)]), ["No tag", () => setTag(s, null)]])]); }
         else if (!isHome()) { M.push(["New folder", () => act("newfolder")], ["New text file", () => act("newtext")]); if (NX.fsClip) M.push(["Paste", () => act("paste")]); M.push(["Refresh", () => load()]); }
         if (M.length) NX.menu(ev.clientX, ev.clientY, M);
       });

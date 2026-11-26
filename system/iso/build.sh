@@ -49,7 +49,7 @@ mkdir -p config/includes.chroot
 cp -a "$REPO/system/iso/root/." config/includes.chroot/
 mkdir -p config/includes.chroot/opt/nebulux/www config/includes.chroot/opt/nebulux/helper config/includes.chroot/opt/nebulux/ext
 cp -a "$REPO/index.html" "$REPO/css" "$REPO/js" "$REPO/img" config/includes.chroot/opt/nebulux/www/
-cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" config/includes.chroot/opt/nebulux/helper/
+cp -a "$REPO/system/helper/nebulux-helper.js" "$REPO/system/helper/more.js" "$REPO/system/helper/zip.js" config/includes.chroot/opt/nebulux/helper/
 cp -a "$REPO/system/browser-ext/." config/includes.chroot/opt/nebulux/ext/
 mkdir -p config/includes.chroot/opt/nebulux/app-ext; cp -a "$REPO/system/app-ext/." config/includes.chroot/opt/nebulux/app-ext/
 echo "$VERSION" > config/includes.chroot/opt/nebulux/VERSION

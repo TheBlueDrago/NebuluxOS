@@ -533,6 +533,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.shell.signOut()); await wait(600);
   await p.mouse.click(W / 2, H / 2); await wait(400); await p.type("#lk-panel input[name=p]", "nebula1"); await p.keyboard.press("Enter"); await wait(1300);
   ok(await p.evaluate(async () => (await NX.fs.list("/Documents")).entries.map((e) => e.name).join(",") === "Groceries.txt,Party plans.txt,Welcome.txt"), "your files are still there after signing in again");
+  // Compress to ZIP file, then Extract all
+  ok(await p.evaluate(async () => { const D = "/Documents", f = await NX.fs.create(D, "Zipme", true); await NX.fs.write(f.path + "/a.txt", "zip me up ".repeat(50)); const sub = await NX.fs.create(f.path, "Inner", true); await NX.fs.write(sub.path + "/b.txt", "inner words"); const z = await NX.fs.zip([f.path]); if (!/Zipme.zip$/.test(z.path)) return "name " + z.path; await NX.fs.remove([f.path], true); const u = await NX.fs.unzip(z.path); const a = await NX.fs.read(u.path + "/a.txt"), b = await NX.fs.read(u.path + "/Inner/b.txt").catch(() => null); await NX.fs.remove([u.path, z.path], true); return u.files === 2 && a === "zip me up ".repeat(50) && b === "inner words" ? true : JSON.stringify([u, a.length, b]); }).then((r) => r === true || (console.log(r), false)), "Compress to ZIP file and Extract all bring the files back");
   ok(errs.length === 0, "no page errors " + errs.join(" | "));
   await c.close(); b.disconnect();
   console.log(failed ? failed + " failed" : "all passed"); process.exit(failed ? 1 : 0);

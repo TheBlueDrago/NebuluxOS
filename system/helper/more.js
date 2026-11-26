@@ -123,6 +123,32 @@ module.exports = function more({ api, run, FAKE }) {
     }
     return { paths: out };
   };
+  // File Explorer: Compress to ZIP file, and Extract all
+  const zipLib = () => { try { return require("./zip.js"); } catch (e) { throw new Error("ZIP files need the newest Nebulux OS update."); } };
+  api["POST /files/zip"] = async (b) => {
+    const ps = list(b.paths), Z = zipLib(), entries = []; let total = 0;
+    const add = (p, rel) => {
+      const st = fs.lstatSync(p); if (st.isSymbolicLink()) return;
+      if (st.isDirectory()) { entries.push({ name: rel + "/", dir: true, mtime: st.mtimeMs }); for (const n of fs.readdirSync(p)) add(path.join(p, n), rel + "/" + n); return; }
+      if (!st.isFile()) return; total += st.size; if (total > 500 * 1048576) throw new Error("That's too much to put in one ZIP file (over 500 MB).");
+      entries.push({ name: rel, data: fs.readFileSync(p), mtime: st.mtimeMs });
+    };
+    for (const p of ps) add(p, path.basename(p));
+    const first = path.basename(ps[0]), stem = ps.length === 1 && fs.statSync(ps[0]).isFile() ? first.replace(/\.[^.]+$/, "") || first : first;
+    const dest = unique(path.dirname(ps[0]), stem + ".zip");
+    fs.writeFileSync(dest, Z.makeZip(entries)); return { path: dest, name: path.basename(dest) };
+  };
+  api["POST /files/unzip"] = async (b) => {
+    const p = safe(b.path), Z = zipLib(); if (fs.statSync(p).size > 500 * 1048576) throw new Error("That ZIP file is too big to extract here.");
+    const items = Z.readZip(fs.readFileSync(p), 2048 * 1048576);
+    const dest = unique(path.dirname(p), path.basename(p).replace(/\.zip$/i, "") || "Extracted"); fs.mkdirSync(dest);
+    for (const it of items) {
+      const to = path.join(dest, ...it.name.split("/")); if (!inside(to, dest)) continue;
+      if (it.dir) { fs.mkdirSync(to, { recursive: true }); continue; }
+      fs.mkdirSync(path.dirname(to), { recursive: true }); fs.writeFileSync(to, it.data);
+    }
+    return { path: dest, name: path.basename(dest), files: items.filter((x) => !x.dir).length };
+  };
   // words inside text files in your folders (Quick Search): small text files only, hidden folders skipped, at most 10 hits
   api["POST /files/search-text"] = async (b) => {
     const q = String((b && b.q) || "").toLowerCase().slice(0, 100); if (q.length < 3) return { hits: [] };
