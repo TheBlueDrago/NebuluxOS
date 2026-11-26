@@ -13,6 +13,7 @@
     ["Symbols", "Nebulux + . opens Symbols: ©, °, ™, currency, math, arrows, Greek and accented letters, typed right where you are typing."],
     ["Fold the calendar", "The arrow next to the date in the calendar flyout folds the month away, so more notifications fit."],
     ["Start from the keyboard", "Click Start and just type to search. The arrow keys move between the apps in Start, the tiles in Quick Settings and the icons on the desktop."],
+    ["Minimize everything", "Nebulux + M minimizes every window and Nebulux + Shift + M brings them back. Nebulux + Home keeps only the window you are in."],
     ["The taskbar from the keyboard", "Nebulux + T goes to the apps on the taskbar and Nebulux + B to the icons on the right; the arrow keys move along and Enter opens."],
     ["Every switch works with the keyboard", "Tab reaches every switch in Settings, and each one says which setting it is."],
     ["Ctrl + W and friends", "Ctrl + W closes the tab or the window, Ctrl + T and Ctrl + N open a tab, Ctrl + Shift + T brings back the tab you closed, and Ctrl + Tab or Ctrl + 1 to 9 move between tabs, in Notepad and File Explorer."],

@@ -375,7 +375,7 @@ module.exports = function more({ api, run, FAKE }) {
   const coreProc = (cmd) => /class=NebuluxShell|--type=|crashpad|nebulux-helper\.js|\bXorg\b|\bopenbox\b|nebulux-session|\bpipewire\b|wireplumber|speech-dispatcher/.test(cmd);
   const procList = async () => {
     if (FAKE) return [{ pid: 101, name: "Web engine", cmd: "chromium --class=NebuluxShell", cpu: 7.5, mem: 380e6, mine: true, core: true }, { pid: 202, name: "VLC", cmd: "vlc", cpu: 3.1, mem: 120e6, mine: true, core: false }, { pid: 303, name: "System", cmd: "systemd", cpu: 0.1, mem: 12e6, mine: false, core: true }];
-    const me = os.userInfo().username, r = await run("ps", ["-eo", "pid=,user=,pcpu=,rss=,comm=,args=", "--sort=-pcpu"], 6000);
+    const me = os.userInfo().username, r = await run("ps", ["-ww", "-eo", "pid=,user=,pcpu=,rss=,comm=,args=", "--sort=-pcpu"], 6000);
     return (r.out || "").split("\n").map((l) => /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s*(.*)$/.exec(l)).filter(Boolean).map((m) => ({ pid: +m[1], name: PNAMES[m[5]] || m[5], cmd: m[6].slice(0, 160), cpu: +m[3], mem: +m[4] * 1024, mine: m[2] === me, core: coreProc(m[6]) || +m[1] === process.pid }));
   };
   // the 40 busiest for Task Manager; every one is checked when something is ended
@@ -384,7 +384,9 @@ module.exports = function more({ api, run, FAKE }) {
     const pid = +b.pid, p = (await procList()).find((x) => x.pid === pid);
     if (!p) throw new Error("That program isn't running any more.");
     if (!p.mine) throw new Error("That program belongs to the system, so it keeps running.");
-    if (p.core) throw new Error("That's part of Nebulux OS, so it keeps running.");
+    // (and the full command line straight from the system, in case the list was cut short)
+    let full = ""; if (!FAKE) { try { full = fs.readFileSync("/proc/" + pid + "/cmdline", "utf8").split("\0").join(" "); } catch (e) { /* gone */ } }
+    if (p.core || coreProc(full)) throw new Error("That's part of Nebulux OS, so it keeps running.");
     if (!FAKE) { try { process.kill(pid, "SIGTERM"); } catch (e) { throw new Error("That program couldn't be ended."); } }
     return { ok: true };
   };

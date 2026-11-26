@@ -23,6 +23,9 @@
     <keybind key="C-W-Right"><action name="Execute"><command>/usr/local/bin/nebulux-key desk-next</command></action></keybind>
     <keybind key="C-W-d"><action name="Execute"><command>/usr/local/bin/nebulux-key desk-new</command></action></keybind>
     <keybind key="W-period"><action name="Execute"><command>/usr/local/bin/nebulux-key symbols</command></action></keybind>
+    <keybind key="W-m"><action name="Execute"><command>/usr/local/bin/nebulux-key minall</command></action></keybind>
+    <keybind key="W-S-m"><action name="Execute"><command>/usr/local/bin/nebulux-key restoreall</command></action></keybind>
+    <keybind key="W-Home"><action name="Execute"><command>/usr/local/bin/nebulux-key home</command></action></keybind>
     <keybind key="W-t"><action name="Execute"><command>/usr/local/bin/nebulux-key tbar</command></action></keybind>
     <keybind key="W-b"><action name="Execute"><command>/usr/local/bin/nebulux-key tray</command></action></keybind>
     <keybind key="C-W-o"><action name="Execute"><command>/usr/local/bin/nebulux-key osk</command></action></keybind>

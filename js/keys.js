@@ -301,4 +301,13 @@
   // "back" (the mouse's back button, Alt + Left) stays on Nebulux OS
   try { history.pushState({ nx: 1 }, "", location.href); addEventListener("popstate", () => history.pushState({ nx: 1 }, "", location.href)); } catch (e) { /* file: pages in tests */ }
   addEventListener("mouseup", (e) => { if (e.button === 3 || e.button === 4) e.preventDefault(); }, true);
+
+  // ---------- Nebulux + M minimizes every window, Nebulux + Shift + M brings them back, Nebulux + Home keeps only the one
+  // you're in (like shaking it), as in Windows ----------
+  let minimized = [];
+  NX.minAll = () => { minimized = [...NX.wins.values()].filter((w) => !w.min).map((w) => w.id); minimized.forEach((id) => NX.minimize(id)); };
+  NX.restoreAll = () => { const L = minimized.filter((id) => NX.wins.has(id)); minimized = []; L.forEach((id) => NX.focus(id)); };
+  const winKey = (k) => { if (!NX.me) return; if (k === "minall") NX.minAll(); if (k === "restoreall") NX.restoreAll(); if (k === "home") { const w = active(); if (w && NX.shakeWin) NX.shakeWin(w.id); } };
+  document.addEventListener("nx:key", (e) => winKey(e.detail));
+  addEventListener("keydown", (e) => { if (!e.metaKey || e.ctrlKey || e.altKey) return; if (/^m$/i.test(e.key)) { e.preventDefault(); winKey(e.shiftKey ? "restoreall" : "minall"); } else if (e.key === "Home" && !e.shiftKey) { e.preventDefault(); winKey("home"); } }, true);
 })();
