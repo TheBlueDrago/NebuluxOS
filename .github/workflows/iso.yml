@@ -14,6 +14,9 @@ on:
         default: false
   push:
     tags: ["v*"]
+  # the owner's release time for 4.2: Nov 26, 12:30 PM Central (18:30 UTC). Remove this after 4.2 is out.
+  schedule:
+    - cron: "30 18 26 11 *"
 permissions:
   contents: write
 concurrency:
@@ -24,7 +27,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
-      NX_VERSION: "4.1"
+      NX_VERSION: "4.2"
       # 3.2 has Wi-Fi settings for the system too (NetworkManager, the IdeaPad fix): the new .iso gets all of it
       NX_NEEDS_ISO: "0"
     steps:

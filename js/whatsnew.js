@@ -1,8 +1,9 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "4.1";
+  NX.version = "4.2";
   NX.whatsNew = [
+    ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
     ["Sign in with Google during setup", "Setup watches the Google window: once you're signed in it brings you back on the next step, and if you close the window it brings you back to the same step."],
@@ -198,6 +199,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "A whole new look"); // what came before 4.1 goes under Earlier updates
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Updates on your terms"); // what came before 4.2 goes under Earlier updates // what came before 4.1 goes under Earlier updates
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
