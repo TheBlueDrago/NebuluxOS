@@ -140,6 +140,14 @@
               return `<div><span>${k ? new Date(t + "T12:00").toLocaleDateString(undefined, { weekday: "long" }) : "Today"}</span>${I.icon(j.daily.weather_code[k], 30)}<small>${j.daily.precipitation_probability_max[k] ? j.daily.precipitation_probability_max[k] + "%" : ""}</small><em>${r(j.daily.temperature_2m_min[k])}°</em><i><u style="left:${a}%;width:${Math.max(4, b - a)}%"></u></i><b>${r(j.daily.temperature_2m_max[k])}°</b></div>`; }).join("")}</div>
             <p class="wa-credit">Weather by Open-Meteo</p>`;
           if (NX.wxSky) NX.wxSky($(".wa-now", body), c.weather_code, now >= new Date(j.daily.sunrise[0]).getTime() && now < new Date(j.daily.sunset[0]).getTime());
+          // a temperature line over the next 24 hours, lined up with the hours under it
+          const hb = $(".wa-hours", body);
+          if (hb && hrs.length > 2) {
+            const t = hrs.map((h) => h[1]), lo = Math.min(...t), hi = Math.max(...t), W = hrs.length * 80 - 8, H = 56, y = (v) => 8 + (hi === lo ? 0.5 : 1 - (v - lo) / (hi - lo)) * (H - 16);
+            const pts = t.map((v, k) => [k * 80 + 36, y(v)]), d = pts.map((q, k) => (k ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" ");
+            hb.insertAdjacentHTML("beforebegin", `<div class="wa-graph-wrap"><svg class="wa-graph" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><defs><linearGradient id="wag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbbf24" stop-opacity=".45"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></linearGradient></defs><path d="${d} L${pts[pts.length - 1][0]} ${H} L${pts[0][0]} ${H} Z" fill="url(#wag)"/><path d="${d}" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((q) => `<circle cx="${q[0]}" cy="${q[1]}" r="2.6" fill="#fbbf24"/>`).join("")}</svg></div>`);
+            const gw = $(".wa-graph-wrap", body); hb.addEventListener("scroll", () => { gw.scrollLeft = hb.scrollLeft; });
+          }
         } catch (e) { $(".wa-body", body).innerHTML = `<p class="wa-note">The weather service didn't answer. Try again in a moment.</p>`; }
       }
       draw();
