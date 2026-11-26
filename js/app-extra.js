@@ -255,7 +255,7 @@
 
   // ---------- Paint: brush, colors, sizes, eraser, save as a picture ----------
   A.paint = { name: "Paint", icon: "paint", category: "Creativity", rating: "4.6", size: "2 MB", w: 900, h: 620, minW: 420, minH: 360, desc: "Draw and paint with brushes and colors, then save your picture.",
-    open(body, win) {
+    open(body, win, opts) {
       body.classList.add("paint");
       const COLS = ["#111827", "#ffffff", "#ef4444", "#f97316", "#facc15", "#22c55e", "#22d3ee", "#3b82f6", "#7c5cff", "#ec4899", "#8b5a2b", "#94a3b8"];
       body.innerHTML = `<div class="p-bar"><div class="p-cols">${COLS.map((c, i) => `<button data-col="${c}" class="${i === 8 ? "on" : ""}" style="background:${c}" aria-label="Color ${c}"></button>`).join("")}</div><label class="p-size">Size <input type="range" min="2" max="48" value="8"></label><div class="p-tools"><button class="p-tb" data-t="brush" title="Brush" aria-label="Brush"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5 5L10 19l-5 1 1-5z"/><path d="M12.5 6.5l5 5"/></svg></button><button class="p-tb" data-t="line" title="Line" aria-label="Line"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/></svg></button><button class="p-tb" data-t="rect" title="Box" aria-label="Box"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="6" width="15" height="12" rx="1.5"/></svg></button><button class="p-tb" data-t="ellipse" title="Circle" aria-label="Circle"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg></button><button class="p-tb" data-t="fill" title="Fill" aria-label="Fill"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l7-7 7 7-7 7z"/><path d="M19.5 15.5c0 1.5 1 2.5 1 3.2a1 1 0 01-2 0c0-.7 1-1.7 1-3.2z" fill="currentColor"/></svg></button><button class="p-tb" data-t="text" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4.5h14V6M12 4.5v15M9 19.5h6"/></svg></button><button class="p-tb" data-t="eraser" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19h12"/><path d="M4.5 14.5l8-8 6 6-5 5H9z"/></svg></button></div><div class="p-tools"><button class="p-tb" data-t="undo" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6L5 10l4 4"/><path d="M5 10h9a5 5 0 010 10h-3"/></svg></button><button class="p-tb" data-t="clear" title="Clear" aria-label="Clear"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg></button></div><button class="btn sm primary" data-t="save">Save picture</button></div><div class="p-wrap"><canvas></canvas></div>`;
@@ -287,6 +287,19 @@
             sx++; } }
         g.putImageData(d, 0, 0);
       };
+      // Edit in Paint (File Explorer > Open with): the picture is fitted onto the canvas
+      const loadPic = async (p) => {
+        if (!p) return;
+        try {
+          const src = NX.native ? NX.rawURL(p) : await NX.fs.url(p), blob = await (await fetch(src)).blob(), u = URL.createObjectURL(blob), im = new Image();
+          await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = u; }); resize(); snap();
+          const k = Math.min(cv.width / im.width, cv.height / im.height, 1), w = im.width * k, h = im.height * k;
+          g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(im, (cv.width - w) / 2, (cv.height - h) / 2, w, h); URL.revokeObjectURL(u);
+          win.el.querySelector(".wt-name").textContent = NX.fs.base(p) + " - Paint";
+        } catch (e) { NX.toast("That picture couldn't be opened in Paint."); }
+      };
+      win.onopts = (o) => { if (o && o.path) loadPic(o.path); };
+      if (opts && opts.path) setTimeout(() => loadPic(opts.path), 150);
       win.paintTest = { fillAt: (x, y) => { snap(); fillAt(x, y); }, pixel: (x, y) => Array.from(g.getImageData(x, y, 1, 1).data.slice(0, 3)), setTool: (t) => (tool = t), setCol: (c) => (col = c) };
       cv.onpointerdown = (e) => { cv.setPointerCapture(e.pointerId); snap(); last = pos(e);
         if (tool === "fill") { fillAt(last[0], last[1]); return; }

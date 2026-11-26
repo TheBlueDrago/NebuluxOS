@@ -7,7 +7,7 @@
     ["New icons", "Settings has a glossy gear with a glowing nebula in the middle, Task Manager a glowing live chart, and Get Started a bright star."],
     ["Narrator", "A screen reader: it reads out loud what the keyboard or mouse is on, windows that open and messages. Turn it on in Settings > Accessibility or with Ctrl + Nebulux + Enter; Ctrl stops the talking. Its voice comes with the 4.4 USB."],
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],
-    ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app, or read any file in Notepad."],
+    ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app: edit a picture in Paint, or read any file in Notepad."],
     ["Color Picker", "A new app: pick any color on the screen with Nebulux + Shift + C and copy it as HEX, RGB or HSL. Your recent colors stay in the app."],
     ["Symbols", "Nebulux + . opens Symbols: ©, °, ™, currency, math, arrows, Greek and accented letters, typed right where you are typing."],
     ["The taskbar from the keyboard", "Nebulux + T goes to the apps on the taskbar and Nebulux + B to the icons on the right; the arrow keys move along and Enter opens."],

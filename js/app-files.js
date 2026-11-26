@@ -160,7 +160,7 @@
   // Open with (right-click a file): the apps that can open it, and Notepad for any file you want to read as text
   NX.openWith = (e, list) => {
     const k = e.kind || kindOf(e.name, false), O = [];
-    if (k === "image") O.push(["Photos", () => NX.open("photos", { path: e.path, list: (list || []).filter((x) => x.kind === "image") }), "photos"]);
+    if (k === "image") O.push(["Photos", () => NX.open("photos", { path: e.path, list: (list || []).filter((x) => x.kind === "image") }), "photos"], ["Paint", () => NX.open("paint", { path: e.path }), "paint"]);
     if (k === "video" || k === "audio") O.push(["Media Player", () => NX.open("media", { path: e.path, list: (list || []).filter((x) => x.kind === "video" || x.kind === "audio") }), "media"]);
     if (k === "pdf" && NX.apps.pdf) O.push(["PDF Viewer", () => NX.open("pdf", { path: e.path }), "pdfview"]);
     if (k !== "image" && k !== "video" && k !== "audio") O.push(["Notepad", () => NX.open("notepad", { file: e.path }), "notepad"]);

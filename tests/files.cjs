@@ -660,6 +660,17 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
     await NX.fs.remove([r.path], true); NX.closeAll();
     return ok1 && ow === "PDF Viewer,Notepad" && ow2 === "Notepad" ? true : JSON.stringify([ok1, ow, ow2]);
   }).then((r) => r === true || (console.log(r), false)), "a PDF opens in PDF Viewer, and Open with lists the apps for a file");
+  // Edit in Paint: a picture opens on Paint's canvas
+  ok(await p.evaluate(async () => {
+    const c = document.createElement("canvas"); c.width = 120; c.height = 80; const g = c.getContext("2d"); g.fillStyle = "#ff0000"; g.fillRect(0, 0, 120, 80);
+    const r = await NX.fs.upload("/Pictures", "Red.png", await new Promise((ok) => c.toBlob(ok, "image/png")));
+    NX.closeAll(); const ow = NX.openWith({ name: "Red.png", path: r.path, kind: "image" }).map((x) => x[0]).join(",");
+    NX.open("paint", { path: r.path }); await new Promise((ok) => setTimeout(ok, 900));
+    const w = NX.wins.get("paint"), cv = w.el.querySelector("canvas"), px = w.paintTest.pixel(Math.floor(cv.width / 2), Math.floor(cv.height / 2));
+    const title = w.el.querySelector(".wt-name").textContent;
+    await NX.fs.remove([r.path], true); NX.closeAll();
+    return ow === "Photos,Paint" && px[0] > 240 && px[1] < 20 && /Red.png/.test(title) ? true : JSON.stringify([ow, px, title]);
+  }).then((r) => r === true || (console.log(r), false)), "Open with offers Paint for a picture, and Paint opens it");
   // double-click a ZIP file: Extract all?
   ok(await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); const f = await NX.fs.create("/Documents", "Packed", true); await NX.fs.write(f.path + "/p.txt", "packed"); const z = await NX.fs.zip([f.path]); await NX.fs.remove([f.path], true); NX.closeAll(); NX.open("files", { place: "Documents" }); await w(700); const it = [...document.querySelectorAll(".fx-item")].find((x) => x.dataset.k === z.path); if (!it) return "no item"; it.dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); await w(300); const form = document.querySelector(".nx-ask-card"); if (!form || !/Extract all/.test(form.textContent)) return "no ask"; form.requestSubmit(); await w(800); const t = await NX.fs.read("/Documents/Packed/p.txt").catch(() => null); await NX.fs.remove(["/Documents/Packed", z.path], true); NX.closeAll(); return t === "packed" || "text " + t; }).then((r) => r === true || (console.log(r), false)), "double-clicking a ZIP file asks, then extracts it");
   // the sign-in screen's Accessibility button: sign in with only the on-screen keyboard
