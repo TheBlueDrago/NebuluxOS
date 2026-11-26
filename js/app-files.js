@@ -5,7 +5,7 @@
 "use strict";
 (function () {
   const A = NX.apps, FOLDERS = ["Desktop", "Documents", "Downloads", "Pictures", "Music", "Videos"];
-  const KINDS = { image: /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i, video: /\.(mp4|webm|mkv|mov|m4v|ogv)$/i, audio: /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i, text: /\.(txt|md|csv|json|log|ini|cfg|conf|xml|html?|css|js|py|sh|yml|yaml)$/i, pdf: /\.pdf$/i };
+  const KINDS = { image: /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i, video: /\.(mp4|webm|mkv|mov|m4v|ogv)$/i, audio: /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i, text: /\.(txt|md|csv|json|log|ini|cfg|conf|xml|html?|css|js|py|sh|yml|yaml|srt|vtt)$/i, pdf: /\.pdf$/i };
   const kindOf = (n, dir) => dir ? "folder" : Object.keys(KINDS).find((k) => KINDS[k].test(n)) || "file";
   const FOLD = { Desktop: "fdesk", Documents: "fdocs", Downloads: "fdl", Pictures: "fpics", Music: "fmusic", Videos: "fvids" };
   const iconOf = (e) => (e.dir && FOLD[e.name]) || (!e.dir && /\.zip$/i.test(e.name || "") && "fzip") || ICON[e.kind] || "file";
@@ -551,7 +551,23 @@
           if (i < list.length - 1) { i++; play(); } else if (rp === "all" && list.length) { i = 0; play(); } };
         m.onerror = () => { const p = st.querySelector(".mp-msg"); p.hidden = false; p.textContent = "This file can't be played. Nebulux OS plays MP4, WebM, MP3, WAV, OGG, M4A and FLAC."; };
         try { m.src = await NX.fs.url(e.path); } catch (er) { m.onerror(); }
+        // captions: a .vtt or .srt file with the same name next to the video shows as subtitles (CC turns them off)
+        if (video) captions(e, m).catch(() => {});
         drawList();
+      }
+      async function captions(e, m) {
+        const dir = NX.fs.parent(e.path), stem = e.name.replace(/\.[^.]+$/, "").toLowerCase();
+        const sub = ((await NX.fs.list(dir)).entries || []).find((x) => !x.dir && /\.(vtt|srt)$/i.test(x.name) && x.name.replace(/\.[^.]+$/, "").toLowerCase() === stem);
+        if (!sub || !document.body.contains(m)) return;
+        let t = await (await fetch(await NX.fs.url(sub.path))).text();
+        if (/\.srt$/i.test(sub.name)) t = "WEBVTT\n\n" + t.replace(/\r/g, "").replace(/(\d+:\d+:\d+),(\d+)/g, "$1.$2");
+        const u = URL.createObjectURL(new Blob([t], { type: "text/vtt" })), tr = document.createElement("track");
+        tr.kind = "subtitles"; tr.label = "Captions"; tr.srclang = (navigator.language || "en").slice(0, 2); tr.src = u; tr.default = true; m.appendChild(tr);
+        const show = () => { if (m.textTracks[0]) m.textTracks[0].mode = NX.data("mp-cc", true) ? "showing" : "hidden"; };
+        tr.addEventListener("load", show); setTimeout(show, 50);
+        st.insertAdjacentHTML("beforeend", `<button class="btn sm mp-cc ${NX.data("mp-cc", true) ? "on" : ""}" aria-pressed="${NX.data("mp-cc", true)}" title="Captions">CC</button>`);
+        const b = st.querySelector(".mp-cc"); b.onclick = () => { NX.setData("mp-cc", !NX.data("mp-cc", true)); b.classList.toggle("on", NX.data("mp-cc", true)); b.setAttribute("aria-pressed", NX.data("mp-cc", true)); show(); };
+        win.captions = { track: () => m.textTracks[0], file: sub.name };
       }
       const musicArt = (e) => `<div class="mp-art mp-music"><div class="mp-glow"></div>${NX.icon("faudio", 120)}<b>${NX.esc(e.name)}</b><div class="mp-bars" aria-hidden="true">${Array.from({ length: 28 }, (_, k) => `<i style="--d:${((k * 37) % 11) / 10 + 0.45}s;--h:${30 + ((k * 53) % 70)}%"></i>`).join("")}</div></div>`;
       function drawList() { li.innerHTML = list.map((e, k) => `<button class="mp-item ${k === i ? "on" : ""}" data-i="${k}">${NX.icon(e.kind === "video" ? "fvideo" : "faudio", 20)}<span>${NX.esc(e.name)}</span></button>`).join("") || `<p class="fx-none">Nothing to play yet.</p>`; li.querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => { i = +b.dataset.i; play(); })); }

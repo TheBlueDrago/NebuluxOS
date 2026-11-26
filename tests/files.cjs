@@ -671,6 +671,20 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
     await NX.fs.remove([r.path], true); NX.closeAll();
     return ow === "Photos,Paint" && px[0] > 240 && px[1] < 20 && /Red.png/.test(title) ? true : JSON.stringify([ow, px, title]);
   }).then((r) => r === true || (console.log(r), false)), "Open with offers Paint for a picture, and Paint opens it");
+  // captions: a .srt next to a video shows as subtitles
+  ok(await p.evaluate(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)), NL = String.fromCharCode(10);
+    const c = document.createElement("canvas"); c.width = 64; c.height = 48; const st = c.captureStream(10), rec = new MediaRecorder(st, { mimeType: "video/webm" }), parts = [];
+    rec.ondataavailable = (e) => parts.push(e.data); rec.start(); const g = c.getContext("2d"); for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? "#f00" : "#00f"; g.fillRect(0, 0, 64, 48); await w(60); } rec.stop(); await w(200);
+    const v = await NX.fs.upload("/Videos", "Clip.webm", new Blob(parts, { type: "video/webm" }));
+    await NX.fs.write("/Videos/Clip.srt", ["1", "00:00:00,000 --> 00:00:05,000", "Hello there", ""].join(NL));
+    NX.closeAll(); NX.open("media", { path: v.path, list: [{ name: "Clip.webm", path: v.path, kind: "video" }] }); await w(1200);
+    const win = NX.wins.get("media"), tr = win && win.captions && win.captions.track();
+    const ok1 = !!tr && tr.mode === "showing" && !!win.el.querySelector(".mp-cc.on");
+    win.el.querySelector(".mp-cc").click(); const ok2 = tr && tr.mode === "hidden"; win.el.querySelector(".mp-cc").click();
+    NX.closeAll(); await NX.fs.remove(["/Videos/Clip.srt", v.path], true);
+    return ok1 && ok2 ? true : JSON.stringify([!!win, !!tr, tr && tr.mode, ok2]);
+  }).then((r) => r === true || (console.log(r), false)), "a .srt file next to a video shows as captions, and CC turns them off");
   // double-click a ZIP file: Extract all?
   ok(await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); const f = await NX.fs.create("/Documents", "Packed", true); await NX.fs.write(f.path + "/p.txt", "packed"); const z = await NX.fs.zip([f.path]); await NX.fs.remove([f.path], true); NX.closeAll(); NX.open("files", { place: "Documents" }); await w(700); const it = [...document.querySelectorAll(".fx-item")].find((x) => x.dataset.k === z.path); if (!it) return "no item"; it.dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); await w(300); const form = document.querySelector(".nx-ask-card"); if (!form || !/Extract all/.test(form.textContent)) return "no ask"; form.requestSubmit(); await w(800); const t = await NX.fs.read("/Documents/Packed/p.txt").catch(() => null); await NX.fs.remove(["/Documents/Packed", z.path], true); NX.closeAll(); return t === "packed" || "text " + t; }).then((r) => r === true || (console.log(r), false)), "double-clicking a ZIP file asks, then extracts it");
   // the sign-in screen's Accessibility button: sign in with only the on-screen keyboard

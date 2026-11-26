@@ -42,7 +42,7 @@ module.exports = function more({ api, run, FAKE }) {
     for (let i = 2; i < 1000; i++) { const t = path.join(dir, `${base} (${i})${ext}`); if (!fs.existsSync(t)) return t; }
     throw new Error("Too many files with that name.");
   }
-  const KINDS = { image: /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i, video: /\.(mp4|webm|mkv|mov|m4v|ogv)$/i, audio: /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i, text: /\.(txt|md|csv|json|log|ini|cfg|conf|xml|html?|css|js|py|sh|yml|yaml)$/i, pdf: /\.pdf$/i };
+  const KINDS = { image: /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i, video: /\.(mp4|webm|mkv|mov|m4v|ogv)$/i, audio: /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i, text: /\.(txt|md|csv|json|log|ini|cfg|conf|xml|html?|css|js|py|sh|yml|yaml|srt|vtt)$/i, pdf: /\.pdf$/i };
   const kindOf = (n, dir) => dir ? "folder" : Object.keys(KINDS).find((k) => KINDS[k].test(n)) || "file";
   const MIME = { svg: "image/svg+xml", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", bmp: "image/bmp", avif: "image/avif", ico: "image/x-icon", mp4: "video/mp4", m4v: "video/mp4", webm: "video/webm", mkv: "video/x-matroska", mov: "video/quicktime", ogv: "video/ogg", mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", oga: "audio/ogg", m4a: "audio/mp4", flac: "audio/flac", aac: "audio/aac", opus: "audio/ogg", weba: "audio/webm", pdf: "application/pdf" };
   const entry = (dir, name) => { const p = path.join(dir, name); let st; try { st = fs.statSync(p); } catch (e) { return null; } const isDir = st.isDirectory(); return { name, path: p, dir: isDir, size: isDir ? null : st.size, mtime: st.mtimeMs, kind: kindOf(name, isDir) }; };
