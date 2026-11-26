@@ -632,6 +632,12 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate((w) => getComputedStyle(document.documentElement).getPropertyValue("--wall") !== w, lw0), "the lock screen slideshow moves to the next background");
   await p.keyboard.press("Enter"); await wait(600); { const pw = await p.$("#lock input[type=password]"); if (pw) { await pw.type("nebula1"); await p.keyboard.press("Enter"); } } await p.waitForFunction(() => document.querySelector("#lock").hidden, { timeout: 8000 }).catch(() => {}); await wait(400);
   await p.evaluate(() => NX.setPref("lockPic", "match"));
+  // title bar: move a window to a new desktop
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(500);
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=clock] .titlebar"), r = t.getBoundingClientRect(); t.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.x + 80, clientY: r.y + 10 })); }); await wait(250);
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Move to a new desktop/.test(b.textContent)).click()); await wait(300);
+  ok(await p.evaluate(() => NX.desks.list().length === 2 && NX.wins.get("clock").desk !== NX.desks.current()), "a window can move to a new desktop from its title bar");
+  await p.evaluate(() => { const d = NX.desks.list().find((x) => !x.current); NX.closeAll(); if (d) NX.desks.remove(d.id); });
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

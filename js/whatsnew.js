@@ -5,6 +5,7 @@
   NX.whatsNew = [
     ["Lock screen slideshow", "Settings > Personalization > Lock screen picture > Slideshow moves through all the backgrounds while the computer is locked."],
     ["Record your screen", "Snipping Tool has Record screen: it films the whole screen into your Videos folder, with a red pill to stop it. Needs the new 4.2 USB."],
+    ["Move a window to another desktop", "Right-click a window's title bar to move it to another desktop, or to a new one."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],
