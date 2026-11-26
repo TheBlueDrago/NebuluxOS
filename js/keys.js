@@ -279,13 +279,22 @@
   // ---------- keep the browser's own page keys away from Nebulux OS: the screen is a browser window underneath, and
   // F5 or Ctrl + R would reload it (closing every app), Ctrl + P would print it, Alt + Left or the mouse's back button
   // would go "back". This listener is added last, so apps (like Notepad's F5) still get their keys first. ----------
+  // printing (Ctrl + P in Notepad and Photos): a hidden page with only what's printed; the print window can also save a PDF
+  NX.printDoc = (title, html) => {
+    const f = document.createElement("iframe"); f.setAttribute("aria-hidden", "true"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0"; document.body.appendChild(f);
+    const d = f.contentDocument; d.open(); d.write(`<!doctype html><title>${NX.esc(title)}</title><style>body{margin:16mm;font:11pt/1.45 "Segoe UI",Arial,sans-serif;color:#111}pre{white-space:pre-wrap;word-wrap:break-word;font:10.5pt/1.5 Consolas,"DejaVu Sans Mono",monospace;margin:0}img{max-width:100%;max-height:250mm;display:block;margin:auto}</style>${html}`); d.close();
+    const go = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { NX.toast("This computer can't print right now."); } setTimeout(() => f.remove(), 2000); };
+    const im = d.querySelector("img"); if (im && !im.complete) { im.onload = go; im.onerror = go; } else setTimeout(go, 50);
+    return f;
+  };
   const guard = (e) => {
     if (e.defaultPrevented) return;
     const key = e.key, low = key.toLowerCase(), c = e.ctrlKey && !e.metaKey && !e.altKey, t = e.target, ed = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
     if (key === "F5" || (c && low === "r")) { e.preventDefault(); const w = active(); if (w && w.refresh) w.refresh(); return; }
     if (key === "F11" || key === "F7" || key === "BrowserBack" || key === "BrowserForward" || key === "BrowserRefresh" || (e.altKey && !e.ctrlKey && (key === "ArrowLeft" || key === "ArrowRight" || key === "Home"))) { e.preventDefault(); return; }
     if (c && low === "s") { e.preventDefault(); const w = active(); if (w && w.save) w.save(); return; } // Ctrl + S saves in Notepad and Paint
-    if (c && ["p", "o", "j", "h", "d", "e", "k", "l"].includes(low)) { e.preventDefault(); return; }
+    if (c && low === "p") { e.preventDefault(); const w = active(); if (w && w.print) w.print(); return; } // Ctrl + P prints in Notepad and Photos
+    if (c && ["o", "j", "h", "d", "e", "k", "l"].includes(low)) { e.preventDefault(); return; }
     if (c && low === "u" && !ed) { e.preventDefault(); return; }
   };
   addEventListener("load", () => addEventListener("keydown", guard));

@@ -674,6 +674,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.down("Control"); await p.keyboard.down("Shift"); await p.keyboard.press("N"); await p.keyboard.up("Shift"); await p.keyboard.up("Control"); await wait(300);
   ok(await p.evaluate(() => /New folder/.test((document.querySelector(".win[data-app=files] .nx-ask-card") || {}).textContent || "")), "Ctrl + Shift + N in File Explorer asks for a new folder's name");
   await p.keyboard.press("Escape"); await p.evaluate(() => NX.closeAll());
+  // Ctrl + P prints the note (here the printer is stood in for)
+  ok(await p.evaluate(async () => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); await new Promise((r) => setTimeout(r, 400)); const t = document.querySelector(".win[data-app=notepad] textarea"); t.focus(); t.value = "Print <me>"; t.dispatchEvent(new Event("input")); const o = NX.printDoc; let got = null; NX.printDoc = (title, html) => { got = [title, html]; }; t.dispatchEvent(new KeyboardEvent("keydown", { key: "p", ctrlKey: true, bubbles: true, cancelable: true })); NX.printDoc = o; t.value = ""; t.dispatchEvent(new Event("input")); await new Promise((r) => setTimeout(r, 500)); NX.closeAll(); return !!got && got[1].includes("Print &lt;me&gt;"); }), "Ctrl + P in Notepad prints the note");
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

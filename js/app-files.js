@@ -494,6 +494,7 @@
         zoom = 1; turn = 0; v.innerHTML = `<img alt="${NX.esc(e.name)}" draggable="false">`; const img = v.querySelector("img"); body.querySelector(".ph-wall").hidden = false; body.querySelector(".ph-del").hidden = false; body.querySelector(".ph-edit-b").hidden = false; body.querySelector(".ph-favs").hidden = true; favMark(); editClose();
         try { img.src = await NX.fs.url(e.path); } catch (er) { v.innerHTML = `<p class="ph-msg">${NX.esc(er.message)}</p>`; }
         img.onerror = () => { v.innerHTML = `<p class="ph-msg">This picture couldn't be shown.</p>`; };
+        win.print = () => NX.printDoc(e.name, `<img src="${img.src}" alt="">`); // Ctrl + P
       }
       const tf = () => { const img = v.querySelector("img"); if (img) img.style.transform = `scale(${zoom}) rotate(${turn}deg)`; };
       let onlyFav = false;

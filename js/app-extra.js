@@ -43,6 +43,7 @@
       let closedNotes = [];
       win.tabs = { count: () => tabs.length, add: () => newTab(), close: () => closeTab(ti), go: (i) => loadTab(i), step: (d) => loadTab((ti + d + tabs.length) % tabs.length),
         reopen: async () => { const c = closedNotes.pop(); if (!c) { NX.toast("There's no closed note to bring back."); return; } await flush(); const id = newId(); tabs.push(c.file ? { id, file: c.file } : { id }); if (!c.file) NX.setData("np-text-" + id, c.text); await loadTab(tabs.length - 1); } };
+      win.print = () => NX.printDoc(file ? NX.fs.base(file) : tabName(tabs[ti], ti), `<pre>${NX.esc(ta.value)}</pre>`);
       win.save = async () => { if (file) { await flush(); NX.toast("Saved " + NX.fs.base(file) + "."); } else body.querySelector(".np-bar [data-a=save]").click(); };
       win.np2 = { tabs: () => tabs.map((x, k) => ({ file: x.file || null, name: tabName(x, k), on: k === ti })), newTab, closeTab, loadTab };
       const count = () => { const v = ta.value; cnt.textContent = (v.trim() ? v.trim().split(/\s+/).length : 0) + " words · " + v.length + " characters"; };
