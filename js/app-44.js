@@ -107,10 +107,11 @@
     el.addEventListener("pointerdown", (e) => { e.preventDefault(); const b = e.target.closest("[data-k]"); if (b) { b.classList.add("down"); setTimeout(() => b.classList.remove("down"), 120); key(b.dataset.k); } });
     draw(); document.body.appendChild(el);
   };
-  // Windows' touch keyboard: tapping a text box with a finger brings it up (Settings > Accessibility can turn this off)
-  addEventListener("pointerup", (e) => { if (e.pointerType !== "touch" || !NX.me || !NX.oskTouchOn()) return; const t = e.target.closest && e.target.closest("input, textarea, [contenteditable=true]"); if (t && editable(t)) { target = t; NX.osk(true); } }, true);
+  // Windows' touch keyboard: tapping a text box with a finger brings it up (Settings > Accessibility can turn this off),
+  // also during setup and on the sign-in screen
+  addEventListener("pointerup", (e) => { if (e.pointerType !== "touch" || !NX.oskTouchOn()) return; const t = e.target.closest && e.target.closest("input, textarea, [contenteditable=true]"); if (t && editable(t)) { target = t; NX.osk(true); } }, true);
   // on by itself only on the USB: phones and tablets in a browser already show their own keyboard
-  NX.oskTouchOn = () => { const v = NX.prefs().oskTouch; return v == null ? !!NX.native : !!v; };
+  NX.oskTouchOn = () => { const v = NX.me ? NX.prefs().oskTouch : null; return v == null ? !!NX.native : !!v; };
   document.addEventListener("nx:key", (e) => { if (e.detail === "osk") NX.osk(); });
   addEventListener("keydown", (e) => { if (e.metaKey && e.ctrlKey && !e.altKey && (e.key === "o" || e.key === "O")) { e.preventDefault(); NX.osk(); } }, true);
 })();
