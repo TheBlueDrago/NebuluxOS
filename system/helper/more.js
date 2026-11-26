@@ -469,7 +469,8 @@ module.exports = function more({ api, run, FAKE }) {
   api["POST /native/hide"] = async (b) => {
     if (FAKE) return { ok: true };
     const all = await windows(), act = await activeId();
-    for (const wm of Object.values(b.apps || {}).slice(0, 60)) { if (!okWm(wm)) continue; for (const x of mineOf(all, wm)) if (parseInt(x.id, 16) === act || b.all) await run("xdotool", ["windowminimize", String(parseInt(x.id, 16))], 4000); }
+    let hid = 0; for (const wm of Object.values(b.apps || {}).slice(0, 60)) { if (!okWm(wm)) continue; for (const x of mineOf(all, wm)) if (parseInt(x.id, 16) === act || b.all) { await run("xdotool", ["windowminimize", String(parseInt(x.id, 16))], 4000); hid++; } }
+    if (hid) await shellFocus(); // the keyboard comes back to Nebulux OS (typing in Start went to the app before)
     return { ok: true };
   };
 
@@ -778,5 +779,5 @@ module.exports = function more({ api, run, FAKE }) {
       const p = spawn("openbox", ["--replace", "--config-file", cfg], { detached: true, stdio: "ignore" }); p.on("error", () => {}); p.unref();
     } catch (e) { /* the USB's own setup stays */ }
   }, 4000);
-  return { rawFile, upload, closeActive, MEDIA_ROOT: () => real(MEDIA) };
+  return { rawFile, upload, closeActive, shellFocus: () => (FAKE ? Promise.resolve() : shellFocus()), MEDIA_ROOT: () => real(MEDIA) };
 };

@@ -643,6 +643,14 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=del]").click()); await wait(700);
   ok(await p.evaluate(async (pth) => !(await NX.fs.list(await NX.folder("Pictures"))).entries.some((e) => e.path === pth) && (await NX.fs.trash()).entries.some((e) => /Delete me/.test(e.name)), delPath), "Photos' Delete sends the picture to the Recycle Bin");
   await p.evaluate(async () => { await NX.fs.emptyTrash(); NX.closeAll(); });
+  // File Explorer: Ctrl + Z puts back what was just deleted
+  await p.evaluate(async () => { NX.closeAll(); await NX.fs.write((await NX.folder("Documents")) + "/Undo me.txt", "x"); NX.open("files", { place: "Documents" }); }); await wait(900);
+  await p.evaluate(() => { const b = [...document.querySelectorAll(".win[data-app=files] .fx-item")].find((x) => /Undo me/.test(x.textContent)); b.dispatchEvent(new MouseEvent("click", { bubbles: true })); }); await wait(200);
+  await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.press("Delete"); await wait(900);
+  const gone = await p.evaluate(() => ![...document.querySelectorAll(".win[data-app=files] .fx-item")].some((x) => /Undo me/.test(x.textContent)));
+  await p.keyboard.down("Control"); await p.keyboard.press("KeyZ"); await p.keyboard.up("Control"); await wait(900);
+  ok(gone && await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].some((x) => /Undo me/.test(x.textContent))), "Ctrl + Z in File Explorer puts back a deleted file");
+  await p.evaluate(() => NX.closeAll());
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

@@ -265,7 +265,11 @@
           if (k === "delete") {
             const onDrive = drives.some((d) => d.mount && cur.startsWith(d.mount));
             if (onDrive && !(await NX.ask(body, { title: "Delete for good?", text: `USB drives have no Recycle Bin, so ${s.length === 1 ? `"${s[0].name}"` : s.length + " items"} can't be brought back.`, ok: "Delete", danger: true }))) return;
-            await NX.fs.remove(s.map((e) => e.path), onDrive); NX.toast(onDrive ? "Deleted." : "Moved to the Recycle Bin."); await load(); return;
+            // remember what went to the Recycle Bin, so Ctrl + Z can put it back
+            const before = onDrive ? null : new Set(((await NX.fs.trash().catch(() => ({ entries: [] }))).entries || []).map((x) => x.id));
+            await NX.fs.remove(s.map((e) => e.path), onDrive);
+            if (before) { const after = ((await NX.fs.trash().catch(() => ({ entries: [] }))).entries || []).filter((x) => !before.has(x.id)).map((x) => x.id); NX.fxUndo = after.length ? after : null; }
+            NX.toast(onDrive ? "Deleted." : "Moved to the Recycle Bin. Press Ctrl + Z to undo."); await load(); return;
           }
           if (k === "restore") { await NX.fs.restore(s.map((e) => e.id)); NX.toast("Put back where it was."); await load(); return; }
           if (k === "purge" || k === "empty") {
@@ -312,6 +316,7 @@
       listEl.addEventListener("keydown", (ev) => {
         if (body.querySelector(".nx-ask")) return; const k = ev.key, c = ev.ctrlKey || ev.metaKey;
         if (k === "Delete") { ev.preventDefault(); act(isTrash() ? "purge" : "delete"); }
+        else if (c && (k === "z" || k === "Z") && NX.fxUndo) { ev.preventDefault(); const ids = NX.fxUndo; NX.fxUndo = null; NX.fs.restore(ids).then(() => { NX.toast("Put back."); NX.filesChanged && NX.filesChanged(); load(); }).catch((er) => NX.toast(er.message)); }
         else if (k === " " && sel.size === 1 && NX.peekFile && !isTrash()) { const e1 = items.find((x) => (x.path || x.id) === [...sel][0]); if (e1 && !e1.dir) { ev.preventDefault(); NX.peekFile(e1, items.filter((x) => !x.dir)); } }
         else if (k === "F2" && sel.size === 1) { ev.preventDefault(); act("rename"); }
         else if (k === "Enter" && sel.size === 1) { ev.preventDefault(); openItem(selected()[0]); }
