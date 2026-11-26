@@ -23,7 +23,7 @@
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { show("This computer can't use a camera here."); return; }
         show("Starting the camera...");
         try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false }); v.srcObject = stream; await v.play().catch(() => {}); show(""); }
-        catch (e) { show(camErr(e, "camera")); }
+        catch (e) { show(camErr(e, "camera")); const again = document.createElement("button"); again.className = "btn sm cam-again"; again.textContent = "Try again"; again.onclick = () => start(); msg.append(document.createElement("br"), again); }
       };
       const stop = () => { if (rec && rec.state !== "inactive") rec.stop(); if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; clearInterval(tick); };
       win.onclose = stop;
