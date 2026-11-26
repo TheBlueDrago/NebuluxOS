@@ -729,3 +729,5 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .calc .c-mode{max-width:calc(100% - 16px);overflow-x:auto;scrollbar-width:none}
 .calc .c-mode button{padding:5px 8px}
 .np-posbtn{cursor:pointer;border-radius:6px;padding:1px 6px}.np-posbtn:hover{background:var(--hover,rgba(255,255,255,.08))}
+/* Store rows: the arrows do the scrolling, like the Microsoft Store (no grey bar under the cards) */
+.st-row{scrollbar-width:none}.st-row::-webkit-scrollbar{display:none}
