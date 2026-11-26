@@ -9,7 +9,7 @@
 (function () {
   const blocked = () => !NX.me || [...document.querySelectorAll("#lock, #oobe")].some((x) => !x.hidden);
   const active = () => { const w = NX.topWin && NX.topWin(); return w && w.el.classList.contains("active") ? w : null; };
-  const isBrowserKey = (e) => (e.ctrlKey || e.metaKey) && !e.altKey && (/^[wtn]$/i.test(e.key) || e.key === "Tab" || /^[=+\-0]$/.test(e.key) || e.key === "_");
+  const isBrowserKey = (e) => e.ctrlKey && !e.metaKey && !e.altKey && (/^[wtn]$/i.test(e.key) || e.key === "Tab" || /^[=+\-0]$/.test(e.key) || e.key === "_");
 
   // the zoom of one window (on top of Settings > Accessibility > Text size)
   const STEPS = [0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
@@ -27,7 +27,8 @@
   addEventListener("keydown", (e) => { if (isBrowserKey(e)) e.preventDefault(); }, true);
   // then: do the Nebulux OS thing (after the app had its turn)
   addEventListener("keydown", (e) => {
-    const c = e.ctrlKey || e.metaKey; if (!c || e.altKey || blocked() || e.nxDone) return;
+    // only Ctrl: the Nebulux key is Meta, so Nebulux + W (Widgets) or Nebulux + T is never Ctrl + W or Ctrl + T
+    const c = e.ctrlKey && !e.metaKey; if (!c || e.altKey || blocked() || e.nxDone) return;
     const k = e.key.toLowerCase(), w = active(), T = w && w.tabs;
     if (k === "/" || k === "?") { NX.shortcutsSheet(); }
     else if (k === "w" && !e.shiftKey) { if (!w) return; if (T && T.count() > 1) T.close(); else NX.close(w.id); }
@@ -43,7 +44,7 @@
   });
   // Ctrl + the mouse wheel zooms the window under the pointer (and never the whole screen)
   addEventListener("wheel", (e) => {
-    if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); if (blocked()) return;
+    if (!e.ctrlKey) return; e.preventDefault(); if (blocked()) return;
     const el = e.target.closest && e.target.closest(".win"), w = el && NX.wins && NX.wins.get(el.dataset.app); if (!w) return;
     const now = Date.now(); if (now - (w.zoomAt || 0) < 120) return; w.zoomAt = now; NX.winZoom(w, e.deltaY < 0 ? 1 : -1);
   }, { capture: true, passive: false });
@@ -130,4 +131,18 @@
   addEventListener("keydown", (e) => { if (e.key === "Enter" && e.ctrlKey && (e.metaKey || (e.getModifierState && e.getModifierState("OS")))) { e.preventDefault(); N.toggle(); } }, true);
   document.addEventListener("nx:key", (e) => { if (e.detail === "narrator") N.toggle(); });
   addEventListener("keydown", (e) => { if (e.key === "Control" && N.on() && SS) SS.cancel(); }, true); // Ctrl stops the talking, like Windows
+
+  // ---------- the taskbar from the keyboard, like Windows: Nebulux + T goes to the apps, Nebulux + B to the icons on the
+  // right; Left and Right move along, Home and End jump to the ends, Esc goes back ----------
+  const tbItems = () => [...document.querySelectorAll("#taskbar button")].filter((b) => b.offsetParent !== null && !b.disabled);
+  NX.taskbarFocus = (where) => { if (!NX.me) return; const L = tbItems(); const t = where === "tray" ? document.querySelector("#tb-qs") : document.querySelector("#tb-apps .tb-app") || document.querySelector("#tb-start"); (t || L[0]) && (t || L[0]).focus(); };
+  document.addEventListener("nx:key", (e) => { if (e.detail === "tbar") NX.taskbarFocus("apps"); if (e.detail === "tray") NX.taskbarFocus("tray"); });
+  addEventListener("keydown", (e) => {
+    if (e.metaKey && !e.ctrlKey && !e.altKey && /^[tb]$/i.test(e.key)) { e.preventDefault(); NX.taskbarFocus(e.key.toLowerCase() === "b" ? "tray" : "apps"); return; }
+    const a = document.activeElement; if (!a || !a.closest || !a.closest("#taskbar") || e.ctrlKey || e.altKey || e.metaKey) return;
+    const L = tbItems(), i = L.indexOf(a); if (i < 0) return;
+    const to = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? L.length - 1 : null;
+    if (to != null) { e.preventDefault(); L[Math.max(0, Math.min(L.length - 1, to))].focus(); }
+    else if (e.key === "Escape") { a.blur(); }
+  });
 })();

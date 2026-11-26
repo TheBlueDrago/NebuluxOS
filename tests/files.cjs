@@ -576,6 +576,18 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !document.querySelector("#nx-keys")), "and Esc closes the list");
   ok(await p.evaluate(() => { NX.setPref("flashAlerts", true); NX.alarmTone(); const on = !!document.querySelector(".nx-flash"); NX.setPref("flashAlerts", false); return on; }), "Flash the screen for alerts flashes when an alarm sounds");
   await p.evaluate(() => NX.closeAll());
+  // Nebulux + W is Widgets, never Ctrl + W; Nebulux + T goes to the taskbar and the arrows move along it
+  await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(400);
+  await p.keyboard.down("Meta"); await p.keyboard.press("w"); await p.keyboard.up("Meta"); await wait(300);
+  ok(await p.evaluate(() => NX.wins.has("calculator")), "Nebulux + W doesn't close the window");
+  await p.evaluate(() => { NX.shell.closeFlyouts && NX.shell.closeFlyouts(); }); await wait(200);
+  await p.keyboard.down("Meta"); await p.keyboard.press("t"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => !!document.activeElement.closest("#tb-apps")), "Nebulux + T goes to the apps on the taskbar");
+  const first = await p.evaluate(() => document.activeElement.dataset.app); await p.keyboard.press("ArrowRight"); await wait(100);
+  ok(await p.evaluate((f) => document.activeElement.closest("#taskbar") && document.activeElement.dataset.app !== f, first), "and Right moves to the next one");
+  await p.keyboard.down("Meta"); await p.keyboard.press("b"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => document.activeElement.id === "tb-qs"), "Nebulux + B goes to the icons on the right");
+  await p.keyboard.press("Escape"); await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
