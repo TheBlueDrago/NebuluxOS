@@ -95,6 +95,7 @@
     fimage: () => `<rect x="7" y="9" width="34" height="30" rx="4" fill="#dbeafe"/><path d="M10 35l9-11 7 7 4-4 8 8z" fill="#3b82f6"/><circle cx="31" cy="17" r="3.4" fill="#f59e0b"/>`,
     fvideo: () => `<rect x="6" y="10" width="36" height="28" rx="4" fill="#1f1b2e"/><path d="M20 18l10 6-10 6z" fill="#f472b6"/>`,
     faudio: () => `<circle cx="24" cy="24" r="17" fill="#ede9fe"/><path d="M27 13v15.5a5 5 0 11-3-4.6V16l8-2v4z" fill="#7c3aed"/>`,
+    fzip: () => `<path d="M13 6h15l9 9v25a2 2 0 01-2 2H13a2 2 0 01-2-2V8a2 2 0 012-2z" fill="#fef3c7"/><path d="M28 6v9h9" fill="#fcd34d"/><path d="M22 6h4v3h-4zM22 12h4v3h-4zM22 18h4v3h-4z" fill="#b45309"/><rect x="20" y="24" width="8" height="10" rx="2" fill="#b45309"/><rect x="22" y="29" width="4" height="3" rx="1" fill="#fef3c7"/>`,
     fpdf: () => `<path d="M13 6h15l9 9v25a2 2 0 01-2 2H13a2 2 0 01-2-2V8a2 2 0 012-2z" fill="#fee2e2"/><path d="M28 6v9h9" fill="#fca5a5"/><rect x="14" y="25" width="20" height="9" rx="2" fill="#dc2626"/>`,
     usb: () => `<rect x="15" y="17" width="18" height="25" rx="4" fill="currentColor"/><rect x="18" y="6" width="12" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M21 10h2M25 10h2" stroke="currentColor" stroke-width="2.5"/>`,
     tv: () => `<rect x="6" y="9" width="36" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 39h14M24 33v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,

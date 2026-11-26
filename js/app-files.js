@@ -8,7 +8,7 @@
   const KINDS = { image: /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i, video: /\.(mp4|webm|mkv|mov|m4v|ogv)$/i, audio: /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i, text: /\.(txt|md|csv|json|log|ini|cfg|conf|xml|html?|css|js|py|sh|yml|yaml)$/i, pdf: /\.pdf$/i };
   const kindOf = (n, dir) => dir ? "folder" : Object.keys(KINDS).find((k) => KINDS[k].test(n)) || "file";
   const FOLD = { Desktop: "fdesk", Documents: "fdocs", Downloads: "fdl", Pictures: "fpics", Music: "fmusic", Videos: "fvids" };
-  const iconOf = (e) => (e.dir && FOLD[e.name]) || ICON[e.kind] || "file";
+  const iconOf = (e) => (e.dir && FOLD[e.name]) || (!e.dir && /\.zip$/i.test(e.name || "") && "fzip") || ICON[e.kind] || "file";
   const ICON = { folder: "folder", image: "fimage", video: "fvideo", audio: "faudio", text: "ftext", pdf: "fpdf", file: "file" };
   const size = (b) => b == null ? "" : b < 1024 ? b + " bytes" : b < 1048576 ? (b / 1024).toFixed(b < 10240 ? 1 : 0) + " KB" : b < 1073741824 ? (b / 1048576).toFixed(1) + " MB" : (b / 1073741824).toFixed(2) + " GB";
   const when = (t) => t ? new Date(t).toLocaleString([], { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
