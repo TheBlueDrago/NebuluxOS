@@ -369,6 +369,24 @@ module.exports = function more({ api, run, FAKE }) {
 
   // ---------- Task Manager: how busy the processor is, and memory ----------
   let lastCpu = null;
+  // Task Manager > Processes: the busiest programs, and End task for your own (never Nebulux OS's own parts)
+  const PNAMES = { chromium: "Web engine", "chromium-browse": "Web engine", node: "Nebulux OS system helper", Xorg: "Display server", openbox: "Window manager", pipewire: "Sound", "pipewire-pulse": "Sound", wireplumber: "Sound devices", NetworkManager: "Network", "speech-dispatch": "Narrator voices", bash: "Command shell", systemd: "System", dbus: "System messages", "dbus-daemon": "System messages", flatpak: "App manager", "gst-launch-1.0": "Screen recorder" };
+  // the screen itself, the helper, the display, sound, and every browser helper process (one of them could be the screen's)
+  const coreProc = (cmd) => /class=NebuluxShell|--type=|crashpad|nebulux-helper\.js|\bXorg\b|\bopenbox\b|nebulux-session|\bpipewire\b|wireplumber|speech-dispatcher/.test(cmd);
+  const procList = async () => {
+    if (FAKE) return [{ pid: 101, name: "Web engine", cmd: "chromium --class=NebuluxShell", cpu: 7.5, mem: 380e6, mine: true, core: true }, { pid: 202, name: "VLC", cmd: "vlc", cpu: 3.1, mem: 120e6, mine: true, core: false }, { pid: 303, name: "System", cmd: "systemd", cpu: 0.1, mem: 12e6, mine: false, core: true }];
+    const me = os.userInfo().username, r = await run("ps", ["-eo", "pid=,user=,pcpu=,rss=,comm=,args=", "--sort=-pcpu"], 6000);
+    return (r.out || "").split("\n").map((l) => /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s*(.*)$/.exec(l)).filter(Boolean).slice(0, 40).map((m) => ({ pid: +m[1], name: PNAMES[m[5]] || m[5], cmd: m[6].slice(0, 160), cpu: +m[3], mem: +m[4] * 1024, mine: m[2] === me, core: coreProc(m[6]) || +m[1] === process.pid }));
+  };
+  api["GET /processes"] = async () => ({ processes: await procList() });
+  api["POST /processes/end"] = async (b) => {
+    const pid = +b.pid, p = (await procList()).find((x) => x.pid === pid);
+    if (!p) throw new Error("That program isn't running any more.");
+    if (!p.mine) throw new Error("That program belongs to the system, so it keeps running.");
+    if (p.core) throw new Error("That's part of Nebulux OS, so it keeps running.");
+    if (!FAKE) { try { process.kill(pid, "SIGTERM"); } catch (e) { throw new Error("That program couldn't be ended."); } }
+    return { ok: true };
+  };
   api["GET /stats"] = async () => {
     const now = os.cpus().map((c) => c.times), sum = (t) => t.user + t.nice + t.sys + t.irq + t.idle;
     let cpu = null;

@@ -841,3 +841,8 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 .cal-card.folded .cal-h,.cal-card.folded .cal-g{display:none}
 .cal-card.folded~.nc,.cal-card.folded{max-height:none}
 #cal:has(.cal-card.folded) .nc{max-height:calc(100vh - var(--tb) - 300px)}
+
+/* Task Manager > Processes */
+.tm-ph,.tm-pr{grid-template-columns:1fr 70px 90px 96px}
+.tm-pr .tm-app{display:flex;flex-direction:column;align-items:flex-start;gap:0}.tm-pr .tm-app small{color:var(--sub);font-size:11px}
+.tm-none{color:var(--sub);padding:20px 8px}

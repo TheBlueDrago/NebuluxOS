@@ -6,8 +6,9 @@
   NX.apps.taskmgr = { name: "Task Manager", icon: "taskmgr", builtIn: true, w: 720, h: 520, minW: 360, minH: 360, desc: "See open apps and how busy the computer is.",
     open(body, win) {
       body.classList.add("tm");
-      let tab = "apps", cpuHist = [], memHist = [], last = null, timer = 0;
-      body.innerHTML = `<div class="tm-tabs" role="tablist"><button data-tab="apps" class="on" role="tab">Apps</button><button data-tab="perf" role="tab">Performance</button></div><div class="tm-body"></div>`;
+      let tab = "apps", cpuHist = [], memHist = [], last = null, timer = 0, procs = null, procErr = "";
+      const mb = (b) => (b >= 1073741824 ? (b / 1073741824).toFixed(1) + " GB" : Math.max(0.1, b / 1048576).toFixed(b < 10485760 ? 1 : 0) + " MB");
+      body.innerHTML = `<div class="tm-tabs" role="tablist"><button data-tab="apps" class="on" role="tab">Apps</button><button data-tab="procs" role="tab">Processes</button><button data-tab="perf" role="tab">Performance</button></div><div class="tm-body"></div>`;
       const box = body.querySelector(".tm-body");
       // a graph with faint grid lines, a fill that fades to the bottom, and a soft glow on the line
       const graph = (hist, color) => { const id = "tg" + color.slice(1), pts = hist.map((v, i) => `${(i / 59) * 300},${100 - Math.max(0, Math.min(100, v))}`).join(" "), grid = [20, 40, 60, 80].map((y) => `<line x1="0" x2="300" y1="${y}" y2="${y}" class="tm-gl"/>`).join("") + [50, 100, 150, 200, 250].map((x) => `<line y1="0" y2="100" x1="${x}" x2="${x}" class="tm-gl"/>`).join(""); return `<svg viewBox="0 0 300 100" preserveAspectRatio="none" class="tm-graph"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".45"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>${grid}${hist.length ? `<polyline points="0,100 ${pts} ${((hist.length - 1) / 59) * 300},100" fill="url(#${id})" stroke="none"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 4px ${color})"/>` : ""}</svg>`; };
@@ -19,6 +20,14 @@
           box.querySelectorAll("[data-end]").forEach((b) => (b.onclick = () => { NX.close(b.dataset.end); draw(); }));
           return;
         }
+        // Processes: every program on the computer, busiest first (on the USB)
+        if (tab === "procs") {
+          if (!NX.native) { box.innerHTML = `<p class="tm-none">Processes show on the real Nebulux OS, from the USB.</p>`; return; }
+          if (!procs) { box.innerHTML = `<p class="tm-none">${procErr || "Looking at what's running..."}</p>`; return; }
+          box.innerHTML = `<div class="tm-head tm-ph"><span>Name</span><span>CPU</span><span>Memory</span><span></span></div>` + procs.map((p) => `<div class="tm-row tm-pr" title="${NX.esc(p.cmd)}"><span class="tm-app"><b>${NX.esc(p.name)}</b><small>${p.pid}</small></span><span class="tm-st">${p.cpu.toFixed(1)}%</span><span class="tm-st">${mb(p.mem)}</span><span>${p.mine && !p.core ? `<button class="btn sm" data-pend="${p.pid}">End task</button>` : ""}</span></div>`).join("");
+          box.querySelectorAll("[data-pend]").forEach((b) => (b.onclick = async () => { b.disabled = true; try { await NX.api("POST", "/processes/end", { pid: +b.dataset.pend }); NX.toast("Ended."); procs = procs.filter((x) => x.pid !== +b.dataset.pend); draw(); } catch (e) { NX.toast(e.message); b.disabled = false; } }));
+          return;
+        }
         const s = last;
         box.innerHTML = `<div class="tm-perf"><div class="tm-card"><div class="tm-ch"><b>Processor</b><span>${s && s.cpu != null ? s.cpu + "%" : NX.native ? "Measuring..." : "Only on the real Nebulux OS"}</span></div>${graph(cpuHist, "#22d3ee")}<small>${s ? NX.esc([s.model, s.cores ? s.cores + " threads" : ""].filter(Boolean).join(" · ")) : ""}</small></div>
           <div class="tm-card"><div class="tm-ch"><b>Memory</b><span>${s && s.memTotal ? gb(s.memUsed) + " of " + gb(s.memTotal) : "Unknown"}</span></div>${graph(memHist, "#a78bfa")}<small>${s && s.memTotal ? Math.round((s.memUsed / s.memTotal) * 100) + "% in use" : ""}</small></div>
@@ -28,6 +37,7 @@
         try {
           if (NX.native) last = await NX.api("GET", "/stats");
           else { const m = performance.memory; last = { cpu: null, cores: navigator.hardwareConcurrency, model: "", memTotal: m ? m.jsHeapSizeLimit : 0, memUsed: m ? m.usedJSHeapSize : 0, uptime: Math.round(performance.now() / 1000) }; }
+          if (NX.native && tab === "procs") { try { procs = (await NX.api("GET", "/processes")).processes || []; procErr = ""; } catch (e) { procErr = e.message; } }
           if (last.cpu != null) cpuHist.push(last.cpu); if (last.memTotal) memHist.push((last.memUsed / last.memTotal) * 100);
           cpuHist = cpuHist.slice(-60); memHist = memHist.slice(-60);
         } catch (e) { /* try again next second */ }

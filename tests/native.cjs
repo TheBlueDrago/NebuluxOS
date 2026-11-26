@@ -428,6 +428,15 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // Compress to ZIP file, then Extract all
   ok(await p.evaluate(async () => { const D = await NX.folder("Documents"), f = await NX.fs.create(D, "Zipme", true); await NX.fs.write(f.path + "/a.txt", "zip me up ".repeat(50)); const sub = await NX.fs.create(f.path, "Inner", true); await NX.fs.write(sub.path + "/b.txt", "inner words"); const z = await NX.fs.zip([f.path]); if (!/Zipme.zip$/.test(z.path)) return "name " + z.path; await NX.fs.remove([f.path], true); const u = await NX.fs.unzip(z.path); const a = await NX.fs.read(u.path + "/a.txt"), b = await NX.fs.read(u.path + "/Inner/b.txt").catch(() => null); await NX.fs.remove([u.path, z.path], true); return u.files === 2 && a === "zip me up ".repeat(50) && b === "inner words" ? true : JSON.stringify([u, a.length, b]); }).then((r) => r === true || (console.log(r), false)), "Compress to ZIP file and Extract all bring the files back");
+  // Task Manager > Processes: the programs on the computer; End task only for your own, never Nebulux OS's parts
+  await p.evaluate(() => { NX.closeAll(); NX.open("taskmgr"); }); await wait(500);
+  await p.evaluate(() => document.querySelector(".win[data-app=taskmgr] [data-tab=procs]").click()); await wait(1800);
+  ok(await p.evaluate(() => { const t = document.querySelector(".win[data-app=taskmgr]").textContent; return /VLC/.test(t) && /Web engine/.test(t) && document.querySelectorAll(".win[data-app=taskmgr] [data-pend]").length === 1; }), "Task Manager lists the processes, with End task only for your own apps");
+  await p.evaluate(() => document.querySelector(".win[data-app=taskmgr] [data-pend]").click()); await wait(400);
+  ok(await p.evaluate(() => !/VLC/.test(document.querySelector(".win[data-app=taskmgr] .tm-body").textContent)), "and End task ends it");
+  ok(await p.evaluate(async () => { try { await NX.api("POST", "/processes/end", { pid: 101 }); return false; } catch (e) { return /part of Nebulux OS/.test(e.message); } }), "the system helper won't end Nebulux OS's own parts");
+  await p.evaluate(() => NX.closeAll());
+
   // Mono audio reaches the sound system
   await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");

@@ -6,6 +6,7 @@
     ["Nebulux Horizon", "A new background that follows the time of day: the glowing edge of a planet under a violet nebula, at sunrise, in daylight, at dusk and at night. New accounts start with Horizon Dynamic; each time of day is also its own background in Settings > Personalization."],
     ["New icons", "Settings has a glossy gear with a glowing nebula in the middle, Task Manager a glowing live chart, and Get Started a bright star."],
     ["Narrator", "A screen reader: it reads out loud what the keyboard or mouse is on, windows that open and messages. Turn it on in Settings > Accessibility or with Ctrl + Nebulux + Enter; Ctrl stops the talking. Its voice comes with the 4.4 USB."],
+    ["Processes in Task Manager", "Task Manager has a Processes tab: every program on the computer with its processor and memory use, and End task for your own (on the USB)."],
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],
     ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app: edit a picture in Paint, or read any file in Notepad."],
     ["Color Picker", "A new app: pick any color on the screen with Nebulux + Shift + C and copy it as HEX, RGB or HSL. Your recent colors stay in the app."],
