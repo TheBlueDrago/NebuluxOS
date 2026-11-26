@@ -614,6 +614,16 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.press("Control"); await wait(80); await p.keyboard.press("w"); await wait(300);
   ok(await p.evaluate(() => !NX.wins.has("calculator") && NX.wins.has("notepad")), "Ctrl, then W, closes the window in front");
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); NX.setPref("stickyKeys", false); }); await wait(500); await p.evaluate(() => NX.closeAll());
+  // the on-screen keyboard types where you are typing
+  await p.evaluate(() => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); }); await wait(500);
+  await p.focus(".win[data-app=notepad] textarea");
+  await p.keyboard.down("Control"); await p.keyboard.down("Meta"); await p.keyboard.press("o"); await p.keyboard.up("Meta"); await p.keyboard.up("Control"); await wait(200);
+  ok(await p.evaluate(() => !!document.querySelector(".nx-osk")), "Ctrl + Nebulux + O shows the on-screen keyboard");
+  for (const k of ["shift", "h", "i", "x", "bs", "sym", "!"]) { await p.click('.nx-osk [data-k="' + k + '"]'); await wait(40); }
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "Hi!"), "clicking its keys types (Shift, Backspace and symbols too)");
+  await p.click('.nx-osk [data-k="close"]'); await wait(100);
+  ok(await p.evaluate(() => !document.querySelector(".nx-osk")), "and it hides");
+  await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); }); await wait(500); await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

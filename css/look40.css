@@ -803,3 +803,13 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 /* Sticky Keys: which keys are held */
 .nx-sticky{position:fixed;right:12px;bottom:calc(var(--tb) + 12px);z-index:5600;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--bg2);border:1px solid var(--accent);box-shadow:0 10px 30px #0008;font-size:12.5px;color:var(--sub);pointer-events:none}
 .nx-sticky kbd{font:600 12px/1 var(--font);padding:4px 7px;border-radius:6px;background:var(--accent);color:#fff}
+
+/* On-screen keyboard */
+.nx-osk{position:fixed;left:50%;bottom:calc(var(--tb) + 10px);transform:translateX(-50%);z-index:5700;width:min(860px,calc(100vw - 16px));padding:8px 10px 10px;border-radius:18px;background:var(--bg2);border:1px solid var(--line);box-shadow:0 24px 60px #000b;backdrop-filter:blur(30px) saturate(1.4);display:flex;flex-direction:column;gap:6px;user-select:none;touch-action:manipulation;animation:nkIn .16s ease-out}
+.ok-bar{display:flex;align-items:center;justify-content:space-between;color:var(--sub);font-size:12px;padding:0 2px}
+.ok-row{display:flex;gap:6px}
+.ok-row button{flex:1 1 0;min-width:0;height:46px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:500 17px var(--font);cursor:pointer;display:grid;place-items:center;transition:background .08s}
+.ok-row button:hover{background:var(--card2)}.ok-row button.down{background:var(--accent);color:#fff}
+.ok-row button.on{background:color-mix(in srgb,var(--accent) 35%,var(--card));border-color:var(--accent)}
+.ok-row .ok-w2{flex:1.6 1 0;font-size:13.5px}.ok-row .ok-w1{flex:.8 1 0}.ok-row .ok-space{flex:6 1 0;font-size:13px;color:var(--sub)}
+@media (max-width:600px){.ok-row{gap:3px}.ok-row button{height:42px;font-size:15px;border-radius:7px}.nx-osk{padding:6px}}

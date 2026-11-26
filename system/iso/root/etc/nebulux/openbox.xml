@@ -25,6 +25,7 @@
     <keybind key="W-period"><action name="Execute"><command>/usr/local/bin/nebulux-key symbols</command></action></keybind>
     <keybind key="W-t"><action name="Execute"><command>/usr/local/bin/nebulux-key tbar</command></action></keybind>
     <keybind key="W-b"><action name="Execute"><command>/usr/local/bin/nebulux-key tray</command></action></keybind>
+    <keybind key="C-W-o"><action name="Execute"><command>/usr/local/bin/nebulux-key osk</command></action></keybind>
     <keybind key="C-W-Return"><action name="Execute"><command>/usr/local/bin/nebulux-key narrator</command></action></keybind>
     <keybind key="C-W-F4"><action name="Execute"><command>/usr/local/bin/nebulux-key desk-close</command></action></keybind>
     <keybind key="XF86AudioRaiseVolume"><action name="Execute"><command>/usr/local/bin/nebulux-key vol-up</command></action></keybind>

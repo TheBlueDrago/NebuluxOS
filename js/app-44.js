@@ -57,3 +57,59 @@
   addEventListener("keydown", (e) => { if (e.metaKey && e.shiftKey && !e.ctrlKey && !e.altKey && (e.key === "C" || e.key === "c")) { e.preventDefault(); quick(); } }, true);
   document.addEventListener("nx:key", (e) => { if (e.detail === "color") quick(); });
 })();
+
+// ---------- The on-screen keyboard: type with the mouse or a finger (Settings > Accessibility, Quick Settings, or it
+// shows by itself when you tap a text box with your finger) ----------
+(function () {
+  let target = null, shift = false, caps = false, sym = false, el = null;
+  const editable = (t) => t && t.isConnected && (t.tagName === "TEXTAREA" || (t.tagName === "INPUT" && /^(text|search|email|url|tel|password|number|)$/i.test(t.type || "")) || t.isContentEditable);
+  addEventListener("focusin", (e) => { if (editable(e.target) && !e.target.closest(".nx-osk")) target = e.target; }, true);
+  const ROWS = [
+    ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"],
+    ["!@#$%^&*()", "-_=+[]{}\|", ";:'\",.<>/", "?`~°€£"],
+  ];
+  const type = (ch) => {
+    const t = editable(target) ? target : null; if (!t) { NX.toast("Tap a text box first, then type."); return; }
+    t.focus();
+    if (t.isContentEditable) { document.execCommand("insertText", false, ch); return; }
+    if (t.type === "number" || t.selectionStart == null) { t.value += ch; t.dispatchEvent(new Event("input", { bubbles: true })); return; }
+    t.setRangeText(ch, t.selectionStart, t.selectionEnd, "end"); t.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  const key = (k) => {
+    const t = editable(target) ? target : null;
+    if (k === "bs") { if (!t) return; t.focus(); if (t.isContentEditable) { document.execCommand("delete"); return; } const a = t.selectionStart, b = t.selectionEnd; if (a == null) { t.value = t.value.slice(0, -1); } else if (a !== b) t.setRangeText("", a, b, "end"); else if (a > 0) t.setRangeText("", a - 1, a, "end"); t.dispatchEvent(new Event("input", { bubbles: true })); return; }
+    if (k === "enter") { if (!t) return; if (t.tagName === "TEXTAREA" || t.isContentEditable) type(String.fromCharCode(10)); else { t.focus(); ["keydown", "keyup"].forEach((ty) => t.dispatchEvent(new KeyboardEvent(ty, { key: "Enter", code: "Enter", bubbles: true, cancelable: true }))); if (t.form) t.form.requestSubmit ? t.form.requestSubmit() : t.form.submit(); } return; }
+    if (k === "left" || k === "right") { if (!t || t.selectionStart == null) return; t.focus(); const p = Math.max(0, Math.min(t.value.length, (k === "left" ? t.selectionStart - 1 : t.selectionEnd + 1))); t.setSelectionRange(p, p); return; }
+    if (k === "shift") { shift = !shift; draw(); return; }
+    if (k === "caps") { caps = !caps; shift = false; draw(); return; }
+    if (k === "sym") { sym = !sym; draw(); return; }
+    if (k === "space") { type(" "); return; }
+    if (k === "close") { NX.osk(false); return; }
+    const up = (shift || caps) && !sym; type(up ? k.toUpperCase() : k); if (shift) { shift = false; draw(); }
+  };
+  const draw = () => {
+    if (!el) return; const R = ROWS[sym ? 1 : 0], up = (shift || caps) && !sym;
+    const row = (s, extraL, extraR) => `<div class="ok-row">${extraL || ""}${[...s].map((c) => `<button data-k="${NX.esc(c)}">${NX.esc(up ? c.toUpperCase() : c)}</button>`).join("")}${extraR || ""}</div>`;
+    el.innerHTML = `<div class="ok-bar"><span>On-screen keyboard</span><button class="wb" data-k="close" aria-label="Close the keyboard" title="Close">${NX.icon("close", 12)}</button></div>` +
+      row(R[0], "", `<button class="ok-w2" data-k="bs" aria-label="Backspace">${NX.icon("back", 16)}</button>`) +
+      row(R[1], "") +
+      row(R[2], `<button class="ok-w2 ${caps ? "on" : ""}" data-k="caps" aria-label="Caps Lock" aria-pressed="${caps}">Caps</button>`, `<button class="ok-w2" data-k="enter" aria-label="Enter">Enter</button>`) +
+      row(R[3], `<button class="ok-w2 ${shift ? "on" : ""}" data-k="shift" aria-label="Shift" aria-pressed="${shift}">Shift</button>`, `<button class="ok-w1" data-k="left" aria-label="Left">&lsaquo;</button><button class="ok-w1" data-k="right" aria-label="Right">&rsaquo;</button>`) +
+      `<div class="ok-row"><button class="ok-w2 ${sym ? "on" : ""}" data-k="sym" aria-label="Symbols">${sym ? "abc" : "&amp;123"}</button><button class="ok-space" data-k="space" aria-label="Space">Space</button><button class="ok-w2" data-k="close" aria-label="Hide the keyboard">Hide</button></div>`;
+  };
+  NX.osk = (on) => {
+    if (on === undefined) on = !el;
+    if (!on) { if (el) { el.remove(); el = null; } return; }
+    if (el) return;
+    el = document.createElement("div"); el.className = "nx-osk"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "On-screen keyboard");
+    // pressing a key never takes the typing away from the text box
+    el.addEventListener("pointerdown", (e) => { e.preventDefault(); const b = e.target.closest("[data-k]"); if (b) { b.classList.add("down"); setTimeout(() => b.classList.remove("down"), 120); key(b.dataset.k); } });
+    draw(); document.body.appendChild(el);
+  };
+  // Windows' touch keyboard: tapping a text box with a finger brings it up (Settings > Accessibility can turn this off)
+  addEventListener("pointerup", (e) => { if (e.pointerType !== "touch" || !NX.me || !NX.oskTouchOn()) return; const t = e.target.closest && e.target.closest("input, textarea, [contenteditable=true]"); if (t && editable(t)) { target = t; NX.osk(true); } }, true);
+  // on by itself only on the USB: phones and tablets in a browser already show their own keyboard
+  NX.oskTouchOn = () => { const v = NX.prefs().oskTouch; return v == null ? !!NX.native : !!v; };
+  document.addEventListener("nx:key", (e) => { if (e.detail === "osk") NX.osk(); });
+  addEventListener("keydown", (e) => { if (e.metaKey && e.ctrlKey && !e.altKey && (e.key === "o" || e.key === "O")) { e.preventDefault(); NX.osk(); } }, true);
+})();
