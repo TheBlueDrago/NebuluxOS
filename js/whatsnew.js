@@ -10,6 +10,7 @@
     ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app: edit a picture in Paint, or read any file in Notepad."],
     ["Color Picker", "A new app: pick any color on the screen with Nebulux + Shift + C and copy it as HEX, RGB or HSL. Your recent colors stay in the app."],
     ["Symbols", "Nebulux + . opens Symbols: ©, °, ™, currency, math, arrows, Greek and accented letters, typed right where you are typing."],
+    ["Fold the calendar", "The arrow next to the date in the calendar flyout folds the month away, so more notifications fit."],
     ["Start from the keyboard", "Click Start and just type to search. The arrow keys move between the apps in Start, the tiles in Quick Settings and the icons on the desktop."],
     ["The taskbar from the keyboard", "Nebulux + T goes to the apps on the taskbar and Nebulux + B to the icons on the right; the arrow keys move along and Enter opens."],
     ["Every switch works with the keyboard", "Tab reaches every switch in Settings, and each one says which setting it is."],

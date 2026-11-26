@@ -658,6 +658,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const t2 = await p.evaluate(() => document.activeElement.classList.contains("sm-tile") ? document.activeElement.textContent.trim() : "");
   ok(t0 && t1 && t2 && t1 !== t0 && t2 !== t1, "the arrow keys move between Start's pinned apps");
   await p.keyboard.press("Escape"); await p.evaluate(() => NX.shell.closeFlyouts());
+  // the calendar flyout's month folds away
+  await p.evaluate(() => { NX.setData("cal-fold", false); NX.shell.closeFlyouts(); }); await p.click("#tb-clock"); await wait(300);
+  await p.click("#cal .cal-fold"); await wait(200);
+  ok(await p.evaluate(() => NX.data("cal-fold", false) === true && getComputedStyle(document.querySelector("#cal .cal-g")).display === "none" && !document.querySelector("#cal").hidden), "the month in the calendar flyout folds away");
+  await p.click("#cal .cal-fold"); await wait(200);
+  ok(await p.evaluate(() => getComputedStyle(document.querySelector("#cal .cal-g")).display !== "none"), "and comes back");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

@@ -833,3 +833,11 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 
 /* Hover Text (hold Alt) */
 .nx-hover{position:fixed;z-index:999990;pointer-events:none;padding:14px 18px;border-radius:14px;background:#0b0820f2;color:#fff;font:600 32px/1.25 var(--font);border:2px solid var(--accent);box-shadow:0 20px 60px #000c;word-break:break-word}
+
+/* the calendar flyout: fold the month away */
+.cal-top{display:flex;align-items:center;justify-content:space-between}
+.cal-fold{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--sub)}.cal-fold:hover{background:var(--hover,#ffffff14);color:var(--txt)}
+.cal-card:not(.folded) .cal-fold svg{transform:rotate(180deg)}
+.cal-card.folded .cal-h,.cal-card.folded .cal-g{display:none}
+.cal-card.folded~.nc,.cal-card.folded{max-height:none}
+#cal:has(.cal-card.folded) .nc{max-height:calc(100vh - var(--tb) - 300px)}
