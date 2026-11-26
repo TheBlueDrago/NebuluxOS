@@ -96,7 +96,7 @@ Then start Nebulux OS like this (all on one line):
 
 ## What's in it
 
-- **New in 4.2:** record your screen from Snipping Tool, a lock screen slideshow, move a window to another desktop from its title bar, Delete in Photos, Ctrl + Z to undo a delete in File Explorer, and typing in Start now works right after using an app.
+- **New in 4.2:** record your screen from Snipping Tool, a lock screen slideshow, move a window to another desktop from its title bar, Delete in Photos, Ctrl + Z to undo a delete in File Explorer, Copy as path, Storage Sense, accent color on title bars and the taskbar, F5 for the date and time in Notepad, and Copy on Settings > About. Fixes: typing in Start works right after using an app, and a web search opens even when Google is already open.
 - **New in 4.1:** the update window has Update now, Remind me later and Never, and an update installs by itself the next time the computer starts (or overnight). Apps open like apps, with no web address, and their links stay inside the app. Setup's Sign in with Google brings you back by itself, and setup is livelier. Also: repeating events and reminders, holidays in the calendar, quiet hours, Quick Search answers for money, time in other cities and word meanings, All apps by category, Nebulux + Z, Calculator Dates, a Photos widget, world clocks on the desktop, clipboard search, Media Player keys, and the lock screen shows your next event and waiting notifications.
 - **New in 4.0:**
   - **A whole new look:** glass that takes color from your background, a floating taskbar, twinkling stars over the wallpaper, live window pictures in Task View and Alt + Tab, notifications and the calendar as floating cards, colored Settings icons, folder icons, and a new start-up screen.
