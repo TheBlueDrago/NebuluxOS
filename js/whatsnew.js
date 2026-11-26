@@ -1,7 +1,7 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "4.3";
+  NX.version = "4.4";
   NX.whatsNew = [
     ["Nebulux Horizon", "A new background: the glowing edge of a planet at sunrise under a violet nebula. New accounts start with it; pick it in Settings > Personalization."],
     ["New Settings and Task Manager icons", "A glossy gear with a glowing nebula in the middle, and Task Manager has a glowing live chart."],
@@ -235,6 +235,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Lock screen slideshow"); // what came before 4.3 goes under Earlier updates
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Lock screen slideshow"); // what came before 4.4 goes under Earlier updates
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
