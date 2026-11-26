@@ -54,5 +54,23 @@
     document.body.appendChild(f); setTimeout(() => f.remove(), 700);
   };
   NX.flashAlert = flash;
+
+  // Settings > Accessibility > Color filters for color blindness: the screen's colors are shifted (daltonized) so that
+  // red-green or blue-yellow differences show up as other differences
+  const M = { protan: "1 0 0 0 0 -0.255 1.255 0 0 0 0.303 -0.545 1.242 0 0 0 0 0 1 0", deutan: "1 0 0 0 0 -0.438 1.438 0 0 0 0.262 -0.563 1.3 0 0 0 0 0 1 0", tritan: "1 -0.332 0.332 0 0 0 0.667 0.332 0 0 0 0 1 0 0 0 0 0 1 0" };
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("aria-hidden", "true"); svg.style.cssText = "position:absolute;width:0;height:0";
+  svg.innerHTML = Object.entries(M).map(([k, m]) => `<filter id="nx-cf-${k}" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`).join("");
+  document.body.appendChild(svg);
+
+  // Settings > Accessibility > Find my pointer: press and let go of Ctrl (nothing else) and rings close in on the pointer
+  let px = innerWidth / 2, py = innerHeight / 2, ctrlAlone = false;
+  addEventListener("pointermove", (e) => { px = e.clientX; py = e.clientY; }, { capture: true, passive: true });
+  addEventListener("keydown", (e) => { ctrlAlone = e.key === "Control" && !e.repeat && !e.shiftKey && !e.altKey && !e.metaKey; }, true);
+  addEventListener("pointerdown", () => { ctrlAlone = false; }, true);
+  addEventListener("keyup", (e) => {
+    if (e.key !== "Control" || !ctrlAlone) return; ctrlAlone = false; if (!NX.me || !NX.prefs().findPointer) return;
+    NX.findPointer();
+  }, true);
+  NX.findPointer = () => { const r = document.createElement("div"); r.className = "nx-findptr"; r.style.left = px + "px"; r.style.top = py + "px"; r.innerHTML = "<i></i><i></i><i></i>"; document.body.appendChild(r); setTimeout(() => r.remove(), 1100); };
   for (const name of ["beep", "alarmTone"]) { const orig = NX[name]; if (typeof orig === "function") NX[name] = function () { flash(); return orig.apply(this, arguments); }; }
 })();

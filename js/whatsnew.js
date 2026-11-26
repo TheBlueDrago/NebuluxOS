@@ -10,6 +10,8 @@
     ["Ctrl + /", "Opens the list of every keyboard shortcut, like Nebulux + /."],
     ["Bold focus outline", "Settings > Accessibility can draw a thick, bright outline around whatever the keyboard is on."],
     ["Flash the screen for alerts", "Settings > Accessibility > Hearing flashes the screen when an alarm, timer or alert sound plays."],
+    ["Color filters for color blindness", "Settings > Accessibility > Color filters can shift the screen's colors for red-green (deuteranopia or protanopia) or blue-yellow (tritanopia) color blindness."],
+    ["Find my pointer", "Turn it on in Settings > Accessibility, then press and let go of Ctrl to see rings close in on the mouse pointer."],
     ["The next window takes over", "Close a window and the one behind it is ready for your keyboard, like Windows."],
     ["Lock screen slideshow", "Settings > Personalization > Lock screen picture > Slideshow moves through all the backgrounds while the computer is locked."],
     ["Record your screen", "Snipping Tool has Record screen: it films the whole screen into your Videos folder, with a red pill to stop it. Needs the new 4.2 USB."],

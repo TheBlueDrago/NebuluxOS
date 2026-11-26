@@ -387,10 +387,19 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   // 3.2: color filters, Show desktop, Settings search
   await p.evaluate(() => NX.open("settings", { page: "access" })); await wait(400);
-  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-cf=gray]").click()); await wait(200);
+  await p.evaluate(() => { const c = document.querySelector(".win[data-app=settings] [data-cfsel]"); c.value = "gray"; c.dispatchEvent(new Event("change")); }); await wait(200);
   ok(await p.evaluate(() => document.documentElement.classList.contains("cf-gray") && getComputedStyle(document.body).filter.includes("grayscale")), "Color filters turn the screen grayscale");
-  await p.evaluate(() => document.querySelector(".win[data-app=settings] [data-cf=none]").click()); await wait(200);
-  ok(await p.evaluate(() => !document.documentElement.classList.contains("cf-gray")), "and back");
+  await p.evaluate(() => { const c = document.querySelector(".win[data-app=settings] [data-cfsel]"); c.value = "deutan"; c.dispatchEvent(new Event("change")); }); await wait(200);
+  ok(await p.evaluate(() => document.documentElement.classList.contains("cf-deutan") && !document.documentElement.classList.contains("cf-gray") && getComputedStyle(document.body).filter.includes("nx-cf-deutan") && !!document.querySelector("#nx-cf-deutan feColorMatrix")), "the red-green color filter shifts the screen's colors");
+  await p.evaluate(() => { const c = document.querySelector(".win[data-app=settings] [data-cfsel]"); c.value = "none"; c.dispatchEvent(new Event("change")); }); await wait(200);
+  ok(await p.evaluate(() => !document.documentElement.classList.contains("cf-gray") && !document.documentElement.classList.contains("cf-deutan")), "and back");
+  // Find my pointer: press and let go of Ctrl
+  await p.evaluate(() => NX.setPref("findPointer", true)); await p.mouse.move(400, 300);
+  await p.keyboard.down("Control"); await p.keyboard.up("Control"); await wait(100);
+  ok(await p.evaluate(() => { const r = document.querySelector(".nx-findptr"); return !!r && r.style.left === "400px" && r.style.top === "300px"; }), "Find my pointer shows rings at the pointer when Ctrl is pressed alone");
+  await wait(1200); await p.keyboard.down("Control"); await p.keyboard.press("c"); await p.keyboard.up("Control"); await wait(100);
+  ok(await p.evaluate(() => !document.querySelector(".nx-findptr")), "but not for Ctrl + C");
+  await p.evaluate(() => NX.setPref("findPointer", false));
   await p.click("#tb-showdesk"); await wait(300);
   ok(await p.evaluate(() => NX.wins.get("settings").min), "the corner of the taskbar shows the desktop");
   await p.click("#tb-showdesk"); await wait(300);
