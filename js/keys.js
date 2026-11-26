@@ -72,5 +72,62 @@
     NX.findPointer();
   }, true);
   NX.findPointer = () => { const r = document.createElement("div"); r.className = "nx-findptr"; r.style.left = px + "px"; r.style.top = py + "px"; r.innerHTML = "<i></i><i></i><i></i>"; document.body.appendChild(r); setTimeout(() => r.remove(), 1100); };
-  for (const name of ["beep", "alarmTone"]) { const orig = NX[name]; if (typeof orig === "function") NX[name] = function () { flash(); return orig.apply(this, arguments); }; }
+  for (const name of ["alarmTone"]) { const orig = NX[name]; if (typeof orig === "function") NX[name] = function () { flash(); return orig.apply(this, arguments); }; }
+
+  // ---------- Narrator: reads out loud what the keyboard is on, windows that open and messages (Settings > Accessibility,
+  // or Ctrl + Nebulux + Enter). On the USB it speaks through speech-dispatcher and eSpeak NG (in the 4.4 USB and newer). ----------
+  const SS = window.speechSynthesis;
+  if (SS && SS.getVoices) SS.getVoices(); // starts loading the voices
+  const N = NX.narrator = { last: "", said: [], on: () => !!(NX.me && NX.prefs().narrator) };
+  const clean = (t) => String(t || "").replace(/\s+/g, " ").trim().slice(0, 220);
+  N.speak = (text, now) => {
+    text = clean(text); if (!text) return; N.last = text; N.said = [...N.said, text].slice(-12);
+    if (!SS || typeof SpeechSynthesisUtterance === "undefined") return;
+    try { if (now !== false) SS.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = +(NX.me && NX.prefs().narratorRate) || 1; SS.speak(u); } catch (e) { /* no voice */ }
+  };
+  // what a screen reader says about an element: its name, then what it is and its state
+  N.describe = (el) => {
+    if (!el || el === document.body || el === document.documentElement) return "";
+    const tag = el.tagName.toLowerCase(), role = el.getAttribute("role") || "", type = (el.getAttribute("type") || "").toLowerCase();
+    let name = el.getAttribute("aria-label") || (el.labels && el.labels[0] && el.labels[0].innerText) || el.getAttribute("alt") || "";
+    if (!name && (tag === "input" || tag === "textarea")) name = el.getAttribute("placeholder") || "";
+    if (!name) name = el.innerText || el.textContent || el.getAttribute("title") || "";
+    name = clean(name).slice(0, 140);
+    let what = "", state = "";
+    if (tag === "button" || role === "button") what = "button";
+    else if (tag === "a") what = "link";
+    else if (tag === "select") { what = "combo box"; state = el.selectedOptions && el.selectedOptions[0] ? el.selectedOptions[0].text : ""; }
+    else if (tag === "input" && (type === "checkbox" || type === "radio")) { what = type === "radio" ? "radio button" : "switch"; state = el.checked ? "on" : "off"; }
+    else if (tag === "input" && type === "range") { what = "slider"; state = el.value; }
+    else if (tag === "textarea" || tag === "input") { what = "edit text"; state = el.type === "password" ? "" : clean(el.value).slice(0, 80); }
+    else if (role === "tab") { what = "tab"; state = el.getAttribute("aria-selected") === "true" ? "selected" : ""; }
+    else if (/^h[1-6]$/.test(tag)) what = "heading";
+    if (el.getAttribute("aria-pressed") === "true") state = state || "pressed";
+    if (el.disabled) state = (state ? state + ", " : "") + "unavailable";
+    return [name, what, state].filter(Boolean).join(", ");
+  };
+  addEventListener("focusin", (e) => { if (N.on()) N.speak(N.describe(e.target)); }, true);
+  addEventListener("change", (e) => { if (N.on() && e.target.matches && e.target.matches("input[type=checkbox], input[type=radio], select")) N.speak(N.describe(e.target)); }, true);
+  // the mouse too: buttons and links are read when the pointer rests on them
+  let hoverT = 0, hoverEl = null;
+  addEventListener("pointerover", (e) => {
+    if (!N.on()) return; const el = e.target.closest && e.target.closest("button, a, [role=button], [role=tab], input, select, .fx-item, .tb-app, .sm-app");
+    if (!el || el === hoverEl) return; hoverEl = el; clearTimeout(hoverT); hoverT = setTimeout(() => { if (el.matches(":hover") && document.activeElement !== el) N.speak(N.describe(el)); }, 450);
+  }, true);
+  document.addEventListener("nx:winopen", (e) => { if (!N.on()) return; const w = NX.wins && NX.wins.get(e.detail); if (w && w.app) setTimeout(() => N.speak(w.app.name + " window", false), 120); });
+  // NX.toast and NX.beep come from shell.js, which loads after this file: wrap them once every script has run
+  const later = () => {
+    { const t0 = NX.toast; if (typeof t0 === "function" && !t0.nxN) { NX.toast = function (text) { if (N.on()) N.speak(text, false); return t0.apply(this, arguments); }; NX.toast.nxN = 1; } }
+    { const b0 = NX.beep; if (typeof b0 === "function" && !b0.nxF) { NX.beep = function () { flash(); return b0.apply(this, arguments); }; NX.beep.nxF = 1; } }
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", later); else later();
+  N.toggle = () => { if (NX.me) NX.setPref("narrator", !NX.prefs().narrator); };
+  document.addEventListener("nx:prefs", (e) => {
+    if (e.detail !== "narrator" || !NX.me) return; const on = !!NX.prefs().narrator;
+    if (on) { N.speak("Narrator is on. Press Control, Nebulux and Enter to turn it off."); setTimeout(() => { if (SS && SS.getVoices && !SS.getVoices().length && NX.prefs().narrator) NX.toast("Narrator can't find a voice on this computer. It speaks on the Nebulux OS 4.4 USB and newer."); }, 1500); }
+    else { if (SS) SS.cancel(); N.last = "Narrator is off."; if (SS && typeof SpeechSynthesisUtterance !== "undefined") try { SS.speak(new SpeechSynthesisUtterance("Narrator is off.")); } catch (e) { /* no voice */ } }
+  });
+  addEventListener("keydown", (e) => { if (e.key === "Enter" && e.ctrlKey && (e.metaKey || (e.getModifierState && e.getModifierState("OS")))) { e.preventDefault(); N.toggle(); } }, true);
+  document.addEventListener("nx:key", (e) => { if (e.detail === "narrator") N.toggle(); });
+  addEventListener("keydown", (e) => { if (e.key === "Control" && N.on() && SS) SS.cancel(); }, true); // Ctrl stops the talking, like Windows
 })();

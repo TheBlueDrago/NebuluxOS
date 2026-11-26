@@ -292,7 +292,7 @@ const api = {
   },
   async "POST /diag"(b) {
     if (b.stage) { if (!FAKE) fs.appendFile("/dev/ttyS0", "NEBULUX-BOOT " + String(b.stage).replace(/[^a-z-]/g, "").slice(0, 20) + " at " + os.uptime().toFixed(1) + "s\n", () => {}); return { ok: true }; }
-    const line = "NEBULUX-DIAG " + (b.open ? "open=" + String(b.open).replace(/[^a-z0-9-]/gi, "").slice(0, 20) : ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1"].join(" ")) + "\n";
+    const line = "NEBULUX-DIAG " + (b.open ? "open=" + String(b.open).replace(/[^a-z0-9-]/gi, "").slice(0, 20) : ["ext=" + (b.ext ? 1 : 0), "screen=" + (+b.w || 0) + "x" + (+b.h || 0), "native=1", "voices=" + (Number.isFinite(+b.voices) ? +b.voices : -1)].join(" ")) + "\n";
     if (!FAKE) fs.appendFile("/dev/ttyS0", line, () => {});
     // in the boot test's virtual computer only: film the screen for 2 seconds to show screen recording works
     if (!FAKE && !b.open && fs.existsSync("/usr/bin/gst-launch-1.0") && /QEMU/i.test((() => { try { return fs.readFileSync("/sys/class/dmi/id/sys_vendor", "utf8"); } catch (e) { return ""; } })())) {

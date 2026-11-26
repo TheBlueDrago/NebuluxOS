@@ -99,3 +99,6 @@ wireplumber
 libspa-0.2-bluetooth
 alsa-utils
 brightnessctl
+speech-dispatcher
+speech-dispatcher-espeak-ng
+espeak-ng

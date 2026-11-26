@@ -61,6 +61,9 @@ boot() { # BIOS or UEFI
   # screen recording (a note, not a failure): the helper films 2 seconds of the screen in the virtual computer
   RS=$(grep -ao "NEBULUX-DIAG screenrec=[0-9]*" "$SHOTS/$MODE-serial.log" | tail -1 | cut -d= -f2)
   if [ "${RS:-0}" -gt 1000 ]; then echo "ok   ($MODE): screen recording works ($RS bytes in 2 seconds)"; else echo "note ($MODE): screen recording didn't make a file (${RS:-no answer})"; fi
+  # Narrator's voices (speech-dispatcher and eSpeak NG): the page reports how many voices it can use
+  VO=$(grep -ao "NEBULUX-DIAG ext=[0-9].* voices=-\?[0-9]*" "$SHOTS/$MODE-serial.log" | tail -1 | sed 's/.*voices=//')
+  if [ "${VO:-0}" -gt 0 ] 2>/dev/null; then echo "ok   ($MODE): Narrator has $VO voices"; else echo "FAIL ($MODE): Narrator has no voice (${VO:-no answer})"; FAILS=$((FAILS + 1)); fi
   keys meta_l; sleep 2; typeword "google"; sleep 1; keys ret; sleep 25; shot 5-google
   # the mouse on the real browser: click into Google's search box and type
   click 640 304; sleep 1; typeword "nebulux"; sleep 3; shot 5b-browser-click

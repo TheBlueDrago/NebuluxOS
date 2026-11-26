@@ -68,7 +68,7 @@ while true; do
     --disable-background-networking --disable-component-update --disable-sync --no-pings --disable-breakpad --disable-domain-reliability --metrics-recording-only --disable-client-side-phishing-detection \
     --password-store=basic --user-data-dir="$P" --load-extension="$EXT" $GPU \
     --window-position=0,0 --window-size="$W,$H" --start-fullscreen --check-for-update-interval=31536000 --overscroll-history-navigation=0 \
-    --autoplay-policy=no-user-gesture-required \
+    --autoplay-policy=no-user-gesture-required --enable-speech-dispatcher \
     --app="http://127.0.0.1:7777/" >"$HOME/.nebulux-browser.log" 2>&1 &
   CPID=$!
   # the watchdog: the OS page talks to the helper all the time; if it hasn't within 45 seconds, start over
