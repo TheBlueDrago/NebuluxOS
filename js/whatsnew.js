@@ -1,8 +1,17 @@
 // The Nebulux OS version, and what's new in it (shown once after an update, the first time someone signs in).
 "use strict";
 (function () {
-  NX.version = "4.2";
+  NX.version = "4.3";
   NX.whatsNew = [
+    ["Nebulux Horizon", "A new background: the glowing edge of a planet at sunrise under a violet nebula. New accounts start with it; pick it in Settings > Personalization."],
+    ["A new Settings icon", "A glossy gear with a glowing nebula in the middle."],
+    ["Ctrl + W and friends", "Ctrl + W closes the tab or the window, Ctrl + T and Ctrl + N open a tab, Ctrl + Shift + T brings back the tab you closed, and Ctrl + Tab or Ctrl + 1 to 9 move between tabs, in Notepad and File Explorer."],
+    ["Zoom any window", "Ctrl + Plus and Ctrl + Minus, or Ctrl + the mouse wheel, make one window bigger or smaller. Ctrl + 0 goes back."],
+    ["Ctrl + /", "Opens the list of every keyboard shortcut, like Nebulux + /."],
+    ["Bold focus outline", "Settings > Accessibility can draw a thick, bright outline around whatever the keyboard is on."],
+    ["Flash the screen for alerts", "Settings > Accessibility > Hearing flashes the screen when an alarm, timer or alert sound plays."],
+    ["The next window takes over", "Close a window and the one behind it is ready for your keyboard, like Windows."],
+    ["Fixes", "Ctrl + W can no longer close the whole Nebulux OS screen on the USB."],
     ["Lock screen slideshow", "Settings > Personalization > Lock screen picture > Slideshow moves through all the backgrounds while the computer is locked."],
     ["Record your screen", "Snipping Tool has Record screen: it films the whole screen into your Videos folder, with a red pill to stop it. Needs the new 4.2 USB."],
     ["ZIP files", "Right-click files in File Explorer to Compress to ZIP file, or right-click a ZIP file to Extract all."],
@@ -226,6 +235,6 @@
     ["First-time setup", "Make your account, then pick your region, keyboard, Wi-Fi, privacy and look, and sign in with Google."],
   ];
   // what came in earlier versions (shown under "Earlier updates")
-  const cut = NX.whatsNew.findIndex((x) => x[0] === "Updates on your terms"); // what came before 4.2 goes under Earlier updates // what came before 4.1 goes under Earlier updates
+  const cut = NX.whatsNew.findIndex((x) => x[0] === "Lock screen slideshow"); // what came before 4.3 goes under Earlier updates
   NX.whatsNewBefore = cut > 0 ? NX.whatsNew.splice(cut) : [];
 })();
