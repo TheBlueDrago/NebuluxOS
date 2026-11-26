@@ -689,6 +689,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   ok(await p.evaluate(() => { const o = document.querySelector("#nx-sd"); return !!o && /Shut down Nebulux OS/.test(o.textContent) && o.querySelectorAll("option").length === 5; }), "Alt + F4 with nothing open shows the Shut down box");
   await p.keyboard.press("Escape"); await wait(150);
   ok(await p.evaluate(() => !document.querySelector("#nx-sd")), "and Esc closes it");
+  // alarm sounds (the test browser is muted)
+  ok(await p.evaluate(() => { let n = 0; const o = NX.sounds.play; NX.sounds.play = () => n++; NX.setPref("alarmTone", "chime"); NX.alarmTone(); NX.setPref("alarmTone", "bells"); NX.alarmTone(); NX.sounds.play = o; NX.setPref("alarmTone", "beep"); return n === 2; }), "alarms can ring with Chime or Bells");
   // Peek and Shake
   if (W > 700) {
     await p.evaluate(() => { NX.closeAll(); NX.open("notepad"); NX.open("calculator"); NX.open("clock"); }); await wait(700);

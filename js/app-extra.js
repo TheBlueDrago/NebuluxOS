@@ -313,7 +313,7 @@
       const card = document.createElement("div"); card.className = "al-card";
       card.innerHTML = `<div class="al-ring">${NX.icon("clock", 44)}</div><div class="al-txt"><b>${NX.esc(a.name || "Alarm")}</b><span>${NX.esc(NX.fmtTime(d || new Date()))}</span></div><div class="al-btns"><button class="btn" data-al="snooze">Snooze 5 min</button><button class="btn primary" data-al="off">Dismiss</button></div>`;
       box.appendChild(card);
-      let n = 0; const beep = () => { if (NX.beep) NX.beep(); }; beep(); const t = setInterval(() => { if (++n >= 30) stop(); else beep(); }, 2000);
+      let n = 0; const beep = () => { if (NX.alarmTone) NX.alarmTone(); else if (NX.beep) NX.beep(); }; beep(); const t = setInterval(() => { if (++n >= 30) stop(); else beep(); }, 2000);
       const stop = () => { clearInterval(t); card.remove(); if (!box.children.length) box.remove(); };
       card.onclick = (e) => { const b = e.target.closest("[data-al]"); if (!b) return; stop();
         if (b.dataset.al === "snooze") { const s = new Date(Date.now() + 5 * 60000), hm = String(s.getHours()).padStart(2, "0") + ":" + String(s.getMinutes()).padStart(2, "0");

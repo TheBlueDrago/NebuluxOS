@@ -25,6 +25,7 @@
     ["Search inside your files", "Quick Search finds the words inside your text files, not just their names, and shows a bit of the text around them."],
     ["Arrange Start", "Drag the apps in Start's Pinned list to put them in the order you like."],
     ["Alt + F4 to shut down", "With no window open, Alt + F4 asks what the computer should do: Shut down, Restart, Sleep, Sign out or Lock."],
+    ["Alarm sounds", "Pick Beep, Chime or Bells for your alarms in Settings, Sound, and play it to hear it first."],
     ["Fixes", "Small fixes all around Nebulux OS."],
     ["Updates on your terms", "The update window has Update now, Remind me later and Never. If you don't pick Never, the update installs by itself the next time the computer starts, or overnight if it's left on."],
     ["Apps feel like apps", "Apps from the Store open in their own window with no web address showing, and the Store calls them apps, not websites."],

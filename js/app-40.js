@@ -534,6 +534,7 @@ NX.lookOn40 = (t) => { const p = NX.prefs(); return p.wallpaper === t.wall && p.
     } catch (e) { /* no sound on this computer */ }
   }
   NX.sounds = {
+    play,
     signin: () => play([[523.25, 0, 1.1, 0.10], [659.25, 0.09, 1.1, 0.09], [783.99, 0.18, 1.2, 0.08], [1046.5, 0.3, 1.4, 0.06]]),
     note: () => play([[880, 0, 0.35, 0.07], [1318.5, 0.07, 0.45, 0.05]]),
   };
@@ -1069,4 +1070,12 @@ NX.shutDownBox = () => {
   o.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
   o.querySelector("form").onsubmit = (e) => { e.preventDefault(); const k = sel.value, S = NX.shell || {}; close(); if (k === "off" || k === "restart") S.power && S.power(k); else if (k === "sleep") S.sleep && S.sleep(); else if (k === "out") S.signOut && S.signOut(); else S.lockKeep && S.lockKeep(); };
   setTimeout(() => sel.focus(), 30);
+};
+
+// ---------- alarm sounds: Beep, Chime or Bells (Settings > Sound) ----------
+NX.alarmTone = () => {
+  const k = NX.me ? NX.prefs().alarmTone || "beep" : "beep";
+  if (k === "beep" || !NX.sounds || !NX.sounds.play) { if (NX.beep) NX.beep(); return; }
+  if (k === "chime") NX.sounds.play([[659.25, 0, 0.5, 0.12], [783.99, 0.18, 0.5, 0.12], [1046.5, 0.36, 0.8, 0.1]]);
+  else NX.sounds.play([[1318.5, 0, 0.9, 0.09], [1567.98, 0.12, 0.9, 0.08], [1318.5, 0.5, 0.9, 0.09], [1567.98, 0.62, 0.9, 0.08]]);
 };
