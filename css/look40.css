@@ -846,3 +846,4 @@ html.cf-protan body{filter:url(#nx-cf-protan)}html.cf-deutan body{filter:url(#nx
 .tm-ph,.tm-pr{grid-template-columns:1fr 70px 90px 96px}
 .tm-pr .tm-app{display:flex;flex-direction:column;align-items:flex-start;gap:0}.tm-pr .tm-app small{color:var(--sub);font-size:11px}
 .tm-none{color:var(--sub);padding:20px 8px}
+body:has(.nx-osk) .nx-sym{bottom:calc(var(--tb) + 320px);max-height:min(300px,calc(100vh - var(--tb) - 340px))}
