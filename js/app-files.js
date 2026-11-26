@@ -355,7 +355,7 @@
         NX.setData("fx-pins", L); NX.toast(on ? e.name + " is pinned to Quick access." : e.name + " is unpinned."); side();
       }
       win.fxPin = pinFolder;
-      function openItem(e) { if (isTrash()) { NX.toast("Restore it first to open it."); return; } if (e.dir) go(e.path); else NX.openFile(e, items); }
+      function openItem(e) { if (isTrash()) { NX.toast("Restore it first to open it."); return; } if (e.dir) go(e.path); else if (/\.zip$/i.test(e.name) && NX.fs.unzip && !isHome()) { NX.ask(body, { title: "Extract all?", text: `The files in "${e.name}" go into a new folder next to it.`, ok: "Extract" }).then((y) => { if (y) { sel = new Set([e.path]); act("unzip"); } }); } else NX.openFile(e, items); }
       let lastClick = null;
       listEl.addEventListener("click", (ev) => {
         const sb = ev.target.closest("[data-sort]"); if (sb) { setSort(sb.dataset.sort); return; }
