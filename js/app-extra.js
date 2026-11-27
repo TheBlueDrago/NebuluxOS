@@ -557,6 +557,13 @@
         if (a === "fostop") NX.focusSession.finish(false);
         draw();
       };
+      // the stopwatch from the keyboard, like Windows' Clock: Space starts and pauses, L takes a lap, R resets
+      const swKey = (e) => {
+        if (v !== "sw" || !win.el.classList.contains("active") || e.ctrlKey || e.metaKey || e.altKey || /input|textarea|select/i.test((e.target && e.target.tagName) || "")) return;
+        const k = e.key === " " ? "sws" : /^l$/i.test(e.key) ? "swl" : /^r$/i.test(e.key) ? "swr" : null; if (!k) return;
+        const b = face.querySelector(`[data-a="${k}"]`); if (!b || b.disabled) return; e.preventDefault(); b.click();
+      };
+      addEventListener("keydown", swKey);
       // the tick only updates the time text, so buttons are never rebuilt under the pointer
       const tick = setInterval(() => {
         const big = face.querySelector(".clk-big") || { set textContent(x) { /* this face shows no time (Alarms) */ } }, now = performance.now();
@@ -568,7 +575,7 @@
       const onFocus = () => { if (v === "fo") draw(); }; document.addEventListener("nx:focus", onFocus);
       const onTm = () => { if (v === "tm" && !face.contains(document.activeElement && document.activeElement.closest(".tmr-add"))) draw(); }; document.addEventListener("nx:timers", onTm);
       const onAl = () => { if (v === "al" && !face.contains(document.activeElement)) draw(); }; document.addEventListener("nx:alarms", onAl);
-      win.onclose = () => { clearInterval(tick); document.removeEventListener("nx:timers", onTm); document.removeEventListener("nx:focus", onFocus); document.removeEventListener("nx:alarms", onAl); }; draw();
+      win.onclose = () => { removeEventListener("keydown", swKey); clearInterval(tick); document.removeEventListener("nx:timers", onTm); document.removeEventListener("nx:focus", onFocus); document.removeEventListener("nx:alarms", onAl); }; draw();
     } };
 
   // ---------- Comet Snake: an original arcade game ----------

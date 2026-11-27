@@ -96,6 +96,7 @@
     ["Jump to a letter", "In Start's All apps list, click a letter to see A to Z and jump straight to the apps that start with another letter."],
     ["Run", "Nebulux + R opens Run: type an app like calc or notepad, a folder like ~/Documents, a file, or a website, and press Enter."],
     ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
+    ["Stopwatch keys", "In Clock's Stopwatch, Space starts and pauses, L takes a lap and R resets."],
     ["Paste into Calculator", "Copy a number anywhere and press Ctrl + V in Calculator to use it. Commas and spaces are ignored."],
     ["Fonts in Notepad", "The Font button switches Notepad between typewriter, clean and book fonts, and remembers your pick."],
     ["Match case", "Notepad's Find has an Aa button: turn it on and Red finds only Red, not red. Shift + F3 goes back to the match before."],

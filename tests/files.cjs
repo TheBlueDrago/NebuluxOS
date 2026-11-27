@@ -854,6 +854,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Control"); await p.keyboard.press("v"); await p.keyboard.up("Control"); await wait(200);
   ok(await p.evaluate(() => /1,?234.5/.test(document.querySelector(".win[data-app=calculator] .c-val").textContent)), "Ctrl + V pastes a copied number into Calculator");
   await p.evaluate(() => NX.closeAll());
+  // Clock's stopwatch from the keyboard: Space starts, L takes a lap, R resets
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(400);
+  await p.evaluate(() => [...document.querySelectorAll(".win[data-app=clock] .clk-tabs button")].find((b) => b.dataset.v === "sw").click()); await wait(100);
+  await p.evaluate(() => document.activeElement && document.activeElement.blur()); await p.keyboard.press(" "); await wait(300); await p.keyboard.press("l"); await wait(100);
+  ok(await p.evaluate(() => /Pause/.test(document.querySelector(".win[data-app=clock] [data-a=sws]").textContent) && document.querySelectorAll(".win[data-app=clock] .clk-laps li").length === 1), "Space starts Clock's stopwatch and L takes a lap");
+  await p.keyboard.press(" "); await wait(50); await p.keyboard.press("r"); await wait(100);
+  ok(await p.evaluate(() => /Start/.test(document.querySelector(".win[data-app=clock] [data-a=sws]").textContent) && !document.querySelectorAll(".win[data-app=clock] .clk-laps li").length), "Space pauses it and R resets it");
+  await p.evaluate(() => NX.closeAll());
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
