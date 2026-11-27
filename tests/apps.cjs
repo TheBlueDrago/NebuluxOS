@@ -636,6 +636,13 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     NX.closeAll(); const o = NX.alarms.ring; let rang = ""; NX.alarms.ring = (x) => { rang = x.name; }; await w(3500); NX.alarms.ring = o;
     const ok = listed && rang === "Eggs: time's up" && !NX.timers.list().find((t) => t.name === "Eggs").on; NX.setData("timers", null); return ok ? true : JSON.stringify([listed, rang]);
   }).then((r) => r === true || (console.log(r), false)), "Clock's timers have names and lengths, and ring with Clock closed");
+  // Quick Search: "timer 10 min" starts a timer
+  ok(await p.evaluate(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)); NX.closeAll(); NX.setData("timers", []); NX.quickSearch(); await w(300);
+    const inp = document.querySelector("#nx-qs input"); if (!inp) return "no input"; inp.value = "timer 10 min"; inp.dispatchEvent(new Event("input", { bubbles: true })); await w(400);
+    const b = [...document.querySelectorAll("button, [role=option]")].find((x) => /Start a 10 minute timer/.test(x.textContent)); if (!b) return "no result"; b.click(); await w(200);
+    const t = NX.timers.list()[0]; const ok = !!t && t.on && t.len === 600000; NX.setData("timers", null); const q2 = document.querySelector("#nx-qs"); if (q2) q2.remove(); return ok || "timer " + JSON.stringify(t);
+  }).then((r) => r === true || (console.log(r), false)), "Quick Search starts a timer from 'timer 10 min'");
   // Color Picker
   ok(await p.evaluate(async () => { NX.setData("colors", []); NX.colorKeep("#22d3ee"); NX.colorKeep("#7c5cff"); NX.closeAll(); NX.open("colorpick"); await new Promise((r) => setTimeout(r, 400)); const b = document.querySelector(".win[data-app=colorpick]"); const t = b.textContent; const okF = t.includes("#7C5CFF") && t.includes("rgb(124, 92, 255)") && t.includes("hsl(252, 100%, 68%)") && t.includes("Violet"); b.querySelector('[data-h="#22d3ee"]').click(); const okH = b.textContent.includes("rgb(34, 211, 238)"); b.querySelector("[data-copy]").click(); const okC = ((NX.notes || [])[0] || {}).text === "Copied #22D3EE."; NX.closeAll(); return okF && okH && okC ? true : JSON.stringify([okF, okH, okC, t.slice(0, 200), ((NX.notes || [])[0] || {}).text]); }).then((r) => r === true || (console.log(r), false)), "Color Picker shows HEX, RGB and HSL, recent colors, and copies");
   // Calculator > Programmer
