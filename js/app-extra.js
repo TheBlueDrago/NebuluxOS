@@ -236,6 +236,14 @@
       const key = (e) => {
         if (!win.el.classList.contains("active") || /input|textarea/i.test((document.activeElement || {}).tagName)) return;
         if ((e.ctrlKey || e.metaKey) && /^c$/i.test(e.key)) { e.preventDefault(); navigator.clipboard && navigator.clipboard.writeText(cur).catch(() => {}); if (NX.clip) NX.clip.add(cur); NX.toast("Copied " + cur + "."); return; }
+        // Ctrl + V: a number you copied goes in (commas and spaces are ignored), like Windows' Calculator
+        if ((e.ctrlKey || e.metaKey) && /^v$/i.test(e.key)) {
+          e.preventDefault();
+          const use = (t) => { const v = String(t || "").trim().replace(/[,\s]/g, ""); if (!/^-?(\d+\.?\d*|\.\d+)$/.test(v)) { NX.toast("Copy a number first, then paste it here."); return; } press("c"); for (const ch of v.replace(/^-/, "")) press(ch); if (v.startsWith("-")) press("neg"); };
+          const last = () => { const L = NX.clip && NX.clip.list ? NX.clip.list() : []; return L.length ? L[0].t : ""; };
+          if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then((t) => use(t || last())).catch(() => use(last())); else use(last());
+          return;
+        }
         const m = { Enter: "=", "=": "=", Backspace: "bs", Escape: "c", Delete: "ce", "%": "pct" }[e.key] || (/^[0-9.+\-*/]$/.test(e.key) ? e.key : null);
         if (m) { e.preventDefault(); press(m); }
       };

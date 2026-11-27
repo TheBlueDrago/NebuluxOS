@@ -849,6 +849,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const fonts = await p.evaluate(() => { const W = NX.wins.get("notepad"), b = W.el.querySelector("[data-a=font]"), out = []; for (let i = 0; i < 3; i++) { b.click(); out.push(W.np.ta.dataset.font); } return out; });
   ok(fonts.join() === "sans,serif,mono", "Notepad's Font button goes through clean, book and typewriter fonts");
   await p.evaluate(() => NX.closeAll());
+  // Calculator: Ctrl + V pastes a number you copied
+  await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); navigator.clipboard.readText = async () => "1,234.5"; }); await wait(500);
+  await p.keyboard.down("Control"); await p.keyboard.press("v"); await p.keyboard.up("Control"); await wait(200);
+  ok(await p.evaluate(() => /1,?234.5/.test(document.querySelector(".win[data-app=calculator] .c-val").textContent)), "Ctrl + V pastes a copied number into Calculator");
+  await p.evaluate(() => NX.closeAll());
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
