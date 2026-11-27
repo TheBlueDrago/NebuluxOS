@@ -45,6 +45,7 @@
     ["Flash the screen for alerts", "Settings > Accessibility > Hearing flashes the screen when an alarm, timer or alert sound plays."],
     ["Contrast themes", "Settings > Accessibility > Contrast themes: Aquatic, Desert, Dusk and Night sky, strong solid colors that make everything easier to see, like Windows."],
     ["Color filters for color blindness", "Settings > Accessibility > Color filters can shift the screen's colors for red-green (deuteranopia or protanopia) or blue-yellow (tritanopia) color blindness."],
+    ["Easier reading", "Settings > Accessibility > Easier reading puts more space between letters, words and lines in apps, which helps with dyslexia."],
     ["Hover Text", "Turn it on in Settings > Accessibility, then hold Alt to see the words under the pointer in big letters."],
     ["Find my pointer", "Turn it on in Settings > Accessibility, then press and let go of Ctrl to see rings close in on the mouse pointer."],
     ["The next window takes over", "Close a window and the one behind it is ready for your keyboard, like Windows."],

@@ -39,7 +39,7 @@
     root.classList.toggle("noanim", !!(NX.me && (p.anim === false || sv)));
     // Settings > Accessibility > Text size: everything inside app windows grows
     root.style.setProperty("--appzoom", NX.me && +p.textSize > 100 ? String(+p.textSize / 100) : "1");
-    root.classList.toggle("bigfocus", !!(NX.me && p.bigfocus));
+    root.classList.toggle("bigfocus", !!(NX.me && p.bigfocus)); root.classList.toggle("readspace", !!(NX.me && p.readSpace));
     root.dataset.caps = NX.me && p.captionStyle ? p.captionStyle : "default";
     // Settings > Accessibility > Contrast themes
     { const ct = NX.me && ["aquatic", "desert", "dusk", "night"].includes(p.contrastTheme) ? p.contrastTheme : null; if (ct) root.dataset.ct = ct; else delete root.dataset.ct; }

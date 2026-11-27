@@ -954,3 +954,7 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 .np-task{list-style:none;padding-left:.2em!important}.np-box{display:inline-block;width:14px;height:14px;border:2px solid var(--sub);border-radius:4px;margin-right:8px;vertical-align:-2px}.np-box.on{background:var(--accent);border-color:var(--accent)}
 .np-mdnone{color:var(--sub)}
 .np-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.np-bar::-webkit-scrollbar{display:none}.np-bar .btn{white-space:nowrap;flex:none}
+
+/* Accessibility > Easier reading: more space between letters, words and lines inside apps */
+html.readspace .win-body,html.readspace .win-body input,html.readspace .win-body textarea{letter-spacing:.06em;word-spacing:.16em;line-height:1.65}
+html.readspace .win-body p,html.readspace .win-body small{line-height:1.7}
