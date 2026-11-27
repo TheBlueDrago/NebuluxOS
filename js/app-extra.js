@@ -123,7 +123,7 @@
       win.onopts = (o) => { if (o.file) openFile(o.file); };
       win.onclose = () => { flush(); };
       loadTab(ti).then(() => { if (opts && opts.file) openFile(opts.file); });
-      // Find (Ctrl + F) and Replace (Ctrl + H), not case-sensitive
+      // Find (Ctrl + F) and Replace (Ctrl + H); the Aa button turns on Match case
       const fb = body.querySelector(".np-find"), fi = fb.f, ri = fb.r, fmsg = body.querySelector(".np-fmsg");
       const findOpen = (rep) => { fb.hidden = false; ri.hidden = !rep; fb.querySelector("[data-f=rep]").hidden = !rep; fb.querySelector("[data-f=all]").hidden = !rep; const sel = ta.value.slice(ta.selectionStart, ta.selectionEnd); if (sel && !sel.includes("\n")) fi.value = sel; fi.focus(); fi.select(); };
       // Match case (the Aa button): off finds Red and red alike
