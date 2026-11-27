@@ -910,3 +910,7 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 
 /* the screen turned off after a while (in a browser tab; on the USB the screen itself goes off) */
 #nx-screenoff{position:fixed;inset:0;z-index:999999;background:#000;cursor:none}
+
+/* Settings: the setting a search pointed at glows for a moment */
+.s-found{animation:sFound 2.4s ease-out}
+@keyframes sFound{0%,30%{box-shadow:0 0 0 2px var(--accent),0 0 24px color-mix(in srgb,var(--accent) 50%,transparent);background:color-mix(in srgb,var(--accent) 16%,var(--card))}100%{box-shadow:none}}

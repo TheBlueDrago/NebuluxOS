@@ -471,7 +471,16 @@
           if (pr) pr.onclick = async () => { pr.disabled = true; try { await NX.removePin(NX.me.id, body.querySelector("#s-pinpw").value); NX.toast("Your PIN is removed."); draw(); } catch (e) { pm.textContent = e.message + " (type your password above to remove the PIN)"; pr.disabled = false; } }; }
         body.querySelectorAll("[data-rmuser]").forEach((b) => (b.onclick = () => { if (b.dataset.sure) { NX.removeUser(b.dataset.rmuser); draw(); NX.toast("Account removed."); } else { b.dataset.sure = 1; b.textContent = "Remove for good?"; b.classList.add("danger"); } }));
       }
-      win.onopts = (o) => { if (o.page) { page = o.page; draw(); } };
+      // a search from Start or Quick Search: open the page and point at the setting that matched, like Windows
+      const flashFind = (q0) => {
+        const q1 = String(q0 || "").toLowerCase().trim(); if (!q1) return;
+        const rows = [...body.querySelectorAll(".s-main .s-row, .s-main .s-card")], words = q1.split(/ +/);
+        const hit = rows.find((r) => r.textContent.toLowerCase().includes(q1)) || rows.find((r) => words.every((w) => r.textContent.toLowerCase().includes(w))) || rows.find((r) => words.some((w) => w.length > 3 && r.textContent.toLowerCase().includes(w)));
+        if (!hit) return; hit.scrollIntoView({ block: "center" }); hit.classList.remove("s-found"); void hit.offsetWidth; hit.classList.add("s-found"); setTimeout(() => hit.classList.remove("s-found"), 2600);
+        const c = hit.querySelector("input, select, button"); if (c) try { c.focus({ preventScroll: true }); } catch (e) { /* fine */ }
+      };
+      win.onopts = (o) => { if (o.page) { page = o.page; draw(); } if (o.find) setTimeout(() => flashFind(o.find), 60); };
+      if (opts.find) setTimeout(() => flashFind(opts.find), 120);
       const onDisp = () => { if (page === "system") { fillScreens(); fillAudio(); } }; document.addEventListener("nx:display", onDisp);
       const onPref = () => { if (document.activeElement && document.activeElement.type === "range" && body.contains(document.activeElement)) return; };
       document.addEventListener("nx:prefs", onPref); win.onclose = () => { document.removeEventListener("nx:prefs", onPref); document.removeEventListener("nx:display", onDisp); };

@@ -718,6 +718,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { const f = document.querySelector(".win[data-app=files] .nx-ask-card"); f.querySelector("input").value = "new.txt"; f.requestSubmit(); }); await wait(600);
   await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.down("Control"); await p.keyboard.press("z"); await p.keyboard.up("Control"); await wait(800);
   ok(await p.evaluate(async () => { const L = (await NX.fs.list("/Documents/Undo")).entries.map((e) => e.name).join(","); await NX.fs.remove(["/Documents/Undo"], true); NX.closeAll(); return L === "old.txt"; }), "Ctrl + Z undoes a rename in File Explorer");
+  // searching Start for a setting opens its page and points at it
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); }); await p.click("#tb-start"); await wait(300); await p.keyboard.type("mono audio"); await wait(400);
+  await p.evaluate(() => document.querySelector('#start [data-spage="access"]').click()); await wait(700);
+  ok(await p.evaluate(() => { const h = document.querySelector(".win[data-app=settings] .s-found"); return !!h && /Mono audio/.test(h.textContent); }), "searching Start for a setting opens its page and highlights it");
+  await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

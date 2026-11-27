@@ -433,7 +433,7 @@
     const web = box.querySelector("[data-web]");
     const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql) || (pg.keys || "").includes(ql))).slice(0, 3);
     if (pages.length) { web.insertAdjacentHTML("beforebegin", `<h4 class="sm-sub">Settings</h4>` + pages.map((pg) => `<button class="sm-res" data-spage="${pg.id}">${NX.icon(pg.icon, 28)}<span><b>${NX.esc(pg.name)}</b><small>Settings</small></span></button>`).join(""));
-      box.querySelectorAll("[data-spage]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open("settings", { page: b.dataset.spage }); })); }
+      box.querySelectorAll("[data-spage]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open("settings", { page: b.dataset.spage, find: ql }); })); }
     if (!NX.fs || ql.length < 2) return;
     let found = [];
     try { const pl = await NX.fs.places(); for (const f of pl.folders) { const r = await NX.fs.list(f.path).catch(() => null); if (r) found.push(...r.entries.filter((e) => e.name.toLowerCase().includes(ql)).map((e) => Object.assign({ where: f.name }, e))); if (found.length > 12) break; } } catch (e) { return; }
