@@ -10,6 +10,7 @@
     ["Copy text from a screenshot", "Snipping Tool and Photos have Copy text: they read the words in a picture, right on this computer, and copy them (on the USB)."],
     ["Screenshots on the clipboard", "Every screenshot is also copied, so Ctrl + V pastes it straight into an app or a chat, like Windows."],
     ["Night light everywhere", "On the USB, Night light now warms the whole display, so YouTube and every other app window gets warmer colors too. On a screen with no backlight, like a desktop monitor, the brightness slider dims every window as well."],
+    ["Rename this PC", "Settings > System > Rename this PC gives your computer its own name, shown in Settings and About."],
     ["Screen and sleep", "Settings > System > Power: turn the screen off, or put the computer to sleep, after a while with nobody using it. A video or music that is playing keeps it awake."],
     ["Volume mixer", "Settings > System > Sound has a Volume mixer: each app playing sound gets its own volume and Mute (on the USB)."],
     ["Processes in Task Manager", "Task Manager has a Processes tab: every program on the computer with its processor and memory use, and End task for your own (on the USB)."],

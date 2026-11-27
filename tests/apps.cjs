@@ -655,6 +655,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     W.el.querySelector(".win-body").dispatchEvent(new KeyboardEvent("keydown", { key: "y", ctrlKey: true, bubbles: true })); const redone = T.pixel(5, 5)[0] > 240 && T.pixel(5, 5)[1] < 20;
     NX.closeAll(); return red && undone && redone ? true : JSON.stringify([red, undone, redone]);
   }).then((r) => r === true || (console.log(r), false)), "Paint undoes and redoes with Ctrl + Z and Ctrl + Y");
+  // Rename this PC
+  ok(await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); NX.closeAll(); NX.set("pc-name", ""); NX.open("settings", { page: "system" }); await w(400);
+    document.querySelector(".win[data-app=settings] [data-pcren]").click(); await w(200); const f = document.querySelector(".win[data-app=settings] .nx-ask-card"); f.querySelector("input").value = "Ada's Laptop!"; f.requestSubmit(); await w(300);
+    const shown = document.querySelector(".win[data-app=settings] .s-hero b").textContent; NX.set("pc-name", ""); NX.closeAll(); return shown === "Adas Laptop" && NX.pcName() === "Nebulux PC"; }), "Rename this PC gives the PC a name (letters, numbers and dashes)");
   // Color Picker
   ok(await p.evaluate(async () => { NX.setData("colors", []); NX.colorKeep("#22d3ee"); NX.colorKeep("#7c5cff"); NX.closeAll(); NX.open("colorpick"); await new Promise((r) => setTimeout(r, 400)); const b = document.querySelector(".win[data-app=colorpick]"); const t = b.textContent; const okF = t.includes("#7C5CFF") && t.includes("rgb(124, 92, 255)") && t.includes("hsl(252, 100%, 68%)") && t.includes("Violet"); b.querySelector('[data-h="#22d3ee"]').click(); const okH = b.textContent.includes("rgb(34, 211, 238)"); b.querySelector("[data-copy]").click(); const okC = ((NX.notes || [])[0] || {}).text === "Copied #22D3EE."; NX.closeAll(); return okF && okH && okC ? true : JSON.stringify([okF, okH, okC, t.slice(0, 200), ((NX.notes || [])[0] || {}).text]); }).then((r) => r === true || (console.log(r), false)), "Color Picker shows HEX, RGB and HSL, recent colors, and copies");
   // Calculator > Programmer
