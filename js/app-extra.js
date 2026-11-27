@@ -418,6 +418,13 @@
       { const pc = body.querySelector(".p-cols"); pc.insertAdjacentHTML("beforeend", `<label class="p-any" title="Any color"><input type="color" value="#7c5cff" aria-label="Pick any color"></label>`);
         const ci = pc.querySelector(".p-any input"); ci.oninput = () => { col = ci.value; pc.querySelectorAll("button").forEach((x) => x.classList.remove("on")); ci.parentElement.classList.add("on"); ci.parentElement.style.background = ci.value; if (tool === "eraser") { tool = "brush"; body.querySelectorAll("[data-t]").forEach((x) => x.classList.toggle("on", x.dataset.t === "brush")); } }; }
       // Ctrl + Z and Ctrl + Y (or Ctrl + Shift + Z)
+      // tool keys: B brush, L line, R rectangle, O oval, F fill, T text, E eraser; [ and ] change the size
+      body.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey || /input|textarea|select/i.test(e.target.tagName) || e.target.isContentEditable) return;
+        const T = { b: "brush", l: "line", r: "rect", o: "ellipse", f: "fill", t: "text", e: "eraser" }[e.key.toLowerCase()];
+        if (T) { const b = body.querySelector(`[data-t=${T}]`); if (b) { e.preventDefault(); b.click(); } return; }
+        if (e.key === "[" || e.key === "]") { const r = body.querySelector('.p-bar input[type=range]'); if (!r) return; e.preventDefault(); r.value = Math.max(+r.min || 1, Math.min(+r.max || 60, +r.value + (e.key === "]" ? 2 : -2))); r.dispatchEvent(new Event("input", { bubbles: true })); }
+      });
       body.tabIndex = -1; body.addEventListener("keydown", (e) => { if (!(e.ctrlKey || e.metaKey) || /input|textarea/i.test(e.target.tagName)) return; const k = e.key.toLowerCase(); const t = k === "z" && !e.shiftKey ? "undo" : k === "y" || (k === "z" && e.shiftKey) ? "redo" : null; if (!t) return; e.preventDefault(); body.querySelector(`[data-t=${t}]`).click(); });
       cv.addEventListener("pointerdown", () => { try { body.focus({ preventScroll: true }); } catch (e) { /* fine */ } });
       body.querySelector(".p-bar").addEventListener("click", (e) => {

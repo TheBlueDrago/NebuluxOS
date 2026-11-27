@@ -862,6 +862,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.press(" "); await wait(50); await p.keyboard.press("r"); await wait(100);
   ok(await p.evaluate(() => /Start/.test(document.querySelector(".win[data-app=clock] [data-a=sws]").textContent) && !document.querySelectorAll(".win[data-app=clock] .clk-laps li").length), "Space pauses it and R resets it");
   await p.evaluate(() => NX.closeAll());
+  // Paint's tool keys: R for rectangle, E for eraser, ] makes it bigger
+  await p.evaluate(() => { NX.closeAll(); NX.open("paint"); }); await wait(500);
+  await p.evaluate(() => document.querySelector(".win[data-app=paint] .content, .win[data-app=paint] [data-t=brush]").closest(".win").querySelector("[data-t=brush]").parentElement.closest("[tabindex]").focus());
+  const s0 = await p.evaluate(() => +document.querySelector(".win[data-app=paint] .p-bar input[type=range]").value);
+  await p.keyboard.press("r"); await wait(50); const onR = await p.evaluate(() => document.querySelector(".win[data-app=paint] [data-t=rect]").classList.contains("on"));
+  await p.keyboard.press("e"); await p.keyboard.press("]"); await wait(50);
+  ok(onR && await p.evaluate((s0) => document.querySelector(".win[data-app=paint] [data-t=eraser]").classList.contains("on") && +document.querySelector(".win[data-app=paint] .p-bar input[type=range]").value > s0, s0), "Paint: R picks the rectangle, E the eraser, and ] makes it bigger");
+  await p.evaluate(() => NX.closeAll());
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
