@@ -613,7 +613,7 @@
       if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets(); if (key === "clip" && NX.clip) NX.clip.toggle();
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
       // like Windows: Nebulux + A Quick Settings, + I Settings, + N the calendar and notifications, + U Accessibility, + X the quick link menu, + Pause About
-      if (key === "qs") $("#tb-qs").click(); if (key === "notif") $("#tb-clock").click(); if (key === "run" && NX.runBox) NX.runBox();
+      if (key === "qs") $("#tb-qs").click(); if (key === "notif") $("#tb-clock").click(); if (key === "run" && NX.runBox) NX.runBox(); if (key === "project" && NX.project) NX.project();
       if (key === "settings") NX.open("settings"); if (key === "access") NX.open("settings", { page: "access" }); if (key === "about") NX.open("settings", { page: "about" });
       if (key === "xmenu") { const r = $("#tb-start").getBoundingClientRect(); quickLinks(r.left, r.top - 8); }
     };
@@ -634,7 +634,7 @@
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
       if (e.key === "PrintScreen") { e.preventDefault(); winKeys("shot"); }
       else if (e.metaKey && e.shiftKey && /^s$/i.test(e.key)) { e.preventDefault(); winKeys(NX.snipArea ? "snip" : "shot"); }
-      else if (e.metaKey && !e.ctrlKey && !e.shiftKey && /^[edlwvainuxr]$/i.test(e.key)) { e.preventDefault(); const k = { e: "files", d: "desk", l: "lock", w: "widgets", v: "clip", a: "qs", i: "settings", n: "notif", u: "access", x: "xmenu", r: "run" }[e.key.toLowerCase()]; if (k !== "xmenu" && k !== "qs" && k !== "notif") closeFlyouts(); winKeys(k); }
+      else if (e.metaKey && !e.ctrlKey && !e.shiftKey && /^[edlwvainuxrp]$/i.test(e.key)) { e.preventDefault(); const k = { e: "files", d: "desk", l: "lock", w: "widgets", v: "clip", a: "qs", i: "settings", n: "notif", u: "access", x: "xmenu", r: "run", p: "project" }[e.key.toLowerCase()]; if (k !== "xmenu" && k !== "qs" && k !== "notif") closeFlyouts(); winKeys(k); }
       else if (e.metaKey && e.key === "Pause") { e.preventDefault(); winKeys("about"); }
       else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
       else if (e.metaKey && !e.ctrlKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }

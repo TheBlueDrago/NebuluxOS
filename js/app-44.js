@@ -249,3 +249,33 @@
     };
   };
 })();
+
+// ---------- Project (Nebulux + P): pick how a plugged-in TV or monitor is used, like Windows ----------
+(function () {
+  const MODES = [["internal", "This screen only", "display"], ["mirror", "Duplicate", "cast"], ["external", "Second screen only", "tv"]];
+  NX.project = async () => {
+    if (!NX.me) return; let o = document.getElementById("nx-proj"); if (o) { o.remove(); return; }
+    o = document.createElement("div"); o.id = "nx-proj";
+    o.innerHTML = `<div class="nx-proj-card" role="dialog" aria-label="Project"><b>Project</b><div class="nx-proj-list"><p class="nx-proj-note">Looking for screens...</p></div><button class="nx-proj-set" type="button">Display settings</button></div>`;
+    document.body.appendChild(o);
+    const close = () => o.remove(), list = o.querySelector(".nx-proj-list");
+    o.addEventListener("pointerdown", (e) => { if (e.target === o) close(); });
+    o.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } if (e.key === "ArrowDown" || e.key === "ArrowUp") { const L = [...o.querySelectorAll("button:not([disabled])")], i = L.indexOf(document.activeElement); e.preventDefault(); const n = L[(i + (e.key === "ArrowDown" ? 1 : -1) + L.length) % L.length]; if (n) n.focus(); } });
+    o.querySelector(".nx-proj-set").onclick = () => { close(); NX.open("settings", { page: "system" }); };
+    if (!NX.native) { list.innerHTML = `<p class="nx-proj-note">TVs and monitors work when Nebulux OS runs from the USB.</p>`; o.querySelector(".nx-proj-set").focus(); return; }
+    const draw = (d) => {
+      if (!document.body.contains(o)) return;
+      if (!d.ext) { list.innerHTML = `<p class="nx-proj-note">No TV or monitor is plugged in. Plug one into the HDMI port, then press Detect.</p><button class="nx-proj-m" data-detect type="button">${NX.icon("reload", 20)}<span>Detect</span></button>`;
+        list.querySelector("[data-detect]").onclick = () => { list.innerHTML = `<p class="nx-proj-note">Looking for screens...</p>`; NX.api("POST", "/display/get", { probe: true }).then(draw).catch((e) => { list.innerHTML = `<p class="nx-proj-note">${NX.esc(e.message)}</p>`; }); };
+        list.querySelector("button").focus(); return; }
+      list.innerHTML = MODES.map(([k, l, ic]) => `<button class="nx-proj-m ${d.mode === k ? "on" : ""}" data-m="${k}" type="button" aria-pressed="${d.mode === k}">${NX.icon(ic, 22)}<span>${l}</span></button>`).join("");
+      list.querySelectorAll("[data-m]").forEach((b) => (b.onclick = async () => {
+        list.querySelectorAll("button").forEach((x) => (x.disabled = true));
+        try { const r = await NX.api("POST", "/display/set", { mode: b.dataset.m }); NX.setData("tv-mode", b.dataset.m); close(); NX.toast(b.dataset.m === "mirror" ? "The TV shows the same picture." : b.dataset.m === "external" ? "Nebulux OS shows on the TV only." : "Nebulux OS shows on this screen only."); return r; }
+        catch (e) { NX.toast(e.message); list.querySelectorAll("button").forEach((x) => (x.disabled = false)); }
+      }));
+      (list.querySelector(".on") || list.querySelector("button")).focus();
+    };
+    try { draw(await NX.api("POST", "/display/get", { probe: true })); } catch (e) { list.innerHTML = `<p class="nx-proj-note">${NX.esc(e.message)}</p>`; }
+  };
+})();

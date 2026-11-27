@@ -136,6 +136,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await api("POST", "/display/get", {})).mode === "external"), "Second screen only shows Nebulux OS on the TV only");
   ok(await until(() => p.evaluate(() => document.querySelector("[data-dm=external]") && document.querySelector("[data-dm=external]").classList.contains("on"))), "and Settings shows it");
   await p.evaluate(() => document.querySelector("[data-dm=mirror]").click()); await until(async () => (await api("POST", "/display/get", {})).mode === "mirror");
+  // Nebulux + P: the Project panel does the same
+  await p.evaluate(() => NX.project()); await until(() => p.evaluate(() => !!document.querySelector("#nx-proj [data-m=internal]")));
+  ok(await p.evaluate(() => document.querySelector("#nx-proj [data-m=mirror]").classList.contains("on")), "Nebulux + P shows the screens, set to Duplicate");
+  await p.evaluate(() => document.querySelector("#nx-proj [data-m=external]").click());
+  ok(await until(async () => (await api("POST", "/display/get", {})).mode === "external") && !(await p.evaluate(() => !!document.querySelector("#nx-proj"))), "and Second screen only in it switches the screens");
+  await api("POST", "/display/set", { mode: "mirror" }); await wait(300);
   ok(await until(() => p.evaluate(() => /TV \(HDMI\)/.test(document.querySelector("#s-alist").innerText))), "the TV's speakers are offered for sound");
   await p.evaluate(() => [...document.querySelectorAll("#s-alist .s-net")].find((r) => /TV/.test(r.innerText)).querySelector("[data-ao]").click());
   ok(await until(async () => (await api("GET", "/audio")).outputs.find((o) => /TV/.test(o.label)).active), "Use this plays the sound on the TV");
