@@ -754,6 +754,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const s = [...document.querySelectorAll(".win[data-app=files] .fx-item.sel")]; return s.length === 1 && /b.txt/.test(s[0].textContent) && document.activeElement === s[0]; }), "the arrow keys move between files in File Explorer");
   await p.keyboard.down("Shift"); await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowDown"); await p.keyboard.up("Shift"); await wait(100);
   ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=files] .fx-item.sel").length === 3), "and Shift + arrows pick a range");
+  await p.keyboard.press("Home"); await p.keyboard.type("c"); await wait(100);
+  ok(await p.evaluate(() => { const s = [...document.querySelectorAll(".win[data-app=files] .fx-item.sel")]; return s.length === 1 && /c.txt/.test(s[0].textContent); }), "typing a letter jumps to the file that starts with it");
   await p.evaluate(async () => { NX.setData("fx-view", "grid"); NX.closeAll(); await NX.fs.remove(["/Documents/Arrows"], true); });
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);

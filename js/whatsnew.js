@@ -19,7 +19,7 @@
     ["Timers that keep going", "Clock can run several timers at once, each with a name and any length, and they ring even with Clock closed. Type timer 10 min in Start or Quick Search to start one; running timers count down in Widgets."],
     ["Week view in Calendar", "Calendar has a Week view: your events hour by hour, a line for right now, and click an hour to add an event then."],
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],
-    ["File Explorer with the keyboard", "The arrow keys move between files, Shift + arrows select a range, and Home and End jump to the first and last."],
+    ["File Explorer with the keyboard", "The arrow keys move between files, Shift + arrows select a range, Home and End jump to the first and last, and typing a name jumps to it."],
     ["Rename many files at once", "Select several files in File Explorer and press F2 or Rename: they get one name, numbered (1), (2), (3), each keeping its file type."],
     ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app: edit a picture in Paint, or read any file in Notepad."],
     ["Color Picker", "A new app: pick any color on the screen with Nebulux + Shift + C and copy it as HEX, RGB or HSL. Your recent colors stay in the app."],

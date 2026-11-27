@@ -376,7 +376,7 @@
       }
       win.fxPin = pinFolder;
       function openItem(e) { if (isTrash()) { NX.toast("Restore it first to open it."); return; } if (e.dir) go(e.path); else if (/\.zip$/i.test(e.name) && NX.fs.unzip && !isHome()) { NX.ask(body, { title: "Extract all?", text: `The files in "${e.name}" go into a new folder next to it.`, ok: "Extract" }).then((y) => { if (y) { sel = new Set([e.path]); act("unzip"); } }); } else NX.openFile(e, items); }
-      let lastClick = null;
+      let lastClick = null, typed = "", typedAt = 0;
       listEl.addEventListener("click", (ev) => {
         const sb = ev.target.closest("[data-sort]"); if (sb) { setSort(sb.dataset.sort); return; }
         const b = ev.target.closest(".fx-item"); if (!b) { if (ev.target === listEl || ev.target.closest(".fx-empty")) { sel.clear(); marks(); } return; }
@@ -399,6 +399,13 @@
       });
       listEl.addEventListener("keydown", (ev) => {
         if (body.querySelector(".nx-ask")) return; const k = ev.key, c = ev.ctrlKey || ev.metaKey;
+        // typing a name jumps to the first file that starts with it (letters typed close together build the name)
+        if (k.length === 1 && k.trim() && !c && !ev.altKey && k !== " ") {
+          const now = Date.now(); typed = now - typedAt < 700 ? typed + k.toLowerCase() : k.toLowerCase(); typedAt = now;
+          const L = [...listEl.querySelectorAll(".fx-item")], hit = L.find((b) => (b.title || b.textContent).trim().toLowerCase().startsWith(typed));
+          if (hit) { ev.preventDefault(); sel = new Set([hit.dataset.k]); lastClick = hit.dataset.k; marks(); hit.focus({ preventScroll: true }); hit.scrollIntoView({ block: "nearest" }); }
+          return;
+        }
         // the arrow keys move between files (Shift picks a range), Home and End go to the first and last, like Windows
         if (/^Arrow|^Home$|^End$/.test(k) && !c && !ev.altKey) {
           const L = [...listEl.querySelectorAll(".fx-item")]; if (!L.length) return; ev.preventDefault();
