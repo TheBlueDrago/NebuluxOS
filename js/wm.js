@@ -63,6 +63,8 @@
     w.snap = where; w.x = where === "left" ? 0 : Math.round(A.w / 2); w.y = 0; w.w = Math.round(A.w / 2); w.h = A.h; place(w); w.onresize && w.onresize();
     document.dispatchEvent(new CustomEvent("nx:snapped", { detail: { id, side: where } }));
   };
+  // Nebulux + Shift + Up: the window goes from the top to the bottom of the screen, keeping its width (like Windows)
+  NX.stretchTall = (id) => { const w = wins.get(id); if (!w || w.max) return; const A = area(); if (!w.snap) { w.rw = w.w; w.rh = w.h; } w.snap = "zone"; w.y = 0; w.h = A.h; place(w); w.onresize && w.onresize(); };
   // snap layouts: a window takes a part of the screen, given as fractions (x, y, width, height)
   NX.snapRect = (id, fx, fy, fw, fh) => {
     const w = wins.get(id); if (!w) return; const A = area();

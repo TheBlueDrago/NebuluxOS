@@ -2,6 +2,6 @@
 # Passes a Windows-key shortcut to Nebulux OS (the window manager catches the keys, so they work over every window).
 #   nebulux-key minall | restoreall | home | osk | color | symbols | narrator | tbar | tray | start | desk | files | lock | tview | widgets | keys | snap-left | snap-right | snap-max | snap-down | shot | tm | clip | desk-prev | desk-next | desk-new | desk-close | vol-up | vol-down | mute | bright-up | bright-down | app-1 .. app-9
 K=$(cat "$HOME/.nebulux-key" 2>/dev/null) || exit 0
-case "$1" in contrast|cfilter|cast|project|run|qs|settings|notif|access|xmenu|about|minall|restoreall|home|osk|color|symbols|narrator|tbar|tray|start|desk|files|lock|sec|snapz|tview|widgets|keys|search|grid|snip|close|zoom-in|zoom-out|zoom-off|snap-left|snap-right|snap-max|snap-down|shot|tm|clip|desk-prev|desk-next|desk-new|desk-close|vol-up|vol-down|mute|mic-mute|bright-up|bright-down|app-[1-9]) ;; *) exit 0;; esac
+case "$1" in tall|contrast|cfilter|cast|project|run|qs|settings|notif|access|xmenu|about|minall|restoreall|home|osk|color|symbols|narrator|tbar|tray|start|desk|files|lock|sec|snapz|tview|widgets|keys|search|grid|snip|close|zoom-in|zoom-out|zoom-off|snap-left|snap-right|snap-max|snap-down|shot|tm|clip|desk-prev|desk-next|desk-new|desk-close|vol-up|vol-down|mute|mic-mute|bright-up|bright-down|app-[1-9]) ;; *) exit 0;; esac
 curl -s -m 2 -X POST -H "x-nx-local: $K" "http://127.0.0.1:7777/local/key?k=$1" >/dev/null 2>&1
 exit 0

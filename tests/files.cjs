@@ -830,6 +830,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(q.out[1][0] === "left" && q.out[1][1] > q.H * 0.8, "Down goes back to the left half");
   ok(q.out[2][0] === "q-br" && q.out[2][1] && q.out[2][2], "Nebulux + Right then Down snaps to the bottom-right quarter");
   ok(q.out[3] === true, "and Down once more minimizes it");
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(400); await p.keyboard.down("Meta"); await p.keyboard.down("Shift"); await p.keyboard.press("ArrowUp"); await p.keyboard.up("Shift"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => { const w = NX.wins.get("clock"); return w.y === 0 && w.h === document.getElementById("windows").clientHeight && !w.max; }), "Nebulux + Shift + Up stretches the window from top to bottom");
   await p.evaluate(() => NX.closeAll());
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);

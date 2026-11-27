@@ -620,6 +620,7 @@
       if (key === "snip" && NX.snipArea) NX.snipArea();
       if (key === "tm") NX.open("taskmgr");
       if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets(); if (key === "clip" && NX.clip) NX.clip.toggle();
+      if (key === "tall") { const w = NX.topWin(); if (w && NX.stretchTall) NX.stretchTall(w.id); }
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
       // like Windows: Nebulux + A Quick Settings, + I Settings, + N the calendar and notifications, + U Accessibility, + X the quick link menu, + Pause About
       if (key === "qs") $("#tb-qs").click(); if (key === "notif") $("#tb-clock").click(); if (key === "run" && NX.runBox) NX.runBox(); if (key === "project" && NX.project) NX.project(); if (key === "cfilter") { const p = NX.prefs(), on = p.colorFilter && p.colorFilter !== "none", next = on ? "none" : p.lastColorFilter || "gray"; NX.setPref("colorFilter", next); NX.toast(on ? "Color filters are off." : "Color filters are on. Ctrl + Nebulux + C turns them off."); }
@@ -650,6 +651,7 @@
       else if (e.metaKey && e.key === "Pause") { e.preventDefault(); winKeys("about"); }
       else if (e.metaKey && e.ctrlKey && !e.shiftKey && /^c$/i.test(e.key)) { e.preventDefault(); winKeys("cfilter"); }
       else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
+      else if (e.metaKey && e.shiftKey && !e.ctrlKey && e.key === "ArrowUp") { e.preventDefault(); winKeys("tall"); }
       else if (e.metaKey && !e.ctrlKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") { e.preventDefault(); winKeys("tm"); }
       if (e.altKey && e.key === "Tab") {
