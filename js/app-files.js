@@ -399,6 +399,20 @@
       });
       listEl.addEventListener("keydown", (ev) => {
         if (body.querySelector(".nx-ask")) return; const k = ev.key, c = ev.ctrlKey || ev.metaKey;
+        // the arrow keys move between files (Shift picks a range), Home and End go to the first and last, like Windows
+        if (/^Arrow|^Home$|^End$/.test(k) && !c && !ev.altKey) {
+          const L = [...listEl.querySelectorAll(".fx-item")]; if (!L.length) return; ev.preventDefault();
+          const cur = L.find((b) => b === document.activeElement) || L.find((b) => sel.has(b.dataset.k)), i0 = cur ? L.indexOf(cur) : -1; let next = null;
+          if (i0 < 0 || k === "Home") next = L[0]; else if (k === "End") next = L[L.length - 1];
+          else if (view === "list" && (k === "ArrowUp" || k === "ArrowDown")) next = L[Math.max(0, Math.min(L.length - 1, i0 + (k === "ArrowDown" ? 1 : -1)))];
+          else if (view === "list") next = cur;
+          else { const r0 = cur.getBoundingClientRect(), dx0 = k === "ArrowRight" ? 1 : k === "ArrowLeft" ? -1 : 0, dy0 = k === "ArrowDown" ? 1 : k === "ArrowUp" ? -1 : 0; let best = 1e9;
+            for (const b of L) { if (b === cur) continue; const r = b.getBoundingClientRect(), dx = r.left + r.width / 2 - (r0.left + r0.width / 2), dy = r.top + r.height / 2 - (r0.top + r0.height / 2), along = dx * dx0 + dy * dy0, across = Math.abs(dx * dy0 + dy * dx0); if (along <= 4) continue; const d = along + across * 3; if (d < best) { best = d; next = b; } }
+            if (!next) next = cur; }
+          if (ev.shiftKey && cur) { const a = L.indexOf(L.find((b) => b.dataset.k === (lastClick || cur.dataset.k)) || cur), z = L.indexOf(next); sel = new Set(L.slice(Math.min(a, z), Math.max(a, z) + 1).map((b) => b.dataset.k)); }
+          else { sel = new Set([next.dataset.k]); lastClick = next.dataset.k; }
+          marks(); next.focus({ preventScroll: true }); next.scrollIntoView({ block: "nearest" }); return;
+        }
         if (k === "Delete") { ev.preventDefault(); act(isTrash() ? "purge" : "delete"); }
         else if (c && (k === "z" || k === "Z") && NX.fxUndo && NX.fxUndo.renames) { ev.preventDefault(); const L = NX.fxUndo.renames; NX.fxUndo = null; (async () => { for (const [p2, old] of L) { try { await NX.fs.rename(p2, old); } catch (er) { NX.toast(er.message); } } NX.toast("Renamed back."); load(); })(); }
         else if (c && (k === "z" || k === "Z") && NX.fxUndo) { ev.preventDefault(); const ids = NX.fxUndo; NX.fxUndo = null; NX.fs.restore(ids).then(() => { NX.toast("Put back."); NX.filesChanged && NX.filesChanged(); load(); }).catch((er) => NX.toast(er.message)); }

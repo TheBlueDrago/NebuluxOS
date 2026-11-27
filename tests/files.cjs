@@ -748,6 +748,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); NX.setData("timers", []); }); await p.click("#tb-start"); await wait(300); await p.keyboard.type("timer 5 min"); await wait(500); await p.keyboard.press("Enter"); await wait(300);
   ok(await p.evaluate(() => { const t = NX.timers.list()[0]; const ok = !!t && t.on && t.len === 300000; NX.setData("timers", null); return ok; }), "Start's search starts a timer from timer 5 min");
   await p.evaluate(() => NX.shell.closeFlyouts());
+  // File Explorer: the arrow keys move between files, Shift picks a range
+  await p.evaluate(async () => { NX.closeAll(); const f = await NX.fs.create("/Documents", "Arrows", true); for (const n of ["a.txt", "b.txt", "c.txt", "d.txt"]) await NX.fs.write(f.path + "/" + n, n); NX.setData("fx-view", "list"); NX.open("files", { path: f.path }); }); await wait(700);
+  await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.press("Home"); await p.keyboard.press("ArrowDown"); await wait(100);
+  ok(await p.evaluate(() => { const s = [...document.querySelectorAll(".win[data-app=files] .fx-item.sel")]; return s.length === 1 && /b.txt/.test(s[0].textContent) && document.activeElement === s[0]; }), "the arrow keys move between files in File Explorer");
+  await p.keyboard.down("Shift"); await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowDown"); await p.keyboard.up("Shift"); await wait(100);
+  ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=files] .fx-item.sel").length === 3), "and Shift + arrows pick a range");
+  await p.evaluate(async () => { NX.setData("fx-view", "grid"); NX.closeAll(); await NX.fs.remove(["/Documents/Arrows"], true); });
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
