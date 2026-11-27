@@ -949,7 +949,7 @@ NX.noteIcon = (text) => {
     const lw = NX.get("lock-wall", NX.defaultWall), w = typeof lw === "number" && NX.wallpapers && NX.wallpapers[lw];
     if (L.hidden || NX.me || !w) { if (el) el.remove(); return; }
     if (!el) { el = document.createElement("div"); el.id = "lk-pic"; L.appendChild(el); }
-    const html = `<b>${NX.esc(w.name)}</b><small>A Nebulux OS background</small>`; if (el.innerHTML !== html) el.innerHTML = html;
+    const shown = w.dynamic && NX.wallNow ? NX.wallpapers[NX.wallNow()] || w : w, html = `<b>${NX.esc(shown.name === "Nebulux Horizon" ? "Horizon Sunrise" : shown.name)}</b><small>${w.dynamic ? "Changes with the time of day" : "A Nebulux OS background"}</small>`; if (el.innerHTML !== html) el.innerHTML = html;
   }, 1000);
 })();
 
