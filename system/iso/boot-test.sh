@@ -94,6 +94,10 @@ boot() { # BIOS or UEFI
   sleep 12; click 52 145; sleep 6; shot 8b-after-ctrlw
   E1=$(grep -ac "NEBULUX-DIAG ext=" "$SHOTS/$MODE-serial.log"); O1=$(grep -ac "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log")
   if [ "$E1" = "$E0" ] && [ "$O1" -gt "$O0" ]; then echo "ok   ($MODE): Ctrl + W closes windows, not Nebulux OS"; else echo "FAIL ($MODE): Ctrl + W closed the Nebulux OS screen (page reports $E0 then $E1, Settings opened $O0 then $O1)"; FAILS=$((FAILS + 1)); fi
+  # Nebulux + I (through the window manager, like the other Nebulux keys) opens Settings again after it was closed
+  keys ctrl-w; sleep 2; O2=$(grep -ac "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log"); keys meta_l-i; sleep 5; shot 8c-nebulux-i
+  O3=$(grep -ac "NEBULUX-DIAG open=settings" "$SHOTS/$MODE-serial.log")
+  if [ "$O3" -gt "$O2" ]; then echo "ok   ($MODE): Nebulux + I opens Settings"; else echo "FAIL ($MODE): Nebulux + I didn't open Settings"; FAILS=$((FAILS + 1)); fi
   echo "system_powerdown" | socat - UNIX-CONNECT:/tmp/qmon >/dev/null 2>&1
   for _ in $(seq 1 30); do kill -0 $QPID 2>/dev/null || break; sleep 2; done
   kill $QPID 2>/dev/null; wait $QPID 2>/dev/null
