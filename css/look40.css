@@ -999,3 +999,4 @@ html.dim-hw #dim{display:none!important}
 .nx-proj-m{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:14px;text-align:left;cursor:pointer}.nx-proj-m:hover{background:var(--hover)}
 .nx-proj-m.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.nx-proj-m[disabled]{opacity:.55}
 .nx-proj-set{align-self:flex-start;background:none;border:0;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;padding:2px 0}
+@media (max-height:820px){#cal .cal-g button{height:29px;width:29px}#cal .cal-g i{padding:3px 0}#cal .cal-top{padding:9px 18px}#cal .cal-h{padding-top:4px}#cal .cal-g{padding:2px 14px 6px}}
