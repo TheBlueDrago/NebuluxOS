@@ -195,3 +195,17 @@
   };
   setInterval(() => NX.idleTick(), 30000);
 })();
+
+// ---------- Night light on the USB: the whole display gets warmer (every app window too), not only Nebulux OS ----------
+(function () {
+  let sent = null, ok = true;
+  const apply = () => {
+    if (!NX.native) return; const p = NX.me ? NX.prefs() : {}, on = !!(NX.me && p.night), want = on ? "on:" + ((p.nightStr) || 50) : "off";
+    if (want === sent) return; sent = want;
+    NX.api("POST", "/night", { on, strength: p.nightStr || 50 }).then(() => { ok = true; document.documentElement.classList.toggle("night-hw", on); }).catch(() => { ok = false; document.documentElement.classList.remove("night-hw"); });
+  };
+  NX.nightApply = apply;
+  document.addEventListener("nx:prefs", (e) => { if (!e.detail || /^night/.test(e.detail)) apply(); });
+  document.addEventListener("nx:signin", apply);
+  setInterval(apply, 60000); // after the screen changes (a TV plugged in), or a schedule turned it on
+})();

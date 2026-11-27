@@ -305,6 +305,8 @@ const api = {
       api["GET /processes"]().then((r) => { const L = r.processes || []; fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG procs=" + (r.total || L.length) + " core=" + L.filter((x) => x.core).length + " shell=" + (r.shell ? 1 : 0) + "\n", () => {}); }).catch(() => fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG procs=0\n", () => {}));
       // and Screen and sleep's idle reading (xprintidle)
       api["GET /idle"]().then((r) => fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG idle=" + (r.known ? "ok" : "none") + "\n", () => {})).catch(() => fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG idle=none\n", () => {}));
+      // and Night light on the whole display (on, then back off)
+      (async () => { let r = "fail"; try { const a = await api["POST /night"]({ on: true, strength: 50 }); await api["POST /night"]({ on: false }); r = a.screens > 0 ? "ok" : "noscreen"; } catch (e) { r = "fail"; } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG night=" + r + "\n", () => {}); })();
     }
     if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);

@@ -450,6 +450,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   // a screenshot also goes on the clipboard (Ctrl + V pastes it anywhere)
   ok(await p.evaluate(async () => { const r = await NX.screenshot(true); const c = await NX.api("GET", "/fake/clip-image"); return !!r && c.path === r.path; }), "a screenshot is copied to the clipboard too");
 
+  // Night light warms the whole display (every window), and the OS screen's own tint steps aside
+  await p.evaluate(() => { NX.setPref("nightStr", 100); NX.setPref("night", true); }); await wait(500);
+  ok(await p.evaluate(async () => (await NX.api("GET", "/fake/night")).gamma === "1:0.780:0.450" && document.documentElement.classList.contains("night-hw")), "Night light warms the whole display on the USB");
+  await p.evaluate(() => NX.setPref("night", false)); await wait(500);
+  ok(await p.evaluate(async () => (await NX.api("GET", "/fake/night")).gamma === "1:1:1"), "and turning it off puts the colors back");
+
   // Mono audio reaches the sound system
   await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");
