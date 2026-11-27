@@ -273,7 +273,7 @@ body:has(#lock:not([hidden]):not(.out)) #toasts{display:none}
 .ph-empty .ph-msg{position:static;height:auto;flex:none;padding:0;display:block}
 
 /* ---------- Paint 4.0: icon tools in groups ---------- */
-.p-bar{gap:10px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+.p-bar{gap:8px 10px;flex-wrap:wrap;overflow:visible}
 .p-cols{flex-wrap:nowrap}
 .p-tools{display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--card);border:1px solid var(--line);flex:none}
 .p-tb{width:34px;height:30px;border-radius:7px;display:grid;place-items:center;color:var(--txt);transition:background .12s,color .12s}

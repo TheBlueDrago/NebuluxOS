@@ -25,7 +25,7 @@
     }
     if (code !== null) out.push(`<pre>${NX.esc(code)}</pre>`); close(); return out.join("");
   };
-  A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
+  A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 840, h: 540, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
     open(body, win, opts) {
       body.classList.add("np");
       body.innerHTML = `<div class="np-tabs" role="tablist" aria-label="Notes"></div><div class="np-bar"><button class="btn sm" data-a="new">New tab</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><button class="btn sm" data-a="ver" title="Go back to an earlier version">Versions</button><button class="btn sm" data-a="speak" title="Read the selected words, or the whole note, out loud">Read aloud</button><button class="btn sm" data-a="md" aria-pressed="false" title="See the note formatted: # headings, **bold**, *italic*, lists and links (Markdown)">Preview</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm np-mc" type="button" data-f="case" aria-pressed="false" title="Match case" aria-label="Match case">Aa</button><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><article class="np-md" hidden aria-label="Formatted note"></article><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
@@ -191,7 +191,7 @@
     setInterval(() => { if (!NX.me) return; const T = L(); let ch = false; for (const t of T) if (t.on && left(t) <= 0) { t.on = false; t.rest = t.len; ch = true; if (NX.alarms && NX.alarms.ring) NX.alarms.ring({ name: (t.name === "Timer" ? "Timer" : t.name) + ": time's up", snooze: false }); } if (ch) save(T); }, 1000);
     return api;
   })();
-  A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 390, h: 640, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
+  A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 450, h: 660, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
@@ -345,7 +345,7 @@
     } };
 
   // ---------- Paint: brush, colors, sizes, eraser, save as a picture ----------
-  A.paint = { name: "Paint", icon: "paint", category: "Creativity", rating: "4.6", size: "2 MB", w: 900, h: 620, minW: 420, minH: 360, desc: "Draw and paint with brushes and colors, then save your picture.",
+  A.paint = { name: "Paint", icon: "paint", category: "Creativity", rating: "4.6", size: "2 MB", w: 1000, h: 640, minW: 420, minH: 360, desc: "Draw and paint with brushes and colors, then save your picture.",
     open(body, win, opts) {
       body.classList.add("paint");
       const COLS = ["#111827", "#ffffff", "#ef4444", "#f97316", "#facc15", "#22c55e", "#22d3ee", "#3b82f6", "#7c5cff", "#ec4899", "#8b5a2b", "#94a3b8"];
