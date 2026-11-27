@@ -73,6 +73,9 @@ boot() { # BIOS or UEFI
   # Night light warms the whole display (a note: some virtual screens have no gamma)
   NL=$(grep -ao "NEBULUX-DIAG night=[a-z]*" "$SHOTS/$MODE-serial.log" | tail -1 | cut -d= -f2)
   if [ "$NL" = ok ]; then echo "ok   ($MODE): Night light changes the whole display"; else echo "note ($MODE): Night light didn't reach the display (${NL:-no answer})"; fi
+  # Snipping Tool's Copy text reads the words on the screen (Tesseract)
+  OC=$(grep -ao "NEBULUX-DIAG ocr=-\?[0-9]*" "$SHOTS/$MODE-serial.log" | tail -1 | cut -d= -f2)
+  if [ "${OC:--1}" -gt 2 ] 2>/dev/null; then echo "ok   ($MODE): Copy text reads $OC words from a screenshot"; elif [ "${OC:--1}" -ge 0 ] 2>/dev/null; then echo "note ($MODE): Copy text found only $OC words"; else echo "FAIL ($MODE): Copy text can't read screenshots (${OC:-no answer})"; FAILS=$((FAILS + 1)); fi
   # Task Manager > Processes reads the real programs, and knows which belong to Nebulux OS (the screen above all)
   PR=$(grep -ao "NEBULUX-DIAG procs=[0-9]* core=[0-9]* shell=[01]" "$SHOTS/$MODE-serial.log" | tail -1)
   if echo "$PR" | grep -q "shell=1" && [ "$(echo "$PR" | sed 's/.*procs=\([0-9]*\).*/\1/')" -ge 5 ]; then echo "ok   ($MODE): Task Manager sees the processes ($PR)"; else echo "FAIL ($MODE): Task Manager's processes look wrong (${PR:-no answer})"; FAILS=$((FAILS + 1)); fi

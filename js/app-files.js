@@ -737,6 +737,9 @@
           v.querySelector("img").src = await NX.fs.url(r.path); v.querySelector("[data-o=open]").onclick = () => NX.open("photos", { path: r.path });
           v.querySelector("[data-o=folder]").onclick = () => NX.open("files", { path: NX.fs.parent(r.path) }); NX.toast("Screenshot saved.");
           v.querySelector(".sn-acts").insertAdjacentHTML("afterbegin", `<button class="btn primary" data-o="crop">Crop</button><button class="btn primary" data-o="draw">Draw</button>`); v.querySelector("[data-o=crop]").onclick = () => crop(r); v.querySelector("[data-o=draw]").onclick = () => draw(r);
+          // Copy text (like Windows' Text actions): read the words in the screenshot, offline, and copy them
+          if (NX.native) { v.querySelector("[data-o=draw]").insertAdjacentHTML("afterend", `<button class="btn" data-o="ocr">Copy text</button>`);
+            v.querySelector("[data-o=ocr]").onclick = async (ev) => { const b = ev.currentTarget; b.disabled = true; b.textContent = "Reading..."; try { const t = (await NX.api("POST", "/ocr", { path: r.path })).text; if (!t) { NX.toast("No text was found in this screenshot."); } else { navigator.clipboard && navigator.clipboard.writeText(t).catch(() => {}); if (NX.clip) NX.clip.add(t); NX.api("POST", "/clip", { text: t }).catch(() => {}); NX.toast("Copied the text: " + (t.length > 60 ? t.slice(0, 60) + "..." : t)); } } catch (er) { NX.toast(er.message); } b.disabled = false; b.textContent = "Copy text"; }; }
         } catch (e) { NX.focus("snip"); NX.toast(e.message); }
         btn.disabled = false; btn.innerHTML = `${NX.icon("camera", 16)}New screenshot`;
       };

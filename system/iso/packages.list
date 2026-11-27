@@ -103,3 +103,5 @@ speech-dispatcher
 speech-dispatcher-espeak-ng
 espeak-ng
 xprintidle
+tesseract-ocr
+tesseract-ocr-eng

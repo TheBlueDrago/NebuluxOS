@@ -458,6 +458,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
 
   ok(await p.evaluate(async () => { if (NX.hw.brightness) return true; NX.setPref("brightness", 60); await new Promise((r) => setTimeout(r, 600)); const b = (await NX.api("GET", "/fake/night")).bright; NX.setPref("brightness", 100); await new Promise((r) => setTimeout(r, 600)); return b === 0.6 && document.documentElement.classList.contains("dim-hw"); }), "with no backlight, brightness dims the whole display");
 
+  // Snipping Tool: Copy text reads the words in a screenshot
+  ok(await p.evaluate(async () => { const r = await NX.screenshot(true); return (await NX.api("POST", "/ocr", { path: r.path })).text === "Hello from the screenshot"; }), "Snipping Tool can read the text in a screenshot");
+
   // Mono audio reaches the sound system
   await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");

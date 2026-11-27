@@ -7,6 +7,7 @@
     ["Nebulux Horizon", "A new background that follows the time of day: the glowing edge of a planet under a violet nebula, at sunrise, in daylight, at dusk and at night. New accounts start with Horizon Dynamic; each time of day is also its own background in Settings > Personalization."],
     ["New icons", "Settings has a glossy gear with a glowing nebula in the middle, Task Manager a glowing live chart, and Get Started a bright star."],
     ["Narrator", "A screen reader: it reads out loud what the keyboard or mouse is on, windows that open and messages. Turn it on in Settings > Accessibility or with Ctrl + Nebulux + Enter; Ctrl stops the talking. Hold Caps Lock and press W to read the whole window, T for the time, B for the battery or N for the newest notification. Its voice comes with the 4.4 USB."],
+    ["Copy text from a screenshot", "Snipping Tool has Copy text: it reads the words in your screenshot, right on this computer, and copies them (on the USB)."],
     ["Screenshots on the clipboard", "Every screenshot is also copied, so Ctrl + V pastes it straight into an app or a chat, like Windows."],
     ["Night light everywhere", "On the USB, Night light now warms the whole display, so YouTube and every other app window gets warmer colors too. On a screen with no backlight, like a desktop monitor, the brightness slider dims every window as well."],
     ["Screen and sleep", "Settings > System > Power: turn the screen off, or put the computer to sleep, after a while with nobody using it. A video or music that is playing keeps it awake."],

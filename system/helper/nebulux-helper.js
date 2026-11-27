@@ -307,6 +307,8 @@ const api = {
       api["GET /idle"]().then((r) => fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG idle=" + (r.known ? "ok" : "none") + "\n", () => {})).catch(() => fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG idle=none\n", () => {}));
       // and Night light on the whole display (on, then back off)
       (async () => { let r = "fail"; try { const a = await api["POST /night"]({ on: true, strength: 50 }); await api["POST /night"]({ on: false }); r = a.screens > 0 ? "ok" : "noscreen"; } catch (e) { r = "fail"; } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG night=" + r + "\n", () => {}); })();
+      // and Copy text: a screenshot of the desktop has words in it (the taskbar, the icons), which Tesseract should read
+      setTimeout(async () => { let n = 0; try { const s2 = await api["POST /screenshot"](); const t = await api["POST /ocr"]({ path: s2.path }); n = (t.text.match(/[A-Za-z]{3,}/g) || []).length; try { fs.rmSync(s2.path); } catch (e) { /* fine */ } } catch (e) { n = -1; } fs.appendFile("/dev/ttyS0", "NEBULUX-DIAG ocr=" + n + "\n", () => {}); }, 4000);
     }
     if (!FAKE && !b.open && fs.existsSync("/dev/ttyS0")) {
       const tree = await run("xwininfo", ["-root", "-children"], 5000), mouse = await run("xdotool", ["getmouselocation", "--shell"], 3000), act = await run("xdotool", ["getactivewindow", "getwindowname"], 3000);

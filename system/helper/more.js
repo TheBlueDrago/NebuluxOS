@@ -862,6 +862,15 @@ module.exports = function more({ api, run, FAKE }) {
     const raw = Buffer.concat(Array.from({ length: h }, () => row));
     return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ihdr), chunk("IDAT", zlib.deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
   }
+  // Snipping Tool > Copy text: read the words in a picture, offline (Tesseract)
+  api["POST /ocr"] = async (b) => {
+    const p = safe(b.path); if (!/\.(png|jpe?g|bmp|webp)$/i.test(p)) throw new Error("Text can only be read from a picture.");
+    if (FAKE) return { text: "Hello from the screenshot" };
+    if (!fs.existsSync("/usr/bin/tesseract")) throw new Error("Reading text from pictures comes with the newest Nebulux OS USB.");
+    const r = await run("tesseract", [p, "stdout", "-l", "eng", "--psm", "3"], 60000);
+    if (!r.ok) throw new Error("The text couldn't be read from this picture.");
+    return { text: r.out.replace(/\f/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, 20000) };
+  };
   api["POST /screenshot"] = async () => {
     const d = new Date(), pad = (n) => String(n).padStart(2, "0");
     const name = `Screenshot ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.png`;
