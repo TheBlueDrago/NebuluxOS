@@ -980,3 +980,7 @@ html.dim-hw #dim{display:none!important}
 .qs-t > svg.ico{padding:5px 0}.qs-split .qs-main svg{width:32px;height:32px}
 .fx-crumbs{cursor:text}.fx-crumbs .fx-cr,.fx-crumbs .fx-crs{cursor:default}.fx-crumbs:has(.fx-pathin){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.fx-pathin{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:var(--txt);font:inherit;font-size:13px;padding:0}
 .fx-pathin:focus,.fx-pathin:focus-visible{outline:none!important;box-shadow:none!important}
+/* phones: link rows keep their arrow on the right; Clock's tabs and Settings' page list scroll inside themselves */
+@media (max-width:560px){.s-row.s-link{flex-wrap:nowrap!important}.s-row.s-link .s-rc{flex-basis:auto!important;overflow:visible!important}.s-side nav{scrollbar-width:none}.s-side nav::-webkit-scrollbar{display:none}}
+.clk-tabs{max-width:calc(100% - 16px);overflow-x:auto;scrollbar-width:none}.clk-tabs::-webkit-scrollbar{display:none}.clk-tabs button{flex:none}.clk{overflow-x:hidden}
+@media (max-width:520px){.st-side{width:66px;padding:8px 2px}.st-nav{font-size:8.5px;padding:8px 0}.st-nav span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
