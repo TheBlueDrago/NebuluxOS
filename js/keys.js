@@ -273,7 +273,9 @@
       const along = dx * dir[0] + dy * dir[1], across = Math.abs(dx * dir[1] + dy * dir[0]); if (along <= 4) continue;
       const d = along + across * 2.2; if (d < bestD) { bestD = d; best = b; }
     }
-    if (best) { e.preventDefault(); best.focus(); best.scrollIntoView && best.scrollIntoView({ block: "nearest" }); }
+    // nothing that way (a list laid out in one row or one column): the next or previous item in order
+    if (!best) { const L = navItems(box), i = L.indexOf(a), step = dir[0] + dir[1]; best = L[i + step] || null; }
+    if (best) { e.preventDefault(); best.focus(); best.scrollIntoView && best.scrollIntoView({ block: "nearest", inline: "nearest" }); }
   });
 
   // ---------- keep the browser's own page keys away from Nebulux OS: the screen is a browser window underneath, and
