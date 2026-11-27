@@ -4,7 +4,7 @@
 (function () {
   const KEYS = [
     ["Nebulux", "Open Start"], ["Nebulux + Tab", "Task View: all your windows and desktops"], ["Nebulux + D", "Show the desktop, and back"],
-    ["Nebulux + E", "File Explorer"], ["Nebulux + L", "Lock the computer"], ["Nebulux + V", "Clipboard history"], ["Nebulux + W", "Widgets"],
+    ["Nebulux + E", "File Explorer"], ["Nebulux + L", "Lock the computer"], ["Nebulux + V", "Clipboard history"], ["Nebulux + W", "Widgets"], ["Nebulux + X", "Quick link menu"], ["Nebulux + R", "Run an app, folder or website by name"], ["Nebulux + I", "Settings"], ["Nebulux + A", "Quick Settings"], ["Ctrl + /", "Every shortcut in one list"],
     ["Nebulux + Left / Right", "Snap a window to half the screen"], ["Nebulux + Up / Down", "Maximize, or restore and minimize"],
     ["Ctrl + Nebulux + D", "New desktop"], ["Ctrl + Nebulux + Left / Right", "Switch desktops"], ["Ctrl + Nebulux + F4", "Close this desktop"],
     ["Nebulux + 1 to 9", "Open the apps on the taskbar, in order"], ["Alt + Tab", "Switch windows"], ["Print Screen", "Take a screenshot"], ["Nebulux + Shift + S", "Screenshot of part of the screen"], ["Nebulux + Space", "Quick Search"], ["Nebulux + G", "App Grid"], ["Ctrl + Shift + Esc", "Task Manager"],
