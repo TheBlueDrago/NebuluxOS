@@ -47,7 +47,7 @@
     ["Text size", "Settings > Accessibility > Text size makes the words and buttons in Nebulux apps 110, 125 or 150 percent bigger."],
     ["Move a window to another desktop", "Right-click a window's title bar to move it to another desktop, or to a new one."],
     ["Delete in Photos", "The trash button in Photos sends the picture you're looking at to the Recycle Bin."],
-    ["Undo a delete", "Pressed Delete by mistake in File Explorer? Ctrl + Z puts it back."],
+    ["Undo a delete or a rename", "Pressed Delete or renamed something by mistake in File Explorer? Ctrl + Z puts it back."],
     ["Typing in Start after an app", "Opening Start with the Nebulux key while an app or website is in front now lets you type in Start's search right away."],
     ["Storage Sense", "Settings > System can empty things that have been in the Recycle Bin for more than 30 days by itself."],
     ["Accent color everywhere", "Settings > Personalization can tint the taskbar and the window you're using with your accent color."],
