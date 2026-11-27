@@ -259,7 +259,7 @@
     const q = start.querySelector(".sm-search input"); if (!q) return;
     e.preventDefault(); e.stopPropagation(); q.focus(); q.setRangeText(e.key, q.selectionStart || 0, q.selectionEnd || 0, "end"); q.dispatchEvent(new Event("input", { bubbles: true }));
   }, true);
-  const NAV = ["#start", "#qs", ".nx-sym .sy-grid", "#icons"];
+  const NAV = ["#start", "#qs", ".nx-sym .sy-grid", "#icons", ".s-side nav", ".tm-tabs", ".clk-tabs", ".c-mode", ".seg", ".sy-tabs", ".np-bar", ".ph-bar"];
   const navItems = (box) => [...box.querySelectorAll("button, a[href], [tabindex='0']")].filter((b) => !b.disabled && b.offsetParent !== null && !b.closest("[hidden]"));
   addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey || !NX.me) return;

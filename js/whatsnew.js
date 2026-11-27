@@ -27,7 +27,7 @@
     ["Symbols", "Nebulux + . opens Symbols: ©, °, ™, currency, math, arrows, Greek and accented letters, typed right where you are typing."],
     ["Fold the calendar", "The arrow next to the date in the calendar flyout folds the month away, so more notifications fit."],
     ["Search finds the setting", "Search Start, Quick Search or Settings for a setting, like mono audio, and Settings opens on it with the setting lit up."],
-    ["Start from the keyboard", "Click Start and just type to search. The arrow keys move between the apps in Start, the tiles in Quick Settings and the icons on the desktop."],
+    ["Start from the keyboard", "Click Start and just type to search. The arrow keys move between the apps in Start, the tiles in Quick Settings, the icons on the desktop, the pages in Settings and the tabs in apps."],
     ["Menus with the keyboard", "Alt + Space opens the window menu, with Move and Size for the arrow keys. The Menu key or Shift + F10 opens the right-click menu for what the keyboard is on, and every menu works with the arrow keys, Enter and Esc."],
     ["Minimize everything", "Nebulux + M minimizes every window and Nebulux + Shift + M brings them back. Nebulux + Home keeps only the window you are in."],
     ["The taskbar from the keyboard", "Nebulux + T goes to the apps on the taskbar and Nebulux + B to the icons on the right; the arrow keys move along and Enter opens."],

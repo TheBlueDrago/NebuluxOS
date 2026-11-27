@@ -757,6 +757,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.press("Home"); await p.keyboard.type("c"); await wait(100);
   ok(await p.evaluate(() => { const s = [...document.querySelectorAll(".win[data-app=files] .fx-item.sel")]; return s.length === 1 && /c.txt/.test(s[0].textContent); }), "typing a letter jumps to the file that starts with it");
   await p.evaluate(async () => { NX.setData("fx-view", "grid"); NX.closeAll(); await NX.fs.remove(["/Documents/Arrows"], true); });
+  // Settings: the arrow keys move through the page list
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
+  await p.evaluate(() => document.querySelector(".win[data-app=settings] .s-side nav [data-p]").focus()); await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowDown"); await wait(100);
+  ok(await p.evaluate(() => document.activeElement.dataset.p === [...document.querySelectorAll(".win[data-app=settings] .s-side nav [data-p]")][2].dataset.p), "the arrow keys move through Settings' pages");
+  await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
