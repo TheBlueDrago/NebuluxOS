@@ -172,7 +172,7 @@
   let syncing = false;
   document.addEventListener("nx:prefs", (e) => {
     if (!NX.me || syncing) return; const k = e.detail, p = NX.prefs();
-    if (k === "mouse") soon(k, () => NX.api("POST", "/mouse", { speed: p.mouse }).catch(() => {}));
+    if (k === "mouse" || k === "mouseLeft") soon("mouse", () => NX.api("POST", "/mouse", { speed: p.mouse, left: !!p.mouseLeft }).catch(() => {}));
     if (k === "tzAuto" && p.tzAuto !== false) NX.api("POST", "/timezone", { detect: true }).then((r) => NX.toast("Time zone: " + String(r.zone).replace(/_/g, " ") + ".")).catch((e) => NX.toast(e.message));
     if (k === "tpTap" || k === "tpNatural") soon("touchpad", () => NX.api("POST", "/touchpad", { tap: p.tpTap !== false, natural: p.tpNatural !== false }).catch(() => {}));
     if (k === "volume") soon(k, () => NX.api("POST", "/volume", { volume: p.volume }).catch(() => {}));
@@ -197,7 +197,7 @@
     if (NX.prefs().keyboard) NX.api("POST", "/keyboard", { layout: NX.prefs().keyboard }).catch(() => {});
     // the time zone, looked up once each start when Set time zone automatically is on
     if (NX.prefs().tzAuto !== false && !tzDone) { tzDone = true; setTimeout(() => NX.api("POST", "/timezone", { detect: true }).catch(() => { tzDone = false; }), 3000); }
-    NX.api("POST", "/mouse", { speed: NX.prefs().mouse }).catch(() => {});
+    NX.api("POST", "/mouse", { speed: NX.prefs().mouse, left: !!NX.prefs().mouseLeft }).catch(() => {});
     NX.api("POST", "/touchpad", { tap: NX.prefs().tpTap !== false, natural: NX.prefs().tpNatural !== false }).catch(() => {});
     try {
       const [w, b] = await Promise.all([NX.api("GET", "/wifi").catch(() => null), NX.api("GET", "/bt").catch(() => null)]);

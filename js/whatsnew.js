@@ -85,6 +85,7 @@
     ["File Explorer keys", "Esc lets go of the selection, Alt + Left, Right and Up go back, forward and up, and Alt + Enter shows Properties."],
     ["Photos keys", "+ and - zoom, Ctrl + R turns the picture, Delete moves it to the Recycle Bin, F5 starts a slideshow and Alt + Enter shows its information."],
     ["More in the right-click menu", "Right-click an empty part of a folder in File Explorer to sort, switch between Icons and Details, select all, or see the folder's Properties."],
+    ["Left-handed mouse", "Settings > Bluetooth & devices > Primary mouse button: pick Right and the right button clicks."],
     ["Monday first", "Settings > Time & language > Start the week on Monday puts Monday first in Calendar and the taskbar's calendar."],
     ["Type a place", "Click the empty part of File Explorer's address bar, or press Ctrl + L, Alt + D or F4, and type a folder to go to. Ctrl + F or Ctrl + E jumps to search, in Settings too."],
     ["Quick link menu", "Right-click Start or press Nebulux + X for Installed apps, Task Manager, Settings, Shut down and more. Right-click the taskbar for Task Manager and Taskbar settings. Nebulux + A, I, N and U open Quick Settings, Settings, notifications and Accessibility, like Windows."],

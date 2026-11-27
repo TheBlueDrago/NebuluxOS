@@ -136,6 +136,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await until(async () => (await api("POST", "/display/get", {})).mode === "external"), "Second screen only shows Nebulux OS on the TV only");
   ok(await until(() => p.evaluate(() => document.querySelector("[data-dm=external]") && document.querySelector("[data-dm=external]").classList.contains("on"))), "and Settings shows it");
   await p.evaluate(() => document.querySelector("[data-dm=mirror]").click()); await until(async () => (await api("POST", "/display/get", {})).mode === "mirror");
+  // the left-handed mouse: Settings > Bluetooth & devices > Primary mouse button reaches the mouse
+  await p.evaluate(() => NX.open("settings", { page: "devices" })); await until(() => p.evaluate(() => !!document.querySelector("[data-mbtn]")));
+  await p.evaluate(() => { const s = document.querySelector("[data-mbtn]"); s.value = "right"; s.dispatchEvent(new Event("change")); });
+  ok(await until(async () => (await api("GET", "/fake/mouse")).left === true), "Primary mouse button: Right makes the mouse left-handed");
+  await p.evaluate(() => NX.setPref("mouseLeft", false)); ok(await until(async () => (await api("GET", "/fake/mouse")).left === false), "and Left puts it back");
+  await p.evaluate(() => NX.open("settings", { page: "system" })); await wait(400);
   // Nebulux + P: the Project panel does the same
   await p.evaluate(() => NX.project()); await until(() => p.evaluate(() => !!document.querySelector("#nx-proj [data-m=internal]")));
   ok(await p.evaluate(() => document.querySelector("#nx-proj [data-m=mirror]").classList.contains("on")), "Nebulux + P shows the screens, set to Duplicate");

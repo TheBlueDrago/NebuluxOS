@@ -326,11 +326,13 @@ const api = {
   },
   async "POST /mouse"(b) {
     const v = Math.max(0, Math.min(10, Math.round(+b.speed))); if (!(v >= 0)) throw new Error("Pick a speed."); const accel = (v / 5 - 1).toFixed(2);
-    if (FAKE) { fake.mouse = v; return { ok: true }; }
+    const left = !!b.left; // the left-handed mouse: the right button clicks (Settings > Mouse > Primary mouse button)
+    if (FAKE) { fake.mouse = v; fake.mouseLeft = left; return { ok: true }; }
     const ids = (await run("xinput", ["list", "--id-only"])).out.split("\n").map((x) => x.trim()).filter((x) => /^\d+$/.test(x));
-    for (const id of ids) await run("xinput", ["set-prop", id, "libinput Accel Speed", accel], 3000); // devices without it just say no
+    for (const id of ids) { await run("xinput", ["set-prop", id, "libinput Accel Speed", accel], 3000); await run("xinput", ["set-prop", id, "libinput Left Handed Enabled", left ? "1" : "0"], 3000); } // devices without them just say no
     return { ok: true };
   },
+  async "GET /fake/mouse"() { if (!FAKE) throw new Error("Not found"); return { speed: fake.mouse, left: !!fake.mouseLeft }; },
   // the touchpad: tap to click, and which way two-finger scrolling moves the page
   async "POST /touchpad"(b) {
     const tap = b.tap !== false, natural = b.natural !== false;
