@@ -48,6 +48,7 @@
       { const tm = /^(?:set (?:a )?)?(?:timer (?:for )?)?(\d{1,3}) ?(s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?)(?: timer)?$/i.exec(q);
         if (tm && /timer/i.test(q) && NX.timers) { const n = +tm[1], u = tm[2][0].toLowerCase(), ms = n * (u === "s" ? 1000 : u === "m" ? 60000 : 3600000), label = n + " " + (u === "s" ? "second" : u === "m" ? "minute" : "hour") + (n === 1 ? "" : "s");
           if (ms >= 1000 && ms <= 86400000) items.push({ head: "Timer", icon: NX.icon("clock", 30), name: "Start a " + label.replace(/s$/, "") + " timer", sub: "Rings even with Clock closed", go: () => { NX.timers.add(label + " timer", ms, true); NX.toast("A " + label.replace(/s$/, "") + " timer is running."); } }); } }
+      if (/^remind me /i.test(q) && NX.parseReminder) { const rm = NX.parseReminder(q); if (rm) items.push({ head: "Reminder", icon: NX.icon("reminders", 30), name: "Remind me: " + rm.text, sub: rm.when ? rm.when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "No time, just on the list", go: () => { NX.addReminder(rm.text, rm.when); NX.toast("Reminder added" + (rm.when ? " for " + NX.fmtTime(rm.when) + "." : ".")); } }); }
       if (/^weather\b|^forecast\b/i.test(q)) { const w = NX.data("wx", null), p = NX.data("wx-place", null); items.push({ head: "Weather", icon: w && NX.wxInfo ? NX.wxInfo.icon(w.code, 30) : NX.icon("weather", 30), name: w && p && NX.wxInfo ? w.now + "°" + w.unit + ", " + NX.wxInfo.name(w.code) + " in " + p.name : "See the weather", sub: "Opens Weather", go: () => NX.open("weather") }); }
       const apps = visible().filter((id) => NX.apps[id].name.toLowerCase().includes(ql)).sort((a, b) => NX.apps[a].name.toLowerCase().indexOf(ql) - NX.apps[b].name.toLowerCase().indexOf(ql)).slice(0, 5);
       apps.forEach((id, k) => items.push({ head: k ? "" : "Apps", icon: NX.icon(NX.apps[id].icon || id, 30), name: NX.apps[id].name, sub: "App", go: () => NX.open(id) }));
@@ -211,6 +212,17 @@
 
   // ---------- Reminders: things to do, with a day and time if you like; it rings when one is due (also with the app closed) ----------
   const todos = () => NX.data("todos", []), saveTodos = (L) => { NX.setData("todos", L); document.dispatchEvent(new CustomEvent("nx:todos")); };
+  // for Quick Search's "remind me to ... in 10 minutes / at 3pm"
+  NX.addReminder = (text, d) => { const p2 = (n) => String(n).padStart(2, "0"), due = d ? d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + "T" + p2(d.getHours()) + ":" + p2(d.getMinutes()) : ""; const L2 = todos(); L2.push({ id: NX.uid(), text: String(text).slice(0, 120), due, done: false, repeat: "" }); saveTodos(L2); return due; };
+  // "remind me to call Sam in 20 minutes", "remind me to stretch at 3pm", "remind me to buy milk tomorrow at 9"
+  NX.parseReminder = (q) => {
+    const m = /^remind me (?:to )?(.+?)(?: (in) (\d{1,3}) ?(min|mins|minutes?|m|hours?|hrs?|h)| (tomorrow )?at (\d{1,2})(?::(\d\d))? ?(am|pm)?| (tomorrow))?$/i.exec(String(q).trim()); if (!m || !m[1]) return null;
+    const now = new Date(); let d = null;
+    if (m[2]) { const n = +m[3]; d = new Date(now.getTime() + n * (/^h/i.test(m[4]) ? 3600000 : 60000)); }
+    else if (m[6]) { let h = +m[6] % 24; const mi = +(m[7] || 0), ap = (m[8] || "").toLowerCase(); if (ap === "pm" && h < 12) h += 12; if (ap === "am" && h === 12) h = 0; d = new Date(now); d.setHours(h, mi, 0, 0); if (m[5] || d <= now) d.setDate(d.getDate() + 1); }
+    else if (m[9]) { d = new Date(now); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+    return { text: m[1].replace(/^\w/, (c) => c.toUpperCase()), when: d };
+  };
   NX.todosTick = (now) => {
     if (!NX.me) return; const d = now || new Date(), stamp = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "T" + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
     let ch = false; const L = todos(); for (const t of L) if (!t.done && !t.rang && t.due && t.due <= stamp) { t.rang = 1; ch = true; if (NX.alarms && NX.alarms.ring) NX.alarms.ring({ name: "Reminder: " + t.text, snooze: false }, d); }
