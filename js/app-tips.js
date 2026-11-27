@@ -36,8 +36,9 @@
           ${card("volume", "Narrator", "Reads out loud what the keyboard or mouse is on. Ctrl + Nebulux + Enter turns it on or off.", NX.prefs().narrator ? "Turn off Narrator" : "Turn on Narrator", "a:narrator")}
           ${card("keyboard", "On-screen keyboard", "Type with the mouse or a finger. Ctrl + Nebulux + O.", "Show it", "a:osk")}
           ${card("zoomin", "Text size", "Make the words and buttons in apps bigger, or zoom one window with Ctrl + Plus.", "Text size", "access")}
-          ${card("contrast", "Color filters", "Grayscale, inverted, or colors shifted for red-green or blue-yellow color blindness.", "Color filters", "access")}
+          ${card("contrast", "Color filters", "Grayscale, inverted, or colors shifted for red-green or blue-yellow color blindness. Ctrl + Nebulux + C turns them on and off.", "Color filters", "access")}
           ${card("keyboard", "Sticky Keys", "Press Ctrl, Alt, Shift or Nebulux, then the next key. Or press Shift five times.", NX.prefs().stickyKeys ? "Turn off Sticky Keys" : "Turn on Sticky Keys", "a:stickyKeys")}
+          ${card("keyboard", "Toggle Keys and Filter Keys", "Hear a sound for Caps Lock, and have a key pressed twice by accident count once.", "Keyboard settings", "access")}
           ${card("volume", "Mono audio and captions", "Hear everything in either ear, and see captions for videos that come with a subtitle file.", "Hearing settings", "access")}</div>`;
         return `<h2>Make it yours</h2><div class="gs-grid">
           ${card("brush", "Themes", "One click sets your background, colors, corners and glass. Or pick each one yourself.", "Personalize", "personal")}
