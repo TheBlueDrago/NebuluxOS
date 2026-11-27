@@ -341,11 +341,11 @@
           // several at once (like Windows): one name for all of them, numbered, each keeping its own file type
           if (k === "rename" && s.length > 1) {
             const stem0 = s[0].name.replace(/\.[^.]+$/, "") || s[0].name, base = await NX.ask(body, { title: "Rename " + s.length + " items", text: "They'll be named like " + stem0 + " (1), " + stem0 + " (2) and so on.", input: true, value: stem0, ok: "Rename" });
-            if (!base || !String(base).trim()) return; const b = String(base).trim(), done = []; let n = 0;
-            for (const e of s) { n++; const ext = e.dir ? "" : (/\.[^.]+$/.exec(e.name) || [""])[0]; try { const r = await NX.fs.rename(e.path, b + " (" + n + ")" + ext); done.push(r.path); } catch (er) { NX.toast(er.message); } }
-            await load(); sel = new Set(done); render(); return;
+            if (!base || !String(base).trim()) return; const b = String(base).trim(), done = [], und = []; let n = 0;
+            for (const e of s) { n++; const ext = e.dir ? "" : (/\.[^.]+$/.exec(e.name) || [""])[0]; try { const r = await NX.fs.rename(e.path, b + " (" + n + ")" + ext); done.push(r.path); und.push([r.path, e.name]); } catch (er) { NX.toast(er.message); } }
+            NX.fxUndo = und.length ? { renames: und } : null; await load(); sel = new Set(done); render(); return;
           }
-          if (k === "rename") { const e = s[0]; const name = await NX.ask(body, { title: "Rename", input: true, value: e.name, ok: "Rename" }); if (!name || name === e.name) return; const r = await NX.fs.rename(e.path, name); await load(); sel = new Set([r.path]); render(); return; }
+          if (k === "rename") { const e = s[0]; const name = await NX.ask(body, { title: "Rename", input: true, value: e.name, ok: "Rename" }); if (!name || name === e.name) return; const r = await NX.fs.rename(e.path, name); NX.fxUndo = { renames: [[r.path, e.name]] }; await load(); sel = new Set([r.path]); render(); return; }
           if (k === "delete") {
             const onDrive = drives.some((d) => d.mount && cur.startsWith(d.mount));
             if (onDrive && !(await NX.ask(body, { title: "Delete for good?", text: `USB drives have no Recycle Bin, so ${s.length === 1 ? `"${s[0].name}"` : s.length + " items"} can't be brought back.`, ok: "Delete", danger: true }))) return;
@@ -400,6 +400,7 @@
       listEl.addEventListener("keydown", (ev) => {
         if (body.querySelector(".nx-ask")) return; const k = ev.key, c = ev.ctrlKey || ev.metaKey;
         if (k === "Delete") { ev.preventDefault(); act(isTrash() ? "purge" : "delete"); }
+        else if (c && (k === "z" || k === "Z") && NX.fxUndo && NX.fxUndo.renames) { ev.preventDefault(); const L = NX.fxUndo.renames; NX.fxUndo = null; (async () => { for (const [p2, old] of L) { try { await NX.fs.rename(p2, old); } catch (er) { NX.toast(er.message); } } NX.toast("Renamed back."); load(); })(); }
         else if (c && (k === "z" || k === "Z") && NX.fxUndo) { ev.preventDefault(); const ids = NX.fxUndo; NX.fxUndo = null; NX.fs.restore(ids).then(() => { NX.toast("Put back."); NX.filesChanged && NX.filesChanged(); load(); }).catch((er) => NX.toast(er.message)); }
         else if (k === " " && sel.size === 1 && NX.peekFile && !isTrash()) { const e1 = items.find((x) => (x.path || x.id) === [...sel][0]); if (e1 && !e1.dir) { ev.preventDefault(); NX.peekFile(e1, items.filter((x) => !x.dir)); } }
         else if (k === "F2" && sel.size >= 1) { ev.preventDefault(); act("rename"); }
