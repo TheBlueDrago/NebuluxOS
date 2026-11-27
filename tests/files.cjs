@@ -778,6 +778,18 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.press("Escape"); await p.keyboard.down("Control"); await p.keyboard.press("e"); await p.keyboard.up("Control"); await wait(100);
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=files] .fx-pathin") && document.activeElement === document.querySelector(".win[data-app=files] .fx-search input")), "Esc puts the path back, Ctrl + E jumps to search");
   await p.evaluate(async () => { NX.setData("fx-view", "grid"); NX.closeAll(); await NX.fs.remove(["/Documents/Arrows"], true); });
+  // the Windows keys: Nebulux + X (the quick link menu, also a right-click on Start), + A, + I
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); }); await p.keyboard.down("Meta"); await p.keyboard.press("x"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => { const m = document.querySelector("#ctx"); return !m.hidden && /Task Manager/.test(m.textContent) && /Shut down/.test(m.textContent); }), "Nebulux + X opens the quick link menu");
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => /Task Manager/.test(b.textContent)).click()); await wait(500);
+  ok(await p.evaluate(() => !!NX.wins.get("taskmgr")), "and Task Manager in it opens Task Manager");
+  await p.evaluate(() => { NX.closeAll(); const b = document.querySelector("#tb-start"), r = b.getBoundingClientRect(); b.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.x + 10, clientY: r.y + 10 })); }); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector("#ctx").hidden && /Installed apps/.test(document.querySelector("#ctx").textContent) && document.querySelector("#start").hidden), "right-clicking Start opens the same menu");
+  await p.keyboard.press("Escape"); await p.keyboard.down("Meta"); await p.keyboard.press("i"); await p.keyboard.up("Meta"); await wait(500);
+  ok(await p.evaluate(() => !!NX.wins.get("settings")), "Nebulux + I opens Settings");
+  await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("a"); await p.keyboard.up("Meta"); await wait(250);
+  ok(await p.evaluate(() => !document.querySelector("#qs").hidden), "Nebulux + A opens Quick Settings");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   // Settings: the arrow keys move through the page list
   await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
   await p.evaluate(() => document.querySelector(".win[data-app=settings] .s-side nav [data-p]").focus()); await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowDown"); await wait(100);

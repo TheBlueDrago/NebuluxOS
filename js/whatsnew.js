@@ -85,6 +85,7 @@
     ["File Explorer keys", "Esc lets go of the selection, Alt + Left, Right and Up go back, forward and up, and Alt + Enter shows Properties."],
     ["Photos keys", "+ and - zoom, Ctrl + R turns the picture, Delete moves it to the Recycle Bin, F5 starts a slideshow and Alt + Enter shows its information."],
     ["Type a place", "Click the empty part of File Explorer's address bar, or press Ctrl + L, Alt + D or F4, and type a folder to go to. Ctrl + F or Ctrl + E jumps to search, in Settings too."],
+    ["Quick link menu", "Right-click Start or press Nebulux + X for Installed apps, Task Manager, Settings, Shut down and more. Nebulux + A, I, N and U open Quick Settings, Settings, notifications and Accessibility, like Windows."],
     ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
     ["Match case", "Notepad's Find has an Aa button: turn it on and Red finds only Red, not red. Shift + F3 goes back to the match before."],
     ["Ctrl + S saves", "Ctrl + S saves in Notepad and Paint, and Ctrl + P prints a note or a picture (or saves it as a PDF). In File Explorer, F5 refreshes and Ctrl + Shift + N makes a new folder."],

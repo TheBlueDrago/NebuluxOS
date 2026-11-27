@@ -612,7 +612,19 @@
       if (key === "tm") NX.open("taskmgr");
       if (key === "tview" && NX.taskView) NX.taskView(); if (key === "widgets" && NX.widgets) NX.widgets(); if (key === "clip" && NX.clip) NX.clip.toggle();
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
+      // like Windows: Nebulux + A Quick Settings, + I Settings, + N the calendar and notifications, + U Accessibility, + X the quick link menu, + Pause About
+      if (key === "qs") $("#tb-qs").click(); if (key === "notif") $("#tb-clock").click();
+      if (key === "settings") NX.open("settings"); if (key === "access") NX.open("settings", { page: "access" }); if (key === "about") NX.open("settings", { page: "about" });
+      if (key === "xmenu") { const r = $("#tb-start").getBoundingClientRect(); quickLinks(r.left, r.top - 8); }
     };
+    // the quick link menu: right-click Start, or press Nebulux + X
+    const quickLinks = (x, y) => {
+      menu(x, y, [["Installed apps", () => NX.open("settings", { page: "apps" }), "apps"], ["Power and sleep", () => NX.open("settings", { page: "system" }), "battery"], ["Network connections", () => NX.open("settings", { page: "network" }), "wifi"],
+        ["Task Manager", () => NX.open("taskmgr"), "taskmgr"], ["Settings", () => NX.open("settings"), "settings"], ["File Explorer", () => NX.open("files"), "files"], ["Search", () => toggleStart(true), "search"], ["", null],
+        ["Lock", () => lockKeep(), "lock"], ["Sign out", () => signOut(), "signout"], ["Sleep", () => sleep(), "moon"], ["Restart", () => power("restart"), "restart"], ["Shut down", () => power("off"), "power"], ["", null], ["Desktop", () => NX.showDesktop(), "display"]]);
+      const m = $("#ctx"); if (m.getBoundingClientRect().bottom > innerHeight - 4) m.style.top = Math.max(6, y - m.offsetHeight) + "px";
+    };
+    NX.quickLinks = quickLinks;
     addEventListener("keydown", (e) => {
       if (!$("#lock").hidden && $("#lock").className === "locked") { reveal(); return; }
       if (e.key === "Escape") closeFlyouts();
@@ -622,7 +634,8 @@
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
       if (e.key === "PrintScreen") { e.preventDefault(); winKeys("shot"); }
       else if (e.metaKey && e.shiftKey && /^s$/i.test(e.key)) { e.preventDefault(); winKeys(NX.snipArea ? "snip" : "shot"); }
-      else if (e.metaKey && !e.ctrlKey && /^[edlwv]$/i.test(e.key)) { e.preventDefault(); winKeys({ e: "files", d: "desk", l: "lock", w: "widgets", v: "clip" }[e.key.toLowerCase()]); }
+      else if (e.metaKey && !e.ctrlKey && !e.shiftKey && /^[edlwvainux]$/i.test(e.key)) { e.preventDefault(); const k = { e: "files", d: "desk", l: "lock", w: "widgets", v: "clip", a: "qs", i: "settings", n: "notif", u: "access", x: "xmenu" }[e.key.toLowerCase()]; if (k !== "xmenu" && k !== "qs" && k !== "notif") closeFlyouts(); winKeys(k); }
+      else if (e.metaKey && e.key === "Pause") { e.preventDefault(); winKeys("about"); }
       else if (e.metaKey && e.key === "Tab") { e.preventDefault(); winKeys("tview"); }
       else if (e.metaKey && !e.ctrlKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) { e.preventDefault(); winKeys("snap-" + { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "max", ArrowDown: "down" }[e.key]); }
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") { e.preventDefault(); winKeys("tm"); }
@@ -649,6 +662,7 @@
     $("#lk-power").onclick = (e) => { e.stopPropagation(); const m = $("#lk-pmenu"); m.hidden = !m.hidden; };
     $("#lk-pmenu").addEventListener("click", (e) => { const b = e.target.closest("[data-pw]"); if (!b) return; $("#lk-pmenu").hidden = true; power(b.dataset.pw === "restart" ? "restart" : "off"); });
     $("#tb-start").onclick = (e) => { e.stopPropagation(); toggleStart(false); };
+    $("#tb-start").oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); quickLinks(e.clientX, e.clientY - 8); };
     $("#tb-search").onclick = (e) => { e.stopPropagation(); toggleStart(true); };
     $("#tb-qs").onclick = (e) => { e.stopPropagation(); const q = $("#qs"); if (!q.hidden) { closeFlyouts(); return; } closeFlyouts("qs"); qsDraw(); q.hidden = false; };
     $("#tb-clock").onclick = (e) => { e.stopPropagation(); const c = $("#cal"); if (!c.hidden) { closeFlyouts(); return; } closeFlyouts("cal"); calM = null; calDraw(); c.hidden = false; };
