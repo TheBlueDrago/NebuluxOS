@@ -652,6 +652,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   // Calculator > Programmer
   await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=prog]").click(); const v = (b) => document.querySelector(".pg-in[data-base='" + b + "']"); const set = (b, x) => { v(b).value = x; v(b).dispatchEvent(new Event("input")); }; set(10, "255"); const a = v(16).value === "FF" && v(8).value === "377" && v(2).value === "11111111"; set(16, "1A"); const b = v(10).value === "26"; document.querySelector("[data-pk=shl]").click(); const c = v(10).value === "52"; set(2, "102"); const d = v(2).classList.contains("bad") && v(10).value === "52"; return a && b && c && d && document.querySelector(".c-keys").hidden; }), "Calculator's Programmer mode shows HEX, DEC, OCT and BIN");
+  // Calculator > Graph: functions of x, drawn on the canvas
+  ok(await p.evaluate(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)); NX.closeAll(); NX.setData("calc-graph", ["2x+1", "", ""]); NX.open("calculator"); await w(500);
+    document.querySelector(".win[data-app=calculator] [data-m=graph]").click(); await w(300);
+    const G = NX.wins.get("calculator").graph, f = G.eval("2x+1"), bad = G.eval("2x+"), sq = G.eval("y = x^2");
+    const cv = document.querySelector(".win[data-app=calculator] .gr-plot canvas"), px = cv.getContext("2d").getImageData(0, 0, cv.width, cv.height).data; let lit = 0; for (let k = 3; k < px.length; k += 4) if (px[k]) lit++;
+    NX.setData("calc-graph", null); NX.closeAll();
+    return f(3) === 7 && bad === false && sq(-3) === 9 && lit > 500;
+  }), "Calculator's Graph mode understands 2x+1 and y = x^2 and draws them");
   // Calculator > Dates
   await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=date]").click(); const set = (q, v) => { const i = document.querySelector(q); i.value = v; i.dispatchEvent(new Event("input")); }; set(".cd-a", "2026-11-25"); set(".cd-b", "2026-12-25"); set(".cd-c", "2026-01-30"); set(".cd-n", "30"); return /30 days/.test(document.querySelector(".cd-diff").textContent) && /March 1, 2026/.test(document.querySelector(".cd-sum").textContent); }), "Calculator's Dates counts the days between dates and adds days to a date");

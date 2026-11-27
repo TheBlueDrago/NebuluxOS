@@ -928,3 +928,16 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 .tmr-add input[type=number]{width:58px}.tmr-add input[name=n]{width:170px}.tmr-add span{color:var(--sub);font-size:12px}
 .al-txt{min-width:170px;flex:1}.al-txt b{white-space:normal;overflow-wrap:anywhere}
 .wg-tmr{cursor:pointer}.wg-tm{display:flex;align-items:baseline;gap:10px;padding:4px 0}.wg-tm b{font:600 22px ui-monospace,Consolas,monospace}.wg-tm span{color:var(--sub);font-size:13px}
+
+/* Calculator > Graph */
+.c-graph{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;flex:1;min-height:0}
+.c-graph[hidden]{display:none}
+.gr-fns{display:flex;flex-direction:column;gap:5px}
+.gr-fn{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:9px;background:var(--card);border:1px solid var(--line)}
+.gr-fn i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}.gr-fn span{color:var(--sub);font-size:12.5px}
+.gr-fn input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--txt);font:600 14px ui-monospace,Consolas,monospace}
+.gr-fn input.bad{color:#f87171}
+.gr-plot{position:relative;flex:1;min-height:180px;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
+.gr-plot canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}.gr-plot canvas:active{cursor:grabbing}
+.gr-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+.calc .c-mode{flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);overflow:visible;row-gap:2px}.calc{overflow-x:hidden}

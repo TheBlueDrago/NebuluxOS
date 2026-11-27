@@ -124,7 +124,7 @@
 
   // ---------- Calculator: a real calculator (no eval), with keyboard keys ----------
   // works out a sum like 2^10 or sin(30) + log(100) (a small parser, no eval); used by Calculator and Quick Search
-  NX.calcEval = (src, degrees) => {
+  NX.calcEval = (src, degrees, vars) => {
     const s = String(src).replace(/\s+/g, "").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/π/g, "pi"); let i = 0;
     const fail = () => { throw new Error("That doesn't look right."); };
     const toRad = (x) => (degrees ? x * Math.PI / 180 : x), fromRad = (x) => (degrees ? x * 180 / Math.PI : x);
@@ -136,7 +136,7 @@
       if (peek() === "(") { i++; const v = expr(); if (peek() !== ")") fail(); i++; return v; }
       if (peek() === "-") { i++; return -power(); } if (peek() === "+") { i++; return power(); }
       const w = /^[a-z]+/i.exec(s.slice(i));
-      if (w) { const name = w[0].toLowerCase(); i += w[0].length; if (name === "pi") return Math.PI; if (name === "e") return Math.E; const f = FN[name]; if (!f || peek() !== "(") fail(); i++; const v = expr(); if (peek() !== ")") fail(); i++; return f(v); }
+      if (w) { const name = w[0].toLowerCase(); i += w[0].length; if (name === "pi") return Math.PI; if (name === "e") return Math.E; if (vars && name in vars) return vars[name]; const f = FN[name]; if (!f || peek() !== "(") fail(); i++; const v = expr(); if (peek() !== ")") fail(); i++; return f(v); }
       return num();
     };
     const post = () => { let v = atom(); while (peek() === "!" || peek() === "%") { v = peek() === "!" ? fact(v) : v / 100; i++; } return v; };
@@ -165,7 +165,7 @@
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
-      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button><button data-m="date">Dates</button><button data-m="prog">Programmer</button></div><div class="c-conv" hidden></div><div class="c-prog" hidden></div><div class="c-date" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
+      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button><button data-m="date">Dates</button><button data-m="prog">Programmer</button><button data-m="graph">Graph</button></div><div class="c-conv" hidden></div><div class="c-prog" hidden></div><div class="c-graph" hidden></div><div class="c-date" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
       let cur = "0", prev = null, op = null, fresh = true, expr = "";
       const val = body.querySelector(".c-val"), ex = body.querySelector(".c-expr");
       const fmt = (n) => { if (!isFinite(n)) return "Can't divide by zero"; const s = Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0) ? n.toExponential(8) : String(+n.toPrecision(15)); return s; };
@@ -272,8 +272,39 @@
         prog.querySelector(".pg-keys").onclick = (e) => { const b = e.target.closest("[data-pk]"); if (!b) return; const k = b.dataset.pk; pv = k === "shl" ? (pv << 1n) & MAX : k === "shr" ? pv >> 1n : k === "not" ? ~pv & MAX : 0n; fill(null); };
         fill(null);
       };
-      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const m = b.dataset.m, c = m === "conv", sc = m === "sci", dt = m === "date", pg = m === "prog";
-        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; dateEl.hidden = !dt; prog.hidden = !pg; body.querySelector(".c-disp").hidden = c || sc || dt || pg; body.querySelector(".c-keys").hidden = c || sc || dt || pg; hist.hidden = true;
+      // Graph (4.4, like Windows Calculator): up to three functions of x, with a grid, axes, zoom and dragging
+      const graph = body.querySelector(".c-graph"), GC = ["#7c5cff", "#22d3ee", "#f472b6"];
+      let gv = { cx: 0, cy: 0, sc: 30 }, gDrag = null;
+      const gFns = () => { const L = NX.data("calc-graph", null); return Array.isArray(L) ? L : ["sin(x)", "x^2/4", ""]; };
+      const gEval = (src) => { const t = String(src || "").replace(/^\s*y\s*=\s*/i, "").replace(/(\d)\s*(x|\()/gi, "$1*$2").replace(/\)\s*(x|\d|\()/gi, ")*$1"); if (!t.trim()) return null; try { NX.calcEval(t, false, { x: 1 }); } catch (e) { return false; } return (x) => { try { return NX.calcEval(t, false, { x }); } catch (e) { return NaN; } }; };
+      const gPlot = () => {
+        const cv = graph.querySelector("canvas"); if (!cv) return; const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); cv.width = Math.max(10, r.width * dpr); cv.height = Math.max(10, r.height * dpr);
+        const g = cv.getContext("2d"), W = cv.width, H = cv.height, sc = gv.sc * dpr, X = (x) => W / 2 + (x - gv.cx) * sc, Y = (y) => H / 2 - (y - gv.cy) * sc, cs = getComputedStyle(body);
+        g.clearRect(0, 0, W, H); const step = [1, 2, 5, 10, 20, 50, 100].find((s2) => s2 * sc >= 40 * dpr) || 100;
+        g.lineWidth = 1; g.strokeStyle = "rgba(128,128,160,.18)"; g.fillStyle = cs.getPropertyValue("--sub") || "#aaa"; g.font = 11 * dpr + "px sans-serif";
+        const x0 = gv.cx - W / 2 / sc, x1 = gv.cx + W / 2 / sc, y0 = gv.cy - H / 2 / sc, y1 = gv.cy + H / 2 / sc;
+        for (let x = Math.ceil(x0 / step) * step; x <= x1; x += step) { g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), H); g.stroke(); if (x) g.fillText(String(+x.toFixed(6)), X(x) + 3, Math.min(H - 4, Math.max(12 * dpr, Y(0) + 13 * dpr))); }
+        for (let y = Math.ceil(y0 / step) * step; y <= y1; y += step) { g.beginPath(); g.moveTo(0, Y(y)); g.lineTo(W, Y(y)); g.stroke(); if (y) g.fillText(String(+y.toFixed(6)), Math.min(W - 30 * dpr, Math.max(3, X(0) + 4)), Y(y) - 3); }
+        g.strokeStyle = "rgba(160,160,200,.7)"; g.lineWidth = 1.5 * dpr; g.beginPath(); g.moveTo(0, Y(0)); g.lineTo(W, Y(0)); g.moveTo(X(0), 0); g.lineTo(X(0), H); g.stroke();
+        gFns().forEach((src, k) => { const f = gEval(src); if (!f) return; g.strokeStyle = GC[k]; g.lineWidth = 2.4 * dpr; g.beginPath(); let pen = false, py = 0;
+          for (let px = 0; px <= W; px += 1.5) { const y = f(gv.cx + (px - W / 2) / sc), sy = Y(y); if (!isFinite(y) || Math.abs(sy - py) > H * 2) { pen = false; py = sy; continue; } if (pen) g.lineTo(px, sy); else g.moveTo(px, sy); pen = true; py = sy; } g.stroke(); });
+      };
+      const graphDraw = () => {
+        const F = gFns(); graph.innerHTML = `<div class="gr-fns">${[0, 1, 2].map((k) => `<label class="gr-fn" style="--c:${GC[k]}"><i></i><span>y =</span><input data-gf="${k}" value="${NX.esc(F[k] || "")}" placeholder="${k ? "Add a function" : "sin(x)"}" spellcheck="false" autocomplete="off" aria-label="Function ${k + 1}"></label>`).join("")}</div><div class="gr-plot"><canvas aria-label="The graph"></canvas><div class="gr-zoom"><button class="btn sm" data-gz="in" aria-label="Zoom in">+</button><button class="btn sm" data-gz="out" aria-label="Zoom out">-</button><button class="btn sm" data-gz="home">Center</button></div></div>`;
+        graph.querySelectorAll("[data-gf]").forEach((inp) => (inp.oninput = () => { const L = gFns().slice(); L[+inp.dataset.gf] = inp.value.slice(0, 80); NX.setData("calc-graph", L); inp.classList.toggle("bad", gEval(inp.value) === false); gPlot(); }));
+        graph.querySelectorAll("[data-gz]").forEach((b) => (b.onclick = () => { const z = b.dataset.gz; if (z === "home") gv = { cx: 0, cy: 0, sc: 30 }; else gv.sc = Math.max(2, Math.min(400, gv.sc * (z === "in" ? 1.5 : 1 / 1.5))); gPlot(); }));
+        const cv = graph.querySelector("canvas");
+        cv.onpointerdown = (e) => { cv.setPointerCapture(e.pointerId); gDrag = { x: e.clientX, y: e.clientY, cx: gv.cx, cy: gv.cy }; };
+        cv.onpointermove = (e) => { if (!gDrag) return; gv.cx = gDrag.cx - (e.clientX - gDrag.x) / gv.sc; gv.cy = gDrag.cy + (e.clientY - gDrag.y) / gv.sc; gPlot(); };
+        cv.onpointerup = cv.onpointercancel = () => { gDrag = null; };
+        cv.onwheel = (e) => { if (e.ctrlKey) return; e.preventDefault(); gv.sc = Math.max(2, Math.min(400, gv.sc * (e.deltaY < 0 ? 1.15 : 1 / 1.15))); gPlot(); };
+        requestAnimationFrame(gPlot);
+      };
+      win.graph = { draw: () => gPlot(), view: () => gv, eval: gEval };
+      { const ro = window.ResizeObserver ? new ResizeObserver(() => { if (!graph.hidden) gPlot(); }) : null; if (ro) ro.observe(graph); }
+      body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const m = b.dataset.m, c = m === "conv", sc = m === "sci", dt = m === "date", pg = m === "prog", gr = m === "graph";
+        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; dateEl.hidden = !dt; prog.hidden = !pg; graph.hidden = !gr; body.querySelector(".c-disp").hidden = c || sc || dt || pg || gr; body.querySelector(".c-keys").hidden = c || sc || dt || pg || gr; hist.hidden = true;
+        if (gr && !graph.innerHTML) graphDraw(); if (gr) requestAnimationFrame(gPlot);
         if (pg && !prog.innerHTML) progDraw(); if (pg) prog.querySelector(".pg-in[data-base='10']").focus();
         if (dt && !dateEl.innerHTML) dateDraw();
         if (c && !conv.innerHTML) convDraw(); if (sc && !sci.innerHTML) sciDraw(); if (sc) sci.querySelector(".sc-in").focus(); };
