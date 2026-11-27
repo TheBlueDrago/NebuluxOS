@@ -517,6 +517,7 @@
 
 // ---------- Themes: one click sets the background, dark or light, the accent color, the corners and the glass ----------
 NX.looks40 = [
+  { name: "Horizon", wall: 17, theme: "dark", accent: "#7c5cff", corners: "round", glass: "frosted" }, // 4.4: changes with the time of day
   { name: "Nebulux", wall: 10, theme: "dark", accent: "#7c5cff", corners: "round", glass: "frosted" },
   { name: "Aurora", wall: 11, theme: "dark", accent: "#22d3ee", corners: "xround", glass: "clear" },
   { name: "Ember", wall: 2, theme: "dark", accent: "#f97316", corners: "square", glass: "solid" },

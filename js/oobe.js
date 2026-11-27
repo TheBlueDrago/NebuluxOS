@@ -118,7 +118,7 @@
       }
       if (k === "look") {
         // a theme sets the background, dark or light, the accent, the corners and the glass in one click
-        const looks = [{ name: "Horizon", wall: 17, theme: "dark", accent: ACCENTS[0], corners: "round", glass: "frosted" }, ...(NX.looks40 || []), { name: "Classic", wall: 0, theme: "dark", accent: ACCENTS[0], corners: "round", glass: "frosted" }];
+        const looks = [...(NX.looks40 || []), { name: "Classic", wall: 0, theme: "dark", accent: ACCENTS[0], corners: "round", glass: "frosted" }];
         const isOn = (t) => st.wall === t.wall && st.theme === t.theme && st.accent === t.accent && (st.corners || "round") === t.corners && (st.glass || "frosted") === t.glass;
         const f = frame("Pick your look", "A theme sets your background, colors and glass. You can change it any time in Settings > Personalization.",
           `<div class="s-themes ob-themes">${looks.map((t, n) => `<button type="button" class="s-theme ${isOn(t) ? "on" : ""}" data-look="${n}" aria-label="${t.name}"><span class="s-th-pic" style="background-image:url(${NX.wallpaperURL(t.wall, 192, 108)})"><i class="s-th-win ${t.theme}" style="--c:${t.accent}"><b></b><b></b></i></span><span class="s-th-n"><i style="background:${t.accent}"></i>${t.name}</span></button>`).join("")}</div>`, { next: "Done" });
