@@ -10,6 +10,7 @@
     ["Processes in Task Manager", "Task Manager has a Processes tab: every program on the computer with its processor and memory use, and End task for your own (on the USB)."],
     ["Week view in Calendar", "Calendar has a Week view: your events hour by hour, a line for right now, and click an hour to add an event then."],
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],
+    ["Rename many files at once", "Select several files in File Explorer and press F2 or Rename: they get one name, numbered (1), (2), (3), each keeping its file type."],
     ["Open with", "Right-click a file in File Explorer and pick Open with to choose the app: edit a picture in Paint, or read any file in Notepad."],
     ["Color Picker", "A new app: pick any color on the screen with Nebulux + Shift + C and copy it as HEX, RGB or HSL. Your recent colors stay in the app."],
     ["Text replacements", "Settings > Bluetooth & devices > Keyboard: type a short code like omw, then a space, and it becomes the whole phrase (On my way!). Add your own."],

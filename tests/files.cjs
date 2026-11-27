@@ -706,6 +706,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.press("Escape"); await wait(100);
   ok(await p.evaluate(() => document.querySelector("#ctx").hidden && !!document.activeElement.closest(".fx-item")), "and Esc closes it and goes back to the file");
   await p.evaluate(() => NX.closeAll());
+  // rename several files at once: one name, numbered, each keeps its type
+  await p.evaluate(async () => { NX.closeAll(); const f = await NX.fs.create("/Documents", "Batch", true); for (const n of ["a.txt", "b.txt", "c.md"]) await NX.fs.write(f.path + "/" + n, n); NX.open("files", { path: f.path }); }); await wait(700);
+  await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.down("Control"); await p.keyboard.press("a"); await p.keyboard.up("Control"); await p.keyboard.press("F2"); await wait(300);
+  ok(await p.evaluate(() => /Rename 3 items/.test((document.querySelector(".win[data-app=files] .nx-ask-card") || {}).textContent || "")), "F2 with several files selected asks for one name for all of them");
+  await p.evaluate(() => { const f = document.querySelector(".win[data-app=files] .nx-ask-card"); f.querySelector("input").value = "Notes"; f.requestSubmit(); }); await wait(800);
+  ok(await p.evaluate(async () => { const L = (await NX.fs.list("/Documents/Batch")).entries.map((e) => e.name).sort().join(","); await NX.fs.remove(["/Documents/Batch"], true); NX.closeAll(); return L === "Notes (1).txt,Notes (2).txt,Notes (3).md"; }), "and numbers them, each keeping its type");
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");
