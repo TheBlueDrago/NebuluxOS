@@ -376,3 +376,14 @@
     NX.toggleTone(e.getModifierState(k));
   }, true);
 })();
+
+// ---------- Filter Keys (Settings > Accessibility > Keyboard): the same key twice within half a second counts once ----------
+(function () {
+  let lastKey = "", lastAt = 0;
+  addEventListener("keydown", (e) => {
+    if (!NX.me || !NX.prefs().filterKeys || e.repeat || /^(Shift|Control|Alt|Meta|OS|CapsLock|NumLock|ScrollLock)$/.test(e.key)) return;
+    const now = Date.now(), k = e.code || e.key;
+    if (k === lastKey && now - lastAt < 500) { e.preventDefault(); e.stopImmediatePropagation(); lastAt = now; return; }
+    lastKey = k; lastAt = now;
+  }, true);
+})();

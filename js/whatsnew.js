@@ -41,6 +41,7 @@
     ["Accessibility in Quick Settings", "The Accessibility tile in Quick Settings turns on Narrator, Sticky Keys, the bold focus outline or your color filter, and opens the on-screen keyboard or the Magnifier."],
     ["Accessibility before you sign in", "The sign-in screen has an Accessibility button next to Power: turn on Narrator, or type your password on the on-screen keyboard."],
     ["On-screen keyboard", "Type with the mouse or a finger: Ctrl + Nebulux + O, or Settings > Accessibility. On a touchscreen it shows by itself when you tap a text box."],
+    ["Filter Keys", "Settings > Accessibility > Filter Keys ignores a key pressed twice by accident: the same key within half a second counts once."],
     ["Toggle Keys", "Settings > Accessibility > Toggle Keys plays a high sound when Caps Lock, Num Lock or Scroll Lock turns on, and a low one when it turns off."],
     ["Sticky Keys", "Press Ctrl, Alt, Shift or Nebulux, then the next key, instead of holding them together. Turn them on in Settings > Accessibility, or press Shift five times."],
     ["Bold focus outline", "Settings > Accessibility can draw a thick, bright outline around whatever the keyboard is on."],

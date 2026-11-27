@@ -839,6 +839,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   const tk2 = await p.evaluate(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "CapsLock", modifierCapsLock: false })); return NX.toggleTone.last; });
   ok(tk1 === "high" && tk2 === "low", "Toggle Keys: a high sound when Caps Lock turns on, a low one when it turns off");
   await p.evaluate(() => NX.setPref("toggleKeys", false));
+  // Filter Keys: a key pressed twice quickly types once
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("filterKeys", true); NX.open("notepad"); }); await wait(500);
+  await p.evaluate(() => { const ta = NX.wins.get("notepad").np.ta; ta.value = ""; ta.focus(); }); await p.keyboard.press("a"); await p.keyboard.press("a"); await p.keyboard.press("b"); await wait(600); await p.keyboard.press("b");
+  ok(await p.evaluate(() => NX.wins.get("notepad").np.ta.value === "abb"), "Filter Keys: the same key twice right away types once, and again after a pause");
+  await p.evaluate(() => { NX.setPref("filterKeys", false); NX.wins.get("notepad").np.ta.value = ""; NX.closeAll(); });
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
