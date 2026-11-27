@@ -15,7 +15,7 @@
     ["Remind me", "Type remind me to call Sam in 20 minutes, or remind me to stretch at 3pm, in Start or Quick Search and it goes into Reminders, ringing on time. Timers and sums work there too."],
     ["A better Paint", "Paint has Redo, Ctrl + Z and Ctrl + Y, any color you like, and asks what to call your picture when you save it."],
     ["Picture details in Photos", "The i button in Photos shows a picture's name, date, size, dimensions and folder, with a way to open the folder."],
-    ["Graph in Calculator", "Calculator has a Graph mode: type up to three functions like sin(x) or 2x+1 and see them drawn. Drag to move around, and zoom with the wheel."],
+    ["Graph in Calculator", "Calculator has a Graph mode: type up to three functions like sin(x) or 2x+1 and see them drawn. Drag to move around, and zoom with the wheel. Standard mode has memory buttons too: MC, MR, M+, M- and MS."],
     ["Timers that keep going", "Clock can run several timers at once, each with a name and any length, and they ring even with Clock closed. Type timer 10 min in Start or Quick Search to start one; running timers count down in Widgets."],
     ["Week view in Calendar", "Calendar has a Week view: your events hour by hour, a line for right now, and click an hour to add an event then."],
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],

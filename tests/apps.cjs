@@ -669,6 +669,8 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     NX.setData("calc-graph", null); NX.closeAll();
     return f(3) === 7 && bad === false && sq(-3) === 9 && lit > 500;
   }), "Calculator's Graph mode understands 2x+1 and y = x^2 and draws them");
+  // Calculator memory: MS, M+, MR
+  ok(await p.evaluate(async () => { NX.closeAll(); NX.setData("calc-mem", null); NX.open("calculator"); await new Promise((r) => setTimeout(r, 500)); const k = (x) => document.querySelector('.win[data-app=calculator] [data-k="' + x + '"]').click(); for (const x of ["4", "2", "ms", "c", "8", "m+", "c", "mr"]) k(x); const v = document.querySelector(".win[data-app=calculator] .c-val").textContent; NX.setData("calc-mem", null); NX.closeAll(); return v === "50"; }), "Calculator's memory: MS, M+ and MR");
   // Calculator > Dates
   await p.evaluate(() => { NX.closeAll(); NX.open("calculator"); }); await wait(500);
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=calculator] [data-m=date]").click(); const set = (q, v) => { const i = document.querySelector(q); i.value = v; i.dispatchEvent(new Event("input")); }; set(".cd-a", "2026-11-25"); set(".cd-b", "2026-12-25"); set(".cd-c", "2026-01-30"); set(".cd-n", "30"); return /30 days/.test(document.querySelector(".cd-diff").textContent) && /March 1, 2026/.test(document.querySelector(".cd-sum").textContent); }), "Calculator's Dates counts the days between dates and adds days to a date");

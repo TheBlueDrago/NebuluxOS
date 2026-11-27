@@ -188,12 +188,13 @@
     setInterval(() => { if (!NX.me) return; const T = L(); let ch = false; for (const t of T) if (t.on && left(t) <= 0) { t.on = false; t.rest = t.len; ch = true; if (NX.alarms && NX.alarms.ring) NX.alarms.ring({ name: (t.name === "Timer" ? "Timer" : t.name) + ": time's up", snooze: false }); } if (ch) save(T); }, 1000);
     return api;
   })();
-  A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 390, h: 580, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
+  A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 390, h: 640, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
     open(body, win) {
       body.classList.add("calc");
       const K = [["%", "pct"], ["CE", "ce"], ["C", "c"], ["⌫", "bs"], ["1/x", "inv"], ["x²", "sq"], ["√x", "sqrt"], ["÷", "/"], ["7"], ["8"], ["9"], ["×", "*"], ["4"], ["5"], ["6"], ["−", "-"], ["1"], ["2"], ["3"], ["+", "+"], ["±", "neg"], ["0"], [".", "."], ["=", "="]];
-      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button><button data-m="date">Dates</button><button data-m="prog">Programmer</button><button data-m="graph">Graph</button></div><div class="c-conv" hidden></div><div class="c-prog" hidden></div><div class="c-graph" hidden></div><div class="c-date" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
-      let cur = "0", prev = null, op = null, fresh = true, expr = "";
+      body.innerHTML = `<div class="seg c-mode"><button data-m="std" class="on">Standard</button><button data-m="sci">Scientific</button><button data-m="conv">Converter</button><button data-m="date">Dates</button><button data-m="prog">Programmer</button><button data-m="graph">Graph</button></div><div class="c-conv" hidden></div><div class="c-prog" hidden></div><div class="c-graph" hidden></div><div class="c-date" hidden></div><div class="c-sci" hidden></div><div class="c-disp"><button class="c-hbtn" aria-label="History" title="History">${NX.icon("time", 16)}</button><small class="c-expr"></small><b class="c-val">0</b></div><div class="c-hist" hidden></div><div class="c-mem" role="group" aria-label="Memory">${[["mc", "MC", "Clear memory"], ["mr", "MR", "Recall memory"], ["m+", "M+", "Add to memory"], ["m-", "M-", "Take away from memory"], ["ms", "MS", "Store in memory"]].map(([k, t, l]) => `<button class="c-mk" data-k="${k}" aria-label="${l}" title="${l}">${t}</button>`).join("")}<span class="c-memv"></span></div><div class="c-keys">${K.map(([l, k]) => `<button class="c-k ${/^[0-9.]$/.test(k || l) ? "num" : ""} ${(k || l) === "=" ? "eq" : ""}" data-k="${k || l}">${l}</button>`).join("")}</div>`;
+      let cur = "0", prev = null, op = null, fresh = true, expr = "", mem = NX.data("calc-mem", null);
+      const memDraw = () => { NX.setData("calc-mem", mem); const v = body.querySelector(".c-memv"); if (v) v.textContent = mem == null ? "" : "M = " + fmt(mem); body.querySelectorAll("[data-k=mc],[data-k=mr]").forEach((b) => (b.disabled = mem == null)); };
       const val = body.querySelector(".c-val"), ex = body.querySelector(".c-expr");
       const fmt = (n) => { if (!isFinite(n)) return "Can't divide by zero"; const s = Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0) ? n.toExponential(8) : String(+n.toPrecision(15)); return s; };
       const calc = (a, b, o) => o === "+" ? a + b : o === "-" ? a - b : o === "*" ? a * b : o === "/" ? (b === 0 ? Infinity : a / b) : b;
@@ -212,9 +213,12 @@
         else if (k === "sq") { const n = parseFloat(cur); cur = fmt(n * n); fresh = true; }
         else if (k === "sqrt") { const n = parseFloat(cur); cur = n < 0 ? "Invalid input" : fmt(Math.sqrt(n)); fresh = true; if (n < 0) setTimeout(() => { cur = "0"; show(); }, 1200); }
         else if (k === "inv") { const n = parseFloat(cur); cur = n === 0 ? "Can't divide by zero" : fmt(1 / n); fresh = true; }
+        // memory, like Windows Calculator: MS stores, MR recalls, M+ and M- add and take away, MC clears
+        else if (/^m[scr+-]$/.test(k)) { const n = parseFloat(cur) || 0; if (k === "ms") mem = n; if (k === "m+") mem = (mem || 0) + n; if (k === "m-") mem = (mem || 0) - n; if (k === "mc") mem = null; if (k === "mr" && mem != null) { cur = fmt(mem); fresh = true; } if (k !== "mr") fresh = true; memDraw(); }
         show();
       };
       body.querySelector(".c-keys").onclick = (e) => { const b = e.target.closest("button"); if (b) press(b.dataset.k); };
+      body.querySelector(".c-mem").onclick = (e) => { const b = e.target.closest("button"); if (b) press(b.dataset.k); }; setTimeout(memDraw, 0);
       // History: the last 20 answers; click one to use it again
       const hist = body.querySelector(".c-hist");
       const histDraw = () => { const H = NX.data("calc-history", []);
@@ -330,7 +334,7 @@
       win.graph = { draw: () => gPlot(), view: () => gv, eval: gEval };
       { const ro = window.ResizeObserver ? new ResizeObserver(() => { if (!graph.hidden) gPlot(); }) : null; if (ro) ro.observe(graph); }
       body.querySelector(".c-mode").onclick = (e) => { const b = e.target.closest("[data-m]"); if (!b) return; const m = b.dataset.m, c = m === "conv", sc = m === "sci", dt = m === "date", pg = m === "prog", gr = m === "graph";
-        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; dateEl.hidden = !dt; prog.hidden = !pg; graph.hidden = !gr; body.querySelector(".c-disp").hidden = c || sc || dt || pg || gr; body.querySelector(".c-keys").hidden = c || sc || dt || pg || gr; hist.hidden = true;
+        body.querySelectorAll(".c-mode button").forEach((x) => x.classList.toggle("on", x === b)); conv.hidden = !c; sci.hidden = !sc; dateEl.hidden = !dt; prog.hidden = !pg; graph.hidden = !gr; body.querySelector(".c-disp").hidden = c || sc || dt || pg || gr; body.querySelector(".c-keys").hidden = c || sc || dt || pg || gr; body.querySelector(".c-mem").hidden = c || sc || dt || pg || gr; hist.hidden = true;
         if (gr && !graph.innerHTML) graphDraw(); if (gr) requestAnimationFrame(gPlot);
         if (pg && !prog.innerHTML) progDraw(); if (pg) prog.querySelector(".pg-in[data-base='10']").focus();
         if (dt && !dateEl.innerHTML) dateDraw();
