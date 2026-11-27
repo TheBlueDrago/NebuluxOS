@@ -280,8 +280,14 @@
           e.stopPropagation();
           if (e.key === "Escape") { e.preventDefault(); end(); listEl.focus(); return; }
           if (e.key !== "Enter") return; e.preventDefault();
-          const t = i.value.trim(); if (!t || t === cur) { end(); listEl.focus(); return; }
-          try { await NX.fs.list(t); done = true; go(t); listEl.focus(); } catch (er) { NX.toast("Nebulux OS can't find " + t + ". Check the spelling and try again."); i.select(); }
+          let t = i.value.trim(); if (!t || t === cur) { end(); listEl.focus(); return; }
+          // ~ is your home folder; a plain name like Documents is looked for in this folder, then in your home folder
+          const home = (places && places.home) || "", abs = (x) => x.startsWith("/") || /^[a-z]:[\\/]/i.test(x);
+          if (t === "~") t = home; else if (t.startsWith("~/")) t = home.replace(/[\\/]$/, "") + t.slice(1);
+          const tries = abs(t) ? [t] : [...(special ? [] : [NX.fs.join(cur, t)]), ...(home ? [NX.fs.join(home, t)] : [])];
+          let to = null; for (const x of tries) { try { await NX.fs.list(x); to = x; break; } catch (er) { /* try the next */ } }
+          if (to) { done = true; go(to); listEl.focus(); return; }
+          NX.toast("Nebulux OS can't find " + t + ". Check the spelling and try again."); i.select();
         };
         i.onblur = () => setTimeout(() => { if (document.activeElement !== i) end(); }, 120);
       }

@@ -769,6 +769,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const i = document.querySelector(".win[data-app=files] .fx-pathin"); return !!i && document.activeElement === i && i.value === "/Documents"; }), "Ctrl + L turns the address bar into a box to type a place");
   await p.keyboard.press("End"); await p.keyboard.type("/Arrows"); await p.keyboard.press("Enter"); await wait(500);
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=files] .fx-pathin") && [...document.querySelectorAll(".win[data-app=files] .fx-item")].some((b) => /c.txt/.test(b.textContent))), "typing a folder and Enter goes there");
+  await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await p.keyboard.type("Pictures"); await p.keyboard.press("Enter"); await wait(500);
+  ok(await p.evaluate(() => /Pictures/.test(document.querySelector(".win[data-app=files] .fx-crumbs").textContent)), "a plain name like Pictures finds the folder in your home folder");
+  await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await p.keyboard.type("~/Documents/Arrows"); await p.keyboard.press("Enter"); await wait(500);
+  ok(await p.evaluate(() => /Arrows/.test(document.querySelector(".win[data-app=files] .fx-crumbs").textContent)), "~ means your home folder");
   await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await p.keyboard.type("/Nope"); await p.keyboard.press("Enter"); await wait(300);
   ok(await p.evaluate(() => !!document.querySelector(".win[data-app=files] .fx-pathin")), "a place that isn't there keeps the box open");
   await p.keyboard.press("Escape"); await p.keyboard.down("Control"); await p.keyboard.press("e"); await p.keyboard.up("Control"); await wait(100);
