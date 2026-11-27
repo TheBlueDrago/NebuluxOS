@@ -799,6 +799,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => NX.prefs().colorFilter && NX.prefs().colorFilter !== "none" && [...document.documentElement.classList].some((c) => c.startsWith("cf-"))), "Ctrl + Nebulux + C turns color filters on");
   await p.keyboard.down("Control"); await p.keyboard.down("Meta"); await p.keyboard.press("c"); await p.keyboard.up("Meta"); await p.keyboard.up("Control"); await wait(150);
   ok(await p.evaluate(() => NX.prefs().colorFilter === "none" && ![...document.documentElement.classList].some((c) => c.startsWith("cf-"))), "and off again");
+  await p.keyboard.down("Alt"); await p.keyboard.down("Shift"); await p.keyboard.press("PrintScreen"); await p.keyboard.up("Shift"); await p.keyboard.up("Alt"); await wait(150);
+  ok(await p.evaluate(() => !!document.documentElement.dataset.ct), "Left Alt + Left Shift + Print Screen turns a contrast theme on");
+  await p.keyboard.down("Alt"); await p.keyboard.down("Shift"); await p.keyboard.press("PrintScreen"); await p.keyboard.up("Shift"); await p.keyboard.up("Alt"); await wait(150);
+  ok(await p.evaluate(() => !document.documentElement.dataset.ct), "and the same keys turn it off");
   await p.evaluate(() => NX.shell.closeFlyouts());
   await p.evaluate(() => { NX.closeAll(); const t = document.querySelector("#taskbar"), r = t.getBoundingClientRect(); t.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.right - 400, clientY: r.y + 10 })); }); await wait(200);
   ok(await p.evaluate(() => !document.querySelector("#ctx").hidden && /Task Manager/.test(document.querySelector("#ctx").textContent) && /Taskbar settings/.test(document.querySelector("#ctx").textContent)), "right-clicking the taskbar offers Task Manager and Taskbar settings");

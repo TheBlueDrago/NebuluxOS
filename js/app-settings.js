@@ -408,7 +408,7 @@
         { const nr = body.querySelector("[data-nrate]"); if (nr) nr.onchange = () => { NX.setPref("narratorRate", +nr.value); NX.narrator && NX.narrator.speak("This is how fast Narrator talks."); }; }
         body.querySelectorAll("[data-rdel]").forEach((b) => (b.onclick = () => { const L = NX.textRepl().slice(); L.splice(+b.dataset.rdel, 1); NX.setData("text-repl", L); draw(); }));
         { const fr = body.querySelector(".s-radd"); if (fr) fr.onsubmit = (e) => { e.preventDefault(); const k = fr.k.value.trim(), v = fr.v.value.trim(); if (!k || !v || k.includes(" ")) { NX.toast("The code is one word, and both boxes need something."); return; } const L = NX.textRepl().filter(([x]) => x !== k); L.push([k, v]); NX.setData("text-repl", L.slice(-100)); draw(); }; }
-        { const ct = body.querySelector("[data-ctheme]"); if (ct) ct.onchange = () => { NX.setPref("contrastTheme", ct.value); draw(); }; }
+        { const ct = body.querySelector("[data-ctheme]"); if (ct) ct.onchange = () => { NX.setPref("contrastTheme", ct.value); if (ct.value && ct.value !== "none") NX.setPref("lastContrastTheme", ct.value); draw(); }; }
         // the volume mixer: each app playing sound, with its own volume and mute (on the USB)
         { const mx = body.querySelector(".s-mixl");
           if (mx) { const fill = async () => { let L = []; try { L = (await NX.api("GET", "/audio/apps")).apps || []; } catch (e) { /* none */ }

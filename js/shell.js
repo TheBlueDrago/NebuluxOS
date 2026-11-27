@@ -614,6 +614,7 @@
       if (/^snap-/.test(key)) { const w = NX.topWin(); if (w) NX.snap(w.id, key.slice(5)); }
       // like Windows: Nebulux + A Quick Settings, + I Settings, + N the calendar and notifications, + U Accessibility, + X the quick link menu, + Pause About
       if (key === "qs") $("#tb-qs").click(); if (key === "notif") $("#tb-clock").click(); if (key === "run" && NX.runBox) NX.runBox(); if (key === "project" && NX.project) NX.project(); if (key === "cfilter") { const p = NX.prefs(), on = p.colorFilter && p.colorFilter !== "none", next = on ? "none" : p.lastColorFilter || "gray"; NX.setPref("colorFilter", next); NX.toast(on ? "Color filters are off." : "Color filters are on. Ctrl + Nebulux + C turns them off."); }
+      if (key === "contrast") { const p = NX.prefs(), ok = ["aquatic", "desert", "dusk", "night"], on = ok.includes(p.contrastTheme); NX.setPref("contrastTheme", on ? "none" : ok.includes(p.lastContrastTheme) ? p.lastContrastTheme : "night"); NX.toast(on ? "Contrast theme is off." : "Contrast theme is on. Left Alt + Left Shift + Print Screen turns it off."); }
       if (key === "cast") { closeFlyouts("qs"); qsDraw(); $("#qs").hidden = false; qsMore("cast"); }
       if (key === "settings") NX.open("settings"); if (key === "access") NX.open("settings", { page: "access" }); if (key === "about") NX.open("settings", { page: "about" });
       if (key === "xmenu") { const r = $("#tb-start").getBoundingClientRect(); quickLinks(r.left, r.top - 8); }
@@ -633,7 +634,8 @@
       if (e.metaKey || e.getModifierState && e.getModifierState("OS")) winAlone = false;
       if (!NX.me) return;
       if (e.ctrlKey && !e.shiftKey && e.key === "Escape") { e.preventDefault(); toggleStart(true); }
-      if (e.key === "PrintScreen") { e.preventDefault(); winKeys("shot"); }
+      if (e.key === "PrintScreen" && e.altKey && e.shiftKey) { e.preventDefault(); winKeys("contrast"); }
+      else if (e.key === "PrintScreen") { e.preventDefault(); winKeys("shot"); }
       else if (e.metaKey && e.shiftKey && /^s$/i.test(e.key)) { e.preventDefault(); winKeys(NX.snipArea ? "snip" : "shot"); }
       else if (e.metaKey && !e.ctrlKey && !e.shiftKey && /^[edlwvainuxrpk]$/i.test(e.key)) { e.preventDefault(); const k = { e: "files", d: "desk", l: "lock", w: "widgets", v: "clip", a: "qs", i: "settings", n: "notif", u: "access", x: "xmenu", r: "run", p: "project", k: "cast" }[e.key.toLowerCase()]; if (k !== "xmenu" && k !== "qs" && k !== "notif" && k !== "cast") closeFlyouts(); winKeys(k); }
       else if (e.metaKey && e.key === "Pause") { e.preventDefault(); winKeys("about"); }

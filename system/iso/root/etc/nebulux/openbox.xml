@@ -25,6 +25,8 @@
     <keybind key="W-p"><action name="Execute"><command>/usr/local/bin/nebulux-key project</command></action></keybind>
     <keybind key="W-k"><action name="Execute"><command>/usr/local/bin/nebulux-key cast</command></action></keybind>
     <keybind key="C-W-c"><action name="Execute"><command>/usr/local/bin/nebulux-key cfilter</command></action></keybind>
+    <keybind key="A-S-Print"><action name="Execute"><command>/usr/local/bin/nebulux-key contrast</command></action></keybind>
+    <keybind key="A-S-Sys_Req"><action name="Execute"><command>/usr/local/bin/nebulux-key contrast</command></action></keybind>
     <keybind key="W-Pause"><action name="Execute"><command>/usr/local/bin/nebulux-key about</command></action></keybind>
     <keybind key="W-l"><action name="Execute"><command>/usr/local/bin/nebulux-key lock</command></action></keybind>
     <keybind key="W-Tab"><action name="Execute"><command>/usr/local/bin/nebulux-key tview</command></action></keybind>
