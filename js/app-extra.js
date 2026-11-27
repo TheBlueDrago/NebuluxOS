@@ -4,6 +4,27 @@
   const A = NX.apps;
 
   // ---------- Notepad: saves as you type, as a note with your account or as a real text file ----------
+  // Markdown to safe HTML (Notepad Preview, File Explorer preview): everything is escaped first, links are https only
+  NX.mdHTML = (src) => {
+    const inline = (t) => NX.esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>").replace(/~~([^~]+)~~/g, "<s>$1</s>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, a, u) => `<a href="${u}" data-mdlink="${u}">${a}</a>`);
+    const out = []; let list = null, code = null;
+    const close = () => { if (list) { out.push(`</${list}>`); list = null; } };
+    for (const line of String(src).split(String.fromCharCode(10))) {
+      if (/^```/.test(line)) { if (code !== null) { out.push(`<pre>${NX.esc(code)}</pre>`); code = null; } else { close(); code = ""; } continue; }
+      if (code !== null) { code += (code ? String.fromCharCode(10) : "") + line; continue; }
+      let m;
+      if ((m = /^(#{1,6})\s+(.*)$/.exec(line))) { close(); const n = m[1].length; out.push(`<h${n}>${inline(m[2])}</h${n}>`); }
+      else if ((m = /^\s*[-*+]\s+\[( |x)\]\s+(.*)$/i.exec(line))) { if (list !== "ul") { close(); out.push("<ul class=\"np-task\">"); list = "ul"; } out.push(`<li><i class="np-box ${m[1].trim() ? "on" : ""}"></i>${inline(m[2])}</li>`); }
+      else if ((m = /^\s*[-*+]\s+(.*)$/.exec(line))) { if (list !== "ul") { close(); out.push("<ul>"); list = "ul"; } out.push(`<li>${inline(m[1])}</li>`); }
+      else if ((m = /^\s*\d+[.)]\s+(.*)$/.exec(line))) { if (list !== "ol") { close(); out.push("<ol>"); list = "ol"; } out.push(`<li>${inline(m[1])}</li>`); }
+      else if ((m = /^>\s?(.*)$/.exec(line))) { close(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); }
+      else if (/^\s*(---|\*\*\*)\s*$/.test(line)) { close(); out.push("<hr>"); }
+      else if (!line.trim()) { close(); }
+      else { close(); out.push(`<p>${inline(line)}</p>`); }
+    }
+    if (code !== null) out.push(`<pre>${NX.esc(code)}</pre>`); close(); return out.join("");
+  };
   A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
     open(body, win, opts) {
       body.classList.add("np");
@@ -17,27 +38,7 @@
       ["keyup", "click", "input", "select"].forEach((ev) => ta.addEventListener(ev, where));
       pos.title = "Go to line (Ctrl + G)"; pos.classList.add("np-posbtn"); pos.onclick = () => goLine();
       // Preview (4.4, like Windows Notepad's Markdown): # headings, **bold**, *italic*, `code`, lists, > quotes and [links](https://...)
-      const mdHTML = (src) => {
-        const inline = (t) => NX.esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>").replace(/~~([^~]+)~~/g, "<s>$1</s>")
-          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, a, u) => `<a href="${u}" data-mdlink="${u}">${a}</a>`);
-        const out = []; let list = null, code = null;
-        const close = () => { if (list) { out.push(`</${list}>`); list = null; } };
-        for (const line of String(src).split(String.fromCharCode(10))) {
-          if (/^```/.test(line)) { if (code !== null) { out.push(`<pre>${NX.esc(code)}</pre>`); code = null; } else { close(); code = ""; } continue; }
-          if (code !== null) { code += (code ? String.fromCharCode(10) : "") + line; continue; }
-          let m;
-          if ((m = /^(#{1,6})\s+(.*)$/.exec(line))) { close(); const n = m[1].length; out.push(`<h${n}>${inline(m[2])}</h${n}>`); }
-          else if ((m = /^\s*[-*+]\s+\[( |x)\]\s+(.*)$/i.exec(line))) { if (list !== "ul") { close(); out.push("<ul class=\"np-task\">"); list = "ul"; } out.push(`<li><i class="np-box ${m[1].trim() ? "on" : ""}"></i>${inline(m[2])}</li>`); }
-          else if ((m = /^\s*[-*+]\s+(.*)$/.exec(line))) { if (list !== "ul") { close(); out.push("<ul>"); list = "ul"; } out.push(`<li>${inline(m[1])}</li>`); }
-          else if ((m = /^\s*\d+[.)]\s+(.*)$/.exec(line))) { if (list !== "ol") { close(); out.push("<ol>"); list = "ol"; } out.push(`<li>${inline(m[1])}</li>`); }
-          else if ((m = /^>\s?(.*)$/.exec(line))) { close(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); }
-          else if (/^\s*(---|\*\*\*)\s*$/.test(line)) { close(); out.push("<hr>"); }
-          else if (!line.trim()) { close(); }
-          else { close(); out.push(`<p>${inline(line)}</p>`); }
-        }
-        if (code !== null) out.push(`<pre>${NX.esc(code)}</pre>`); close(); return out.join("");
-      };
-      NX.mdHTML = mdHTML;
+      const mdHTML = NX.mdHTML;
       const md = body.querySelector(".np-md");
       const mdShow = (on) => { md.hidden = !on; ta.hidden = !!on; const b = body.querySelector("[data-a=md]"); b.classList.toggle("on", !!on); b.setAttribute("aria-pressed", !!on); if (on) md.innerHTML = mdHTML(ta.value) || `<p class="np-mdnone">Nothing to show yet. Type some Markdown, like # A heading or **bold**.</p>`; };
       md.addEventListener("click", (e) => { const a = e.target.closest("[data-mdlink]"); if (a) { e.preventDefault(); NX.open("google", { url: a.dataset.mdlink }); } });

@@ -958,3 +958,4 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 /* Accessibility > Easier reading: more space between letters, words and lines inside apps */
 html.readspace .win-body,html.readspace .win-body input,html.readspace .win-body textarea{letter-spacing:.06em;word-spacing:.16em;line-height:1.65}
 html.readspace .win-body p,html.readspace .win-body small{line-height:1.7}
+.pv-md{white-space:normal!important;font:13px/1.5 var(--font)!important;padding:10px!important}.pv-md h1{font-size:18px}.pv-md h2{font-size:15px}.pv-md[hidden]{display:none}
