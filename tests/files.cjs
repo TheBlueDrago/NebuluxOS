@@ -773,6 +773,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => /Pictures/.test(document.querySelector(".win[data-app=files] .fx-crumbs").textContent)), "a plain name like Pictures finds the folder in your home folder");
   await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await p.keyboard.type("~/Documents/Arrows"); await p.keyboard.press("Enter"); await wait(500);
   ok(await p.evaluate(() => /Arrows/.test(document.querySelector(".win[data-app=files] .fx-crumbs").textContent)), "~ means your home folder");
+  await p.evaluate(() => { const l = document.querySelector(".win[data-app=files] .fx-list"), r = l.getBoundingClientRect(); l.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.right - 20, clientY: r.bottom - 20 })); }); await wait(200);
+  ok(await p.evaluate(() => { const t = document.querySelector("#ctx").textContent; return /Sort by/.test(t) && /Date changed/.test(t) && /Details/.test(t) && /Properties/.test(t); }), "right-clicking a folder's empty space offers Sort by, View and Properties");
+  await p.evaluate(() => [...document.querySelectorAll("#ctx button")].find((b) => b.textContent.trim() === "Properties").click()); await wait(400);
+  ok(await p.evaluate(() => { const d = document.querySelector(".fx-props"); const ok = !!d && /Arrows/.test(d.textContent) && /Folder/.test(d.textContent); if (d) d.remove(); document.querySelector(".win[data-app=files] .fx-list").focus(); return ok; }), "and Properties shows the folder");
   await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await p.keyboard.type("/Nope"); await p.keyboard.press("Enter"); await wait(300);
   ok(await p.evaluate(() => !!document.querySelector(".win[data-app=files] .fx-pathin")), "a place that isn't there keeps the box open");
   await p.keyboard.press("Escape"); await p.keyboard.down("Control"); await p.keyboard.press("e"); await p.keyboard.up("Control"); await wait(100);
