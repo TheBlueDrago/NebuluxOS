@@ -47,6 +47,15 @@
   // Nebulux + arrow keys: left or right half, maximize, restore, minimize
   NX.snap = (id, where) => {
     const w = wins.get(id); if (!w) return; const A = area();
+    // quarters, like Windows: a window on a half goes to its top or bottom quarter with Up or Down, and back to the half the other way
+    const side = w.snap === "left" || w.snap === "q-tl" || w.snap === "q-bl" ? "l" : w.snap === "right" || w.snap === "q-tr" || w.snap === "q-br" ? "r" : null;
+    if (side && (where === "max" || where === "down") && !w.max) {
+      const fx = side === "l" ? 0 : 0.5;
+      if ((where === "max" && /^q-b/.test(w.snap)) || (where === "down" && /^q-t/.test(w.snap))) { NX.snap(id, side === "l" ? "left" : "right"); return; }
+      if (w.snap === "left" || w.snap === "right") { NX.snapRect(id, fx, where === "max" ? 0 : 0.5, 0.5, 0.5); w.snap = "q-" + (where === "max" ? "t" : "b") + side; document.dispatchEvent(new CustomEvent("nx:snapped", { detail: { id, side: w.snap } })); return; }
+      if (where === "down") { NX.minimize(id); return; } // a bottom quarter, then Down again: minimize
+      if (!w.max) NX.toggleMax(id); return; // a top quarter, then Up again: full size
+    }
     if (where === "max") { if (!w.max) NX.toggleMax(id); return; }
     if (where === "down") { if (w.max) NX.toggleMax(id); else if (w.snap) { w.snap = null; w.w = w.rw || w.w; w.h = w.rh || w.h; fit(w); place(w); w.onresize && w.onresize(); } else NX.minimize(id); return; }
     if (w.max) { w.max = false; w.el.classList.remove("maxed"); w.el.querySelector(".wb-max").innerHTML = NX.icon("max", 16); }

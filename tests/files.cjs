@@ -122,7 +122,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const r = document.querySelector(".win[data-app=notepad]").getBoundingClientRect(); return r.x <= 1 && Math.abs(r.width - innerWidth / 2) < 3; }), "Windows + Left snaps the window to the left half");
   ok(await p.evaluate(() => document.querySelector("#start").hidden), "and doesn't open Start");
   await winKey("ArrowUp");
-  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad]").classList.contains("maxed")), "Windows + Up maximizes it");
+  ok(await p.evaluate(() => NX.wins.get("notepad").snap === "q-tl"), "Windows + Up on a left half makes it the top-left quarter, like Windows 11");
+  await winKey("ArrowUp");
+  ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad]").classList.contains("maxed")), "and Up again maximizes it");
   await winKey("KeyD");
   ok(await p.evaluate(() => [...NX.wins.values()].every((w) => w.min)), "Windows + D shows the desktop");
   await winKey("KeyD");
@@ -821,6 +823,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => document.querySelector("#start .sm-jump [data-to=P]").click()); await wait(200);
   ok(await p.evaluate(() => !document.querySelector("#start .sm-jump") && document.activeElement === document.querySelector('#start [data-letter="P"]')), "and a letter jumps to its apps");
   await p.evaluate(() => NX.shell.closeFlyouts());
+  // quarters: Nebulux + Left then Up is the top-left quarter; Down goes back to the half; Right then Down is the bottom-right quarter
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(400);
+  const q = await p.evaluate(() => { const w = NX.wins.get("clock"), out = []; NX.snap("clock", "left"); NX.snap("clock", "max"); out.push([w.snap, w.x, w.y, w.h]); NX.snap("clock", "down"); out.push([w.snap, w.h]); NX.snap("clock", "right"); NX.snap("clock", "down"); out.push([w.snap, w.x > 0, w.y > 0]); NX.snap("clock", "down"); out.push(w.min); return { out, H: document.getElementById("windows").clientHeight }; });
+  ok(q.out[0][0] === "q-tl" && q.out[0][1] === 0 && q.out[0][2] === 0 && q.out[0][3] < q.H * 0.6, "Nebulux + Left then Up snaps to the top-left quarter");
+  ok(q.out[1][0] === "left" && q.out[1][1] > q.H * 0.8, "Down goes back to the left half");
+  ok(q.out[2][0] === "q-br" && q.out[2][1] && q.out[2][2], "Nebulux + Right then Down snaps to the bottom-right quarter");
+  ok(q.out[3] === true, "and Down once more minimizes it");
+  await p.evaluate(() => NX.closeAll());
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
