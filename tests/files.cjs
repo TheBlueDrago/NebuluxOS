@@ -693,7 +693,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.querySelector(".win[data-app=notepad] textarea").value === "On my way! and 12 Main Street, done"), "typing a code and a space or comma puts in its phrase");
   await p.evaluate(() => { const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = ""; t.dispatchEvent(new Event("input")); NX.setData("text-repl", null); }); await wait(500); await p.evaluate(() => NX.closeAll());
   // Alt + Space: the window menu, all by keyboard; Move with the arrow keys
-  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(500);
+  await p.evaluate(() => { NX.closeAll(); NX.open("clock"); const w = NX.wins.get("clock"); if (w.max) NX.toggleMax("clock"); w.x = 20; }); await wait(500);
   const x0 = await p.evaluate(() => NX.wins.get("clock").x);
   await p.keyboard.down("Alt"); await p.keyboard.press("Space"); await p.keyboard.up("Alt"); await wait(200);
   ok(await p.evaluate(() => !document.querySelector("#ctx").hidden && document.activeElement.closest("#ctx") && /Move/.test(document.querySelector("#ctx").textContent)), "Alt + Space opens the window menu, ready for the keyboard");
