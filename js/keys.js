@@ -362,3 +362,17 @@
   addEventListener("keyup", (e) => { if (e.key === "CapsLock") capsHeld = false; }, true);
   addEventListener("blur", () => { capsHeld = false; });
 })();
+
+// ---------- Toggle Keys (Settings > Accessibility > Keyboard): a sound for Caps Lock, Num Lock and Scroll Lock ----------
+(function () {
+  let ctx = null;
+  NX.toggleTone = (on) => {
+    NX.toggleTone.last = on ? "high" : "low";
+    try { const v = NX.prefs().volume / 100; if (!v) return; ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = on ? 1100 : 500; o.type = "sine"; g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.2 * v), ctx.currentTime + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18); o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.2); } catch (e) { /* no sound card */ }
+  };
+  addEventListener("keydown", (e) => {
+    if (!NX.me || !NX.prefs().toggleKeys || e.repeat) return;
+    const k = e.key === "CapsLock" ? "CapsLock" : e.key === "NumLock" ? "NumLock" : e.key === "ScrollLock" ? "ScrollLock" : null; if (!k || !e.getModifierState) return;
+    NX.toggleTone(e.getModifierState(k));
+  }, true);
+})();

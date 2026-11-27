@@ -833,6 +833,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { NX.closeAll(); NX.open("clock"); }); await wait(400); await p.keyboard.down("Meta"); await p.keyboard.down("Shift"); await p.keyboard.press("ArrowUp"); await p.keyboard.up("Shift"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => { const w = NX.wins.get("clock"); return innerWidth < 700 ? !!w : w.y === 0 && w.h === document.getElementById("windows").clientHeight && !w.max; }), "Nebulux + Shift + Up stretches the window from top to bottom (phones: windows are already full size)");
   await p.evaluate(() => NX.closeAll());
+  // Toggle Keys: Caps Lock makes a sound (the test browser is muted; NX.toggleTone.last says which one)
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("toggleKeys", true); }); await wait(50);
+  const tk1 = await p.evaluate(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "CapsLock", modifierCapsLock: true })); return NX.toggleTone.last; });
+  const tk2 = await p.evaluate(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "CapsLock", modifierCapsLock: false })); return NX.toggleTone.last; });
+  ok(tk1 === "high" && tk2 === "low", "Toggle Keys: a high sound when Caps Lock turns on, a low one when it turns off");
+  await p.evaluate(() => NX.setPref("toggleKeys", false));
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
