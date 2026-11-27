@@ -978,3 +978,5 @@ html.dim-hw #dim{display:none!important}
 .s-hero .s-pcren{margin-left:auto;align-self:center}
 .np-mc.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .qs-t > svg.ico{padding:5px 0}.qs-split .qs-main svg{width:32px;height:32px}
+.fx-crumbs{cursor:text}.fx-crumbs .fx-cr,.fx-crumbs .fx-crs{cursor:default}.fx-crumbs:has(.fx-pathin){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.fx-pathin{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:var(--txt);font:inherit;font-size:13px;padding:0}
+.fx-pathin:focus,.fx-pathin:focus-visible{outline:none!important;box-shadow:none!important}

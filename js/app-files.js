@@ -269,6 +269,28 @@
         c.innerHTML = parts.map(([p, n], i) => `<button class="fx-cr" data-go="${NX.esc(p)}">${i === 0 ? NX.icon(drive ? "usb" : "home", 14) : ""}${NX.esc(n)}</button>`).join(`<span class="fx-crs">${NX.icon("chevron", 10)}</span>`);
         c.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
       }
+      // type a place: click the empty part of the address bar, or press Ctrl + L, Alt + D or F4, like Windows
+      function editPath() {
+        const c = $(".fx-crumbs"); if (c.querySelector(".fx-pathin")) { c.querySelector(".fx-pathin").select(); return; }
+        const special = isHome() || isTrash() || isTag() || isRecent() || isGal(), v = special ? (places && places.home) || "" : cur;
+        c.innerHTML = `<input class="fx-pathin" spellcheck="false" autocomplete="off" aria-label="Type a folder to go to" value="${NX.esc(v)}">`;
+        const i = c.querySelector("input"); let done = false; i.focus(); i.select();
+        const end = () => { if (done) return; done = true; crumbs(); };
+        i.onkeydown = async (e) => {
+          e.stopPropagation();
+          if (e.key === "Escape") { e.preventDefault(); end(); listEl.focus(); return; }
+          if (e.key !== "Enter") return; e.preventDefault();
+          const t = i.value.trim(); if (!t || t === cur) { end(); listEl.focus(); return; }
+          try { await NX.fs.list(t); done = true; go(t); listEl.focus(); } catch (er) { NX.toast("Nebulux OS can't find " + t + ". Check the spelling and try again."); i.select(); }
+        };
+        i.onblur = () => setTimeout(() => { if (document.activeElement !== i) end(); }, 120);
+      }
+      $(".fx-crumbs").addEventListener("click", (e) => { if (e.target === e.currentTarget) editPath(); });
+      body.addEventListener("keydown", (e) => {
+        const c = (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey, low = (e.key || "").toLowerCase();
+        if ((c && low === "l") || (e.altKey && !e.ctrlKey && low === "d") || (e.key === "F4" && !e.altKey && !e.ctrlKey)) { e.preventDefault(); e.stopPropagation(); editPath(); }
+        else if (c && (low === "f" || low === "e")) { e.preventDefault(); e.stopPropagation(); const s = $(".fx-search input"); s.focus(); s.select(); }
+      });
       function tools() {
         const one = sel.size === 1, any = sel.size > 0, t = (k, icon, label, on) => `<button class="fx-t" data-t="${k}" ${on === false ? "disabled" : ""} title="${label}">${NX.icon(icon, 16)}<span>${label}</span></button>`;
         $(".fx-tools").innerHTML = isTrash() ? t("restore", "restart", "Restore", any) + t("purge", "trash", "Delete for good", any) + `<span class="fx-sp"></span>` + t("empty", "recycle", "Empty Recycle Bin", items.length > 0)

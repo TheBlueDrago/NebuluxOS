@@ -765,11 +765,21 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => !document.querySelector(".win[data-app=files] .fx-item.sel") && !!NX.wins.get("files")), "Esc lets go of the selection, and the window stays open");
   await p.keyboard.down("Alt"); await p.keyboard.press("ArrowUp"); await p.keyboard.up("Alt"); await wait(500);
   ok(await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].some((b) => /Arrows/.test(b.textContent))), "Alt + Up goes up a folder");
+  await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await wait(150);
+  ok(await p.evaluate(() => { const i = document.querySelector(".win[data-app=files] .fx-pathin"); return !!i && document.activeElement === i && i.value === "/Documents"; }), "Ctrl + L turns the address bar into a box to type a place");
+  await p.keyboard.press("End"); await p.keyboard.type("/Arrows"); await p.keyboard.press("Enter"); await wait(500);
+  ok(await p.evaluate(() => !document.querySelector(".win[data-app=files] .fx-pathin") && [...document.querySelectorAll(".win[data-app=files] .fx-item")].some((b) => /c.txt/.test(b.textContent))), "typing a folder and Enter goes there");
+  await p.keyboard.down("Control"); await p.keyboard.press("l"); await p.keyboard.up("Control"); await p.keyboard.type("/Nope"); await p.keyboard.press("Enter"); await wait(300);
+  ok(await p.evaluate(() => !!document.querySelector(".win[data-app=files] .fx-pathin")), "a place that isn't there keeps the box open");
+  await p.keyboard.press("Escape"); await p.keyboard.down("Control"); await p.keyboard.press("e"); await p.keyboard.up("Control"); await wait(100);
+  ok(await p.evaluate(() => !document.querySelector(".win[data-app=files] .fx-pathin") && document.activeElement === document.querySelector(".win[data-app=files] .fx-search input")), "Esc puts the path back, Ctrl + E jumps to search");
   await p.evaluate(async () => { NX.setData("fx-view", "grid"); NX.closeAll(); await NX.fs.remove(["/Documents/Arrows"], true); });
   // Settings: the arrow keys move through the page list
   await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
   await p.evaluate(() => document.querySelector(".win[data-app=settings] .s-side nav [data-p]").focus()); await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowDown"); await wait(100);
   ok(await p.evaluate(() => document.activeElement.dataset.p === [...document.querySelectorAll(".win[data-app=settings] .s-side nav [data-p]")][2].dataset.p), "the arrow keys move through Settings' pages");
+  await p.keyboard.down("Control"); await p.keyboard.press("f"); await p.keyboard.up("Control"); await wait(100);
+  ok(await p.evaluate(() => document.activeElement === document.querySelector(".win[data-app=settings] .s-search input")), "Ctrl + F in Settings jumps to Find a setting");
   await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);

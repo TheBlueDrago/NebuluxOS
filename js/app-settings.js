@@ -58,6 +58,8 @@
     open(body, win, opts) {
       let page = opts.page || "home", q = "", qRaw = ""; // qRaw keeps the spaces you type
       body.classList.add("settings");
+      // Ctrl + F or Ctrl + E: straight to "Find a setting"
+      body.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && /^[fe]$/i.test(e.key)) { const s = body.querySelector(".s-search input"); if (s) { e.preventDefault(); e.stopPropagation(); s.focus(); s.select(); } } });
       const draw = () => {
         const p = NX.prefs(), me = NX.me;
         const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q) || (x.keys || "").includes(q) || ((NX.settingsWords || {})[x.id] || "").includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}"><span class="s-ri s-ni" data-ri="${x.icon}">${NX.icon(x.icon, 15)}</span><span>${x.name}</span></button>`).join("");
