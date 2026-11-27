@@ -89,7 +89,7 @@
     ["Monday first", "Settings > Time & language > Start the week on Monday puts Monday first in Calendar and the taskbar's calendar."],
     ["Type a place", "Click the empty part of File Explorer's address bar, or press Ctrl + L, Alt + D or F4, and type a folder to go to. Ctrl + F or Ctrl + E jumps to search, in Settings too."],
     ["Quick link menu", "Right-click Start or press Nebulux + X for Installed apps, Task Manager, Settings, Shut down and more. Right-click the taskbar for Task Manager and Taskbar settings. Nebulux + A, I, N and U open Quick Settings, Settings, notifications and Accessibility, like Windows."],
-    ["Project", "Nebulux + P picks how a plugged-in TV or monitor is used: This screen only, Duplicate or Second screen only."],
+    ["Project", "Nebulux + P picks how a plugged-in TV or monitor is used: This screen only, Duplicate or Second screen only. Nebulux + K opens Cast for a wireless display."],
     ["Run", "Nebulux + R opens Run: type an app like calc or notepad, a folder like ~/Documents, a file, or a website, and press Enter."],
     ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
     ["Match case", "Notepad's Find has an Aa button: turn it on and Red finds only Red, not red. Shift + F3 goes back to the match before."],
