@@ -707,8 +707,10 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
   await p.evaluate(() => { const d = NX.desks.list().find((x) => !x.current); NX.closeAll(); if (d) NX.desks.remove(d.id); });
   // Photos: Delete sends the picture to the Recycle Bin
   const delPath = await p.evaluate(async () => { NX.closeAll(); const cv = document.createElement("canvas"); cv.width = 40; cv.height = 30; cv.getContext("2d").fillRect(0, 0, 40, 30); const r = await NX.fs.upload(await NX.folder("Pictures"), "Delete me.png", await new Promise((ok) => cv.toBlob(ok, "image/png"))); NX.open("photos", { path: r.path }); return r.path; }); await wait(800);
-  await p.evaluate(() => document.querySelector(".win[data-app=photos] [data-p=del]").click()); await wait(700);
-  ok(await p.evaluate(async (pth) => !(await NX.fs.list(await NX.folder("Pictures"))).entries.some((e) => e.path === pth) && (await NX.fs.trash()).entries.some((e) => /Delete me/.test(e.name)), delPath), "Photos' Delete sends the picture to the Recycle Bin");
+  await p.evaluate(() => document.querySelector(".win[data-app=photos] .ph-bar").parentElement.focus()); await p.keyboard.press("+"); await p.keyboard.down("Control"); await p.keyboard.press("r"); await p.keyboard.up("Control"); await wait(150);
+  ok(await p.evaluate(() => { const t = [...document.querySelectorAll(".win[data-app=photos] img")].map((i) => i.style.transform).join(" "); return t.includes("scale(1.25)") && t.includes("rotate(90deg)") && !!NX.wins.get("photos"); }), "in Photos, + zooms in and Ctrl + R turns the picture");
+  await p.keyboard.press("Delete"); await wait(700);
+  ok(await p.evaluate(async (pth) => !(await NX.fs.list(await NX.folder("Pictures"))).entries.some((e) => e.path === pth) && (await NX.fs.trash()).entries.some((e) => /Delete me/.test(e.name)), delPath), "Photos' Delete key sends the picture to the Recycle Bin");
   await p.evaluate(async () => { await NX.fs.emptyTrash(); NX.closeAll(); });
   // File Explorer: Ctrl + Z puts back what was just deleted
   await p.evaluate(async () => { NX.closeAll(); await NX.fs.write((await NX.folder("Documents")) + "/Undo me.txt", "x"); NX.open("files", { place: "Documents" }); }); await wait(900);

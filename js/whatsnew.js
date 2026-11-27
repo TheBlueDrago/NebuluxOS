@@ -83,6 +83,7 @@
     ["Alt + F4 to shut down", "With no window open, Alt + F4 asks what the computer should do: Shut down, Restart, Sleep, Sign out or Lock."],
     ["Alarm sounds", "Pick Beep, Chime or Bells for your alarms in Settings > System > Sound, and play it to hear it first."],
     ["File Explorer keys", "Esc lets go of the selection, Alt + Left, Right and Up go back, forward and up, and Alt + Enter shows Properties."],
+    ["Photos keys", "+ and - zoom, Ctrl + R turns the picture, Delete moves it to the Recycle Bin, F5 starts a slideshow and Alt + Enter shows its information."],
     ["Go to line", "In Notepad, press Ctrl + G or click Ln and Col at the bottom to jump to a line."],
     ["Match case", "Notepad's Find has an Aa button: turn it on and Red finds only Red, not red. Shift + F3 goes back to the match before."],
     ["Ctrl + S saves", "Ctrl + S saves in Notepad and Paint, and Ctrl + P prints a note or a picture (or saves it as a PDF). In File Explorer, F5 refreshes and Ctrl + Shift + N makes a new folder."],

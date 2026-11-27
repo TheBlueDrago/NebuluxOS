@@ -570,7 +570,14 @@
         if (k === "prev" && list.length) { i = (i - 1 + list.length) % list.length; show(); } if (k === "next" && list.length) { i = (i + 1) % list.length; show(); }
         if (k === "in") { zoom = Math.min(6, zoom * 1.25); tf(); } if (k === "out") { zoom = Math.max(0.2, zoom / 1.25); tf(); } if (k === "turn") { turn = (turn + 90) % 360; tf(); } if (k === "all") { slideStop(); gallery(); } if (k === "slide") { if (slideT) slideStop(); else slideGo(); }
       };
-      body.tabIndex = 0; body.addEventListener("keydown", (e) => { if (e.key === "Escape" && slideT) { e.stopPropagation(); slideStop(); return; } if (e.key === "ArrowLeft") body.querySelector("[data-p=prev]").click(); if (e.key === "ArrowRight") body.querySelector("[data-p=next]").click(); });
+      body.tabIndex = 0; body.addEventListener("keydown", (e) => { if (e.key === "Escape" && slideT) { e.stopPropagation(); slideStop(); return; } if (/input|textarea/i.test(e.target.tagName)) return;
+        // like Windows Photos: + and - zoom, Ctrl + R turns the picture, Delete moves it to the Recycle Bin, F5 starts a slideshow, Alt + Enter shows its information
+        const pb = (k) => { const b = body.querySelector("[data-p=" + k + "]"); if (!b || b.disabled) return false; e.preventDefault(); e.stopPropagation(); b.click(); return true; };
+        const k = e.key, c = e.ctrlKey || e.metaKey;
+        if (k === "ArrowLeft" && !e.altKey) pb("prev"); else if (k === "ArrowRight" && !e.altKey) pb("next");
+        else if (k === "+" || k === "=") pb("in"); else if (k === "-" || k === "_") pb("out");
+        else if (c && (k === "r" || k === "R")) pb("turn"); else if (k === "Delete" && !c) pb("del");
+        else if (k === "F5") pb("slide"); else if (e.altKey && k === "Enter") pb("info"); });
       const start = (o) => { if (o.path) { list = (o.list && o.list.length ? o.list : [{ name: NX.fs.base(o.path), path: o.path, kind: "image" }]); i = Math.max(0, list.findIndex((x) => x.path === o.path)); show(); } else gallery(); };
       win.onopts = start; start(opts);
       const oldClose = win.onclose; win.onclose = () => { slideStop(); if (oldClose) oldClose(); };
