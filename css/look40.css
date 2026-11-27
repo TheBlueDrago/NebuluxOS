@@ -926,3 +926,4 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 .tmr-add{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin:14px auto 0;max-width:760px}
 .tmr-add input{padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font:inherit}
 .tmr-add input[type=number]{width:58px}.tmr-add input[name=n]{width:170px}.tmr-add span{color:var(--sub);font-size:12px}
+.al-txt{min-width:170px;flex:1}.al-txt b{white-space:normal;overflow-wrap:anywhere}
