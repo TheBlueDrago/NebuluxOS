@@ -456,6 +456,8 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.setPref("night", false)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/fake/night")).gamma === "1:1:1"), "and turning it off puts the colors back");
 
+  ok(await p.evaluate(async () => { if (NX.hw.brightness) return true; NX.setPref("brightness", 60); await new Promise((r) => setTimeout(r, 600)); const b = (await NX.api("GET", "/fake/night")).bright; NX.setPref("brightness", 100); await new Promise((r) => setTimeout(r, 600)); return b === 0.6 && document.documentElement.classList.contains("dim-hw"); }), "with no backlight, brightness dims the whole display");
+
   // Mono audio reaches the sound system
   await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");

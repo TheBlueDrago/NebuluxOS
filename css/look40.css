@@ -960,3 +960,4 @@ html.readspace .win-body,html.readspace .win-body input,html.readspace .win-body
 html.readspace .win-body p,html.readspace .win-body small{line-height:1.7}
 .pv-md{white-space:normal!important;font:13px/1.5 var(--font)!important;padding:10px!important}.pv-md h1{font-size:18px}.pv-md h2{font-size:15px}.pv-md[hidden]{display:none}
 html.night-hw #night{display:none!important}
+html.dim-hw #dim{display:none!important}

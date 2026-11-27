@@ -255,15 +255,17 @@ module.exports = function more({ api, run, FAKE }) {
   // ---------- displays: a TV or monitor on HDMI ----------
   let fakeDisp = { tv: false, mode: "internal" };
   // Night light on the whole display (every window, not only Nebulux OS): warmer colors through each screen's gamma
-  let fakeNight = null;
+  let fakeNight = null, fakeBright = 1;
   api["POST /night"] = async (b) => {
     const on = !!b.on, s = Math.max(0, Math.min(100, +b.strength || 50)) / 100, gamma = on ? "1:" + (1 - 0.22 * s).toFixed(3) + ":" + (1 - 0.55 * s).toFixed(3) : "1:1:1";
-    if (FAKE) { fakeNight = gamma; return { ok: true, gamma }; }
+    // (and the brightness on screens with no backlight to dim, like a desktop monitor: 30 to 100 percent)
+    const bright = b.bright == null ? 1 : Math.max(0.3, Math.min(1, +b.bright || 1));
+    if (FAKE) { fakeNight = gamma; fakeBright = bright; return { ok: true, gamma, bright }; }
     const r = await run("xrandr", ["--current"], 6000), outs = parseXrandr(r.out || "").outs.filter((o) => o.connected && o.active);
-    for (const o of outs) await run("xrandr", ["--output", o.name, "--gamma", gamma], 5000);
-    return { ok: true, gamma, screens: outs.length };
+    for (const o of outs) await run("xrandr", ["--output", o.name, "--gamma", gamma, "--brightness", bright.toFixed(2)], 5000);
+    return { ok: true, gamma, bright, screens: outs.length };
   };
-  api["GET /fake/night"] = async () => { if (!FAKE) throw new Error("Not found"); return { gamma: fakeNight }; };
+  api["GET /fake/night"] = async () => { if (!FAKE) throw new Error("Not found"); return { gamma: fakeNight, bright: fakeBright }; };
   function parseXrandr(s) {
     const outs = []; let cur = null; const screen = /current (\d+) x (\d+)/.exec(s);
     for (const line of s.split("\n")) {
