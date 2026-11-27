@@ -437,6 +437,13 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(async () => { try { await NX.api("POST", "/processes/end", { pid: 101 }); return false; } catch (e) { return /part of Nebulux OS/.test(e.message); } }), "the system helper won't end Nebulux OS's own parts");
   await p.evaluate(() => NX.closeAll());
 
+  // the volume mixer: each app playing sound, with its own volume
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "system" }); }); await wait(1200);
+  ok(await p.evaluate(() => /YouTube/.test(document.querySelector(".win[data-app=settings] .s-mixl").textContent) && document.querySelectorAll(".win[data-app=settings] [data-mxv]").length === 2), "the volume mixer lists the apps playing sound");
+  await p.evaluate(() => { const r = document.querySelector('.win[data-app=settings] [data-mxv="7"]'); r.value = 30; r.dispatchEvent(new Event("input")); }); await wait(500);
+  ok(await p.evaluate(async () => (await NX.api("GET", "/audio/apps")).apps.find((x) => x.id === 7).vol === 30), "and moving an app's slider sets its volume");
+  await p.evaluate(() => NX.closeAll());
+
   // Mono audio reaches the sound system
   await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");

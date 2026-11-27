@@ -330,6 +330,27 @@ module.exports = function more({ api, run, FAKE }) {
     } else await run("pactl", ["set-default-sink", id.slice(5)], 4000);
     return audio();
   };
+  // the volume mixer (Settings > System > Sound): each app playing sound, with its own volume
+  let fakeMix = [{ id: 7, name: "YouTube", vol: 80, muted: false }, { id: 9, name: "Media Player", vol: 55, muted: false }];
+  api["GET /audio/apps"] = async () => {
+    if (FAKE) return { apps: fakeMix };
+    const r = await run("pactl", ["list", "sink-inputs"], 6000); if (!r.ok) return { apps: [] };
+    const apps = [];
+    for (const blk of r.out.split(/\n(?=Sink Input #)/)) {
+      const id = (/^Sink Input #(\d+)/m.exec(blk) || [])[1]; if (!id) continue;
+      const name = ((/application\.name = "([^"]*)"/.exec(blk) || [])[1] || (/media\.name = "([^"]*)"/.exec(blk) || [])[1] || "An app").replace(/^Chromium$/i, "Web app");
+      const vol = +((/Volume:[^\n]*?(\d+)%/.exec(blk) || [])[1] || 100), muted = /Mute: yes/.test(blk);
+      apps.push({ id: +id, name: name.slice(0, 40), vol: Math.min(150, vol), muted });
+    }
+    return { apps: apps.slice(0, 12) };
+  };
+  api["POST /audio/app-volume"] = async (b) => {
+    const id = +b.id, vol = Math.max(0, Math.min(100, Math.round(+b.vol))); if (!Number.isInteger(id) || id < 0 || !Number.isFinite(vol)) throw new Error("That app isn't playing sound any more.");
+    if (FAKE) { const a = fakeMix.find((x) => x.id === id); if (!a) throw new Error("That app isn't playing sound any more."); a.vol = vol; if (b.muted != null) a.muted = !!b.muted; return { ok: true }; }
+    const r = await run("pactl", ["set-sink-input-volume", String(id), vol + "%"], 4000); if (!r.ok) throw new Error("That app isn't playing sound any more.");
+    if (b.muted != null) await run("pactl", ["set-sink-input-mute", String(id), b.muted ? "1" : "0"], 4000);
+    return { ok: true };
+  };
   // mono audio (Settings > Accessibility): a sound output that mixes left and right into both ears, made the default
   let fakeMono = false;
   const monoMod = async () => { const r = await run("pactl", ["list", "short", "modules"], 4000); const line = (r.out || "").split("\n").find((l) => /module-remap-sink/.test(l) && /sink_name=nx_mono/.test(l)); return line ? line.trim().split(/\s+/)[0] : null; };
