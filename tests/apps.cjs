@@ -627,6 +627,15 @@ const OUT = path.join(__dirname, "shots"), W = +process.argv[2] || 1366, H = +pr
     NX.setData("events", []); NX.setData("ca-view", "month"); NX.closeAll();
     return ok1 && ok2 ? true : JSON.stringify([!!ev, ev && ev.style.top, title, ok2]);
   }).then((r) => r === true || (console.log(r), false)), "Calendar's Week view puts events at their hour, and an hour you click fills in the time");
+  // Clock's timers: added in the Timer tab, they ring even with Clock closed
+  ok(await p.evaluate(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)); NX.closeAll(); NX.setData("timers", null); NX.open("clock"); await w(400);
+    document.querySelector(".win[data-app=clock] [data-v=tm]").click(); await w(100);
+    const fa = document.querySelector(".win[data-app=clock] .tmr-add"); fa.n.value = "Eggs"; fa.h.value = 0; fa.m.value = 0; fa.s.value = 2; fa.requestSubmit(); await w(100);
+    const listed = /Eggs/.test(document.querySelector(".win[data-app=clock] .tmr-list").textContent);
+    NX.closeAll(); const o = NX.alarms.ring; let rang = ""; NX.alarms.ring = (x) => { rang = x.name; }; await w(3500); NX.alarms.ring = o;
+    const ok = listed && rang === "Eggs: time's up" && !NX.timers.list().find((t) => t.name === "Eggs").on; NX.setData("timers", null); return ok ? true : JSON.stringify([listed, rang]);
+  }).then((r) => r === true || (console.log(r), false)), "Clock's timers have names and lengths, and ring with Clock closed");
   // Color Picker
   ok(await p.evaluate(async () => { NX.setData("colors", []); NX.colorKeep("#22d3ee"); NX.colorKeep("#7c5cff"); NX.closeAll(); NX.open("colorpick"); await new Promise((r) => setTimeout(r, 400)); const b = document.querySelector(".win[data-app=colorpick]"); const t = b.textContent; const okF = t.includes("#7C5CFF") && t.includes("rgb(124, 92, 255)") && t.includes("hsl(252, 100%, 68%)") && t.includes("Violet"); b.querySelector('[data-h="#22d3ee"]').click(); const okH = b.textContent.includes("rgb(34, 211, 238)"); b.querySelector("[data-copy]").click(); const okC = ((NX.notes || [])[0] || {}).text === "Copied #22D3EE."; NX.closeAll(); return okF && okH && okC ? true : JSON.stringify([okF, okH, okC, t.slice(0, 200), ((NX.notes || [])[0] || {}).text]); }).then((r) => r === true || (console.log(r), false)), "Color Picker shows HEX, RGB and HSL, recent colors, and copies");
   // Calculator > Programmer

@@ -11,6 +11,7 @@
     ["Screen and sleep", "Settings > System > Power: turn the screen off, or put the computer to sleep, after a while with nobody using it. A video or music that is playing keeps it awake."],
     ["Volume mixer", "Settings > System > Sound has a Volume mixer: each app playing sound gets its own volume and Mute (on the USB)."],
     ["Processes in Task Manager", "Task Manager has a Processes tab: every program on the computer with its processor and memory use, and End task for your own (on the USB)."],
+    ["Timers that keep going", "Clock can run several timers at once, each with a name and any length, and they ring even with Clock closed."],
     ["Week view in Calendar", "Calendar has a Week view: your events hour by hour, a line for right now, and click an hour to add an event then."],
     ["PDF Viewer", "PDF files open in their own window, with zoom, search, rotate and print."],
     ["Rename many files at once", "Select several files in File Explorer and press F2 or Rename: they get one name, numbered (1), (2), (3), each keeping its file type."],

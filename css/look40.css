@@ -914,3 +914,15 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 /* Settings: the setting a search pointed at glows for a moment */
 .s-found{animation:sFound 2.4s ease-out}
 @keyframes sFound{0%,30%{box-shadow:0 0 0 2px var(--accent),0 0 24px color-mix(in srgb,var(--accent) 50%,transparent);background:color-mix(in srgb,var(--accent) 16%,var(--card))}100%{box-shadow:none}}
+
+/* Clock > Timer: several timers */
+.tmr-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;width:100%;max-width:760px;margin:6px auto 0}
+.tmr{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.tmr.on{border-color:var(--accent)}
+.tmr-ring{--p:0;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--card2) 0)}
+.tmr-ring b{width:100px;height:100px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);font-size:20px}
+.tmr-info{text-align:center}.tmr-info b{display:block;font-size:14px}.tmr-info small{color:var(--sub);font-size:12px}
+.tmr-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.tmr-add{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin:14px auto 0;max-width:760px}
+.tmr-add input{padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font:inherit}
+.tmr-add input[type=number]{width:58px}.tmr-add input[name=n]{width:170px}.tmr-add span{color:var(--sub);font-size:12px}

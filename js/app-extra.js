@@ -145,6 +145,22 @@
     const expr = () => { let v = term(); for (;;) { if (peek() === "+") { i++; v += term(); } else if (peek() === "-") { i++; v -= term(); } else return v; } };
     if (!s) return 0; const v = expr(); if (i < s.length) fail(); return v;
   };
+  // ---------- Clock's timers (4.4): several at once, each with a name and any length; they keep going with Clock closed ----------
+  NX.timers = (function () {
+    const L = () => NX.data("timers", null) || [{ id: "t1", name: "Timer", len: 300000, rest: 300000, on: false, at: 0 }];
+    const save = (T) => { NX.setData("timers", T); document.dispatchEvent(new CustomEvent("nx:timers")); };
+    const left = (t) => Math.max(0, t.on ? t.rest - (Date.now() - t.at) : t.rest);
+    const edit = (id, fn) => { const T = L(); const t = T.find((x) => x.id === id); if (t) { fn(t, T); save(T); } };
+    const api = {
+      list: L, get: (id) => L().find((x) => x.id === id), left,
+      add: (name, ms, start) => { const T = L(); if (T.length >= 12) { NX.toast("That's a lot of timers. Delete one first."); return; } T.push({ id: NX.uid(), name: String(name).slice(0, 30), len: ms, rest: ms, on: !!start, at: Date.now() }); save(T); },
+      toggle: (id) => edit(id, (t) => { if (t.on) { t.rest = left(t); t.on = false; } else { if (t.rest <= 0) t.rest = t.len; t.at = Date.now(); t.on = true; } }),
+      reset: (id) => edit(id, (t) => { t.on = false; t.rest = t.len; }),
+      remove: (id) => { save(L().filter((x) => x.id !== id)); },
+    };
+    setInterval(() => { if (!NX.me) return; const T = L(); let ch = false; for (const t of T) if (t.on && left(t) <= 0) { t.on = false; t.rest = t.len; ch = true; if (NX.alarms && NX.alarms.ring) NX.alarms.ring({ name: (t.name === "Timer" ? "Timer" : t.name) + ": time's up", snooze: false }); } if (ch) save(T); }, 1000);
+    return api;
+  })();
   A.calculator = { name: "Calculator", icon: "calculator", category: "Utilities", rating: "4.8", size: "1 MB", w: 390, h: 580, minW: 300, minH: 440, desc: "Add, subtract, multiply and divide, with percent, square root and your keyboard.",
     open(body, win) {
       body.classList.add("calc");
@@ -393,7 +409,7 @@
     open(body, win) {
       body.classList.add("clk");
       body.innerHTML = `<div class="seg clk-tabs"><button data-v="clock" class="on">Clock</button><button data-v="sw">Stopwatch</button><button data-v="tm">Timer</button><button data-v="fo">Focus</button><button data-v="al">Alarms</button><button data-v="cd">Countdown</button></div><div class="clk-face"></div>`;
-      let v = "clock", swOn = false, swT = 0, swAt = 0, laps = [], tmLeft = 300000, tmOn = false, tmAt = 0, tmSet = 300000;
+      let v = "clock", swOn = false, swT = 0, swAt = 0, laps = [];
       const face = body.querySelector(".clk-face"), f2 = (n) => String(n).padStart(2, "0");
       const fmtMs = (ms) => { ms = Math.max(0, ms); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60, cs = Math.floor(ms / 10) % 100; return (h ? h + ":" : "") + f2(m) + ":" + f2(s) + "." + f2(cs); };
       const draw = () => {
@@ -438,7 +454,10 @@
         if (v === "fo") { const on = NX.focusSession.on(), n = NX.focusSession.today();
           face.innerHTML = on ? `<div class="clk-ring" style="--p:${(1 - NX.focusSession.left() / NX.focusSession.len()) * 100}"><div class="clk-big mono">${fmtMs(NX.focusSession.left()).slice(0, -3)}</div></div><div class="clk-sub">Do not disturb is on until it's done.</div><div class="clk-btns"><button class="btn" data-a="fostop">Stop</button></div>`
             : `<div class="clk-sub" style="margin-top:6px">Focus for a while. Do not disturb stays on until it's done.</div><div class="clk-btns">${[15, 25, 45, 60].map((m) => `<button class="btn ${m === 25 ? "primary" : ""}" data-a="fo${m}">${m} min</button>`).join("")}</div><div class="clk-sub">${n ? n + (n === 1 ? " session" : " sessions") + " today" : "No focus sessions yet today"}</div>`; }
-        if (v === "tm") { const left = tmOn ? tmLeft - (now - tmAt) : tmLeft; face.innerHTML = `<div class="clk-big mono">${fmtMs(left).slice(0, -3)}</div><div class="clk-btns">${tmOn ? "" : `<button class="btn" data-a="t1">1 min</button><button class="btn" data-a="t5">5 min</button><button class="btn" data-a="t10">10 min</button>`}</div><div class="clk-btns"><button class="btn primary" data-a="tms">${tmOn ? "Pause" : "Start"}</button><button class="btn" data-a="tmr">Reset</button></div>`;
+        if (v === "tm") { const T = NX.timers.list();
+          face.innerHTML = `<div class="tmr-list">${T.map((t) => { const left = NX.timers.left(t); return `<div class="tmr ${t.on ? "on" : ""}" data-tid="${t.id}"><div class="tmr-ring" style="--p:${(1 - left / t.len) * 100}"><b class="mono tmr-left">${fmtMs(left).slice(0, -3)}</b></div><div class="tmr-info"><b>${NX.esc(t.name)}</b><small>${fmtMs(t.len).slice(0, -3)}</small></div><div class="tmr-btns"><button class="btn sm ${t.on ? "" : "primary"}" data-a="tgo" data-tid="${t.id}">${t.on ? "Pause" : "Start"}</button><button class="btn sm" data-a="treset" data-tid="${t.id}">Reset</button><button class="btn sm" data-a="tdel" data-tid="${t.id}" aria-label="Delete ${NX.esc(t.name)}">Delete</button></div></div>`; }).join("") || `<p class="clk-sub">No timers yet. Add one below.</p>`}</div>
+            <form class="tmr-add"><input name="n" maxlength="30" placeholder="Name, like Pasta" aria-label="Timer name"><input name="h" type="number" min="0" max="23" value="0" aria-label="Hours"><span>h</span><input name="m" type="number" min="0" max="59" value="5" aria-label="Minutes"><span>m</span><input name="s" type="number" min="0" max="59" value="0" aria-label="Seconds"><span>s</span><button class="btn primary">Add timer</button></form>`;
+          const fa = face.querySelector(".tmr-add"); fa.onsubmit = (e) => { e.preventDefault(); const ms = ((+fa.h.value || 0) * 3600 + (+fa.m.value || 0) * 60 + (+fa.s.value || 0)) * 1000; if (ms < 1000) { NX.toast("Make the timer at least a second long."); return; } NX.timers.add(fa.n.value.trim() || "Timer", ms, true); draw(); };
  }
       };
       body.querySelector(".clk-tabs").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; v = b.dataset.v; body.querySelectorAll(".clk-tabs button").forEach((x) => x.classList.toggle("on", x === b)); draw(); };
@@ -447,9 +466,9 @@
         if (a === "sws") { if (swOn) { swT += now - swAt; swOn = false; } else { swAt = now; swOn = true; } }
         if (a === "swl") laps.unshift(swT + now - swAt);
         if (a === "swr") { swOn = false; swT = 0; laps = []; }
-        if (a === "t1" || a === "t5" || a === "t10") { tmSet = tmLeft = { t1: 60000, t5: 300000, t10: 600000 }[a]; }
-        if (a === "tms") { if (tmOn) { tmLeft -= now - tmAt; tmOn = false; } else if (tmLeft > 0) { tmAt = now; tmOn = true; } }
-        if (a === "tmr") { tmOn = false; tmLeft = tmSet; }
+        if (a === "tgo") NX.timers.toggle(b.dataset.tid);
+        if (a === "treset") NX.timers.reset(b.dataset.tid);
+        if (a === "tdel") NX.timers.remove(b.dataset.tid);
         if (/^fo\d+$/.test(a)) NX.focusSession.start(+a.slice(2));
         if (a === "fostop") NX.focusSession.finish(false);
         draw();
@@ -459,13 +478,13 @@
         const big = face.querySelector(".clk-big") || { set textContent(x) { /* this face shows no time (Alarms) */ } }, now = performance.now();
         if (v === "clock") { const d = new Date(); big.textContent = NX.fmtTime(d, true); }
         else if (v === "sw" && swOn) big.textContent = fmtMs(swT + now - swAt);
-        else if (v === "tm" && tmOn) big.textContent = fmtMs(tmLeft - (now - tmAt)).slice(0, -3);
+        else if (v === "tm") face.querySelectorAll(".tmr").forEach((el) => { const t = NX.timers.get(el.dataset.tid); if (!t || !t.on) return; const left = NX.timers.left(t); el.querySelector(".tmr-left").textContent = fmtMs(left).slice(0, -3); el.querySelector(".tmr-ring").style.setProperty("--p", (1 - left / t.len) * 100); });
         else if (v === "fo" && NX.focusSession.on()) { big.textContent = fmtMs(NX.focusSession.left()).slice(0, -3); const r = face.querySelector(".clk-ring"); if (r) r.style.setProperty("--p", (1 - NX.focusSession.left() / NX.focusSession.len()) * 100); }
-        if (tmOn && tmLeft - (now - tmAt) <= 0) { tmOn = false; tmLeft = tmSet; NX.alarms.ring({ name: "Timer: time's up", snooze: false }); draw(); }
       }, 50);
       const onFocus = () => { if (v === "fo") draw(); }; document.addEventListener("nx:focus", onFocus);
+      const onTm = () => { if (v === "tm" && !face.contains(document.activeElement && document.activeElement.closest(".tmr-add"))) draw(); }; document.addEventListener("nx:timers", onTm);
       const onAl = () => { if (v === "al" && !face.contains(document.activeElement)) draw(); }; document.addEventListener("nx:alarms", onAl);
-      win.onclose = () => { clearInterval(tick); document.removeEventListener("nx:focus", onFocus); document.removeEventListener("nx:alarms", onAl); }; draw();
+      win.onclose = () => { clearInterval(tick); document.removeEventListener("nx:timers", onTm); document.removeEventListener("nx:focus", onFocus); document.removeEventListener("nx:alarms", onAl); }; draw();
     } };
 
   // ---------- Comet Snake: an original arcade game ----------
