@@ -98,6 +98,7 @@
     if (!clockFirst) setTimeout(() => { const i = $("#lock input"); if (i) i.focus(); }, 60);
   }
   function reveal() { const L = $("#lock"); if (L.className !== "locked") return; L.className = "signin"; setTimeout(() => { const i = $("#lock input"); if (i) i.focus(); }, 260); }
+  let usePw = false; // "Sign in with your password instead"
   function signinDraw() {
     const users = NX.users(), box = $("#lk-panel");
     if (mode === "setup") {
@@ -117,15 +118,18 @@
         box.innerHTML = `${NX.avatar(u, "lk-av", "div")}<h2>${NX.esc(u.name)}</h2><button class="btn primary wide lk-guest">Sign in</button>`;
         $(".lk-guest", box).onclick = async () => enter(await NX.checkPassword(u.id, ""));
         setTimeout(() => { const g = $(".lk-guest", box); if (g) g.focus(); }, 60);
-      } else
+      } else {
+      const pin = NX.hasPin && NX.hasPin(u.id) && !usePw;
       box.innerHTML = `${NX.avatar(u, "lk-av", "div")}<h2>${NX.esc(u.name)}</h2>
-        <form class="lk-form pw"><input name="p" type="password" maxlength="64" placeholder="Password" aria-label="Password" autocomplete="current-password"><button class="lk-go" type="submit" aria-label="Sign in">${NX.icon("arrow", 18)}</button></form><p class="lk-err" role="alert"></p>
-        <button class="lk-link" data-a="forgot">I forgot my password</button>`;
+        <form class="lk-form pw ${pin ? "pin" : ""}"><input name="p" type="password" maxlength="${pin ? 12 : 64}" placeholder="${pin ? "PIN" : "Password"}" aria-label="${pin ? "PIN" : "Password"}" ${pin ? 'inputmode="numeric" pattern="[0-9]*"' : ""} autocomplete="current-password"><button class="lk-go" type="submit" aria-label="Sign in">${NX.icon("arrow", 18)}</button></form><p class="lk-err" role="alert"></p>
+        ${pin ? `<button class="lk-link" data-a="usepw">Sign in with your password instead</button>` : (NX.hasPin && NX.hasPin(u.id) ? `<button class="lk-link" data-a="usepin">Sign in with your PIN</button>` : `<button class="lk-link" data-a="forgot">I forgot my password</button>`)}`;
+      }
       const f = $(".lk-form", box), er = $(".lk-err", box);
       if (f) f.onsubmit = async (e) => {
-        e.preventDefault(); const p = f.p.value; if (!p) { er.textContent = "Type your password."; return; }
+        const isPin = f.classList.contains("pin");
+        e.preventDefault(); const p = f.p.value; if (!p) { er.textContent = isPin ? "Type your PIN." : "Type your password."; return; }
         const btn = $("button", f); btn.disabled = true; er.textContent = ""; box.classList.add("busy");
-        try { const me = await NX.checkPassword(u.id, p); enter(me); } catch (err) { er.textContent = err.message; f.p.value = ""; btn.disabled = false; box.classList.remove("busy"); f.p.focus(); box.classList.add("shake"); setTimeout(() => box.classList.remove("shake"), 400); }
+        try { const me = isPin ? await NX.checkPin(u.id, p) : await NX.checkPassword(u.id, p); usePw = false; enter(me); } catch (err) { er.textContent = err.message; f.p.value = ""; btn.disabled = false; box.classList.remove("busy"); f.p.focus(); box.classList.add("shake"); setTimeout(() => box.classList.remove("shake"), 400); }
       };
     }
     $("#lk-users").innerHTML = users.length ? users.map((x) => `<button class="lk-user ${chosen && x.id === chosen.id && mode !== "setup" ? "on" : ""}" data-u="${x.id}">${NX.avatar(x, "av")}<span>${NX.esc(x.name)}</span></button>`).join("") + (users.length < 8 ? `<button class="lk-user ${mode === "setup" ? "on" : ""}" data-a="add"><span class="av plus">+</span><span>Add account</span></button>` : "") : "";
@@ -137,6 +141,7 @@
         mode = "setup"; signinDraw(); reveal(); setTimeout(() => { const i = $("#lock input"); i && i.focus(); }, 30);
       }
       if (a === "back") { mode = "signin"; chosen = chosen || NX.users()[0]; signinDraw(); }
+      if (a === "usepw" || a === "usepin") { usePw = a === "usepw"; signinDraw(); setTimeout(() => { const i = $("#lock input"); i && i.focus(); }, 30); return; }
       if (a === "forgot") { $(".lk-err").textContent = "Passwords on Nebulux OS stay on this PC and can't be recovered. You can add a new account below."; }
     }));
   }

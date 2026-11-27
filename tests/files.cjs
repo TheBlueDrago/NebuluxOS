@@ -758,6 +758,23 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   }).then((r) => r === true || (console.log(r), false)), "a .srt file next to a video shows as captions, and CC turns them off");
   // double-click a ZIP file: Extract all?
   ok(await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); const f = await NX.fs.create("/Documents", "Packed", true); await NX.fs.write(f.path + "/p.txt", "packed"); const z = await NX.fs.zip([f.path]); await NX.fs.remove([f.path], true); NX.closeAll(); NX.open("files", { place: "Documents" }); await w(700); const it = [...document.querySelectorAll(".fx-item")].find((x) => x.dataset.k === z.path); if (!it) return "no item"; it.dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); await w(300); const form = document.querySelector(".nx-ask-card"); if (!form || !/Extract all/.test(form.textContent)) return "no ask"; form.requestSubmit(); await w(800); const t = await NX.fs.read("/Documents/Packed/p.txt").catch(() => null); await NX.fs.remove(["/Documents/Packed", z.path], true); NX.closeAll(); return t === "packed" || "text " + t; }).then((r) => r === true || (console.log(r), false)), "double-clicking a ZIP file asks, then extracts it");
+  // a PIN: set it in Settings > Accounts (with the password), then sign in with it; the password still works
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings", { page: "accounts" }); }); await wait(500);
+  await p.type(".win[data-app=settings] #s-pinpw", "nebula1"); await p.type(".win[data-app=settings] #s-pin", "2468");
+  await p.click(".win[data-app=settings] #s-pinset"); await wait(1500);
+  ok(await p.evaluate(() => NX.hasPin(NX.me.id) && !JSON.stringify(NX.users()).includes("2468")), "Settings sets up a PIN (and only its hash is kept)");
+  await p.evaluate(() => { NX.closeAll(); NX.shell.signOut(); }); await wait(1200); await p.keyboard.press("Enter"); await wait(400);
+  ok(await p.evaluate(() => (document.querySelector("#lock input") || {}).placeholder === "PIN"), "the sign-in screen asks for the PIN");
+  await p.type("#lock input", "1111"); await p.keyboard.press("Enter"); await wait(1500);
+  ok(await p.evaluate(() => !document.querySelector("#lock").hidden && /PIN is incorrect/.test(document.querySelector("#lock .lk-err").textContent)), "a wrong PIN doesn't sign in");
+  await p.type("#lock input", "2468"); await p.keyboard.press("Enter"); await wait(1800);
+  ok(await p.evaluate(() => document.querySelector("#lock").hidden && NX.me && NX.me.name === "Ada"), "the right PIN signs in");
+  await p.evaluate(() => NX.shell.signOut()); await wait(1200); await p.keyboard.press("Enter"); await wait(400);
+  await p.evaluate(() => document.querySelector('#lock [data-a="usepw"]').click()); await wait(200);
+  await p.type("#lock input", "nebula1"); await p.keyboard.press("Enter"); await wait(1800);
+  ok(await p.evaluate(() => document.querySelector("#lock").hidden && NX.me && NX.me.name === "Ada"), "and Sign in with your password instead still works");
+  await p.evaluate(() => NX.removePin(NX.me.id, "nebula1")); await wait(1200);
+  ok(await p.evaluate(() => !NX.hasPin(NX.me.id)), "the PIN can be removed");
   // the sign-in screen's Accessibility button: sign in with only the on-screen keyboard
   await p.evaluate(() => NX.shell.signOut()); await wait(1200);
   await p.evaluate(() => document.querySelector("#lk-access").click()); await wait(150);

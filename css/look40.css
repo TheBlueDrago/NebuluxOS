@@ -897,3 +897,8 @@ html[data-ct] #nx-living{display:none!important}html[data-ct] .dicon{color:var(-
 html[data-caps=large] video::cue{font-size:150%;background:#000;color:#fff}
 html[data-caps=yellow] video::cue{font-size:130%;background:#000;color:#ffee32}
 html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000,1px 1px 2px #000,-1px -1px 2px #000;font-size:120%}
+
+/* Settings > Accounts > PIN */
+.s-pin .s-pinh{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}.s-pin .s-pinh small{color:var(--sub);font-size:12.5px}
+.s-pinb{display:flex;gap:8px;flex-wrap:wrap}
+.lk-form.pin input{letter-spacing:.3em;text-align:center}

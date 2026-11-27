@@ -76,6 +76,22 @@ window.NX = window.NX || {};
     saveUsers(L); if (!ok) throw new Error(u.lock > Date.now() ? "Too many wrong tries. Wait 30 seconds and try again." : "The password is incorrect. Try again.");
     return u;
   };
+  // a PIN (4.4, like Windows Hello): a quicker way to sign in on this PC; the password still works
+  NX.hasPin = (id) => { const u = NX.users().find((x) => x.id === id); return !!(u && u.pinHash); };
+  NX.setPin = async (id, pw, pin) => {
+    await NX.checkPassword(id, pw);
+    pin = String(pin || ""); if (!/^[0-9]{4,12}$/.test(pin)) throw new Error("A PIN is 4 to 12 numbers.");
+    const L = NX.users(), u = L.find((x) => x.id === id); u.pinSalt = rand(16); u.pinHash = await NX.hash("pin:" + pin, u.pinSalt); saveUsers(L);
+  };
+  NX.removePin = async (id, pw) => { await NX.checkPassword(id, pw); const L = NX.users(), u = L.find((x) => x.id === id); delete u.pinSalt; delete u.pinHash; saveUsers(L); };
+  NX.checkPin = async (id, pin) => {
+    const L = NX.users(), u = L.find((x) => x.id === id); if (!u || !u.pinHash) throw new Error("There's no PIN for this account.");
+    if (u.lock > Date.now()) throw new Error("Too many wrong tries. Wait " + Math.ceil((u.lock - Date.now()) / 1000) + " seconds and try again.");
+    const ok = (await NX.hash("pin:" + String(pin || ""), u.pinSalt)) === u.pinHash;
+    u.fails = ok ? 0 : (u.fails || 0) + 1; if (u.fails >= 5) { u.fails = 0; u.lock = Date.now() + 30000; }
+    saveUsers(L); if (!ok) throw new Error(u.lock > Date.now() ? "Too many wrong tries. Wait 30 seconds and try again." : "That PIN is incorrect. Try again.");
+    return u;
+  };
   NX.changePassword = async (id, oldPw, newPw) => {
     await NX.checkPassword(id, oldPw);
     if (String(newPw || "").length < 4) throw new Error("Use at least 4 characters for your new password.");
