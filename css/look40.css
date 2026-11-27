@@ -892,3 +892,8 @@ html[data-ct] #nx-living{display:none!important}html[data-ct] .dicon{color:var(-
 .cw-e b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cw-e small{font-size:10.5px;color:var(--sub)}
 .cw-now{position:absolute;left:0;right:0;height:2px;background:#ef4444;pointer-events:none}.cw-now::before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:#ef4444}
 @media (max-width:600px){.ca-head{flex-wrap:wrap;row-gap:8px}.ca-head h2{width:100%;font-size:19px}.ca-head .ca-sp{display:none}.cw-body{max-height:58vh}.cw-top,.cw-adrow,.cw-inner{grid-template-columns:42px repeat(7,1fr)}.cw-dh b{width:26px;height:26px;font-size:14px}.cw-h{font-size:9.5px;right:3px}.cw-e{padding:3px 4px}.cw-e small{display:none}}
+
+/* Accessibility > Caption style (Media Player captions) */
+html[data-caps=large] video::cue{font-size:150%;background:#000;color:#fff}
+html[data-caps=yellow] video::cue{font-size:130%;background:#000;color:#ffee32}
+html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000,1px 1px 2px #000,-1px -1px 2px #000;font-size:120%}
