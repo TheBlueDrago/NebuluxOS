@@ -435,7 +435,7 @@
     open(body, win, opts) {
       body.classList.add("ph");
       let list = [], i = 0, zoom = 1, turn = 0;
-      body.innerHTML = `<div class="ph-bar"><button class="wv-b" data-p="prev" aria-label="Previous" title="Previous">${NX.icon("back", 16)}</button><button class="wv-b" data-p="next" aria-label="Next" title="Next">${NX.icon("fwd", 16)}</button><span class="ph-name"></span><button class="wv-b" data-p="out" aria-label="Zoom out" title="Zoom out">${NX.icon("zoomout", 16)}</button><button class="wv-b" data-p="in" aria-label="Zoom in" title="Zoom in">${NX.icon("zoomin", 16)}</button><button class="wv-b" data-p="turn" aria-label="Rotate" title="Rotate">${NX.icon("rotate", 16)}</button><button class="wv-b" data-p="all" aria-label="All pictures" title="All pictures">${NX.icon("grid", 16)}</button></div><div class="ph-view"></div>`;
+      body.innerHTML = `<div class="ph-bar"><button class="wv-b" data-p="prev" aria-label="Previous" title="Previous">${NX.icon("back", 16)}</button><button class="wv-b" data-p="next" aria-label="Next" title="Next">${NX.icon("fwd", 16)}</button><span class="ph-name"></span><button class="wv-b" data-p="out" aria-label="Zoom out" title="Zoom out">${NX.icon("zoomout", 16)}</button><button class="wv-b" data-p="in" aria-label="Zoom in" title="Zoom in">${NX.icon("zoomin", 16)}</button><button class="wv-b" data-p="turn" aria-label="Rotate" title="Rotate">${NX.icon("rotate", 16)}</button><button class="wv-b ph-infob" data-p="info" aria-label="File information" title="File information" aria-pressed="false" hidden>${NX.icon("info", 16)}</button><button class="wv-b" data-p="all" aria-label="All pictures" title="All pictures">${NX.icon("grid", 16)}</button></div><div class="ph-view"></div>`;
       const v = body.querySelector(".ph-view"), nm = body.querySelector(".ph-name");
       // the slideshow: every picture, one after another, the whole window; Esc or a click stops it
       body.querySelector(".ph-bar").insertAdjacentHTML("beforeend", `<button class="wv-b ph-fav" data-p="fav" aria-label="Favorite" title="Favorite" aria-pressed="false" hidden><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-9A5 5 0 0 1 12 6a5 5 0 0 1 9.2 5c-2.2 4.6-9.2 9-9.2 9z" fill="currentColor"/></svg></button><button class="btn sm ph-favs" data-p="favs" aria-pressed="false" title="Show only favorites"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-9A5 5 0 0 1 12 6a5 5 0 0 1 9.2 5c-2.2 4.6-9.2 9-9.2 9z" fill="currentColor"/></svg>Favorites</button><button class="btn sm ph-edit-b" data-p="edit" title="Brightness, colors and filters" hidden>${NX.icon("brush", 14)}Edit</button><button class="btn sm ph-del" data-p="del" title="Delete (to the Recycle Bin)" aria-label="Delete" hidden>${NX.icon("trash", 14)}</button><button class="btn sm ph-wall" data-p="wall" title="Make this picture your background" hidden>${NX.icon("display", 14)}Set as background</button><button class="btn sm ph-slide" data-p="slide" title="Slideshow">${NX.icon("media", 14)}Slideshow</button>`);
@@ -501,11 +501,24 @@
         nm.textContent = e.name + (list.length > 1 ? `  (${i + 1} of ${list.length})` : ""); win.el.querySelector(".wt-name").textContent = e.name + " - Photos";
         zoom = 1; turn = 0; v.innerHTML = `<img alt="${NX.esc(e.name)}" draggable="false">`; const img = v.querySelector("img"); body.querySelector(".ph-wall").hidden = false; body.querySelector(".ph-del").hidden = false; body.querySelector(".ph-edit-b").hidden = false; body.querySelector(".ph-favs").hidden = true; favMark(); editClose();
         try { img.src = await NX.fs.url(e.path); } catch (er) { v.innerHTML = `<p class="ph-msg">${NX.esc(er.message)}</p>`; }
+        img.addEventListener("load", () => infoDraw()); infoDraw();
         img.onerror = () => { v.innerHTML = `<p class="ph-msg">This picture couldn't be shown.</p>`; };
         win.print = () => NX.printDoc(e.name, `<img src="${img.src}" alt="">`); // Ctrl + P
       }
       const tf = () => { const img = v.querySelector("img"); if (img) img.style.transform = `scale(${zoom}) rotate(${turn}deg)`; };
       let onlyFav = false;
+      const infoDraw = () => {
+        let pane = body.querySelector(".ph-info"); const on = NX.data("ph-info", false), e = list[i], img = body.querySelector(".ph-view img"), b = body.querySelector(".ph-infob");
+        if (b) { b.hidden = !e; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); }
+        if (!on || !e) { if (pane) pane.remove(); return; }
+        if (!pane) { pane = document.createElement("aside"); pane.className = "ph-info"; pane.setAttribute("aria-label", "File information"); body.appendChild(pane); }
+        const sz = e.size == null ? "" : e.size < 1048576 ? (e.size / 1024).toFixed(0) + " KB" : (e.size / 1048576).toFixed(1) + " MB";
+        const dims = img && img.naturalWidth ? img.naturalWidth + " x " + img.naturalHeight + " pixels" : "";
+        const mp = img && img.naturalWidth ? (img.naturalWidth * img.naturalHeight / 1e6).toFixed(1) + " megapixels" : "";
+        pane.innerHTML = `<h4>File information</h4><dl>${[["Name", e.name], ["Taken or saved", e.mtime ? new Date(e.mtime).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : ""], ["Size", sz], ["Dimensions", dims], ["", mp], ["Folder", NX.fs.parent ? NX.fs.parent(e.path) : ""]].filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${NX.esc(v)}</dd>`).join("")}</dl><button class="btn sm" data-pfolder>Open the folder</button>`;
+        pane.querySelector("[data-pfolder]").onclick = () => NX.open("files", { path: NX.fs.parent(e.path) });
+      };
+      win.phInfo = infoDraw;
       const favMark = () => { const e = list[i], on = !!e && NX.data("photo-favs", []).includes(e.path), b = body.querySelector(".ph-fav"); b.hidden = !e; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); };
       async function gallery() {
         nm.textContent = "Pictures"; win.el.querySelector(".wt-name").textContent = "Photos"; body.querySelector(".ph-wall").hidden = true; body.querySelector(".ph-del").hidden = true; body.querySelector(".ph-edit-b").hidden = true; body.querySelector(".ph-fav").hidden = true; body.querySelector(".ph-favs").hidden = false; editClose();
@@ -523,6 +536,8 @@
         const b = e.target.closest("[data-p]"); if (!b) return; const k = b.dataset.p;
         if (k === "edit") { editOpen(); return; }
         if (k === "del" && list[i]) { const it = list[i]; NX.fs.remove([it.path]).then(() => { list.splice(i, 1); NX.filesChanged && NX.filesChanged(); NX.toast(it.name + " is in the Recycle Bin."); if (!list.length) gallery(); else { i = i % list.length; show(); } }).catch((er) => NX.toast(er.message)); return; }
+        // File information (like Windows Photos): name, size, dimensions, date and where it is
+        if (k === "info") { const on = !NX.data("ph-info", false); NX.setData("ph-info", on); infoDraw(); return; }
         if (k === "fav" && list[i]) { const L = NX.data("photo-favs", []), pth = list[i].path; NX.setData("photo-favs", L.includes(pth) ? L.filter((x) => x !== pth) : [pth, ...L].slice(0, 500)); favMark(); return; }
         if (k === "favs") { onlyFav = !onlyFav; b.classList.toggle("on", onlyFav); b.setAttribute("aria-pressed", onlyFav); gallery(); return; }
         if (k === "wall" && list[i] && NX.setWallpaperFile) { const it = list[i]; (async () => { try { const blob = await (await fetch(await NX.fs.url(it.path))).blob(); const ext = (it.name.split(".").pop() || "").toLowerCase(); await NX.setWallpaperFile(new File([blob], it.name, { type: blob.type && blob.type.startsWith("image/") ? blob.type : "image/" + (ext === "jpg" ? "jpeg" : ext || "jpeg") })); } catch (er) { NX.toast(er.message || "That picture couldn't be used."); } })(); return; }
