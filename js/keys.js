@@ -343,4 +343,20 @@
     e.preventDefault(); const r = a.getBoundingClientRect();
     a.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.left + Math.min(24, r.width / 2), clientY: r.top + Math.min(r.height, 28), button: 2 }));
   }, true);
+  // ---------- Narrator keys, like Windows: hold Caps Lock (the Narrator key) and press
+  // W to read the whole window, T for the time and date, B for the battery, N for the newest notification ----------
+  let capsHeld = false;
+  addEventListener("keydown", (e) => {
+    if (e.key === "CapsLock") { capsHeld = true; return; }
+    if (!capsHeld || !N.on() || e.ctrlKey || e.altKey || e.metaKey) return;
+    const k = e.key.toLowerCase(); let say = "";
+    if (k === "w") { const w = active(); say = w ? w.app.name + " window. " + clean(w.el.querySelector(".win-body").innerText).slice(0, 1500) : "The desktop."; }
+    else if (k === "t") { const d = new Date(); say = NX.fmtTime(d) + ", " + d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }); }
+    else if (k === "b") { const b = NX.batt && NX.batt(); say = b ? "Battery " + b.percent + " percent" + (b.charging ? ", charging" : "") : "No battery information."; }
+    else if (k === "n") { const n = (NX.notes || [])[0]; say = n ? "Newest notification: " + n.text : "No notifications."; }
+    else return;
+    e.preventDefault(); e.stopImmediatePropagation(); N.speak(say.length > 1500 ? say.slice(0, 1500) : say);
+  }, true);
+  addEventListener("keyup", (e) => { if (e.key === "CapsLock") capsHeld = false; }, true);
+  addEventListener("blur", () => { capsHeld = false; });
 })();

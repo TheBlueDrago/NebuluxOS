@@ -740,6 +740,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const b = document.querySelector(".win[data-app=calculator] [data-k='7']"); b.focus(); return NX.narrator.last === "7, button"; }), "Narrator reads the button the keyboard is on");
   ok(await p.evaluate(async () => { NX.open("settings", { page: "access" }); await new Promise((r) => setTimeout(r, 500)); const c = document.querySelector(".win[data-app=settings] input[data-pref=bigfocus]"); c.focus(); return /switch, off$/.test(NX.narrator.last); }), "and a switch with its state");
   ok(await p.evaluate(() => { NX.toast("Hello there."); return NX.narrator.last === "Hello there."; }), "and messages");
+  await p.evaluate(() => NX.open("clock")); await wait(500);
+  await p.keyboard.down("CapsLock"); await p.keyboard.press("w"); await p.keyboard.up("CapsLock"); await wait(100);
+  ok(await p.evaluate(() => /^Clock window./.test(NX.narrator.last)), "Narrator: Caps Lock + W reads the window");
+  await p.keyboard.down("CapsLock"); await p.keyboard.press("t"); await p.keyboard.up("CapsLock"); await wait(100);
+  ok(await p.evaluate(() => /20[0-9][0-9]$/.test(NX.narrator.last)), "and Caps Lock + T reads the time and date");
   await p.keyboard.down("Control"); await p.keyboard.down("Meta"); await p.keyboard.press("Enter"); await p.keyboard.up("Meta"); await p.keyboard.up("Control"); await wait(200);
   ok(await p.evaluate(() => !NX.prefs().narrator && NX.narrator.last === "Narrator is off."), "Ctrl + Nebulux + Enter turns Narrator off");
   ok(await p.evaluate(() => { document.querySelector(".win[data-app=settings] [data-pg], .win[data-app=settings] button").focus(); return NX.narrator.last === "Narrator is off."; }), "and then it's quiet");
