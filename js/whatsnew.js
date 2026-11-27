@@ -37,6 +37,7 @@
     ["On-screen keyboard", "Type with the mouse or a finger: Ctrl + Nebulux + O, or Settings > Accessibility. On a touchscreen it shows by itself when you tap a text box."],
     ["Sticky Keys", "Press Ctrl, Alt, Shift or Nebulux, then the next key, instead of holding them together. Turn them on in Settings > Accessibility, or press Shift five times."],
     ["Bold focus outline", "Settings > Accessibility can draw a thick, bright outline around whatever the keyboard is on."],
+    ["Markdown in Notepad", "Notepad Preview shows a note formatted: # headings, **bold**, *italic*, lists, checkboxes, quotes and links."],
     ["Read aloud in Notepad", "Notepad reads the words you select, or the whole note, out loud. Press it again to stop."],
     ["Captions in Media Player", "A .srt or .vtt subtitle file with the same name as a video shows as captions; the CC button turns them on or off, and Settings > Accessibility > Caption style makes them bigger or easier to read."],
     ["Mono audio", "Settings > Accessibility > Mono audio mixes the left and right sound together for every app, so you hear everything in either ear (on the USB)."],

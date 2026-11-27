@@ -588,6 +588,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.keyboard.down("Meta"); await p.keyboard.press("b"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => document.activeElement.id === "tb-qs"), "Nebulux + B goes to the icons on the right");
   await p.keyboard.press("Escape"); await p.evaluate(() => NX.closeAll());
+  // Notepad's Preview formats Markdown (and keeps it safe)
+  ok(await p.evaluate(async () => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); await new Promise((r) => setTimeout(r, 500)); const t = document.querySelector(".win[data-app=notepad] textarea"), NL = String.fromCharCode(10);
+    t.value = ["# Shopping", "- **milk**", "- [x] eggs", "<img src=x onerror=alert(1)>", "[site](https://example.com)"].join(NL); t.dispatchEvent(new Event("input"));
+    document.querySelector(".win[data-app=notepad] [data-a=md]").click(); const m = document.querySelector(".win[data-app=notepad] .np-md");
+    const ok = !m.hidden && t.hidden && m.querySelector("h1").textContent === "Shopping" && m.querySelector("li b").textContent === "milk" && !!m.querySelector(".np-box.on") && !m.querySelector("img") && m.querySelector("a").getAttribute("href") === "https://example.com";
+    document.querySelector(".win[data-app=notepad] [data-a=md]").click(); const back = !t.hidden; t.value = ""; t.dispatchEvent(new Event("input")); await new Promise((r) => setTimeout(r, 500)); NX.closeAll(); return ok && back; }), "Notepad's Preview shows Markdown formatted, with no unsafe HTML");
   // Notepad's Read aloud reads the selected words
   ok(await p.evaluate(async () => { NX.closeAll(); NX.setData("np-tabs", null); NX.setData("np-text", ""); NX.open("notepad"); await new Promise((r) => setTimeout(r, 500)); const t = document.querySelector(".win[data-app=notepad] textarea"); t.value = "Hello world, from Notepad"; t.dispatchEvent(new Event("input")); t.setSelectionRange(0, 11); document.querySelector(".win[data-app=notepad] [data-a=speak]").click(); const said = NX.narrator.read; window.speechSynthesis && speechSynthesis.cancel(); t.value = ""; t.dispatchEvent(new Event("input")); await new Promise((r) => setTimeout(r, 500)); NX.closeAll(); return said === "Hello world"; }), "Notepad's Read aloud reads the selected words");
   // Symbols (Nebulux + .): click one and it's typed where you were typing

@@ -941,3 +941,16 @@ html[data-caps=outline] video::cue{background:transparent;color:#fff;text-shadow
 .gr-plot canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}.gr-plot canvas:active{cursor:grabbing}
 .gr-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
 .calc .c-mode{flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);overflow:visible;row-gap:2px}.calc{overflow-x:hidden}
+
+/* Notepad > Preview (Markdown) */
+.np-md{flex:1;overflow:auto;padding:18px 24px;line-height:1.6;font-size:15px;user-select:text}
+.np-md[hidden]{display:none}
+.np-md h1,.np-md h2,.np-md h3{margin:.6em 0 .3em;line-height:1.25}.np-md h1{font-size:26px}.np-md h2{font-size:21px}.np-md h3{font-size:17px}
+.np-md p{margin:.4em 0}.np-md ul,.np-md ol{margin:.4em 0;padding-left:1.4em}
+.np-md code{font:13.5px ui-monospace,Consolas,monospace;background:var(--card2);padding:1px 5px;border-radius:5px}
+.np-md pre{font:13px/1.5 ui-monospace,Consolas,monospace;background:var(--card2);padding:10px 12px;border-radius:9px;overflow:auto}
+.np-md blockquote{margin:.5em 0;padding:4px 12px;border-left:3px solid var(--accent);color:var(--sub)}
+.np-md a{color:var(--accent)}.np-md hr{border:0;border-top:1px solid var(--line);margin:1em 0}
+.np-task{list-style:none;padding-left:.2em!important}.np-box{display:inline-block;width:14px;height:14px;border:2px solid var(--sub);border-radius:4px;margin-right:8px;vertical-align:-2px}.np-box.on{background:var(--accent);border-color:var(--accent)}
+.np-mdnone{color:var(--sub)}
+.np-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.np-bar::-webkit-scrollbar{display:none}.np-bar .btn{white-space:nowrap;flex:none}

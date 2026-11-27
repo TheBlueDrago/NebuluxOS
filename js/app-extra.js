@@ -7,7 +7,7 @@
   A.notepad = { name: "Notepad", icon: "notepad", category: "Productivity", rating: "4.7", size: "1 MB", w: 760, h: 520, desc: "Write notes and lists. Everything saves by itself as you type. Open and save text files too.",
     open(body, win, opts) {
       body.classList.add("np");
-      body.innerHTML = `<div class="np-tabs" role="tablist" aria-label="Notes"></div><div class="np-bar"><button class="btn sm" data-a="new">New tab</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><button class="btn sm" data-a="ver" title="Go back to an earlier version">Versions</button><button class="btn sm" data-a="speak" title="Read the selected words, or the whole note, out loud">Read aloud</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
+      body.innerHTML = `<div class="np-tabs" role="tablist" aria-label="Notes"></div><div class="np-bar"><button class="btn sm" data-a="new">New tab</button><button class="btn sm" data-a="open">Open</button><button class="btn sm" data-a="save">Save to Documents</button><button class="btn sm" data-a="dl">Download</button><button class="btn sm" data-a="ver" title="Go back to an earlier version">Versions</button><button class="btn sm" data-a="speak" title="Read the selected words, or the whole note, out loud">Read aloud</button><button class="btn sm" data-a="md" aria-pressed="false" title="See the note formatted: # headings, **bold**, *italic*, lists and links (Markdown)">Preview</button><span class="np-sp"></span><button class="btn sm" data-a="wrap" aria-pressed="true" title="Word wrap">Wrap</button><button class="btn sm" data-a="-" aria-label="Smaller text">A-</button><button class="btn sm" data-a="+" aria-label="Bigger text">A+</button></div><form class="np-find" hidden><input name="f" placeholder="Find" aria-label="Find"><input name="r" placeholder="Replace with" aria-label="Replace with" hidden><button class="btn sm" type="button" data-f="next">Next</button><button class="btn sm" type="button" data-f="rep" hidden>Replace</button><button class="btn sm" type="button" data-f="all" hidden>Replace all</button><span class="np-fmsg"></span><button class="btn sm" type="button" data-f="close" aria-label="Close find">${NX.icon("close", 12)}</button></form><textarea spellcheck="true" placeholder="Start typing..." aria-label="Note"></textarea><article class="np-md" hidden aria-label="Formatted note"></article><div class="np-status"><span class="np-pos">Ln 1, Col 1</span><span class="np-count"></span><span class="np-saved">Saved</span></div>`;
       const ta = body.querySelector("textarea"), cnt = body.querySelector(".np-count"), sv = body.querySelector(".np-saved"), saveBtn = body.querySelector("[data-a=save]");
       let size = NX.data("np-size", 15), t = 0, file = null; ta.style.fontSize = size + "px";
       // word wrap (on by default, kept for next time) and where the cursor is
@@ -16,13 +16,38 @@
       const pos = body.querySelector(".np-pos"), where = () => { const before = ta.value.slice(0, ta.selectionStart).split("\n"); pos.textContent = "Ln " + before.length + ", Col " + (before[before.length - 1].length + 1); };
       ["keyup", "click", "input", "select"].forEach((ev) => ta.addEventListener(ev, where));
       pos.title = "Go to line (Ctrl + G)"; pos.classList.add("np-posbtn"); pos.onclick = () => goLine();
+      // Preview (4.4, like Windows Notepad's Markdown): # headings, **bold**, *italic*, `code`, lists, > quotes and [links](https://...)
+      const mdHTML = (src) => {
+        const inline = (t) => NX.esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>").replace(/~~([^~]+)~~/g, "<s>$1</s>")
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, a, u) => `<a href="${u}" data-mdlink="${u}">${a}</a>`);
+        const out = []; let list = null, code = null;
+        const close = () => { if (list) { out.push(`</${list}>`); list = null; } };
+        for (const line of String(src).split(String.fromCharCode(10))) {
+          if (/^```/.test(line)) { if (code !== null) { out.push(`<pre>${NX.esc(code)}</pre>`); code = null; } else { close(); code = ""; } continue; }
+          if (code !== null) { code += (code ? String.fromCharCode(10) : "") + line; continue; }
+          let m;
+          if ((m = /^(#{1,6})\s+(.*)$/.exec(line))) { close(); const n = m[1].length; out.push(`<h${n}>${inline(m[2])}</h${n}>`); }
+          else if ((m = /^\s*[-*+]\s+\[( |x)\]\s+(.*)$/i.exec(line))) { if (list !== "ul") { close(); out.push("<ul class=\"np-task\">"); list = "ul"; } out.push(`<li><i class="np-box ${m[1].trim() ? "on" : ""}"></i>${inline(m[2])}</li>`); }
+          else if ((m = /^\s*[-*+]\s+(.*)$/.exec(line))) { if (list !== "ul") { close(); out.push("<ul>"); list = "ul"; } out.push(`<li>${inline(m[1])}</li>`); }
+          else if ((m = /^\s*\d+[.)]\s+(.*)$/.exec(line))) { if (list !== "ol") { close(); out.push("<ol>"); list = "ol"; } out.push(`<li>${inline(m[1])}</li>`); }
+          else if ((m = /^>\s?(.*)$/.exec(line))) { close(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); }
+          else if (/^\s*(---|\*\*\*)\s*$/.test(line)) { close(); out.push("<hr>"); }
+          else if (!line.trim()) { close(); }
+          else { close(); out.push(`<p>${inline(line)}</p>`); }
+        }
+        if (code !== null) out.push(`<pre>${NX.esc(code)}</pre>`); close(); return out.join("");
+      };
+      NX.mdHTML = mdHTML;
+      const md = body.querySelector(".np-md");
+      const mdShow = (on) => { md.hidden = !on; ta.hidden = !!on; const b = body.querySelector("[data-a=md]"); b.classList.toggle("on", !!on); b.setAttribute("aria-pressed", !!on); if (on) md.innerHTML = mdHTML(ta.value) || `<p class="np-mdnone">Nothing to show yet. Type some Markdown, like # A heading or **bold**.</p>`; };
+      md.addEventListener("click", (e) => { const a = e.target.closest("[data-mdlink]"); if (a) { e.preventDefault(); NX.open("google", { url: a.dataset.mdlink }); } });
       const title = () => { win.el.querySelector(".wt-name").textContent = (file ? NX.fs.base(file) : "Notepad"); saveBtn.hidden = !!file; };
       // tabs: each one is a note Notepad keeps for you ("Untitled" until it has a first line) or a text file; they come back next time
       let tabs = (NX.data("np-tabs", null) || [{ id: 1 }]).filter((x) => x && x.id); if (!tabs.length) tabs = [{ id: 1 }];
       let ti = Math.max(0, Math.min(+NX.data("np-tab", 0) || 0, tabs.length - 1));
       const keyOf = (tb) => (tb.id === 1 ? "np-text" : "np-text-" + tb.id), strip = body.querySelector(".np-tabs");
       const tabsSave = () => { NX.setData("np-tabs", tabs.map((x) => (x.file ? { id: x.id, file: x.file } : { id: x.id }))); NX.setData("np-tab", ti); };
-      const tabName = (tb, k) => { if (tb.file) return NX.fs.base(tb.file); const txt = k === ti ? ta.value : NX.data(keyOf(tb), ""); return (txt.split("\n").find((x) => x.trim()) || "").trim().slice(0, 24) || "Untitled"; };
+      const tabName = (tb, k) => { if (tb.file) return NX.fs.base(tb.file); const txt = k === ti ? ta.value : NX.data(keyOf(tb), ""); return (txt.split("\n").find((x) => x.trim()) || "").trim().replace(/^#+\s*/, "").slice(0, 24) || "Untitled"; };
       const drawTabs = () => { strip.innerHTML = tabs.map((tb, k) => `<div class="np-tab ${k === ti ? "on" : ""}"><button class="np-tn" role="tab" aria-selected="${k === ti}" data-ti="${k}" title="${NX.esc(tb.file || tabName(tb, k))}">${NX.icon(tb.file ? "ftext" : "notepad", 14)}<span>${NX.esc(tabName(tb, k))}</span></button><button class="np-tx" data-tx="${k}" aria-label="Close ${NX.esc(tabName(tb, k))}">${NX.icon("close", 10)}</button></div>`).join("") + `<button class="np-tadd" data-tadd="1" aria-label="New tab" title="New tab">${NX.icon("plus", 14)}</button>`; };
       const newId = () => Math.max(1, ...tabs.map((x) => x.id)) + 1;
       async function loadTab(k) {
@@ -76,6 +101,7 @@
           try { const dir = await NX.folder("Documents"); const r = await NX.fs.create(dir, nm, false); file = r.path; await NX.fs.write(file, ta.value); NX.setData(keyOf(tabs[ti]), ""); tabs[ti].file = file; tabsSave(); drawTabs(); title(); sv.textContent = "Saved in Documents"; NX.toast("Saved in Documents as " + r.name + "."); NX.filesChanged && NX.filesChanged(); } catch (er) { NX.toast(er.message); }
         }
         if (k === "dl") { const url = URL.createObjectURL(new Blob([ta.value], { type: "text/plain" })), l = document.createElement("a"); l.href = url; l.download = file ? NX.fs.base(file) : "note.txt"; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+        if (k === "md") { mdShow(md.hidden); return; }
         if (k === "speak") {
           // Read aloud: the selected words, or everything (press it again to stop)
           const SS = window.speechSynthesis; if (!SS || typeof SpeechSynthesisUtterance === "undefined") { NX.toast("This computer can’t read out loud."); return; }
