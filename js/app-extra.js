@@ -129,6 +129,7 @@
       // Match case (the Aa button): off finds Red and red alike
       let matchCase = false; const cs = (t) => (matchCase ? String(t) : String(t).toLowerCase());
       const findNext = () => { const q = fi.value; if (!q) return false; const hay = cs(ta.value), n = cs(q); let i = hay.indexOf(n, ta.selectionEnd); if (i < 0) i = hay.indexOf(n); if (i < 0) { fmsg.textContent = "Not found"; return false; } { let total = 0, nth = 0, j = hay.indexOf(n); while (j >= 0 && total < 9999) { total++; if (j === i) nth = total; j = hay.indexOf(n, j + Math.max(1, n.length)); } fmsg.textContent = nth + " of " + total; } ta.focus(); ta.setSelectionRange(i, i + q.length); fi.focus(); return true; };
+      const findPrev = () => { const q = fi.value; if (!q) return false; const hay = cs(ta.value), n = cs(q); let i = ta.selectionStart > 0 ? hay.lastIndexOf(n, ta.selectionStart - 1) : -1; if (i < 0) i = hay.lastIndexOf(n); if (i < 0) { fmsg.textContent = "Not found"; return false; } ta.setSelectionRange(i, i); return findNext(); };
       const replaceOne = () => { const q = fi.value; if (!q) return; if (cs(ta.value.slice(ta.selectionStart, ta.selectionEnd)) !== cs(q) && !findNext()) return; ta.setRangeText(ri.value, ta.selectionStart, ta.selectionEnd, "end"); ta.dispatchEvent(new Event("input")); findNext(); };
       const replaceAll = () => { const q = fi.value; if (!q) return; let n = 0; const low = cs(q); let out = "", i = 0, v = ta.value, lv = cs(v); for (;;) { const j = lv.indexOf(low, i); if (j < 0) break; out += v.slice(i, j) + ri.value; i = j + q.length; n++; } if (!n) { fmsg.textContent = "Not found"; return; } ta.value = out + v.slice(i); ta.dispatchEvent(new Event("input")); fmsg.textContent = n === 1 ? "Replaced 1" : "Replaced " + n; };
       fb.onsubmit = (e) => { e.preventDefault(); findNext(); };
@@ -141,8 +142,8 @@
       };
       win.npGoLine = goLine;
       fb.onclick = (e) => { const b = e.target.closest("[data-f]"); if (!b) return; const k = b.dataset.f; if (k === "case") { matchCase = !matchCase; b.classList.toggle("on", matchCase); b.setAttribute("aria-pressed", matchCase); fmsg.textContent = ""; return; } if (k === "next") findNext(); if (k === "rep") replaceOne(); if (k === "all") replaceAll(); if (k === "close") { fb.hidden = true; fmsg.textContent = ""; ta.focus(); } };
-      fb.onkeydown = (e) => { if (e.key === "Escape") { e.stopPropagation(); fb.hidden = true; ta.focus(); } if (e.key === "Enter") { e.preventDefault(); if (e.target === ri) replaceOne(); else findNext(); } };
-      body.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^[fh]$/i.test(e.key)) { e.preventDefault(); findOpen(e.key.toLowerCase() === "h"); } if (e.key === "F3") { e.preventDefault(); findNext(); }
+      fb.onkeydown = (e) => { if (e.key === "Escape") { e.stopPropagation(); fb.hidden = true; ta.focus(); } if (e.key === "Enter") { e.preventDefault(); if (e.target === ri) replaceOne(); else if (e.shiftKey) findPrev(); else findNext(); } };
+      body.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^[fh]$/i.test(e.key)) { e.preventDefault(); findOpen(e.key.toLowerCase() === "h"); } if (e.key === "F3") { e.preventDefault(); if (e.shiftKey) findPrev(); else findNext(); }
         // Ctrl + G: Go to line
         if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^g$/i.test(e.key)) { e.preventDefault(); goLine(); }
         // F5: the date and time where you're typing, like Windows Notepad

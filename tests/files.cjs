@@ -523,6 +523,7 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => { const ta = NX.wins.get("notepad").np.ta; return ta.value.slice(ta.selectionStart, ta.selectionEnd) === "Red" && ta.selectionStart === 11; }), "Ctrl + F finds words in Notepad, the next one each time");
   ok(await p.evaluate(() => / of [0-9]+$/.test(document.querySelector(".win[data-app=notepad] .np-fmsg").textContent)), "and Find says which match it is, like 2 of 3");
   ok(await p.evaluate(() => { const W = NX.wins.get("notepad"), ta = W.np.ta, fb = W.el.querySelector(".np-find"); const old = ta.value; ta.value = "red Red RED"; ta.setSelectionRange(0, 0); fb.f.value = "Red"; fb.querySelector("[data-f=case]").click(); fb.querySelector("[data-f=next]").click(); const at = ta.selectionStart, msg = W.el.querySelector(".np-fmsg").textContent; fb.querySelector("[data-f=case]").click(); ta.value = old; return at === 4 && msg === "1 of 1"; }), "Match case finds only Red, not red or RED");
+  ok(await p.evaluate(() => { const W = NX.wins.get("notepad"), ta = W.np.ta, fb = W.el.querySelector(".np-find"); const old = ta.value; ta.value = "a1 a2 a3"; ta.setSelectionRange(6, 8); fb.f.value = "a"; ta.dispatchEvent(new KeyboardEvent("keydown", { key: "F3", shiftKey: true, bubbles: true })); const one = ta.selectionStart; fb.f.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true })); const two = ta.selectionStart; ta.value = old; return one === 3 && two === 0; }), "Shift + F3 and Shift + Enter find the match before");
   await p.evaluate(() => { const w = NX.wins.get("notepad"); w.np.findOpen(true); const f = document.querySelector(".win[data-app=notepad] .np-find"); f.f.value = "red"; f.r.value = "green"; w.np.replaceAll(); }); await wait(200);
   ok(await p.evaluate(() => NX.wins.get("notepad").np.ta.value === "green apple, green car, blue sky" && /Replaced 2/.test(document.querySelector(".win[data-app=notepad] .np-fmsg").textContent)), "Replace all replaces every one");
   await p.evaluate(() => { const n = NX.wins.get("notepad").np; n.ta.value = ""; n.ta.dispatchEvent(new Event("input")); NX.close("notepad"); }); await wait(500);
@@ -758,6 +759,12 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   ok(await p.evaluate(() => document.querySelectorAll(".win[data-app=files] .fx-item.sel").length === 3), "and Shift + arrows pick a range");
   await p.keyboard.press("Home"); await p.keyboard.type("c"); await wait(100);
   ok(await p.evaluate(() => { const s = [...document.querySelectorAll(".win[data-app=files] .fx-item.sel")]; return s.length === 1 && /c.txt/.test(s[0].textContent); }), "typing a letter jumps to the file that starts with it");
+  await p.keyboard.down("Alt"); await p.keyboard.press("Enter"); await p.keyboard.up("Alt"); await wait(300);
+  ok(await p.evaluate(() => { const d = document.querySelector(".fx-props"); const ok = !!d && /c.txt/.test(d.textContent); if (d) d.remove(); return ok; }), "Alt + Enter shows the file's Properties");
+  await p.focus(".win[data-app=files] .fx-list"); await p.keyboard.press("Escape"); await wait(100);
+  ok(await p.evaluate(() => !document.querySelector(".win[data-app=files] .fx-item.sel") && !!NX.wins.get("files")), "Esc lets go of the selection, and the window stays open");
+  await p.keyboard.down("Alt"); await p.keyboard.press("ArrowUp"); await p.keyboard.up("Alt"); await wait(500);
+  ok(await p.evaluate(() => [...document.querySelectorAll(".win[data-app=files] .fx-item")].some((b) => /Arrows/.test(b.textContent))), "Alt + Up goes up a folder");
   await p.evaluate(async () => { NX.setData("fx-view", "grid"); NX.closeAll(); await NX.fs.remove(["/Documents/Arrows"], true); });
   // Settings: the arrow keys move through the page list
   await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);

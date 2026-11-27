@@ -426,8 +426,12 @@
         else if (k === " " && sel.size === 1 && NX.peekFile && !isTrash()) { const e1 = items.find((x) => (x.path || x.id) === [...sel][0]); if (e1 && !e1.dir) { ev.preventDefault(); NX.peekFile(e1, items.filter((x) => !x.dir)); } }
         else if (k === "F2" && sel.size >= 1) { ev.preventDefault(); act("rename"); }
         else if (c && ev.shiftKey && /^n$/i.test(k) && !isHome() && !isTrash()) { ev.preventDefault(); act("newfolder"); } // Ctrl + Shift + N, like Windows
-        else if (k === "Enter" && sel.size === 1) { ev.preventDefault(); openItem(selected()[0]); }
+        else if (k === "Enter" && sel.size === 1 && !ev.altKey) { ev.preventDefault(); openItem(selected()[0]); }
         else if (k === "Backspace" && !c) { ev.preventDefault(); nav("up"); }
+        // like Windows: Esc lets go of the selection, Alt + Left / Right / Up go back, forward and up, Alt + Enter shows Properties
+        else if (k === "Escape" && sel.size) { ev.preventDefault(); ev.stopPropagation(); sel.clear(); marks(); }
+        else if (ev.altKey && !c && (k === "ArrowLeft" || k === "ArrowRight" || k === "ArrowUp")) { ev.preventDefault(); nav(k === "ArrowLeft" ? "back" : k === "ArrowRight" ? "fwd" : "up"); }
+        else if (ev.altKey && k === "Enter" && sel.size === 1 && !isTrash()) { ev.preventDefault(); props(selected()[0]); }
         else if (c && /^[acxv]$/i.test(k)) { ev.preventDefault(); const l = k.toLowerCase(); if (l === "a") { sel = new Set(items.map((e) => e.path || e.id)); marks(); } else if (!isTrash()) act(l === "c" ? "copy" : l === "x" ? "cut" : "paste"); }
       });
       function nav(k) {
