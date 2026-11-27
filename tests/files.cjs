@@ -790,6 +790,17 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("a"); await p.keyboard.up("Meta"); await wait(250);
   ok(await p.evaluate(() => !document.querySelector("#qs").hidden), "Nebulux + A opens Quick Settings");
   await p.evaluate(() => NX.shell.closeFlyouts());
+  // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
+  await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
+  ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
+  await p.keyboard.type("calc"); await p.keyboard.press("Enter"); await wait(500);
+  ok(await p.evaluate(() => !!NX.wins.get("calculator") && !document.querySelector("#nx-run")), "Run opens calc as Calculator");
+  await p.evaluate(() => { NX.closeAll(); NX.runBox(); }); await wait(100); await p.evaluate(() => { document.querySelector("#nx-run input").value = "~/Documents"; }); await p.keyboard.press("Enter"); await wait(600);
+  ok(await p.evaluate(() => !!NX.wins.get("files") && /Documents/.test(document.querySelector(".win[data-app=files] .fx-crumbs").textContent)), "Run opens ~/Documents in File Explorer");
+  await p.evaluate(() => { NX.closeAll(); NX.runBox(); }); await wait(100); await p.evaluate(() => { document.querySelector("#nx-run input").value = "nothingcalledthis"; }); await p.keyboard.press("Enter"); await wait(300);
+  ok(await p.evaluate(() => /can't find nothingcalledthis/.test(document.querySelector("#nx-run .nx-run-msg").textContent)), "and says so when it can't find what you typed");
+  await p.keyboard.press("Escape"); await wait(100);
+  ok(await p.evaluate(() => !document.querySelector("#nx-run")), "Esc closes Run");
   // Settings: the arrow keys move through the page list
   await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
   await p.evaluate(() => document.querySelector(".win[data-app=settings] .s-side nav [data-p]").focus()); await p.keyboard.press("ArrowDown"); await p.keyboard.press("ArrowDown"); await wait(100);

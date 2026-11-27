@@ -209,3 +209,43 @@
   document.addEventListener("nx:signin", apply);
   setInterval(apply, 60000); // after the screen changes (a TV plugged in), or a schedule turned it on
 })();
+
+// ---------- Run (Nebulux + R): type an app, a folder, a file or a website, like Windows ----------
+(function () {
+  const ALIAS = { calc: "calculator", explorer: "files", "file explorer": "files", control: "settings", "control panel": "settings", "ms-settings:": "settings", mspaint: "paint", taskmgr: "taskmgr", "task manager": "taskmgr", snippingtool: "snip", photos: "photos", camera: "camera", store: "store", clock: "clock", notes: "notes", write: "notepad", wordpad: "notepad" };
+  const findApp = (v) => {
+    const low = v.toLowerCase(), A = NX.apps, ids = Object.keys(A).filter((id) => !A[id].hidden);
+    if (ALIAS[low] && A[ALIAS[low]]) return ALIAS[low];
+    return ids.find((id) => id === low || (A[id].name || "").toLowerCase() === low) || ids.find((id) => (A[id].name || "").toLowerCase().startsWith(low)) || null;
+  };
+  const openPath = async (p) => {
+    try { await NX.fs.list(p); NX.open("files", { path: p }); return true; } catch (e) { /* not a folder */ }
+    const dir = NX.fs.parent(p); if (!dir && dir !== "") return false;
+    try { const r = await NX.fs.list(dir || "/"); const f = r.entries.find((x) => x.path === p); if (f) { NX.openFile(f, r.entries); return true; } } catch (e) { /* no such folder */ }
+    return false;
+  };
+  NX.runBox = () => {
+    if (!NX.me) return; let o = document.getElementById("nx-run"); if (o) { o.querySelector("input").select(); return; }
+    const hist = NX.data("run-hist", []);
+    o = document.createElement("div"); o.id = "nx-run";
+    o.innerHTML = `<form class="nx-run-card" role="dialog" aria-label="Run"><div class="nx-run-h">${NX.icon("apps", 20)}<b>Run</b></div><p>Type the name of an app, a folder, a file or a website, and Nebulux OS will open it for you.</p><label class="nx-run-in"><span>Open:</span><input list="nx-run-l" autocomplete="off" spellcheck="false" aria-label="Open" value="${NX.esc(hist[0] || "")}"></label><datalist id="nx-run-l">${hist.map((h) => `<option value="${NX.esc(h)}">`).join("")}</datalist><p class="nx-run-msg" role="alert"></p><div class="nx-run-b"><button type="button" class="btn" data-x>Cancel</button><button class="btn primary">OK</button></div></form>`;
+    document.body.appendChild(o); const i = o.querySelector("input"), msg = o.querySelector(".nx-run-msg"), close = () => o.remove();
+    setTimeout(() => { i.focus(); i.select(); }, 20);
+    o.querySelector("[data-x]").onclick = close;
+    o.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+    o.addEventListener("pointerdown", (e) => { if (e.target === o) close(); });
+    o.querySelector("form").onsubmit = async (e) => {
+      e.preventDefault(); let v = i.value.trim(); if (!v) return;
+      let done = false;
+      const app = /[\/\.:]/.test(v) && !ALIAS[v.toLowerCase()] ? null : findApp(v);
+      if (app) { NX.open(app); done = true; }
+      else if (v === "~" || v.startsWith("~/") || v.startsWith("/") || /^[a-z]:[\/]/i.test(v)) {
+        if (v.startsWith("~")) { const home = (await NX.fs.places()).home || "/"; v = v === "~" ? home : home.replace(/[\/]$/, "") + v.slice(1); }
+        done = await openPath(v);
+      }
+      else if (/^https?:\/\//i.test(v) || /^([\w-]+\.)+[a-z]{2,}(:\d+)?(\/\S*)?$/i.test(v)) done = NX.searchWeb(v) !== false;
+      if (!done) { msg.textContent = "Nebulux OS can't find " + v + ". Make sure you typed the name correctly, then try again."; i.select(); return; }
+      NX.setData("run-hist", [i.value.trim(), ...hist.filter((h) => h !== i.value.trim())].slice(0, 10)); close();
+    };
+  };
+})();
