@@ -102,6 +102,9 @@ window.NX = window.NX || {};
     const L = NX.users(); if (L.some((u) => u.id !== id && u.name.toLowerCase() === name.toLowerCase())) throw new Error("There's already an account with that name.");
     const u = L.find((x) => x.id === id); u.name = name; saveUsers(L);
   };
+  // the first day of the week in every calendar (Settings > Time & language)
+  NX.weekStart = () => (NX.me && NX.prefs().weekMon ? 1 : 0);
+  NX.weekDays = (L) => L.slice(NX.weekStart()).concat(L.slice(0, NX.weekStart()));
   NX.removeUser = (id) => { saveUsers(NX.users().filter((u) => u.id !== id)); NX.del("prefs:" + id); NX.del("data:" + id); };
 
   // ---- per-user preferences and app data ----
