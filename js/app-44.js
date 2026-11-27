@@ -174,3 +174,24 @@
     t.dispatchEvent(new Event("input", { bubbles: true }));
   }, true);
 })();
+
+// ---------- Power > Screen and sleep: turn the screen off, or sleep, after a while with nobody using the computer ----------
+(function () {
+  let last = Date.now(), offAt = 0, slept = false;
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, () => { last = Date.now(); slept = false; const o = document.getElementById("nx-screenoff"); if (o) o.remove(); }, { capture: true, passive: true }));
+  const playing = () => [...document.querySelectorAll("video,audio")].some((m) => !m.paused && !m.ended);
+  NX.idleTick = async () => {
+    if (!NX.me) return; const p = NX.prefs(), scr = (p.screenOffMin == null ? (NX.native ? 10 : 0) : +p.screenOffMin) * 60000, slp = (+p.sleepMin || 0) * 60000; if (!scr && !slp) return;
+    let idle = Date.now() - last, sound = playing();
+    // (on the USB the display's idle time counts every window, the OS screen too)
+    if (NX.native) { try { const r = await NX.api("GET", "/idle"); if (r && r.known !== false) idle = r.ms; sound = sound || !!(r && r.sound); } catch (e) { return; } }
+    if (sound) return;
+    if (slp && idle >= slp && !slept) { slept = true; if (NX.shell && NX.shell.sleep) NX.shell.sleep(); return; }
+    if (scr && idle >= scr && Date.now() - offAt > scr) {
+      offAt = Date.now();
+      if (NX.native) NX.api("POST", "/screen/off").catch(() => {});
+      else if (!document.getElementById("nx-screenoff")) { const o = document.createElement("div"); o.id = "nx-screenoff"; o.setAttribute("aria-hidden", "true"); document.body.appendChild(o); }
+    }
+  };
+  setInterval(() => NX.idleTick(), 30000);
+})();

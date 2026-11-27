@@ -102,3 +102,4 @@ brightnessctl
 speech-dispatcher
 speech-dispatcher-espeak-ng
 espeak-ng
+xprintidle

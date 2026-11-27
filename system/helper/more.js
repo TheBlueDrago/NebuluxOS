@@ -330,6 +330,19 @@ module.exports = function more({ api, run, FAKE }) {
     } else await run("pactl", ["set-default-sink", id.slice(5)], 4000);
     return audio();
   };
+  // Power > Screen and sleep: how long nobody has touched the keyboard or mouse (over every window), and whether
+  // anything is playing sound (a video counts as being used); turning the screen off
+  let fakeIdle = 0;
+  api["GET /idle"] = async () => {
+    if (FAKE) return { ms: fakeIdle, sound: false };
+    const r = await run("xprintidle", [], 3000), ms = r.ok ? +r.out.trim() || 0 : 0;
+    const s = await run("pactl", ["list", "sink-inputs"], 4000), sound = /Corked: no/.test(s.out || "");
+    return { ms, sound, known: r.ok };
+  };
+  api["POST /fake/idle"] = async (b) => { if (!FAKE) throw new Error("Not found"); fakeIdle = +b.ms || 0; return { ok: true }; };
+  let fakeScreenOff = 0;
+  api["POST /screen/off"] = async () => { if (FAKE) { fakeScreenOff++; return { ok: true, n: fakeScreenOff }; } await run("xset", ["dpms", "force", "off"], 4000); return { ok: true }; };
+  api["GET /fake/screen-off"] = async () => { if (!FAKE) throw new Error("Not found"); return { n: fakeScreenOff }; };
   // the volume mixer (Settings > System > Sound): each app playing sound, with its own volume
   let fakeMix = [{ id: 7, name: "YouTube", vol: 80, muted: false }, { id: 9, name: "Media Player", vol: 55, muted: false }];
   api["GET /audio/apps"] = async () => {

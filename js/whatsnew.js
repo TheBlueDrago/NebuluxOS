@@ -7,6 +7,7 @@
     ["Nebulux Horizon", "A new background that follows the time of day: the glowing edge of a planet under a violet nebula, at sunrise, in daylight, at dusk and at night. New accounts start with Horizon Dynamic; each time of day is also its own background in Settings > Personalization."],
     ["New icons", "Settings has a glossy gear with a glowing nebula in the middle, Task Manager a glowing live chart, and Get Started a bright star."],
     ["Narrator", "A screen reader: it reads out loud what the keyboard or mouse is on, windows that open and messages. Turn it on in Settings > Accessibility or with Ctrl + Nebulux + Enter; Ctrl stops the talking. Its voice comes with the 4.4 USB."],
+    ["Screen and sleep", "Settings > System > Power: turn the screen off, or put the computer to sleep, after a while with nobody using it. A video or music that is playing keeps it awake."],
     ["Volume mixer", "Settings > System > Sound has a Volume mixer: each app playing sound gets its own volume and Mute (on the USB)."],
     ["Processes in Task Manager", "Task Manager has a Processes tab: every program on the computer with its processor and memory use, and End task for your own (on the USB)."],
     ["Week view in Calendar", "Calendar has a Week view: your events hour by hour, a line for right now, and click an hour to add an event then."],
