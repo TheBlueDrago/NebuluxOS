@@ -447,6 +447,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   // Screen and sleep: after the set time with nobody at the keyboard or mouse (over every window), the screen goes off
   ok(await p.evaluate(async () => { const n0 = (await NX.api("GET", "/fake/screen-off")).n; NX.setPref("screenOffMin", 1); NX.setPref("sleepMin", 0); await NX.api("POST", "/fake/idle", { ms: 30000 }); await NX.idleTick(); const n1 = (await NX.api("GET", "/fake/screen-off")).n; await NX.api("POST", "/fake/idle", { ms: 70000 }); await NX.idleTick(); const n2 = (await NX.api("GET", "/fake/screen-off")).n; await NX.api("POST", "/fake/idle", { ms: 0 }); NX.setPref("screenOffMin", 0); return n1 === n0 && n2 === n0 + 1; }), "the screen turns off after the time in Screen and sleep (not before)");
 
+  // a screenshot also goes on the clipboard (Ctrl + V pastes it anywhere)
+  ok(await p.evaluate(async () => { const r = await NX.screenshot(true); const c = await NX.api("GET", "/fake/clip-image"); return !!r && c.path === r.path; }), "a screenshot is copied to the clipboard too");
+
   // Mono audio reaches the sound system
   await p.evaluate(() => NX.setPref("monoAudio", true)); await wait(500);
   ok(await p.evaluate(async () => (await NX.api("GET", "/sound/mono")).on === true), "Mono audio turns on in the sound system");

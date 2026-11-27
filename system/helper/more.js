@@ -606,6 +606,15 @@ module.exports = function more({ api, run, FAKE }) {
     const r = await run("xclip", ["-o", "-selection", "clipboard", "-t", "UTF8_STRING"], 2500);
     return { text: r.ok ? r.out.slice(0, 20000) : "" };
   };
+  // a picture on the clipboard (a screenshot, like Windows), so Ctrl + V pastes it in any app
+  let fakeClipImg = "";
+  api["POST /clip/image"] = async (b) => {
+    const p = safe(b.path); if (!/\.png$/i.test(p)) throw new Error("Only PNG pictures go on the clipboard.");
+    if (FAKE) { fakeClipImg = p; return { ok: true }; }
+    spawn("xclip", ["-selection", "clipboard", "-t", "image/png", "-i", p], { stdio: "ignore", detached: true }).on("error", () => {}).unref();
+    return { ok: true };
+  };
+  api["GET /fake/clip-image"] = async () => { if (!FAKE) throw new Error("Not found"); return { path: fakeClipImg }; };
   api["POST /clip"] = async (b) => {
     const text = String((b && b.text) || "").slice(0, 20000);
     if (FAKE) { fakeClip = text; return { ok: true }; }

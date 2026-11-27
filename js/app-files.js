@@ -621,7 +621,13 @@
       const blob = await new Promise((ok) => c.toBlob(ok, "image/png")); const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
       r = await NX.fs.upload(await NX.folder("Pictures"), `Screenshot ${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}.png`, blob);
     }
-    if (!quiet) NX.toast("Screenshot saved in Pictures" + (NX.native ? " > Screenshots." : "."));
+    // and on the clipboard, like Windows: Ctrl + V pastes it straight into any app
+    let copied = false;
+    if (r && r.path && NX.prefs().shotClip !== false) {
+      if (NX.native) { try { await NX.api("POST", "/clip/image", { path: r.path }); copied = true; } catch (e) { /* not this time */ } }
+      else if (navigator.clipboard && window.ClipboardItem) { try { const b = await (await fetch(await NX.fs.url(r.path))).blob(); await navigator.clipboard.write([new ClipboardItem({ "image/png": b.type === "image/png" ? b : new Blob([b], { type: "image/png" }) })]); copied = true; } catch (e) { /* the browser said no */ } }
+    }
+    if (!quiet) NX.toast("Screenshot saved in Pictures" + (NX.native ? " > Screenshots" : "") + (copied ? " and copied, so Ctrl + V pastes it." : "."));
     NX.filesChanged(); return r;
   };
   A.snip = { name: "Snipping Tool", icon: "snip", builtIn: true, w: 560, h: 460, minW: 320, minH: 300, desc: "Take a picture of your screen.",
