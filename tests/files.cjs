@@ -723,6 +723,11 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => document.querySelector('#start [data-spage="access"]').click()); await wait(700);
   ok(await p.evaluate(() => { const h = document.querySelector(".win[data-app=settings] .s-found"); return !!h && /Mono audio/.test(h.textContent); }), "searching Start for a setting opens its page and highlights it");
   await p.evaluate(() => NX.closeAll());
+  // Settings' own search: Enter goes to the setting
+  await p.evaluate(() => { NX.closeAll(); NX.open("settings"); }); await wait(500);
+  await p.type(".win[data-app=settings] .s-search input", "sticky keys"); await p.keyboard.press("Enter"); await wait(400);
+  ok(await p.evaluate(() => { const h = document.querySelector(".win[data-app=settings] .s-found"); return !!h && /Sticky Keys/.test(h.textContent); }), "Enter in Settings' search goes to the setting and lights it up");
+  await p.evaluate(() => NX.closeAll());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

@@ -58,7 +58,7 @@
       body.classList.add("settings");
       const draw = () => {
         const p = NX.prefs(), me = NX.me;
-        const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q) || (x.keys || "").includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}"><span class="s-ri s-ni" data-ri="${x.icon}">${NX.icon(x.icon, 15)}</span><span>${x.name}</span></button>`).join("");
+        const nav = PAGES.filter((x) => !x.under && (!q || x.name.toLowerCase().includes(q) || (x.keys || "").includes(q) || ((NX.settingsWords || {})[x.id] || "").includes(q))).map((x) => `<button class="s-nav ${x.id === page || (PAGES.find((y) => y.id === page) || {}).under === x.id ? "on" : ""}" data-p="${x.id}"><span class="s-ri s-ni" data-ri="${x.icon}">${NX.icon(x.icon, 15)}</span><span>${x.name}</span></button>`).join("");
         body.innerHTML = `<aside class="s-side"><div class="s-me" data-p="accounts">${NX.avatar(me, "av")}<span><b>${NX.esc(me.name)}</b><small>Local account</small></span></div>
           <label class="s-search">${NX.icon("search", 16)}<input placeholder="Find a setting" value="${NX.esc(qRaw)}" aria-label="Find a setting"></label><nav>${nav || `<p class="s-none">No settings match.</p>`}</nav></aside>
           <section class="s-main"><h1>${(() => { const pg = PAGES.find((x) => x.id === page); return pg.under ? `<button class="s-crumb" data-p="${pg.under}">${PAGES.find((x) => x.id === pg.under).name}</button><span class="s-crumbsep">${NX.icon("chevron", 14)}</span>${pg.name}` : pg.name; })()}</h1>${pageHTML(page, p, me)}</section>`;
@@ -375,6 +375,8 @@
         const cr = body.querySelector("#s-clearrecent"); if (cr) cr.onclick = () => { NX.setData("recent-files", []); NX.toast("Recently opened files cleared."); draw(); };
         body.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { page = b.dataset.p; draw(); body.querySelector(".s-main").scrollTop = 0; }));
         const si = body.querySelector(".s-search input"); si.oninput = () => { qRaw = si.value; q = si.value.trim().toLowerCase(); const pos = si.selectionStart; draw(); const n = body.querySelector(".s-search input"); n.focus(); n.setSelectionRange(pos, pos); };
+        // Enter: go to the first page that matches, pointing at the setting
+        si.onkeydown = (e) => { if (e.key !== "Enter" || !q) return; const b = body.querySelector(".s-side nav [data-p]"); if (!b) return; e.preventDefault(); const found = q; page = b.dataset.p; q = ""; qRaw = ""; draw(); setTimeout(() => flashFind && flashFind(found), 40); };
         // switches and lists say which setting they are (for the keyboard and Narrator)
         body.querySelectorAll(".s-row").forEach((r) => { const t = r.querySelector(".s-rt b"); if (!t) return; r.querySelectorAll(".s-rc input[type=checkbox], .s-rc select").forEach((c) => { if (!c.getAttribute("aria-label")) c.setAttribute("aria-label", t.textContent); if (c.type === "checkbox") c.setAttribute("role", "switch"); }); });
         body.querySelectorAll("[data-pref]").forEach((inp) => {
