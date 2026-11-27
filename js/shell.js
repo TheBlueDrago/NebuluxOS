@@ -431,6 +431,13 @@
   async function startExtras(q, S) {
     const gen = ++searchGen, ql = q.toLowerCase(), box = $(".sm-results", S); if (!box) return;
     const web = box.querySelector("[data-web]");
+    // quick actions, like in Quick Search: a sum, a timer, a reminder
+    { const acts = [];
+      if (/[0-9)]/.test(q) && /[-+*/^%()]|sqrt|sin|cos|tan|log/.test(q) && NX.calcEval) { try { const v = NX.calcEval(q, true); if (isFinite(v)) { const r2 = String(+v.toPrecision(12)); acts.push([NX.icon("calculator", 28), "= " + r2, "Copy the answer", () => { navigator.clipboard && navigator.clipboard.writeText(r2).catch(() => {}); if (NX.clip) NX.clip.add(r2); NX.toast("Copied " + r2 + "."); }]); } } catch (e) { /* not a sum */ } }
+      const tm = NX.parseTimer && NX.parseTimer(q); if (tm) acts.push([NX.icon("clock", 28), "Start a " + tm.one + " timer", "Clock", () => NX.startTimer(tm)]);
+      const rm = /^remind me /i.test(q) && NX.parseReminder ? NX.parseReminder(q) : null; if (rm) acts.push([NX.icon("reminders", 28), "Remind me: " + rm.text, rm.when ? rm.when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "Reminders", () => { NX.addReminder(rm.text, rm.when); NX.toast("Reminder added" + (rm.when ? " for " + NX.fmtTime(rm.when) + "." : ".")); }]);
+      if (acts.length) { box.insertAdjacentHTML("afterbegin", `<h4 class="sm-sub">Do it now</h4>` + acts.map(([ic, t, sub], i) => `<button class="sm-res sm-act" data-sact="${i}">${ic}<span><b>${NX.esc(t)}</b><small>${NX.esc(sub)}</small></span></button>`).join(""));
+        box.querySelectorAll("[data-sact]").forEach((b) => (b.onclick = () => { closeFlyouts(); acts[+b.dataset.sact][3](); })); } }
     const pages = (NX.settingsPages || []).filter((pg) => pg.id !== "home" && (pg.name.toLowerCase().includes(ql) || ((NX.settingsWords || {})[pg.id] || "").includes(ql) || (pg.keys || "").includes(ql))).slice(0, 3);
     if (pages.length) { web.insertAdjacentHTML("beforebegin", `<h4 class="sm-sub">Settings</h4>` + pages.map((pg) => `<button class="sm-res" data-spage="${pg.id}">${NX.icon(pg.icon, 28)}<span><b>${NX.esc(pg.name)}</b><small>Settings</small></span></button>`).join(""));
       box.querySelectorAll("[data-spage]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open("settings", { page: b.dataset.spage, find: ql }); })); }

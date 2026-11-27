@@ -728,6 +728,10 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.type(".win[data-app=settings] .s-search input", "sticky keys"); await p.keyboard.press("Enter"); await wait(400);
   ok(await p.evaluate(() => { const h = document.querySelector(".win[data-app=settings] .s-found"); return !!h && /Sticky Keys/.test(h.textContent); }), "Enter in Settings' search goes to the setting and lights it up");
   await p.evaluate(() => NX.closeAll());
+  // Start does quick actions too: Enter on "timer 5 min" starts a timer
+  await p.evaluate(() => { NX.closeAll(); NX.shell.closeFlyouts(); NX.setData("timers", []); }); await p.click("#tb-start"); await wait(300); await p.keyboard.type("timer 5 min"); await wait(500); await p.keyboard.press("Enter"); await wait(300);
+  ok(await p.evaluate(() => { const t = NX.timers.list()[0]; const ok = !!t && t.on && t.len === 300000; NX.setData("timers", null); return ok; }), "Start's search starts a timer from timer 5 min");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   // Narrator (the test browser is muted; NX.narrator.last is what it said)
   await p.evaluate(() => { NX.closeAll(); NX.setPref("narrator", true); }); await wait(200);
   ok(await p.evaluate(() => /Narrator is on/.test(NX.narrator.last)), "turning Narrator on says so");

@@ -23,6 +23,14 @@
     let r; if (a[0] === "t") { const toC = { C: (x) => x, F: (x) => (x - 32) * 5 / 9, K: (x) => x - 273.15 }, fromC = { C: (x) => x, F: (x) => x * 9 / 5 + 32, K: (x) => x + 273.15 }; r = fromC[b[1]](toC[a[1]](v)); } else r = (v * a[1]) / b[1];
     return { value: +r.toPrecision(8), text: v + " " + m[2] + " = " + +r.toPrecision(8) + " " + m[3] };
   };
+  // "timer 10 min", "5 minute timer", "set a timer for 30 seconds" (Quick Search and Start)
+  NX.parseTimer = (q) => {
+    q = String(q || "").trim(); if (!/timer/i.test(q) || !NX.timers) return null;
+    const tm = /^(?:set (?:a )?)?(?:timer (?:for )?)?(\d{1,3}) ?(s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?)(?: timer)?$/i.exec(q); if (!tm) return null;
+    const n = +tm[1], u = tm[2][0].toLowerCase(), ms = n * (u === "s" ? 1000 : u === "m" ? 60000 : 3600000), word = u === "s" ? "second" : u === "m" ? "minute" : "hour";
+    return ms >= 1000 && ms <= 86400000 ? { ms, one: n + " " + word, label: n + " " + word + (n === 1 ? "" : "s") } : null;
+  };
+  NX.startTimer = (tm) => { NX.timers.add(tm.label + " timer", tm.ms, true); NX.toast("A " + tm.one + " timer is running."); };
   NX.quickSearch = () => {
     if (!NX.me) return; let o = $("#nx-qs"); if (o) { o.remove(); return; }
     if (NX.shell) NX.shell.closeFlyouts();
@@ -45,9 +53,7 @@
       if (/[\d)]/.test(q) && /[-+*/^×÷%!()]|sqrt|sin|cos|tan|log|ln/.test(q) && NX.calcEval) { try { const v = NX.calcEval(q, true); if (isFinite(v)) { const r = String(+v.toPrecision(12)); items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: "= " + r, sub: "Press Enter to copy it", go: () => { navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } }); } } catch (e) { /* not a sum */ } }
       const cv = NX.qsConvert(q); if (cv) items.push({ head: "Answer", icon: NX.icon("calculator", 30), name: cv.text, sub: "Press Enter to copy it", go: () => { const r = String(cv.value); navigator.clipboard && navigator.clipboard.writeText(r).catch(() => {}); if (NX.clip) NX.clip.add(r); NX.toast("Copied " + r + "."); } });
       // "timer 10 min", "5 minute timer", "set a timer for 30 seconds": starts one of Clock's timers
-      { const tm = /^(?:set (?:a )?)?(?:timer (?:for )?)?(\d{1,3}) ?(s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?)(?: timer)?$/i.exec(q);
-        if (tm && /timer/i.test(q) && NX.timers) { const n = +tm[1], u = tm[2][0].toLowerCase(), ms = n * (u === "s" ? 1000 : u === "m" ? 60000 : 3600000), label = n + " " + (u === "s" ? "second" : u === "m" ? "minute" : "hour") + (n === 1 ? "" : "s");
-          if (ms >= 1000 && ms <= 86400000) items.push({ head: "Timer", icon: NX.icon("clock", 30), name: "Start a " + label.replace(/s$/, "") + " timer", sub: "Rings even with Clock closed", go: () => { NX.timers.add(label + " timer", ms, true); NX.toast("A " + label.replace(/s$/, "") + " timer is running."); } }); } }
+      { const tm = NX.parseTimer(q); if (tm) items.push({ head: "Timer", icon: NX.icon("clock", 30), name: "Start a " + tm.one + " timer", sub: "Rings even with Clock closed", go: () => NX.startTimer(tm) }); }
       if (/^remind me /i.test(q) && NX.parseReminder) { const rm = NX.parseReminder(q); if (rm) items.push({ head: "Reminder", icon: NX.icon("reminders", 30), name: "Remind me: " + rm.text, sub: rm.when ? rm.when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "No time, just on the list", go: () => { NX.addReminder(rm.text, rm.when); NX.toast("Reminder added" + (rm.when ? " for " + NX.fmtTime(rm.when) + "." : ".")); } }); }
       if (/^weather\b|^forecast\b/i.test(q)) { const w = NX.data("wx", null), p = NX.data("wx-place", null); items.push({ head: "Weather", icon: w && NX.wxInfo ? NX.wxInfo.icon(w.code, 30) : NX.icon("weather", 30), name: w && p && NX.wxInfo ? w.now + "°" + w.unit + ", " + NX.wxInfo.name(w.code) + " in " + p.name : "See the weather", sub: "Opens Weather", go: () => NX.open("weather") }); }
       const apps = visible().filter((id) => NX.apps[id].name.toLowerCase().includes(ql)).sort((a, b) => NX.apps[a].name.toLowerCase().indexOf(ql) - NX.apps[b].name.toLowerCase().indexOf(ql)).slice(0, 5);
