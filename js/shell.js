@@ -386,12 +386,21 @@
   function allAppsDraw(all, me) {
     const S = $("#start"), list = [...all].sort((a, b) => NX.apps[a].name.localeCompare(NX.apps[b].name)), view = NX.prefs().allView === "cat" ? "cat" : "list";
     let letter = "", rows = "";
-    for (const id of list) { const L = NX.apps[id].name[0].toUpperCase(); if (L !== letter) { letter = L; rows += `<h5 class="sm-letter">${NX.esc(L)}</h5>`; } rows += `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 28)}<span><b>${NX.esc(NX.apps[id].name)}</b></span></button>`; }
+    for (const id of list) { const L = NX.apps[id].name[0].toUpperCase(); if (L !== letter) { letter = L; rows += `<button class="sm-letter" data-letter="${NX.esc(L)}" aria-label="${NX.esc(L)}: jump to another letter">${NX.esc(L)}</button>`; } rows += `<button class="sm-res" data-app="${id}">${NX.icon(NX.apps[id].icon || id, 28)}<span><b>${NX.esc(NX.apps[id].name)}</b></span></button>`; }
     S.innerHTML = `<label class="sm-search">${NX.icon("search", 16)}<input placeholder="Search for apps, settings and the web" aria-label="Search"></label>
       <div class="sm-body"><div class="sm-h"><h4>All apps</h4><div class="seg sm-av">${[["cat", "Category"], ["list", "List"]].map(([v, t]) => `<button data-av="${v}" class="${view === v ? "on" : ""}">${t}</button>`).join("")}</div><button class="sm-all" data-back="1">${NX.icon("back", 12)} Back</button></div>${view === "cat" ? catHTML(list) : `<div class="sm-allist">${rows}<button class="sm-res" data-store="1">${NX.icon("store", 28)}<span><b>Get more apps</b><small>Nebulux Store</small></span></button></div>`}</div>
       ${smFoot(me)}`;
     S.querySelectorAll("[data-app]").forEach((b) => (b.onclick = () => { closeFlyouts(); NX.open(b.dataset.app); }));
     $("[data-back]", S).onclick = (e) => { e.stopPropagation(); startDraw(""); };
+    // click a letter: every letter shows, and a click on one jumps to its apps (like Windows' All apps)
+    S.querySelectorAll("[data-letter]").forEach((h) => (h.onclick = (e) => {
+      e.stopPropagation(); const box = $(".sm-allist", S); if (!box || box.querySelector(".sm-jump")) return;
+      const have = new Set([...S.querySelectorAll("[data-letter]")].map((x) => x.dataset.letter)), j = document.createElement("div"); j.className = "sm-jump";
+      j.innerHTML = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map((c) => `<button data-to="${c}" ${have.has(c) ? "" : "disabled"}>${c}</button>`).join("");
+      box.appendChild(j); const first = j.querySelector(`[data-to="${h.dataset.letter}"]`) || j.querySelector("button:not([disabled])"); if (first) first.focus();
+      j.onclick = (ev) => { const b = ev.target.closest("[data-to]"); ev.stopPropagation(); j.remove(); if (!b) return; const t = S.querySelector(`[data-letter="${b.dataset.to}"]`); if (t) { t.scrollIntoView({ block: "start" }); t.focus({ preventScroll: true }); } };
+      j.onkeydown = (ev) => { if (ev.key === "Escape") { ev.stopPropagation(); j.remove(); h.focus(); } };
+    }));
     const stb = $("[data-store]", S); if (stb) stb.onclick = () => { closeFlyouts(); NX.open("store"); };
     S.querySelectorAll("[data-av]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); NX.setPref("allView", b.dataset.av); allAppsDraw(all, me); }));
     S.querySelectorAll(".sm-cat-h").forEach((h) => (h.onclick = (e) => { e.stopPropagation(); h.parentElement.classList.toggle("open"); }));

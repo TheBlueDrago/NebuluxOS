@@ -1000,3 +1000,8 @@ html.dim-hw #dim{display:none!important}
 .nx-proj-m.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.nx-proj-m[disabled]{opacity:.55}
 .nx-proj-set{align-self:flex-start;background:none;border:0;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;padding:2px 0}
 @media (max-height:820px){#cal .cal-g button{height:29px;width:29px}#cal .cal-g i{padding:3px 0}#cal .cal-top{padding:9px 18px}#cal .cal-h{padding-top:4px}#cal .cal-g{padding:2px 14px 6px}}
+/* All apps: letter headings jump to any letter */
+button.sm-letter{align-self:flex-start;background:none;border:0;padding:3px 8px;border-radius:6px;font:inherit;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer}button.sm-letter:hover{background:var(--hover)}
+.sm-jump{position:absolute;inset:70px 24px 74px;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:18px;border-radius:12px;background:var(--flyout,var(--card2));backdrop-filter:blur(24px);border:1px solid var(--line);box-shadow:0 12px 40px #0006;align-content:center}
+.sm-jump button{height:44px;border-radius:10px;border:0;background:var(--card);color:var(--txt);font:inherit;font-size:16px;font-weight:600;cursor:pointer}.sm-jump button:hover:not([disabled]){background:var(--accent);color:#fff}.sm-jump button[disabled]{opacity:.3;cursor:default}
+.sm-jump{background:#1b1630f5;backdrop-filter:blur(40px)}[data-theme=light] .sm-jump{background:#f6f4fcf5}

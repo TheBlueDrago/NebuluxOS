@@ -813,6 +813,14 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => { NX.closeAll(); document.querySelector("#tb-clock").click(); }); await wait(300);
   ok(await p.evaluate(() => document.querySelector("#cal .cal-g i").textContent === "M"), "and in the taskbar's calendar");
   await p.evaluate(() => { NX.shell.closeFlyouts(); NX.setPref("weekMon", false); });
+  // All apps: a letter heading opens the A to Z grid, and a letter jumps there
+  await p.evaluate(() => { NX.closeAll(); NX.setPref("allView", "list"); document.querySelector("#tb-start").click(); }); await wait(300);
+  await p.evaluate(() => [...document.querySelectorAll("#start button")].find((b) => /All apps/.test(b.textContent)).click()); await wait(300);
+  await p.evaluate(() => document.querySelector("#start [data-letter]").click()); await wait(150);
+  ok(await p.evaluate(() => document.querySelectorAll("#start .sm-jump button").length === 26 && !!document.querySelector("#start .sm-jump [data-to=P]:not([disabled])")), "a letter in All apps shows every letter, ready to jump");
+  await p.evaluate(() => document.querySelector("#start .sm-jump [data-to=P]").click()); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector("#start .sm-jump") && document.activeElement === document.querySelector('#start [data-letter="P"]')), "and a letter jumps to its apps");
+  await p.evaluate(() => NX.shell.closeFlyouts());
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
