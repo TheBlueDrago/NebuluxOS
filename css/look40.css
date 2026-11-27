@@ -976,3 +976,4 @@ html.dim-hw #dim{display:none!important}
 .c-memv{flex:1.6;text-align:right;color:var(--sub);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .s-hero .s-pcren{margin-left:auto;align-self:center}
+.np-mc.on{background:var(--accent);color:#fff;border-color:var(--accent)}
