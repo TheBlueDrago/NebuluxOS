@@ -674,6 +674,13 @@
       if (e.target.closest(".win") || e.target.closest("#taskbar") || e.target.closest(".dicon") || e.target.closest("#start,#qs,#cal")) return;
       e.preventDefault(); menu(e.clientX, e.clientY, [["New folder", () => NX.desktopNew && NX.desktopNew(true)], ["New text document", () => NX.desktopNew && NX.desktopNew(false)], ["Refresh", () => { icons(); }], [NX.prefs().stacks ? "Stop using stacks" : "Use stacks", () => NX.setPref("stacks", !NX.prefs().stacks)], ["Sort by name", () => { const P = NX.prefs(); NX.setPref("desktop", [...P.desktop].sort((x, y) => (NX.apps[x] ? NX.apps[x].name : x).localeCompare(NX.apps[y] ? NX.apps[y].name : y))); icons(); }, "listv"], ["", null], ["View", null], ...[["large", "Large icons"], ["medium", "Medium icons"], ["small", "Small icons"]].map(([k, t]) => [t, () => { NX.setPref("iconSize", k); icons(); }, (NX.prefs().iconSize || "medium") === k ? "check" : "blank"]), ["", null], ["Desktop widgets", () => NX.open("settings", { page: "personal" })], ["Next background", () => { const p = NX.prefs(), n = NX.wallpapers.length, cur = typeof p.wallpaper === "number" ? p.wallpaper : -1; NX.setPref("wallpaper", (cur + 1) % n); NX.toast(NX.wallpapers[(cur + 1) % n].name + "."); }], ["Display settings", () => NX.open("settings", { page: "system" })], ["Personalize", () => NX.open("settings", { page: "personal" })], ["Open in File Explorer", () => NX.open("files", { place: "Desktop" })]]);
     });
+    // right-click an empty part of the taskbar: Task Manager and the taskbar's settings, like Windows
+    $("#taskbar").addEventListener("contextmenu", (e) => {
+      if (e.target.closest("button, a, input, [data-app]")) return;
+      e.preventDefault(); e.stopPropagation();
+      menu(e.clientX, e.clientY - 8, [["Task Manager", () => NX.open("taskmgr"), "taskmgr"], ["Taskbar settings", () => { NX.open("settings", { page: "personal" }); setTimeout(() => { const h = [...document.querySelectorAll(".win[data-app=settings] h3")].find((x) => x.textContent === "Taskbar"); if (h) h.scrollIntoView({ block: "start" }); }, 350); }, "taskbar"]]);
+      const m = $("#ctx"); if (m.getBoundingClientRect().bottom > innerHeight - 4) m.style.top = Math.max(6, e.clientY - 8 - m.offsetHeight) + "px";
+    });
     boot();
   }
   NX.menu = menu;

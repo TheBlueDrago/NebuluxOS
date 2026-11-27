@@ -790,6 +790,9 @@ let failed = 0; const ok = (c, m) => { if (!c) { failed++; console.log("FAIL", m
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("a"); await p.keyboard.up("Meta"); await wait(250);
   ok(await p.evaluate(() => !document.querySelector("#qs").hidden), "Nebulux + A opens Quick Settings");
   await p.evaluate(() => NX.shell.closeFlyouts());
+  await p.evaluate(() => { NX.closeAll(); const t = document.querySelector("#taskbar"), r = t.getBoundingClientRect(); t.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.right - 400, clientY: r.y + 10 })); }); await wait(200);
+  ok(await p.evaluate(() => !document.querySelector("#ctx").hidden && /Task Manager/.test(document.querySelector("#ctx").textContent) && /Taskbar settings/.test(document.querySelector("#ctx").textContent)), "right-clicking the taskbar offers Task Manager and Taskbar settings");
+  await p.keyboard.press("Escape");
   // Run (Nebulux + R): an app by its short name, a folder, and something that isn't there
   await p.evaluate(() => NX.closeAll()); await p.keyboard.down("Meta"); await p.keyboard.press("r"); await p.keyboard.up("Meta"); await wait(200);
   ok(await p.evaluate(() => !!document.querySelector("#nx-run") && document.activeElement === document.querySelector("#nx-run input")), "Nebulux + R opens Run, ready to type");
